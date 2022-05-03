@@ -1,21 +1,31 @@
 {
-  "name": "hardhat-template",
+  "name": "dlsl-dev-modules",
   "version": "1.0.0",
   "license": "MIT",
   "author": "Distributed Lab",
-  "description": "",
+  "description": "Solidity Development Modules by DistributedLab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/distributedlab-solidity-library/dev-modules"
+  },
+  "keywords": [
+    "solidity",
+    "ethereum",
+    "smartcontracts",
+    "distributedlab"
+  ],
+  "files": [
+    "/contracts/**/*.sol",
+    "/build/contracts/*.json",
+    "!/contracts/mocks/**/*"
+  ],
   "scripts": {
     "install": "npx husky install",
     "compile": "npx hardhat compile --force",
+    "coverage": "npx hardhat coverage",
     "test": "npx hardhat test",
-    "test-all": "npm run deploy-dev && npm run test",
     "private-network": "npx hardhat node",
     "private-network-fork": "npx hardhat node --fork https://mainnet.infura.io/v3/$(grep INFURA_KEY .env | cut -d '\"' -f2)",
-    "deploy-dev": "npx hardhat run --network localhost deploy/runners/migrations.js",
-    "deploy-rinkeby": "npx hardhat run --network rinkeby deploy/runners/migrations.js",
-    "deploy-chapel": "npx hardhat run --network chapel deploy/runners/migrations.js",
-    "deploy-eth-mainnet": "npx hardhat run --network eth_mainnet deploy/runners/migrations.js",
-    "deploy-bsc-mainnet": "npx hardhat run --network bsc_mainnet deploy/runners/migrations.js",
     "lint-fix": "npm run lint-sol-fix && npm run lint-js-fix && npm run lint-json-fix",
     "lint-json-fix": "prettier --write \"./[a-zA-Z0-9.]+(?!-lock).json\"",
     "lint-js-fix": "prettier --write \"./**/*.js\"",
@@ -24,10 +34,8 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.1",
     "@openzeppelin/contracts-upgradeable": "^4.3.1",
-    "bignumber.js": "^9.0.1",
     "dotenv": "^10.0.0",
-    "hardhat": "^2.6.4",
-    "hardhat-gas-reporter": "^1.0.4"
+    "hardhat": "^2.6.4"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-etherscan": "^2.1.6",
@@ -36,6 +44,7 @@
     "@truffle/deployer": "3.2.56",
     "@truffle/reporters": "1.1.2",
     "@metamask/eth-sig-util": "^4.0.0",
+    "bignumber.js": "^9.0.1",
     "chai": "^4.3.4",
     "hardhat-contract-sizer": "^2.1.1",
     "hardhat-gas-reporter": "^1.0.4",
@@ -46,6 +55,7 @@
     "solhint": "^3.3.6",
     "solhint-plugin-prettier": "^0.0.5",
     "truffle-assertions": "^0.9.2",
+    "solidity-coverage": "^0.7.20",
     "web3": "^1.5.2"
   }
 }
