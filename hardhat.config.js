@@ -38,7 +38,7 @@ module.exports = {
     alphaSort: false,
     disambiguatePaths: false,
     runOnCompile: true,
-    strict: true,
+    strict: false,
   },
   gasReporter: {
     currency: "USD",
