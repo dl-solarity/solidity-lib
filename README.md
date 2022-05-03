@@ -1,4 +1,4 @@
-# Solidity Development Modules by DistributedLab
+# Solidity Development Modules by Distributed Lab
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

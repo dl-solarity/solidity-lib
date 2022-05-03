@@ -1,9 +1,9 @@
 {
-  "name": "dlsl-dev-modules",
-  "version": "1.0.0",
+  "name": "dlsl",
+  "version": "1.0.1",
   "license": "MIT",
   "author": "Distributed Lab",
-  "description": "Solidity Development Modules by DistributedLab",
+  "description": "Solidity Development Modules by Distributed Lab",
   "repository": {
     "type": "git",
     "url": "https://github.com/distributedlab-solidity-library/dev-modules"
@@ -13,10 +13,6 @@
     "ethereum",
     "smartcontracts",
     "distributedlab"
-  ],
-  "files": [
-    "/contracts/**/*.sol",
-    "!/contracts/mocks/**/*"
   ],
   "scripts": {
     "install": "npx husky install",
@@ -28,7 +24,8 @@
     "lint-fix": "npm run lint-sol-fix && npm run lint-js-fix && npm run lint-json-fix",
     "lint-json-fix": "prettier --write \"./[a-zA-Z0-9.]+(?!-lock).json\"",
     "lint-js-fix": "prettier --write \"./**/*.js\"",
-    "lint-sol-fix": "prettier --write \"contracts/**/*.sol\""
+    "lint-sol-fix": "prettier --write \"contracts/**/*.sol\"",
+    "publish-to-npm": "npm run lint-fix && bash ./scripts/publish.sh"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.1",
