@@ -4,6 +4,12 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
+/**
+ *  @notice The ContractsRegistry module
+ *
+ *  This is the helper contract that is used by an AbstractContractsRegistry as a proxy admin.
+ *  It is essential to distinguish between the admin and the registry due to the Transparent proxies nature
+ */
 contract ProxyUpgrader {
     using Address for address;
 
