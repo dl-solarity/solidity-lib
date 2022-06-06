@@ -51,13 +51,7 @@ contract Staking is IStaking, CompoundRateKeeperV2 {
         uint256 _compoundRate = getCompoundRate();
         uint256 _normalizedAmount = addressToStake[msg.sender].normalizedAmount;
 
-        uint256 _newAmount;
-        if (_normalizedAmount > 0) {
-            _newAmount = __getAvailableAmount(_normalizedAmount, _compoundRate) + _amount;
-        } else {
-            _newAmount = _amount;
-        }
-
+        uint256 _newAmount = _amount + __getAvailableAmount(_normalizedAmount, _compoundRate);
         uint256 _newNormalizedAmount = __getNormalizedAmount(_newAmount, _compoundRate);
 
         aggregatedAmount += _amount;
