@@ -18,7 +18,7 @@ describe("CompoundRateKeeperV2", () => {
   });
 
   beforeEach("setup", async () => {
-    crk = await CompoundRateKeeperV2.new();
+    crk = await CompoundRateKeeperV2.new(decimal(1));
   });
 
   afterEach("setup", async () => {

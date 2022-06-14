@@ -17,11 +17,13 @@ contract CompoundRateKeeperV2 is ICompoundRateKeeperV2, Ownable {
 
     bool public hasMaxRateReached;
 
-    constructor() {
+    constructor(uint256 _annualPercent) {
+        require(_annualPercent >= _getDecimals(), "CRK: annual percent can't be less then 1");
+
         capitalizationPeriod = 31536000;
         lastUpdate = uint64(block.timestamp);
 
-        annualPercent = _getDecimals();
+        annualPercent = _annualPercent;
         currentRate = _getDecimals();
     }
 

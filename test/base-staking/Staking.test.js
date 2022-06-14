@@ -27,7 +27,7 @@ describe("Staking", () => {
 
   beforeEach("setup", async () => {
     erc20 = await ERC20Mock.new("20S", "20N", 18);
-    staking = await Staking.new(erc20.address, startTimestamp, endTimestamp, lockPeriod);
+    staking = await Staking.new(erc20.address, startTimestamp, endTimestamp, lockPeriod, decimal(1));
   });
 
   afterEach("setup", async () => {
@@ -47,7 +47,7 @@ describe("Staking", () => {
       await setNextBlockTime(10);
 
       try {
-        await Staking.new(erc20.address, 10, 15, 1);
+        await Staking.new(erc20.address, 10, 15, 1, decimal(1));
         assert.equal(1, 2);
       } catch (e) {
         assert.include(e.message, "Staking: incorrect timestamps");
@@ -56,7 +56,7 @@ describe("Staking", () => {
 
     it("should revert if start timestamp more or equal end timestamp", async () => {
       try {
-        await Staking.new(erc20.address, 10, 10, 1);
+        await Staking.new(erc20.address, 10, 10, 1, decimal(1));
         assert.equal(1, 2);
       } catch (e) {
         assert.include(e.message, "Staking: incorrect timestamps");

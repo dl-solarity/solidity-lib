@@ -28,8 +28,9 @@ contract Staking is IStaking, CompoundRateKeeperV2 {
         IERC20 _token,
         uint64 _startTimestamp,
         uint64 _endTimestamp,
-        uint64 _lockPeriod
-    ) {
+        uint64 _lockPeriod,
+        uint256 _annualPercent
+    ) CompoundRateKeeperV2(_annualPercent) {
         require(
             block.timestamp < _startTimestamp && _startTimestamp < _endTimestamp,
             "Staking: incorrect timestamps"
