@@ -10,7 +10,7 @@ import "./ProxyUpgrader.sol";
 /**
  *  @notice The ContractsRegistry module
  *
- *  Supports the following data types `uin256`, `address`, `bytes[]`
+ *  The purpose of this module is to provide an organized registry of the project's smartcontracts
  *  together with the upgradeability and dependency injection mechanisms.
  *
  *  The ContractsRegistry should be used as the highest level smartcontract that is aware of any other
