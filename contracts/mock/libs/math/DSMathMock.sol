@@ -2,7 +2,7 @@
 // from https://github.com/makerdao/dss/blob/master/src/jug.sol
 pragma solidity ^0.8.9;
 
-import "../../math/DSMath.sol";
+import "../../../libs/math/DSMath.sol";
 
 contract DSMathMock {
     function rpow(

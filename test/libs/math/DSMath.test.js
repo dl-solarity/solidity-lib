@@ -1,7 +1,7 @@
 const DSMath = artifacts.require("DSMathMock");
 
 const { assert } = require("chai");
-const { toBN } = require("../../scripts/helpers/utils");
+const { toBN } = require("../../../scripts/helpers/utils");
 
 const BASE = toBN(10).pow(toBN(9));
 
@@ -11,9 +11,11 @@ const assertBNequal = (actual, expected) => {
 
 describe("DSMath", () => {
   let dsMath;
+
   before("setup", async () => {
     dsMath = await DSMath.new();
   });
+
   describe("rpow", () => {
     it("should calculate power for decimals", async () => {
       const cases = [
@@ -24,6 +26,7 @@ describe("DSMath", () => {
         [BASE.multipliedBy(123456), 3, BASE, BASE.multipliedBy(1881640295202816)],
         [BASE.multipliedBy(0.5), 2, BASE, BASE.multipliedBy(0.25)],
       ];
+
       for (const [base, exponent, mod, expected] of cases) {
         const result = await dsMath.rpow(base, exponent, mod);
         assertBNequal(result, expected);
