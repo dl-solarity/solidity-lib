@@ -1,7 +1,9 @@
-const DSMath = artifacts.require("DSMathMock");
-
 const { assert } = require("chai");
 const { toBN } = require("../../../scripts/helpers/utils");
+
+const DSMath = artifacts.require("DSMathMock");
+
+DSMath.numberFormat = "BigNumber";
 
 const BASE = toBN(10).pow(toBN(9));
 

@@ -2,6 +2,8 @@ const { assert } = require("chai");
 
 const PaginatorMock = artifacts.require("PaginatorMock");
 
+PaginatorMock.numberFormat = "BigNumber";
+
 describe("PaginatorMock", () => {
   let mock;
 
