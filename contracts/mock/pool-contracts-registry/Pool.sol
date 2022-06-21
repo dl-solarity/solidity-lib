@@ -3,13 +3,13 @@ pragma solidity ^0.8.9;
 
 import "../../contracts-registry/AbstractDependant.sol";
 
-import "./ContractsRegistry1.sol";
+import "./ContractsRegistry2.sol";
 
-contract CRDependant is AbstractDependant {
+contract Pool is AbstractDependant {
     address public token;
 
     function setDependencies(address contractsRegistry) external override dependant {
-        ContractsRegistry1 registry = ContractsRegistry1(contractsRegistry);
+        ContractsRegistry2 registry = ContractsRegistry2(contractsRegistry);
 
         token = registry.getTokenContract();
     }

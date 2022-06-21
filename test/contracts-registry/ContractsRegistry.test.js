@@ -2,7 +2,7 @@ const { assert } = require("chai");
 const { toBN, accounts } = require("../../scripts/helpers/utils");
 const truffleAssert = require("truffle-assertions");
 
-const ContractsRegistry = artifacts.require("ContractsRegistry");
+const ContractsRegistry = artifacts.require("ContractsRegistry1");
 const CRDependant = artifacts.require("CRDependant");
 const CRDependantUpgrade = artifacts.require("CRDependantUpgrade");
 const ERC20Mock = artifacts.require("ERC20Mock");
