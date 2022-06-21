@@ -5,6 +5,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
+import "../libs/arrays/Paginator.sol";
+
 import "../contracts-registry/AbstractDependant.sol";
 
 import "./ProxyBeacon.sol";
@@ -25,6 +27,7 @@ import "./ProxyBeacon.sol";
  */
 abstract contract AbstractPoolContractsRegistry is OwnableUpgradeable, AbstractDependant {
     using EnumerableSet for EnumerableSet.AddressSet;
+    using Paginator for EnumerableSet.AddressSet;
     using Math for uint256;
 
     address internal _contractsRegistry;
@@ -158,12 +161,6 @@ abstract contract AbstractPoolContractsRegistry is OwnableUpgradeable, AbstractD
         uint256 offset,
         uint256 limit
     ) external view returns (address[] memory pools) {
-        uint256 to = (offset + limit).min(_pools[name].length()).max(offset);
-
-        pools = new address[](to - offset);
-
-        for (uint256 i = offset; i < to; i++) {
-            pools[i - offset] = _pools[name].at(i);
-        }
+        return _pools[name].part(offset, limit);
     }
 }
