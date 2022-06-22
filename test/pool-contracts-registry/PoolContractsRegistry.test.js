@@ -1,5 +1,5 @@
 const { assert } = require("chai");
-const { toBN, accounts } = require("../../scripts/helpers/utils");
+const { accounts } = require("../../scripts/helpers/utils");
 const truffleAssert = require("truffle-assertions");
 
 const PoolContractsRegistry = artifacts.require("PoolContractsRegistry");
@@ -47,6 +47,7 @@ describe("PoolContractsRegistry", () => {
       _poolContractsRegistry.address
     );
     await contractsRegistry.addContract(await contractsRegistry.TOKEN_NAME(), token.address);
+    await contractsRegistry.addContract(await contractsRegistry.POOL_FACTORY_NAME(), OWNER);
 
     poolContractsRegistry = await PoolContractsRegistry.at(await contractsRegistry.getPoolContractsRegistryContract());
 
@@ -101,7 +102,7 @@ describe("PoolContractsRegistry", () => {
     it("only owner should be able to add pools", async () => {
       await truffleAssert.reverts(
         poolContractsRegistry.addPool(NAME_1, POOL_1, { from: POOL_1 }),
-        "PoolContractsRegistry: not an owner"
+        "PoolContractsRegistry: not a factory"
       );
     });
   });

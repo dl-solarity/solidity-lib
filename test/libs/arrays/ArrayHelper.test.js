@@ -49,4 +49,14 @@ describe("ArrayHelperMock", () => {
       assert.equal(arr.length, 0);
     });
   });
+
+  describe("asArray", () => {
+    it("should build arrays", async () => {
+      assert.deepEqual(
+        (await mock.asArrayUint("123")).map((e) => e.toFixed()),
+        ["123"]
+      );
+      assert.deepEqual(await mock.asArrayAddress(FIRST), [FIRST]);
+    });
+  });
 });
