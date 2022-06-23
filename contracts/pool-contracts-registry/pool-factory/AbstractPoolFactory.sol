@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.9;
 
 import "../../contracts-registry/AbstractDependant.sol";
 import "../AbstractPoolContractsRegistry.sol";
@@ -15,7 +15,7 @@ import "./PublicBeaconProxy.sol";
  *  The actual `deploy()` function has to be implemented in the descendants of this contract. The deployment
  *  is made via the BeaconProxy pattern.
  */
-contract AbstractPoolFactory is AbstractDependant {
+abstract contract AbstractPoolFactory is AbstractDependant {
     address internal _contractsRegistry;
 
     /**
