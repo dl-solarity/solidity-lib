@@ -2,36 +2,36 @@
 pragma solidity ^0.8.9;
 
 /**
- *  @notice A simple library to reverse common arrays
+ *  @notice A simple library that adds functionality when working with arrays.
  */
 library ArrayHelper {
-    function reverse(uint256[] memory arr) internal pure returns (uint256[] memory reversed) {
-        reversed = new uint256[](arr.length);
-        uint256 i = arr.length;
+    function reverse(uint256[] memory arr_) internal pure returns (uint256[] memory reversed_) {
+        reversed_ = new uint256[](arr_.length);
+        uint256 i = arr_.length;
 
         while (i > 0) {
             i--;
-            reversed[arr.length - 1 - i] = arr[i];
+            reversed_[arr_.length - 1 - i] = arr_[i];
         }
     }
 
-    function reverse(address[] memory arr) internal pure returns (address[] memory reversed) {
-        reversed = new address[](arr.length);
-        uint256 i = arr.length;
+    function reverse(address[] memory arr_) internal pure returns (address[] memory reversed_) {
+        reversed_ = new address[](arr_.length);
+        uint256 i = arr_.length;
 
         while (i > 0) {
             i--;
-            reversed[arr.length - 1 - i] = arr[i];
+            reversed_[arr_.length - 1 - i] = arr_[i];
         }
     }
 
-    function asArray(address elem) internal pure returns (address[] memory array) {
-        array = new address[](1);
-        array[0] = elem;
+    function asArray(uint256 elem_) internal pure returns (uint256[] memory array_) {
+        array_ = new uint256[](1);
+        array_[0] = elem_;
     }
 
-    function asArray(uint256 elem) internal pure returns (uint256[] memory array) {
-        array = new uint256[](1);
-        array[0] = elem;
+    function asArray(address elem_) internal pure returns (address[] memory array_) {
+        array_ = new address[](1);
+        array_[0] = elem_;
     }
 }

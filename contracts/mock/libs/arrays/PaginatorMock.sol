@@ -4,15 +4,8 @@ pragma solidity ^0.8.9;
 import "../../../libs/arrays/Paginator.sol";
 
 contract PaginatorMock {
-    using Paginator for uint256[];
-    using Paginator for address[];
-    using Paginator for bytes32[];
-    using Paginator for EnumerableSet.UintSet;
-    using Paginator for EnumerableSet.AddressSet;
-    using Paginator for EnumerableSet.Bytes32Set;
-    using EnumerableSet for EnumerableSet.UintSet;
-    using EnumerableSet for EnumerableSet.AddressSet;
-    using EnumerableSet for EnumerableSet.Bytes32Set;
+    using Paginator for *;
+    using EnumerableSet for *;
 
     uint256[] public uintArr;
     address[] public addressArr;
