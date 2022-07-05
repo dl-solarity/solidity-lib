@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: ALGPL-3.0-or-later-or-later
 // from https://github.com/makerdao/dss/blob/master/src/jug.sol
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 library DSMath {
     /**
