@@ -13,6 +13,11 @@ library StringSet {
         mapping(string => uint256) _indexes;
     }
 
+    /**
+     *  @notice The function add value to set
+     *  @param set the set object
+     *  @param value the value to add
+     */
     function add(Set storage set, string memory value) internal returns (bool) {
         if (!contains(set, value)) {
             set._values.push(value);
@@ -24,6 +29,11 @@ library StringSet {
         }
     }
 
+    /**
+     *  @notice The function remove value to set
+     *  @param set the set object
+     *  @param value the value to remove
+     */
     function remove(Set storage set, string memory value) internal returns (bool) {
         uint256 valueIndex = set._indexes[value];
 
@@ -48,14 +58,28 @@ library StringSet {
         }
     }
 
+    /**
+     *  @notice The function returns true if value in the set
+     *  @param set the set object
+     *  @param value the value to search in set
+     */
     function contains(Set storage set, string memory value) internal view returns (bool) {
         return set._indexes[value] != 0;
     }
 
+    /**
+     *  @notice The function returns length of set
+     *  @param set the set object
+     */
     function length(Set storage set) internal view returns (uint256) {
         return set._values.length;
     }
 
+    /**
+     *  @notice The function returns value from set by index
+     *  @param set the set object
+     *  @param index the index of slot in set
+     */
     function at(Set storage set, uint256 index) internal view returns (string memory) {
         return set._values[index];
     }

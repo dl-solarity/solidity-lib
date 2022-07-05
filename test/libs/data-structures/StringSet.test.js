@@ -5,7 +5,7 @@ const StringSetMock = artifacts.require("StringSetMock");
 
 StringSetMock.numberFormat = "BigNumber";
 
-describe.only("StringSetMock", () => {
+describe("StringSetMock", () => {
   let mock;
 
   beforeEach("setup", async () => {
