@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 /**
  *  @notice This library is used to convert numbers that use token's N decimals to M decimals.
