@@ -2,18 +2,20 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "../data-structures/StringSet.sol";
 
 /**
  *  @notice Library for pagination.
  *
  *  Supports the following data types `uin256[]`, `address[]`, `bytes32[]`, `UintSet`,
- * `AddressSet`, `BytesSet`.
+ * `AddressSet`, `BytesSet`, `StringSet`.
  *
  */
 library Paginator {
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
+    using StringSet for StringSet.Set;
 
     /**
      * @notice Returns part of an array.
@@ -106,6 +108,20 @@ library Paginator {
         uint256 to = _handleIncomingParametersForPart(set.length(), offset, limit);
 
         list = new bytes32[](to - offset);
+
+        for (uint256 i = offset; i < to; i++) {
+            list[i - offset] = set.at(i);
+        }
+    }
+
+    function part(
+        StringSet.Set storage set,
+        uint256 offset,
+        uint256 limit
+    ) internal view returns (string[] memory list) {
+        uint256 to = _handleIncomingParametersForPart(set.length(), offset, limit);
+
+        list = new string[](to - offset);
 
         for (uint256 i = offset; i < to; i++) {
             list[i - offset] = set.at(i);
