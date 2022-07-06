@@ -1,5 +1,4 @@
 const { assert } = require("chai");
-const { accounts } = require("../../../scripts/helpers/utils");
 
 const StringSetMock = artifacts.require("StringSetMock");
 
@@ -51,7 +50,7 @@ describe("StringSetMock", () => {
     });
   });
 
-  describe("remove()", async () => {
+  describe("remove()", () => {
     it("should remove string", async () => {
       let expected = "test";
 
@@ -115,7 +114,7 @@ describe("StringSetMock", () => {
     });
   });
 
-  describe("length()", async () => {
+  describe("length()", () => {
     it("should return correct length", async () => {
       let expected = "test";
 
@@ -129,7 +128,7 @@ describe("StringSetMock", () => {
     });
   });
 
-  describe("at()", async () => {
+  describe("at()", () => {
     it("should correctly return 10 values", async () => {
       let expected = "test";
 
@@ -139,6 +138,22 @@ describe("StringSetMock", () => {
 
       for (let i = 0; i < 10; i++) {
         assert.equal(await mock.at(i), expected + i);
+      }
+    });
+  });
+
+  describe("values", () => {
+    it("should return all values", async () => {
+      let expected = "test";
+
+      for (let i = 0; i < 10; i++) {
+        await mock.add(expected + i);
+      }
+
+      let values = await mock.values();
+
+      for (let i = 0; i < 10; i++) {
+        assert.equal(expected + i, values[i]);
       }
     });
   });

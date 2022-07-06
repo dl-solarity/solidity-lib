@@ -83,4 +83,8 @@ library StringSet {
     function at(Set storage set, uint256 index) internal view returns (string memory) {
         return set._values[index];
     }
+
+    function values(Set storage set) internal view returns (string[] memory) {
+        return set._values;
+    }
 }

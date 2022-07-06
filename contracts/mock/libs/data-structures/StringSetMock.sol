@@ -8,15 +8,15 @@ contract StringSetMock {
 
     StringSet.Set internal _set;
 
-    function add(string memory value) external {
+    function add(string calldata value) external {
         _set.add(value);
     }
 
-    function remove(string memory value) external {
+    function remove(string calldata value) external {
         _set.remove(value);
     }
 
-    function contains(string memory value) external view returns (bool) {
+    function contains(string calldata value) external view returns (bool) {
         return _set.contains(value);
     }
 
@@ -26,6 +26,10 @@ contract StringSetMock {
 
     function at(uint256 index) external view returns (string memory) {
         return _set.at(index);
+    }
+
+    function values() external view returns (string[] memory) {
+        return _set.values();
     }
 
     function getSet() external view returns (string[] memory set) {
