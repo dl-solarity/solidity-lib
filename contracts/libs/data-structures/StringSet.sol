@@ -84,6 +84,11 @@ library StringSet {
         return set._values[index];
     }
 
+    /**
+     *  @notice The function that returns values the set stores, can be very expensive to call
+     *  @param set the set object
+     *  @return the memory array of values
+     */
     function values(Set storage set) internal view returns (string[] memory) {
         return set._values;
     }
