@@ -173,14 +173,14 @@ abstract contract AbstractContractsRegistry is OwnableUpgradeable {
     function addProxyContract(string calldata name, address contractAddress) external onlyOwner {
         require(contractAddress != address(0), "ContractsRegistry: Null address is forbidden");
 
-        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            contractAddress,
-            address(_proxyUpgrader),
-            ""
+        address proxyAddr = address(
+            new TransparentUpgradeableProxy(contractAddress, address(_proxyUpgrader), "")
         );
 
-        _contracts[name] = address(proxy);
-        _isProxy[address(proxy)] = true;
+        AbstractDependant(proxyAddr).setInjector(address(this));
+
+        _contracts[name] = proxyAddr;
+        _isProxy[proxyAddr] = true;
     }
 
     /**
