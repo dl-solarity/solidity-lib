@@ -75,6 +75,10 @@ describe("ContractsRegistry", () => {
 
       assert.isTrue(await contractsRegistry.hasContract(await contractsRegistry.CRDEPENDANT_NAME()));
 
+      const crdProxy = await CRDependant.at(await contractsRegistry.getCRDependantContract());
+
+      assert.equal(await crdProxy.getInjector(), contractsRegistry.address);
+
       await contractsRegistry.removeContract(await contractsRegistry.CRDEPENDANT_NAME());
 
       assert.isFalse(await contractsRegistry.hasContract(await contractsRegistry.CRDEPENDANT_NAME()));
@@ -85,11 +89,11 @@ describe("ContractsRegistry", () => {
 
       await contractsRegistry.addProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), _crd.address);
 
-      const crd = await contractsRegistry.getCRDependantContract();
+      const crdProxyAddr = await contractsRegistry.getCRDependantContract();
 
       await contractsRegistry.removeContract(await contractsRegistry.CRDEPENDANT_NAME());
 
-      await contractsRegistry.justAddProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), _crd.address);
+      await contractsRegistry.justAddProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), crdProxyAddr);
 
       assert.isTrue(await contractsRegistry.hasContract(await contractsRegistry.CRDEPENDANT_NAME()));
 
