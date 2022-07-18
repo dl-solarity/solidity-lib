@@ -177,8 +177,6 @@ abstract contract AbstractContractsRegistry is OwnableUpgradeable {
             new TransparentUpgradeableProxy(contractAddress, address(_proxyUpgrader), "")
         );
 
-        AbstractDependant(proxyAddr).setInjector(address(this));
-
         _contracts[name] = proxyAddr;
         _isProxy[proxyAddr] = true;
     }

@@ -75,13 +75,16 @@ describe("ContractsRegistry", () => {
 
       assert.isTrue(await contractsRegistry.hasContract(await contractsRegistry.CRDEPENDANT_NAME()));
 
-      const crdProxy = await CRDependant.at(await contractsRegistry.getCRDependantContract());
-
-      assert.equal(await crdProxy.getInjector(), contractsRegistry.address);
-
       await contractsRegistry.removeContract(await contractsRegistry.CRDEPENDANT_NAME());
 
       assert.isFalse(await contractsRegistry.hasContract(await contractsRegistry.CRDEPENDANT_NAME()));
+    });
+
+    it("should add and remove proxy without dependant", async () => {
+      const _token = await ERC20Mock.new("Mock", "Mock", 18);
+
+      await contractsRegistry.addProxyContract(await contractsRegistry.TOKEN_NAME(), _token.address);
+      await contractsRegistry.removeContract(await contractsRegistry.TOKEN_NAME());
     });
 
     it("should just add and remove the proxy contract", async () => {
