@@ -1,5 +1,6 @@
 const { assert } = require("chai");
 const { accounts } = require("../../../scripts/helpers/utils");
+const truffleAssert = require("truffle-assertions");
 
 const ArrayHelperMock = artifacts.require("ArrayHelperMock");
 
@@ -47,6 +48,38 @@ describe("ArrayHelperMock", () => {
 
       arr = await mock.reverseAddress([]);
       assert.equal(arr.length, 0);
+    });
+  });
+
+  describe("insert", () => {
+    it("should insert uint array", async () => {
+      const base = [1, 2, 3, 0, 0, 0];
+      const index = 3;
+      const what = [4, 5, 6];
+
+      const res = await mock.insertUint(base, index, what);
+
+      assert.equal(res[0].toFixed(), 6);
+      assert.deepEqual(
+        res[1].map((e) => e.toFixed()),
+        ["1", "2", "3", "4", "5", "6"]
+      );
+    });
+
+    it("should insert address array", async () => {
+      const base = [FIRST, SECOND];
+      const index = 1;
+      const what = [THIRD];
+
+      const res = await mock.insertAddress(base, index, what);
+
+      assert.equal(res[0].toFixed(), 2);
+      assert.deepEqual(res[1], [FIRST, THIRD]);
+    });
+
+    it("should revert in case of out of bound insertion", async () => {
+      await truffleAssert.reverts(mock.insertUint([1], 1, [2]));
+      await truffleAssert.reverts(mock.insertAddress([], 0, [FIRST]));
     });
   });
 
