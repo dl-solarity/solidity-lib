@@ -25,13 +25,37 @@ library ArrayHelper {
         }
     }
 
-    function asArray(address elem) internal pure returns (address[] memory array) {
-        array = new address[](1);
-        array[0] = elem;
+    function insert(
+        uint256[] memory to,
+        uint256 index,
+        uint256[] memory what
+    ) internal pure returns (uint256) {
+        for (uint256 i = 0; i < what.length; i++) {
+            to[index + i] = what[i];
+        }
+
+        return index + what.length;
+    }
+
+    function insert(
+        address[] memory to,
+        uint256 index,
+        address[] memory what
+    ) internal pure returns (uint256) {
+        for (uint256 i = 0; i < what.length; i++) {
+            to[index + i] = what[i];
+        }
+
+        return index + what.length;
     }
 
     function asArray(uint256 elem) internal pure returns (uint256[] memory array) {
         array = new uint256[](1);
+        array[0] = elem;
+    }
+
+    function asArray(address elem) internal pure returns (address[] memory array) {
+        array = new address[](1);
         array[0] = elem;
     }
 }
