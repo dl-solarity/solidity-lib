@@ -29,7 +29,10 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: `${process.env.ETHERSCAN_KEY}`,
+    apiKey: {
+      mainnet: `${process.env.ETHERSCAN_KEY}`,
+      bsc: `${process.env.BSCSCAN_KEY}`,
+    },
   },
   mocha: {
     timeout: 1000000,
@@ -37,7 +40,7 @@ module.exports = {
   contractSizer: {
     alphaSort: false,
     disambiguatePaths: false,
-    runOnCompile: false,
+    runOnCompile: true,
     strict: false,
   },
   gasReporter: {

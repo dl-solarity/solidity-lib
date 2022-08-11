@@ -1,8 +1,9 @@
 const TruffleDeployer = require("@truffle/deployer");
 const TruffleReporter = require("@truffle/reporters").migrationsV5;
+const Verifier = require("../verifier/verifier");
 
 class Deployer {
-  async startMigration(confirmations = 0) {
+  async startMigration(verify, confirmations = 0) {
     try {
       let chainId = await web3.eth.getChainId();
       let networkType = await web3.eth.net.getNetworkType();
@@ -16,6 +17,10 @@ class Deployer {
         network: "",
         network_id: chainId,
       });
+
+      if (verify) {
+        this.verifier = new Verifier();
+      }
 
       this.reporter.confirmations = confirmations;
       this.reporter.setMigration({ dryRun: false });
@@ -32,7 +37,7 @@ class Deployer {
         blockLimit: (await web3.eth.getBlock("latest")).gasLimit,
       });
     } catch (e) {
-      console.log(e);
+      console.log(e.message);
     }
   }
 
@@ -51,7 +56,7 @@ class Deployer {
         await Contract.link(library);
       }
     } catch (e) {
-      console.log(e);
+      console.log(e.message);
     }
   }
 
@@ -61,9 +66,13 @@ class Deployer {
 
       Instance.setAsDeployed(instance);
 
+      if (this.verifier) {
+        await this.verifier.verify([instance, ...args]);
+      }
+
       return instance;
     } catch (e) {
-      console.log(e);
+      console.log(e.message);
     }
   }
 
@@ -75,7 +84,7 @@ class Deployer {
 
       this.deployer.finish();
     } catch (e) {
-      console.log(e);
+      console.log(e.message);
     }
   }
 }

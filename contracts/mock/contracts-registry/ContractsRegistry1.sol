@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../contracts-registry/AbstractContractsRegistry.sol";
+import "../../contracts-registry/presets/OwnableContractsRegistry.sol";
 
-contract ContractsRegistry1 is AbstractContractsRegistry {
+contract ContractsRegistry1 is OwnableContractsRegistry {
     string public constant CRDEPENDANT_NAME = "CRDEPENDANT";
     string public constant TOKEN_NAME = "TOKEN";
 

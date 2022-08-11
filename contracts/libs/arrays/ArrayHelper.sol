@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 /**
- *  @notice A simple library to reverse common arrays
+ *  @notice A simple library to work with arrays
  */
 library ArrayHelper {
     function reverse(uint256[] memory arr) internal pure returns (uint256[] memory reversed) {

@@ -26,17 +26,26 @@ class Migrations {
     return files;
   }
 
+  isVerify() {
+    return process.env.VERIFY == "true";
+  }
+
   async migrate() {
     try {
       const migrationFiles = this.getMigrationFiles();
+      const verify = this.isVerify();
       const deployer = new Deployer();
 
-      await deployer.startMigration();
+      if (verify) {
+        console.log("\nAUTO VERIFICATION IS ON");
+      }
+
+      await deployer.startMigration(verify);
 
       console.log(migrationFiles);
 
       for (let i = 0; i < migrationFiles.length; i++) {
-        const func = require("../migrations/" + migrationFiles[i]);
+        const func = require("../../migrations/" + migrationFiles[i]);
 
         await func(deployer);
       }
@@ -45,7 +54,7 @@ class Migrations {
 
       process.exit(0);
     } catch (e) {
-      console.log(e);
+      console.log(e.message);
       process.exit(1);
     }
   }
