@@ -3,21 +3,26 @@ pragma solidity ^0.8.0;
 
 import "./ContractsRegistry2.sol";
 
-import "../../pool-contracts-registry/AbstractPoolContractsRegistry.sol";
+import "../../pool-contracts-registry/presets/OwnablePoolContractsRegistry.sol";
 
-contract PoolContractsRegistry is AbstractPoolContractsRegistry {
+contract PoolContractsRegistry is OwnablePoolContractsRegistry {
     string public constant POOL_1_NAME = "POOL_1";
     string public constant POOL_2_NAME = "POOL_2";
 
     address internal poolFactory;
 
-    function _onlyPoolFactory() internal view override {
+    modifier onlyPoolFactory() {
         require(poolFactory == msg.sender, "PoolContractsRegistry: not a factory");
+        _;
     }
 
     function setDependencies(address contractsRegistry) public override {
         super.setDependencies(contractsRegistry);
 
         poolFactory = ContractsRegistry2(contractsRegistry).getPoolFactoryContract();
+    }
+
+    function addProxyPool(string calldata name, address poolAddress) external onlyPoolFactory {
+        _addProxyPool(name, poolAddress);
     }
 }

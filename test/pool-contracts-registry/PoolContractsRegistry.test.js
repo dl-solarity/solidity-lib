@@ -40,7 +40,7 @@ describe("PoolContractsRegistry", () => {
     const _poolContractsRegistry = await PoolContractsRegistry.new();
     token = await ERC20Mock.new("Mock", "Mock", 18);
 
-    await contractsRegistry.__ContractsRegistry_init();
+    await contractsRegistry.__OwnableContractsRegistry_init();
 
     await contractsRegistry.addProxyContract(
       await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME(),
@@ -51,7 +51,7 @@ describe("PoolContractsRegistry", () => {
 
     poolContractsRegistry = await PoolContractsRegistry.at(await contractsRegistry.getPoolContractsRegistryContract());
 
-    await poolContractsRegistry.__PoolContractsRegistry_init();
+    await poolContractsRegistry.__OwnablePoolContractsRegistry_init();
 
     await contractsRegistry.injectDependencies(await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME());
 
@@ -79,18 +79,18 @@ describe("PoolContractsRegistry", () => {
     });
   });
 
-  describe("addPool()", () => {
+  describe("addProxyPool()", () => {
     it("should add pool", async () => {
-      await poolContractsRegistry.addPool(NAME_1, POOL_1);
-      await poolContractsRegistry.addPool(NAME_1, POOL_2);
+      await poolContractsRegistry.addProxyPool(NAME_1, POOL_1);
+      await poolContractsRegistry.addProxyPool(NAME_1, POOL_2);
 
       assert.equal((await poolContractsRegistry.countPools(NAME_1)).toFixed(), "2");
       assert.equal((await poolContractsRegistry.countPools(NAME_2)).toFixed(), "0");
     });
 
     it("should list added pools", async () => {
-      await poolContractsRegistry.addPool(NAME_1, POOL_1);
-      await poolContractsRegistry.addPool(NAME_1, POOL_2);
+      await poolContractsRegistry.addProxyPool(NAME_1, POOL_1);
+      await poolContractsRegistry.addProxyPool(NAME_1, POOL_2);
 
       assert.deepEqual(await poolContractsRegistry.listPools(NAME_1, 0, 2), [POOL_1, POOL_2]);
       assert.deepEqual(await poolContractsRegistry.listPools(NAME_1, 0, 10), [POOL_1, POOL_2]);
@@ -101,7 +101,7 @@ describe("PoolContractsRegistry", () => {
 
     it("only owner should be able to add pools", async () => {
       await truffleAssert.reverts(
-        poolContractsRegistry.addPool(NAME_1, POOL_1, { from: POOL_1 }),
+        poolContractsRegistry.addProxyPool(NAME_1, POOL_1, { from: POOL_1 }),
         "PoolContractsRegistry: not a factory"
       );
     });
@@ -115,7 +115,7 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("should inject dependencies", async () => {
-      await poolContractsRegistry.addPool(NAME_1, pool.address);
+      await poolContractsRegistry.addProxyPool(NAME_1, pool.address);
 
       assert.equal(await pool.token(), ZERO);
 

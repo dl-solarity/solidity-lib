@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import "./AbstractDependant.sol";
@@ -35,8 +35,8 @@ import "./ProxyUpgrader.sol";
  *
  *  The management is simplified because all of the contracts are now located in a single place.
  */
-abstract contract AbstractContractsRegistry is OwnableUpgradeable {
-    ProxyUpgrader internal _proxyUpgrader;
+abstract contract AbstractContractsRegistry is Initializable {
+    ProxyUpgrader private _proxyUpgrader;
 
     mapping(string => address) private _contracts;
     mapping(address => bool) private _isProxy;
@@ -44,9 +44,7 @@ abstract contract AbstractContractsRegistry is OwnableUpgradeable {
     /**
      *  @notice The proxy initializer function
      */
-    function __ContractsRegistry_init() external initializer {
-        __Ownable_init();
-
+    function __ContractsRegistry_init() internal onlyInitializing {
         _proxyUpgrader = new ProxyUpgrader();
     }
 
@@ -68,30 +66,15 @@ abstract contract AbstractContractsRegistry is OwnableUpgradeable {
      *  @param name the name of the contract
      *  @return true if the contract is present in the registry
      */
-    function hasContract(string calldata name) external view returns (bool) {
+    function hasContract(string memory name) public view returns (bool) {
         return _contracts[name] != address(0);
-    }
-
-    /**
-     *  @notice The function that injects the dependencies into the given contract
-     *  @param name the name of the contract
-     */
-    function injectDependencies(string calldata name) external onlyOwner {
-        address contractAddress = _contracts[name];
-
-        require(contractAddress != address(0), "ContractsRegistry: This mapping doesn't exist");
-
-        AbstractDependant dependant = AbstractDependant(contractAddress);
-        dependant.setDependencies(address(this));
     }
 
     /**
      *  @notice The function that returns the admin of the added proxy contracts
      *  @return the proxy admin address
      */
-    function getProxyUpgrader() external view returns (address) {
-        require(address(_proxyUpgrader) != address(0), "ContractsRegistry: Bad ProxyUpgrader");
-
+    function getProxyUpgrader() public view returns (address) {
         return address(_proxyUpgrader);
     }
 
@@ -100,7 +83,7 @@ abstract contract AbstractContractsRegistry is OwnableUpgradeable {
      *  @param name the name of the contract
      *  @return the implementation address
      */
-    function getImplementation(string calldata name) external view returns (address) {
+    function getImplementation(string memory name) public view returns (address) {
         address contractProxy = _contracts[name];
 
         require(contractProxy != address(0), "ContractsRegistry: This mapping doesn't exist");
@@ -110,14 +93,27 @@ abstract contract AbstractContractsRegistry is OwnableUpgradeable {
     }
 
     /**
+     *  @notice The function that injects the dependencies into the given contract
+     *  @param name the name of the contract
+     */
+    function _injectDependencies(string memory name) internal {
+        address contractAddress = _contracts[name];
+
+        require(contractAddress != address(0), "ContractsRegistry: This mapping doesn't exist");
+
+        AbstractDependant dependant = AbstractDependant(contractAddress);
+        dependant.setDependencies(address(this));
+    }
+
+    /**
      *  @notice The function to upgrade added proxy contract with a new implementation
      *  @param name the name of the proxy contract
      *  @param newImplementation the new implementation the proxy should be upgraded to
      *
      *  It is the Owner's responsibility to ensure the compatibility between implementations
      */
-    function upgradeContract(string calldata name, address newImplementation) external onlyOwner {
-        _upgradeContract(name, newImplementation, bytes(""));
+    function _upgradeContract(string memory name, address newImplementation) internal {
+        _upgradeContractAndCall(name, newImplementation, bytes(""));
     }
 
     /**
@@ -128,19 +124,8 @@ abstract contract AbstractContractsRegistry is OwnableUpgradeable {
      *
      *  It is the Owner's responsibility to ensure the compatibility between implementations
      */
-    function upgradeContractAndCall(
-        string calldata name,
-        address newImplementation,
-        bytes memory data
-    ) external onlyOwner {
-        _upgradeContract(name, newImplementation, data);
-    }
-
-    /**
-     *  @notice Internal upgrade function
-     */
-    function _upgradeContract(
-        string calldata name,
+    function _upgradeContractAndCall(
+        string memory name,
         address newImplementation,
         bytes memory data
     ) internal {
@@ -158,7 +143,7 @@ abstract contract AbstractContractsRegistry is OwnableUpgradeable {
      *  @param name the name to associate the contract with
      *  @param contractAddress the address of the contract
      */
-    function addContract(string calldata name, address contractAddress) external onlyOwner {
+    function _addContract(string memory name, address contractAddress) internal {
         require(contractAddress != address(0), "ContractsRegistry: Null address is forbidden");
 
         _contracts[name] = contractAddress;
@@ -170,7 +155,7 @@ abstract contract AbstractContractsRegistry is OwnableUpgradeable {
      *  @param name the name to associate the contract with
      *  @param contractAddress the address of the implementation
      */
-    function addProxyContract(string calldata name, address contractAddress) external onlyOwner {
+    function _addProxyContract(string memory name, address contractAddress) internal {
         require(contractAddress != address(0), "ContractsRegistry: Null address is forbidden");
 
         address proxyAddr = address(
@@ -188,10 +173,7 @@ abstract contract AbstractContractsRegistry is OwnableUpgradeable {
      *  @param name the name to associate the contract with
      *  @param contractAddress the address of the proxy
      */
-    function justAddProxyContract(string calldata name, address contractAddress)
-        external
-        onlyOwner
-    {
+    function _justAddProxyContract(string memory name, address contractAddress) internal {
         require(contractAddress != address(0), "ContractsRegistry: Null address is forbidden");
 
         _contracts[name] = contractAddress;
@@ -202,7 +184,7 @@ abstract contract AbstractContractsRegistry is OwnableUpgradeable {
      *  @notice The function to remove the contract from the ContractsRegistry
      *  @param name the associated name with the contract
      */
-    function removeContract(string calldata name) external onlyOwner {
+    function _removeContract(string memory name) internal {
         require(_contracts[name] != address(0), "ContractsRegistry: This mapping doesn't exist");
 
         delete _isProxy[_contracts[name]];

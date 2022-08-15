@@ -31,8 +31,6 @@ contract ProxyUpgrader {
         address to,
         bytes calldata data
     ) external onlyOwner {
-        require(to.isContract(), "ProxyUpgrader: not a contract");
-
         if (data.length > 0) {
             TransparentUpgradeableProxy(payable(what)).upgradeToAndCall(to, data);
         } else {

@@ -25,7 +25,7 @@ describe("ContractsRegistry", () => {
   beforeEach("setup", async () => {
     contractsRegistry = await ContractsRegistry.new();
 
-    await contractsRegistry.__ContractsRegistry_init();
+    await contractsRegistry.__OwnableContractsRegistry_init();
   });
 
   describe("contract management", async () => {
@@ -70,6 +70,11 @@ describe("ContractsRegistry", () => {
 
     it("should add and remove the proxy contract", async () => {
       const _crd = await CRDependant.new();
+
+      await truffleAssert.reverts(
+        contractsRegistry.getImplementation(await contractsRegistry.CRDEPENDANT_NAME()),
+        "ContractsRegistry: This mapping doesn't exist"
+      );
 
       await contractsRegistry.addProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), _crd.address);
 
@@ -154,6 +159,13 @@ describe("ContractsRegistry", () => {
       assert.equal(toBN(await crd.addedFunction()).toFixed(), "42");
     });
 
+    it("should not upgrade non existing contract", async () => {
+      await truffleAssert.reverts(
+        contractsRegistry.upgradeContract("RANDOM CONTRACT", _crdu.address),
+        "ContractsRegistry: This mapping doesn't exist"
+      );
+    });
+
     it("should upgrade and call the contract", async () => {
       await truffleAssert.reverts(crd.addedFunction());
 
@@ -197,6 +209,13 @@ describe("ContractsRegistry", () => {
       await contractsRegistry.injectDependencies(await contractsRegistry.CRDEPENDANT_NAME());
 
       assert.equal(await crd.token(), token.address);
+    });
+
+    it("should not inject dependencies", async () => {
+      await truffleAssert.reverts(
+        contractsRegistry.injectDependencies("RANDOM CONTRACT"),
+        "ContractsRegistry: This mapping doesn't exist"
+      );
     });
 
     it("should not allow random users to inject dependencies", async () => {

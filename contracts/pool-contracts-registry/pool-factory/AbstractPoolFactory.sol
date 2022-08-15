@@ -19,7 +19,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     address internal _contractsRegistry;
 
     /**
-     *  @notice The function that accepts dependencies from the ContractsRegistry, can be overriden
+     *  @notice The function that accepts dependencies from the ContractsRegistry, can be overridden
      *  @param contractsRegistry the dependency registry
      */
     function setDependencies(address contractsRegistry) public virtual override dependant {
@@ -48,7 +48,11 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         string memory poolType,
         address poolProxy
     ) internal {
-        AbstractPoolContractsRegistry(poolRegistry).addPool(poolType, poolProxy);
+        (bool success, ) = poolRegistry.call(
+            abi.encodeWithSignature("addProxyPool(string,address)", poolType, poolProxy)
+        );
+
+        require(success, "AbstractPoolFactory: failed to register contract");
     }
 
     /**

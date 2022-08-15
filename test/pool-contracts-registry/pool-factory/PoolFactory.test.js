@@ -39,7 +39,7 @@ describe("PoolFactory", () => {
     const _poolContractsRegistry = await PoolContractsRegistry.new();
     token = await ERC20Mock.new("Mock", "Mock", 18);
 
-    await contractsRegistry.__ContractsRegistry_init();
+    await contractsRegistry.__OwnableContractsRegistry_init();
 
     await contractsRegistry.addProxyContract(
       await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME(),
@@ -51,7 +51,7 @@ describe("PoolFactory", () => {
     poolContractsRegistry = await PoolContractsRegistry.at(await contractsRegistry.getPoolContractsRegistryContract());
     poolFactory = await PoolFactory.at(await contractsRegistry.getPoolFactoryContract());
 
-    await poolContractsRegistry.__PoolContractsRegistry_init();
+    await poolContractsRegistry.__OwnablePoolContractsRegistry_init();
 
     await contractsRegistry.injectDependencies(await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME());
     await contractsRegistry.injectDependencies(await contractsRegistry.POOL_FACTORY_NAME());
@@ -96,7 +96,7 @@ describe("PoolFactory", () => {
       const pool = await Pool.at((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
 
       await truffleAssert.reverts(
-        poolContractsRegistry.addPool(NAME_1, poolFactory.address),
+        poolContractsRegistry.addProxyPool(NAME_1, poolFactory.address),
         "PoolContractsRegistry: not a factory"
       );
       await truffleAssert.reverts(pool.setDependencies(contractsRegistry.address), "Dependant: Not an injector");
