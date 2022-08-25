@@ -9,7 +9,7 @@ import "./DiamondStorage.sol";
  *  @notice The Diamond standard module
  *
  *  This is a custom implementation of a Diamond Proxy standard (https://eips.ethereum.org/EIPS/eip-2535).
- *  This contract acts as a highest level contract of that standard. What is different from the EIP2545,
+ *  This contract acts as a highest level contract of that standard. What is different from the EIP2535,
  *  in order to use the DiamondStorage, storage is defined in a separate contract that the facets have to inherit from,
  *  not an internal library.
  *
