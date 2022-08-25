@@ -418,4 +418,64 @@ describe("PaginatorMock", () => {
       assert.equal(arr[2], "4");
     });
   });
+
+  describe("address set", () => {
+    beforeEach(async () => {
+      await mock.pushAddress(5);
+    });
+
+    it("should return empty array if `offset` is bigger then length", async () => {
+      const arr = await mock.partAddressSet(10, 1);
+
+      assert.equal(arr.length, 0);
+    });
+
+    it("should return full array", async () => {
+      const arr = await mock.partAddressSet(0, 5);
+
+      assert.equal(arr.length, 5);
+      assert.equal(arr[0], "0x0000000000000000000000000000000000000000");
+      assert.equal(arr[4], "0x0000000000000000000000000000000000000004");
+    });
+
+    it("should return from the beginning, part of the array ", async () => {
+      const arr = await mock.partAddressSet(0, 2);
+
+      assert.equal(arr.length, 2);
+      assert.equal(arr[0], "0x0000000000000000000000000000000000000000");
+      assert.equal(arr[1], "0x0000000000000000000000000000000000000001");
+    });
+
+    it("should return from the beginning, full array, length overrun", async () => {
+      const arr = await mock.partAddressSet(0, 1000);
+
+      assert.equal(arr.length, 5);
+      assert.equal(arr[0], "0x0000000000000000000000000000000000000000");
+      assert.equal(arr[4], "0x0000000000000000000000000000000000000004");
+    });
+
+    it("should return from the middle part, full array", async () => {
+      const arr = await mock.partAddressSet(2, 3);
+
+      assert.equal(arr.length, 3);
+      assert.equal(arr[0], "0x0000000000000000000000000000000000000002");
+      assert.equal(arr[2], "0x0000000000000000000000000000000000000004");
+    });
+
+    it("should return from the middle part, part of the array", async () => {
+      const arr = await mock.partAddressSet(2, 2);
+
+      assert.equal(arr.length, 2);
+      assert.equal(arr[0], "0x0000000000000000000000000000000000000002");
+      assert.equal(arr[1], "0x0000000000000000000000000000000000000003");
+    });
+
+    it("should return from the middle part, full array, length overrun", async () => {
+      const arr = await mock.partAddressSet(2, 1000);
+
+      assert.equal(arr.length, 3);
+      assert.equal(arr[0], "0x0000000000000000000000000000000000000002");
+      assert.equal(arr[2], "0x0000000000000000000000000000000000000004");
+    });
+  });
 });

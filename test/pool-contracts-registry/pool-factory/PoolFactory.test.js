@@ -82,6 +82,13 @@ describe("PoolFactory", () => {
       assert.notEqual(await pool.token(), ZERO);
     });
 
+    it("should not register pools", async () => {
+      await contractsRegistry.addContract(await contractsRegistry.POOL_FACTORY_NAME(), OWNER);
+      await contractsRegistry.injectDependencies(await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME());
+
+      await truffleAssert.reverts(poolFactory.deployPool(), "AbstractPoolFactory: failed to register contract");
+    });
+
     it("should deploy several pools", async () => {
       await poolFactory.deployPool();
       await poolFactory.deployPool();
