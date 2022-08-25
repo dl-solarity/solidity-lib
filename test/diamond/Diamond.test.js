@@ -1,0 +1,156 @@
+const { assert } = require("chai");
+const { accounts } = require("../../scripts/helpers/utils");
+const truffleAssert = require("truffle-assertions");
+
+const OwnableDiamond = artifacts.require("OwnableDiamond");
+const DummyFacet = artifacts.require("DummyFacet");
+
+OwnableDiamond.numberFormat = "BigNumber";
+DummyFacet.numberFormat = "BigNumber";
+
+function getSelectors(contract) {
+  return Object.keys(contract.methods).map((el) => web3.eth.abi.encodeFunctionSignature(el));
+}
+
+describe("Diamond", () => {
+  let ZERO = "0x0000000000000000000000000000000000000000";
+  let OWNER;
+  let SECOND;
+
+  let diamond;
+
+  before("setup", async () => {
+    OWNER = await accounts(0);
+    SECOND = await accounts(1);
+  });
+
+  beforeEach("setup", async () => {
+    diamond = await OwnableDiamond.new();
+  });
+
+  describe("ownable diamond functions", () => {
+    it("should set owner correctly", async () => {
+      assert.equal(await diamond.getOwner(), OWNER);
+    });
+
+    it("should transfer ownership", async () => {
+      await diamond.transferOwnership(SECOND);
+
+      assert.equal(await diamond.getOwner(), SECOND);
+    });
+
+    it("should not transfer ownership from non-owner", async () => {
+      await truffleAssert.reverts(diamond.transferOwnership(SECOND, { from: SECOND }), "ODStorage: not an owner");
+    });
+
+    it("should not transfer ownership to zero address", async () => {
+      await truffleAssert.reverts(diamond.transferOwnership(ZERO), "OwnableDiamond: zero address owner");
+    });
+  });
+
+  describe("facets", () => {
+    let dummyFacet;
+
+    beforeEach("setup", async () => {
+      dummyFacet = await DummyFacet.new();
+    });
+
+    it("should return empty data", async () => {
+      assert.deepEqual(await diamond.getFacets(), []);
+      assert.deepEqual(await diamond.getFacetSelectors(dummyFacet.address), []);
+      assert.equal(await diamond.getFacetBySelector("0x11223344"), ZERO);
+    });
+
+    it("should add facet correctly", async () => {
+      let selectors = getSelectors(dummyFacet);
+
+      await diamond.addFacet(dummyFacet.address, selectors);
+
+      assert.deepEqual(await diamond.getFacets(), [dummyFacet.address]);
+      assert.deepEqual(await diamond.getFacetSelectors(dummyFacet.address), selectors);
+      assert.equal(await diamond.getFacetBySelector(selectors[0]), dummyFacet.address);
+    });
+
+    it("should not add non-contract as a facet", async () => {
+      await truffleAssert.reverts(diamond.addFacet(SECOND, []), "Diamond: facet is not a contract");
+    });
+
+    it("should not add facet when no selectors provided", async () => {
+      await diamond.addFacet(dummyFacet.address, []);
+
+      assert.deepEqual(await diamond.getFacets(), []);
+    });
+
+    it("only owner should add facets", async () => {
+      await truffleAssert.reverts(
+        diamond.addFacet(dummyFacet.address, [], { from: SECOND }),
+        "ODStorage: not an owner"
+      );
+    });
+
+    it("should not add duplicate selectors", async () => {
+      let selectors = getSelectors(dummyFacet);
+
+      await diamond.addFacet(dummyFacet.address, selectors);
+      await truffleAssert.reverts(diamond.addFacet(dummyFacet.address, selectors), "Diamond: selector already added");
+    });
+
+    it("should be able to call facets", async () => {
+      let selectors = getSelectors(dummyFacet);
+
+      await diamond.addFacet(dummyFacet.address, selectors);
+
+      const facet = await DummyFacet.at(diamond.address);
+
+      await facet.setDummyString("hello, diamond");
+
+      assert.equal(await facet.getDummyString(), "hello, diamond");
+      assert.equal(await dummyFacet.getDummyString(), "");
+    });
+
+    it("should remove selectors", async () => {
+      let selectors = getSelectors(dummyFacet);
+
+      await diamond.addFacet(dummyFacet.address, selectors);
+      await diamond.removeFacet(dummyFacet.address, selectors.slice(1));
+
+      assert.deepEqual(await diamond.getFacets(), [dummyFacet.address]);
+      assert.deepEqual(await diamond.getFacetSelectors(dummyFacet.address), [selectors[0]]);
+      assert.equal(await diamond.getFacetBySelector(selectors[0]), dummyFacet.address);
+      assert.equal(await diamond.getFacetBySelector(selectors[1]), ZERO);
+    });
+
+    it("should fully remove facets", async () => {
+      let selectors = getSelectors(dummyFacet);
+
+      await diamond.addFacet(dummyFacet.address, selectors);
+      await diamond.removeFacet(dummyFacet.address, selectors);
+
+      assert.deepEqual(await diamond.getFacets(), []);
+      assert.deepEqual(await diamond.getFacetSelectors(dummyFacet.address), []);
+      assert.equal(await diamond.getFacetBySelector(selectors[0]), ZERO);
+    });
+
+    it("should not remove selectors from another facet", async () => {
+      let selectors = getSelectors(dummyFacet);
+
+      await diamond.addFacet(dummyFacet.address, selectors);
+
+      await truffleAssert.reverts(
+        diamond.removeFacet(diamond.address, selectors),
+        "Diamond: selector from another facet"
+      );
+    });
+
+    it("only owner should remove facets", async () => {
+      let selectors = getSelectors(dummyFacet);
+
+      await diamond.addFacet(dummyFacet.address, selectors);
+
+      await truffleAssert.reverts(
+        diamond.removeFacet(dummyFacet.address, selectors, { from: SECOND }),
+        "ODStorage: not an owner"
+      );
+    });
+  });
+});

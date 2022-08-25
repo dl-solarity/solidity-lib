@@ -7,7 +7,7 @@ contract DiamondStorage {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    bytes32 constant DIAMOND_STORAGE_SLOT = keccak256("diamond.standard.diamond.storage");
+    bytes32 public constant DIAMOND_STORAGE_SLOT = keccak256("diamond.standard.diamond.storage");
 
     struct DStorage {
         mapping(bytes4 => address) selectorToFacet;
@@ -16,10 +16,10 @@ contract DiamondStorage {
     }
 
     function getDiamondStorage() internal pure returns (DStorage storage ds) {
-        bytes32 position = DIAMOND_STORAGE_SLOT;
+        bytes32 slot = DIAMOND_STORAGE_SLOT;
 
         assembly {
-            ds.slot := position
+            ds.slot := slot
         }
     }
 
