@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+/**
+ *  @notice The storage contract of Ownable Diamond preset
+ */
 contract OwnableDiamondStorage {
     bytes32 public constant OWNABLE_DIAMOND_STORAGE_SLOT =
         keccak256("diamond.standard.ownablediamond.storage");

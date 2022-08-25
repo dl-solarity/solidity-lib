@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 import "../../Diamond.sol";
 import "./OwnableDiamondStorage.sol";
 
+/**
+ *  @notice The Ownable preset of Diamond proxy
+ */
 contract OwnableDiamond is Diamond, OwnableDiamondStorage {
     constructor() {
         transferOwnership(msg.sender);
