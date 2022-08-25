@@ -25,4 +25,12 @@ contract OwnableDiamond is Diamond, OwnableDiamondStorage {
     function removeFacet(address facet, bytes4[] memory selectors) public onlyOwner {
         _removeFacet(facet, selectors);
     }
+
+    function updateFacet(
+        address facet,
+        bytes4[] memory fromSelectors,
+        bytes4[] memory toSelectors
+    ) public onlyOwner {
+        _updateFacet(facet, fromSelectors, toSelectors);
+    }
 }

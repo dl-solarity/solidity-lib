@@ -54,6 +54,7 @@ contract Diamond is DiamondStorage {
      */
     function _addFacet(address facet, bytes4[] memory selectors) internal {
         require(facet.isContract(), "Diamond: facet is not a contract");
+        require(selectors.length > 0, "Diamond: no selectors provided");
 
         DStorage storage ds = getDiamondStorage();
 
@@ -67,9 +68,7 @@ contract Diamond is DiamondStorage {
             ds.facetToSelectors[facet].add(bytes32(selectors[i]));
         }
 
-        if (ds.facetToSelectors[facet].length() > 0) {
-            ds.facets.add(facet);
-        }
+        ds.facets.add(facet);
     }
 
     /**
@@ -78,6 +77,8 @@ contract Diamond is DiamondStorage {
      *  @param selectors the selectors of that implementation to be removed
      */
     function _removeFacet(address facet, bytes4[] memory selectors) internal {
+        require(selectors.length > 0, "Diamond: no selectors provided");
+
         DStorage storage ds = getDiamondStorage();
 
         for (uint256 i = 0; i < selectors.length; i++) {
@@ -93,5 +94,20 @@ contract Diamond is DiamondStorage {
         if (ds.facetToSelectors[facet].length() == 0) {
             ds.facets.remove(facet);
         }
+    }
+
+    /**
+     *  @notice The internal function to update the facets of the diamond
+     *  @param facet the facet to update
+     *  @param fromSelectors the selectors to remove from the facet
+     *  @param toSelectors the selectors to add to the facet
+     */
+    function _updateFacet(
+        address facet,
+        bytes4[] memory fromSelectors,
+        bytes4[] memory toSelectors
+    ) internal {
+        _addFacet(facet, toSelectors);
+        _removeFacet(facet, fromSelectors);
     }
 }

@@ -76,9 +76,7 @@ describe("Diamond", () => {
     });
 
     it("should not add facet when no selectors provided", async () => {
-      await diamond.addFacet(dummyFacet.address, []);
-
-      assert.deepEqual(await diamond.getFacets(), []);
+      await truffleAssert.reverts(diamond.addFacet(dummyFacet.address, []), "Diamond: no selectors provided");
     });
 
     it("only owner should add facets", async () => {
@@ -120,6 +118,10 @@ describe("Diamond", () => {
       assert.equal(await diamond.getFacetBySelector(selectors[1]), ZERO);
     });
 
+    it("should not remove facet when no selectors provided", async () => {
+      await truffleAssert.reverts(diamond.removeFacet(dummyFacet.address, []), "Diamond: no selectors provided");
+    });
+
     it("should fully remove facets", async () => {
       let selectors = getSelectors(dummyFacet);
 
@@ -149,6 +151,24 @@ describe("Diamond", () => {
 
       await truffleAssert.reverts(
         diamond.removeFacet(dummyFacet.address, selectors, { from: SECOND }),
+        "ODStorage: not an owner"
+      );
+    });
+
+    it("should update facets", async () => {
+      let selectors = getSelectors(dummyFacet);
+
+      await diamond.addFacet(dummyFacet.address, [selectors[0]]);
+      await diamond.updateFacet(dummyFacet.address, [selectors[0]], [selectors[1]]);
+
+      assert.deepEqual(await diamond.getFacetSelectors(dummyFacet.address), [selectors[1]]);
+      assert.equal(await diamond.getFacetBySelector(selectors[0]), ZERO);
+      assert.equal(await diamond.getFacetBySelector(selectors[1]), dummyFacet.address);
+    });
+
+    it("only owner should update facets", async () => {
+      await truffleAssert.reverts(
+        diamond.updateFacet(dummyFacet.address, [], [], { from: SECOND }),
         "ODStorage: not an owner"
       );
     });
