@@ -27,6 +27,8 @@ contract Diamond is DiamondStorage {
     fallback() external payable {
         address facet = getFacetBySelector(msg.sig);
 
+        require(facet != address(0), "Diamond: selector is not registered");
+
         assembly {
             calldatacopy(0, 0, calldatasize())
             let result := delegatecall(gas(), facet, 0, calldatasize(), 0, 0)

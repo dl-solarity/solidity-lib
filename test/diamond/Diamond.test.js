@@ -106,6 +106,12 @@ describe("Diamond", () => {
       assert.equal(await dummyFacet.getDummyString(), "");
     });
 
+    it("should not call facet if selector is not added", async () => {
+      const facet = await DummyFacet.at(diamond.address);
+
+      await truffleAssert.reverts(facet.getDummyString(), "Diamond: selector is not registered");
+    });
+
     it("should remove selectors", async () => {
       let selectors = getSelectors(dummyFacet);
 
