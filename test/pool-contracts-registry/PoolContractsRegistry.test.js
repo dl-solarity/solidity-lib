@@ -152,6 +152,11 @@ describe("PoolContractsRegistry", () => {
 
       assert.equal(await poolContractsRegistry.getProxyBeacon(NAME_1), beacon);
       assert.equal(await poolContractsRegistry.getImplementation(NAME_1), poolUpgrade.address);
+
+      await poolContractsRegistry.setNewImplementations([NAME_1], [poolUpgrade.address]);
+
+      assert.equal(await poolContractsRegistry.getProxyBeacon(NAME_1), beacon);
+      assert.equal(await poolContractsRegistry.getImplementation(NAME_1), poolUpgrade.address);
     });
   });
 });
