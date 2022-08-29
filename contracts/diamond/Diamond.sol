@@ -15,6 +15,8 @@ import "./DiamondStorage.sol";
  *
  *  As a convention, view and pure function should be defined in the storage contract while function that modify state, in
  *  the facet itself.
+ *
+ *  If you wish to add a receive() function, you can attach a "0x00000000" selector to a facet that has such function.
  */
 contract Diamond is DiamondStorage {
     using Address for address;
@@ -43,11 +45,6 @@ contract Diamond is DiamondStorage {
             }
         }
     }
-
-    /**
-     *  @notice The function to receive ether with no data
-     */
-    receive() external payable {}
 
     /**
      *  @notice The internal function to add facets to a diamond (aka diamondCut())

@@ -21,13 +21,16 @@ contract OwnableDiamondStorage {
     }
 
     modifier onlyOwner() {
-        address owner = getOwner();
+        address diamondOwner = owner();
 
-        require(owner == address(0) || owner == msg.sender, "ODStorage: not an owner");
+        require(
+            diamondOwner == address(0) || diamondOwner == msg.sender,
+            "ODStorage: not an owner"
+        );
         _;
     }
 
-    function getOwner() public view returns (address) {
+    function owner() public view returns (address) {
         return getOwnableDiamondStorage().owner;
     }
 }

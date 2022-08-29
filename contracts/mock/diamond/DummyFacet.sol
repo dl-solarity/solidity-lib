@@ -7,4 +7,6 @@ contract DummyFacet is DummyStorage {
     function setDummyString(string calldata dummyString) external {
         getDummyFacetStorage().dummyString = dummyString;
     }
+
+    receive() external payable {}
 }
