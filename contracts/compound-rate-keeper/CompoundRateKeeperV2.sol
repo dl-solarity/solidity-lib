@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.4;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
@@ -63,7 +63,7 @@ contract CompoundRateKeeperV2 is ICompoundRateKeeperV2, Ownable {
 
     /// @dev Calculate compound rate for this moment.
     function getCompoundRate() public view override returns (uint256) {
-        return _getPotentialCompoundRate(uint64(block.timestamp));
+        return getPotentialCompoundRate(uint64(block.timestamp));
     }
 
     /**
@@ -73,19 +73,15 @@ contract CompoundRateKeeperV2 is ICompoundRateKeeperV2, Ownable {
      * If rate bigger than _getMaxRate(), return _getMaxRate().
      * If function is reverted by overflow, call emergencyUpdateCompoundRate().
      */
-    function getPotentialCompoundRate(uint64 timestamp_) public view override returns (uint256) {
-        return _getPotentialCompoundRate(timestamp_);
-    }
-
-    function _getPotentialCompoundRate(uint64 timestamp_) private view returns (uint256) {
+    function getPotentialCompoundRate(uint64 timestamp_) public view returns (uint256) {
         if (hasMaxRateReached) return _getMaxRate();
 
         uint64 lastUpdate_ = lastUpdate;
 
-        // Require is made to avoid incorrect calculations at the front
-        require(lastUpdate_ <= timestamp_, "CRK: invalid timestamp");
+        if (lastUpdate_ == timestamp_) return currentRate;
 
-        if (timestamp_ == lastUpdate_) return currentRate;
+        // Require is made to avoid incorrect calculations at the front
+        require(lastUpdate_ < timestamp_, "CRK: invalid timestamp");
 
         uint64 secondsPassed_ = timestamp_ - lastUpdate_;
 
@@ -97,11 +93,11 @@ contract CompoundRateKeeperV2 is ICompoundRateKeeperV2, Ownable {
         uint256 rate_ = currentRate;
 
         if (capitalizationPeriodsNum_ != 0) {
-            uint256 capitalizationPeriod_Rate = annualPercent_.rpow(
+            uint256 capitalizationPeriodRate_ = annualPercent_.rpow(
                 capitalizationPeriodsNum_,
                 _getDecimals()
             );
-            rate_ = (rate_ * capitalizationPeriod_Rate) / _getDecimals();
+            rate_ = (rate_ * capitalizationPeriodRate_) / _getDecimals();
         }
 
         if (secondsLeft_ > 0) {
