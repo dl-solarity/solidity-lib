@@ -1,4 +1,4 @@
 module.exports = {
-  skipFiles: ["interfaces/", "mock/tokens/"],
+  skipFiles: ["interfaces/", "mock/"],
   configureYulOptimizer: true,
 };

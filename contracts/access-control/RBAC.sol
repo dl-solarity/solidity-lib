@@ -7,7 +7,7 @@ import "../libs/data-structures/StringSet.sol";
 import "../libs/arrays/ArrayHelper.sol";
 import "../libs/arrays/SetHelper.sol";
 
-contract RBAC is Initializable {
+abstract contract RBAC is Initializable {
     using StringSet for StringSet.Set;
     using ArrayHelper for string;
     using SetHelper for StringSet.Set;
@@ -25,7 +25,7 @@ contract RBAC is Initializable {
     modifier onlyPermission(string memory permission) {
         require(
             hasPermission(msg.sender, permission),
-            string.concat("RBAC: no ", permission, " permission")
+            string(abi.encodePacked("RBAC: no ", permission, " permission"))
         );
         _;
     }
