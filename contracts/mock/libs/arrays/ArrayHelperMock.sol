@@ -14,6 +14,10 @@ contract ArrayHelperMock {
         return arr.reverse();
     }
 
+    function reverseString(string[] memory arr) external pure returns (string[] memory) {
+        return arr.reverse();
+    }
+
     function insertUint(
         uint256[] memory to,
         uint256 index,
@@ -30,11 +34,23 @@ contract ArrayHelperMock {
         return (to.insert(index, what), to);
     }
 
+    function insertString(
+        string[] memory to,
+        uint256 index,
+        string[] memory what
+    ) external pure returns (uint256, string[] memory) {
+        return (to.insert(index, what), to);
+    }
+
     function asArrayUint(uint256 elem) external pure returns (uint256[] memory array) {
         return elem.asArray();
     }
 
     function asArrayAddress(address elem) external pure returns (address[] memory array) {
+        return elem.asArray();
+    }
+
+    function asArrayString(string memory elem) external pure returns (string[] memory array) {
         return elem.asArray();
     }
 }

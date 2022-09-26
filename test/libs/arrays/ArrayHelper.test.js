@@ -42,11 +42,23 @@ describe("ArrayHelperMock", () => {
       assert.equal(arr[2], FIRST);
     });
 
+    it("should reverse string array", async () => {
+      const arr = await mock.reverseString(["1", "2", "3"]);
+
+      assert.equal(arr.length, 3);
+      assert.equal(arr[0], "3");
+      assert.equal(arr[1], "2");
+      assert.equal(arr[2], "1");
+    });
+
     it("should reverse empty array", async () => {
       let arr = await mock.reverseUint([]);
       assert.equal(arr.length, 0);
 
       arr = await mock.reverseAddress([]);
+      assert.equal(arr.length, 0);
+
+      arr = await mock.reverseString([]);
       assert.equal(arr.length, 0);
     });
   });
@@ -77,9 +89,21 @@ describe("ArrayHelperMock", () => {
       assert.deepEqual(res[1], [FIRST, THIRD]);
     });
 
+    it("should insert string array", async () => {
+      const base = ["1", "2"];
+      const index = 1;
+      const what = ["3"];
+
+      const res = await mock.insertString(base, index, what);
+
+      assert.equal(res[0].toFixed(), 2);
+      assert.deepEqual(res[1], ["1", "3"]);
+    });
+
     it("should revert in case of out of bound insertion", async () => {
       await truffleAssert.reverts(mock.insertUint([1], 1, [2]));
       await truffleAssert.reverts(mock.insertAddress([], 0, [FIRST]));
+      await truffleAssert.reverts(mock.insertString(["1", "2"], 2, ["1"]));
     });
   });
 
@@ -90,6 +114,7 @@ describe("ArrayHelperMock", () => {
         ["123"]
       );
       assert.deepEqual(await mock.asArrayAddress(FIRST), [FIRST]);
+      assert.deepEqual(await mock.asArrayString("1"), ["1"]);
     });
   });
 });
