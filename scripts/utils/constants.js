@@ -1,4 +1,4 @@
-const { toBN } = require("../../scripts/helpers/utils");
+const { toBN } = require("./utils");
 
 const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
 const ETHER_ADDR = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
