@@ -3,13 +3,16 @@ class Verifier {
     hre.config.contractSizer.runOnCompile = false;
 
     for (let i = 0; i < contractsWithArgs.length; i++) {
-      const contractAddr = contractsWithArgs[i][0].address;
+      const contract = contractsWithArgs[i][0];
+      const fileName = contract.constructor._hArtifact.sourceName;
+      const contractName = contract.constructor._hArtifact.contractName;
       const args = contractsWithArgs[i].slice(1);
 
       try {
         await hre.run("verify:verify", {
-          address: contractAddr,
+          address: contract.address,
           constructorArguments: args,
+          contract: fileName + ":" + contractName,
         });
 
         await hre.run("compile", {
