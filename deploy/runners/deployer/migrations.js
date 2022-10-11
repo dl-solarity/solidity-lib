@@ -30,24 +30,40 @@ class Migrations {
     return process.env.VERIFY == "true";
   }
 
+  confirmations() {
+    return process.env.CONFIRMATIONS;
+  }
+
+  getParams() {
+    const verify = this.isVerify();
+    let confirmations = 0;
+
+    if (verify) {
+      console.log("\nAUTO VERIFICATION IS ON");
+
+      confirmations = 5;
+    }
+
+    if (this.confirmations() != undefined) {
+      confirmations = this.confirmations();
+    }
+
+    return [verify, confirmations];
+  }
+
   async migrate() {
     try {
       const migrationFiles = this.getMigrationFiles();
-      const verify = this.isVerify();
       const deployer = new Deployer();
 
-      if (verify) {
-        console.log("\nAUTO VERIFICATION IS ON");
-      }
-
-      await deployer.startMigration(verify);
+      await deployer.startMigration(...this.getParams());
 
       console.log(migrationFiles);
 
       for (let i = 0; i < migrationFiles.length; i++) {
-        const func = require("../../migrations/" + migrationFiles[i]);
+        const migration = require("../../migrations/" + migrationFiles[i]);
 
-        await func(deployer);
+        await migration(deployer);
       }
 
       await deployer.finishMigration();
