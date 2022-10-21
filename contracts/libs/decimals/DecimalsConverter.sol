@@ -53,7 +53,7 @@ library DecimalsConverter {
         pure
         returns (uint256 resultAmount)
     {
-        return safeConversion(amount, baseDecimals, to18);
+        return convertSafe(amount, baseDecimals, to18);
     }
 
     function from18(uint256 amount, uint256 destDecimals) internal pure returns (uint256) {
@@ -61,7 +61,7 @@ library DecimalsConverter {
     }
 
     function from18Safe(uint256 amount, uint256 destDecimals) internal pure returns (uint256) {
-        return safeConversion(amount, destDecimals, from18);
+        return convertSafe(amount, destDecimals, from18);
     }
 
     function round18(uint256 amount, uint256 decimals) internal pure returns (uint256) {
@@ -69,10 +69,10 @@ library DecimalsConverter {
     }
 
     function round18Safe(uint256 amount, uint256 decimals) internal pure returns (uint256) {
-        return safeConversion(amount, decimals, round18);
+        return convertSafe(amount, decimals, round18);
     }
 
-    function safeConversion(
+    function convertSafe(
         uint256 amount,
         uint256 decimals,
         function(uint256, uint256) internal pure returns (uint256) convertFunc

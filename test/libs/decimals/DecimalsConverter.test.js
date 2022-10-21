@@ -32,8 +32,8 @@ describe("DecimalsConverter", () => {
 
   describe("to18Safe", () => {
     it("should correctly convert to 18", async () => {
-      assert.equal((await mock.to18(wei("1", 6), 6)).toFixed(), wei("1"));
-      assert.equal((await mock.to18(wei("1", 8), 8)).toFixed(), wei("1"));
+      assert.equal((await mock.to18Safe(wei("1", 6), 6)).toFixed(), wei("1"));
+      assert.equal((await mock.to18Safe(wei("1", 8), 8)).toFixed(), wei("1"));
     });
 
     it("should get exception if the result of conversion is zero", async () => {
