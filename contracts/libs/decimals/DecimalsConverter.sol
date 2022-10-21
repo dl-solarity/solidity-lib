@@ -48,11 +48,37 @@ library DecimalsConverter {
         return convert(amount, baseDecimals, 18);
     }
 
+    function to18Safe(uint256 amount, uint256 baseDecimals)
+        internal
+        pure
+        returns (uint256 resultAmount)
+    {
+        return safeConversion(amount, baseDecimals, to18);
+    }
+
     function from18(uint256 amount, uint256 destDecimals) internal pure returns (uint256) {
         return convert(amount, 18, destDecimals);
     }
 
+    function from18Safe(uint256 amount, uint256 destDecimals) internal pure returns (uint256) {
+        return safeConversion(amount, destDecimals, from18);
+    }
+
     function round18(uint256 amount, uint256 decimals) internal pure returns (uint256) {
         return to18(from18(amount, decimals), decimals);
+    }
+
+    function round18Safe(uint256 amount, uint256 decimals) internal pure returns (uint256) {
+        return safeConversion(amount, decimals, round18);
+    }
+
+    function safeConversion(
+        uint256 amount,
+        uint256 decimals,
+        function(uint256, uint256) internal pure returns (uint256) convertFunc
+    ) internal pure returns (uint256 conversionResult) {
+        conversionResult = convertFunc(amount, decimals);
+
+        require(conversionResult > 0, "DecimalsConverter: Incorrect amount after conversion");
     }
 }
