@@ -1,5 +1,6 @@
 const { assert } = require("chai");
 const { toBN, wei } = require("../../../scripts/helpers/utils");
+const truffleAssert = require("truffle-assertions");
 
 const DecimalsConverterMock = artifacts.require("DecimalsConverterMock");
 
@@ -29,6 +30,19 @@ describe("DecimalsConverter", () => {
     });
   });
 
+  describe("to18Safe", () => {
+    it("should correctly convert to 18", async () => {
+      assert.equal((await mock.to18Safe(wei("1", 6), 6)).toFixed(), wei("1"));
+      assert.equal((await mock.to18Safe(wei("1", 8), 8)).toFixed(), wei("1"));
+    });
+
+    it("should get exception if the result of conversion is zero", async () => {
+      const reason = "DecimalsConverter: Incorrect amount after conversion";
+
+      await truffleAssert.reverts(mock.to18Safe(wei("1", 11), 30), reason);
+    });
+  });
+
   describe("from18", () => {
     it("should convert from 18", async () => {
       assert.equal((await mock.from18(wei("1"), 6)).toFixed(), wei("1", 6));
@@ -36,6 +50,19 @@ describe("DecimalsConverter", () => {
       assert.equal((await mock.from18(wei("1", 16), 8)).toFixed(), wei("1", 6));
       assert.equal((await mock.from18(wei("1", 5), 8)).toFixed(), "0");
       assert.equal((await mock.from18(wei("1"), 30)).toFixed(), wei("1", 30));
+    });
+  });
+
+  describe("from18Safe", () => {
+    it("should correctly convert to 18", async () => {
+      assert.equal((await mock.from18Safe(wei("1"), 6)).toFixed(), wei("1", 6));
+      assert.equal((await mock.from18Safe(wei("1"), 8)).toFixed(), wei("1", 8));
+    });
+
+    it("should get exception if the result of conversion is zero", async () => {
+      const reason = "DecimalsConverter: Incorrect amount after conversion";
+
+      await truffleAssert.reverts(mock.from18Safe(wei("1", 6), 6), reason);
     });
   });
 
@@ -51,6 +78,14 @@ describe("DecimalsConverter", () => {
 
       assert.equal((await mock.round18(badNum1, 4)).toFixed(), wei("1"));
       assert.equal((await mock.round18(badNum2, 12)).toFixed(), toBN(wei("1")).plus(wei("1", 7)).toFixed());
+    });
+  });
+
+  describe("round18Safe", () => {
+    it("should get exception if the result of conversion is zero", async () => {
+      const reason = "DecimalsConverter: Incorrect amount after conversion";
+
+      await truffleAssert.reverts(mock.round18Safe(wei("1", 6), 6), reason);
     });
   });
 });
