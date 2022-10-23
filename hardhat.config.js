@@ -1,12 +1,19 @@
 require("@nomiclabs/hardhat-web3");
 require("@nomiclabs/hardhat-truffle5");
 require("@nomiclabs/hardhat-etherscan");
+require("@typechain/hardhat");
 require("hardhat-contract-sizer");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
 
 const dotenv = require("dotenv");
 dotenv.config();
+
+function typechainTarget() {
+  const target = process.env.TYPECHAIN_TARGET;
+
+  return target == "" || target == undefined ? "ethers-v5" : target;
+}
 
 module.exports = {
   networks: {
@@ -48,5 +55,11 @@ module.exports = {
     gasPrice: 50,
     enabled: false,
     coinmarketcap: `${process.env.COINMARKETCAP_KEY}`,
+  },
+  typechain: {
+    outDir: `generated-types/${typechainTarget().split("-")[0]}`,
+    target: typechainTarget(),
+    alwaysGenerateOverloads: true,
+    discriminateTypes: true,
   },
 };
