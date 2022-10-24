@@ -9,6 +9,10 @@ require("solidity-coverage");
 const dotenv = require("dotenv");
 dotenv.config();
 
+function privateKey() {
+  return process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [];
+}
+
 function typechainTarget() {
   const target = process.env.TYPECHAIN_TARGET;
 
