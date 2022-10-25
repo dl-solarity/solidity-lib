@@ -41,6 +41,9 @@ abstract contract AbstractContractsRegistry is Initializable {
     mapping(string => address) private _contracts;
     mapping(address => bool) private _isProxy;
 
+    event AddedContract(string name, address contractAddress, bool isProxy);
+    event RemovedContract(string name);
+
     /**
      *  @notice The proxy initializer function
      */
@@ -147,6 +150,8 @@ abstract contract AbstractContractsRegistry is Initializable {
         require(contractAddress != address(0), "ContractsRegistry: Null address is forbidden");
 
         _contracts[name] = contractAddress;
+
+        emit AddedContract(name, contractAddress, false);
     }
 
     /**
@@ -164,6 +169,8 @@ abstract contract AbstractContractsRegistry is Initializable {
 
         _contracts[name] = proxyAddr;
         _isProxy[proxyAddr] = true;
+
+        emit AddedContract(name, proxyAddr, true);
     }
 
     /**
@@ -178,6 +185,8 @@ abstract contract AbstractContractsRegistry is Initializable {
 
         _contracts[name] = contractAddress;
         _isProxy[contractAddress] = true;
+
+        emit AddedContract(name, contractAddress, true);
     }
 
     /**
@@ -189,5 +198,7 @@ abstract contract AbstractContractsRegistry is Initializable {
 
         delete _isProxy[_contracts[name]];
         delete _contracts[name];
+
+        emit RemovedContract(name);
     }
 }
