@@ -46,6 +46,17 @@ abstract contract RBAC is IRBAC, Initializable {
 
     mapping(address => StringSet.Set) private _userRoles;
 
+    event AddedRole(address to, string[] rolesToGrant);
+    event RemovedRole(address from, string[] rolesToRevoke);
+
+    event AddedPermission(string role, string permission, string[] permissionsToAdd, bool allowed);
+    event RemovedPermission(
+        string role,
+        string permission,
+        string[] permissionsToRemove,
+        bool allowed
+    );
+
     modifier onlyPermission(string memory resource, string memory permission) {
         require(
             hasPermission(msg.sender, resource, permission),
@@ -227,6 +238,8 @@ abstract contract RBAC is IRBAC, Initializable {
      */
     function _grantRoles(address to, string[] memory rolesToGrant) internal {
         _userRoles[to].add(rolesToGrant);
+
+        emit AddedRole(to, rolesToGrant);
     }
 
     /**
@@ -236,6 +249,8 @@ abstract contract RBAC is IRBAC, Initializable {
      */
     function _revokeRoles(address from, string[] memory rolesToRevoke) internal {
         _userRoles[from].remove(rolesToRevoke);
+
+        emit RemovedRole(from, rolesToRevoke);
     }
 
     /**
@@ -261,6 +276,8 @@ abstract contract RBAC is IRBAC, Initializable {
 
         permissions.add(permissionsToAdd);
         resources.add(resourceToAdd);
+
+        emit AddedPermission(role, resourceToAdd, permissionsToAdd, allowed);
     }
 
     /**
@@ -289,5 +306,7 @@ abstract contract RBAC is IRBAC, Initializable {
         if (permissions.length() == 0) {
             resources.remove(resourceToRemove);
         }
+
+        emit RemovedPermission(role, resourceToRemove, permissionsToRemove, allowed);
     }
 }
