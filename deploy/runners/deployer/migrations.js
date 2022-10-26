@@ -1,27 +1,18 @@
 const fs = require("fs");
 const path = require("path");
-const Deployer = require("./deployer");
+const Deployer = require("../deployer/deployer");
 
 class Migrations {
   getMigrationFiles() {
     const migrationsDir = "./deploy/migrations/";
+    const directoryContents = fs.readdirSync(migrationsDir);
 
-    const directoryContents = fs.readdirSync(`${migrationsDir}`);
     let files = directoryContents
       .filter((file) => !isNaN(parseInt(path.basename(file))))
-      .filter((file) => fs.statSync(migrationsDir + file).isFile());
-
-    if (files.length === 0) return [];
-
-    files = files.sort((a, b) => {
-      if (a.number > b.number) {
-        return 1;
-      } else if (a.number < b.number) {
-        return -1;
-      }
-
-      return 0;
-    });
+      .filter((file) => fs.statSync(migrationsDir + file).isFile())
+      .sort((a, b) => {
+        return parseInt(path.basename(a)) - parseInt(path.basename(b));
+      });
 
     return files;
   }
