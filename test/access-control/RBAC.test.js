@@ -167,7 +167,7 @@ describe("RBAC", () => {
       });
 
       it("should add roles with proper permission", async () => {
-        await rbac.addPermissionsToRole("RBAC_MASTER", [{ resource: "RBAC", permissions: ["CREATE"] }], true);
+        await rbac.addPermissionsToRole("RBAC_MASTER", [{ resource: "RBAC_RESOURCE", permissions: ["CREATE"] }], true);
         await rbac.grantRoles(SECOND, ["RBAC_MASTER"]);
 
         await truffleAssert.passes(rbac.grantRoles(OWNER, ["RBAC_MASTER"], { from: SECOND }), "pass");

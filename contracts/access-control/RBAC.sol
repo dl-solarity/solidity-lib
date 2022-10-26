@@ -36,7 +36,7 @@ abstract contract RBAC is IRBAC, Initializable {
     string public constant UPDATE_PERMISSION = "UPDATE";
     string public constant DELETE_PERMISSION = "DELETE";
 
-    string public constant RBAC_RESOURCE = "RBAC";
+    string public constant RBAC_RESOURCE = "RBAC_RESOURCE";
 
     mapping(string => mapping(string => StringSet.Set)) private _roleAllowedPermissions;
     mapping(string => mapping(string => StringSet.Set)) private _roleDisallowedPermissions;
@@ -45,6 +45,17 @@ abstract contract RBAC is IRBAC, Initializable {
     mapping(string => StringSet.Set) private _roleDisallowedResources;
 
     mapping(address => StringSet.Set) private _userRoles;
+
+    event GrantedRoles(address to, string[] rolesToGrant);
+    event RevokedRoles(address from, string[] rolesToRevoke);
+
+    event AddedPermissions(string role, string resource, string[] permissionsToAdd, bool allowed);
+    event RemovedPermissions(
+        string role,
+        string resource,
+        string[] permissionsToRemove,
+        bool allowed
+    );
 
     modifier onlyPermission(string memory resource, string memory permission) {
         require(
@@ -227,6 +238,8 @@ abstract contract RBAC is IRBAC, Initializable {
      */
     function _grantRoles(address to, string[] memory rolesToGrant) internal {
         _userRoles[to].add(rolesToGrant);
+
+        emit GrantedRoles(to, rolesToGrant);
     }
 
     /**
@@ -236,6 +249,8 @@ abstract contract RBAC is IRBAC, Initializable {
      */
     function _revokeRoles(address from, string[] memory rolesToRevoke) internal {
         _userRoles[from].remove(rolesToRevoke);
+
+        emit RevokedRoles(from, rolesToRevoke);
     }
 
     /**
@@ -261,6 +276,8 @@ abstract contract RBAC is IRBAC, Initializable {
 
         permissions.add(permissionsToAdd);
         resources.add(resourceToAdd);
+
+        emit AddedPermissions(role, resourceToAdd, permissionsToAdd, allowed);
     }
 
     /**
@@ -289,5 +306,7 @@ abstract contract RBAC is IRBAC, Initializable {
         if (permissions.length() == 0) {
             resources.remove(resourceToRemove);
         }
+
+        emit RemovedPermissions(role, resourceToRemove, permissionsToRemove, allowed);
     }
 }
