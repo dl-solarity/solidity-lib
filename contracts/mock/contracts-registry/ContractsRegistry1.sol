@@ -7,6 +7,10 @@ contract ContractsRegistry1 is OwnableContractsRegistry {
     string public constant CRDEPENDANT_NAME = "CRDEPENDANT";
     string public constant TOKEN_NAME = "TOKEN";
 
+    function mockInit() external {
+        __ContractsRegistry_init();
+    }
+
     function getCRDependantContract() external view returns (address) {
         return getContract(CRDEPENDANT_NAME);
     }

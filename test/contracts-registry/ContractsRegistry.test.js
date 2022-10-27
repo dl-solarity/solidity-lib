@@ -15,17 +15,66 @@ ERC20Mock.numberFormat = "BigNumber";
 describe("ContractsRegistry", () => {
   let ZERO = "0x0000000000000000000000000000000000000000";
   let OWNER;
+  let SECOND;
 
   let contractsRegistry;
 
   before("setup", async () => {
     OWNER = await accounts(0);
+    SECOND = await accounts(1);
   });
 
   beforeEach("setup", async () => {
     contractsRegistry = await ContractsRegistry.new();
 
     await contractsRegistry.__OwnableContractsRegistry_init();
+  });
+
+  describe("access", () => {
+    it("should not initialize twice", async () => {
+      await truffleAssert.reverts(contractsRegistry.mockInit(), "Initializable: contract is not initializing");
+      await truffleAssert.reverts(
+        contractsRegistry.__OwnableContractsRegistry_init(),
+        "Initializable: contract is already initialized"
+      );
+    });
+
+    it("only owner should call these functions", async () => {
+      await truffleAssert.reverts(
+        contractsRegistry.injectDependencies("", { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+
+      await truffleAssert.reverts(
+        contractsRegistry.upgradeContract("", ZERO, { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+
+      await truffleAssert.reverts(
+        contractsRegistry.upgradeContractAndCall("", ZERO, "0x", { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+
+      await truffleAssert.reverts(
+        contractsRegistry.addContract("", ZERO, { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+
+      await truffleAssert.reverts(
+        contractsRegistry.addProxyContract("", ZERO, { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+
+      await truffleAssert.reverts(
+        contractsRegistry.justAddProxyContract("", ZERO, { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+
+      await truffleAssert.reverts(
+        contractsRegistry.removeContract("", { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+    });
   });
 
   describe("contract management", async () => {

@@ -23,6 +23,12 @@ describe("RBAC", () => {
     await rbac.__RBACMock_init();
   });
 
+  describe("access", () => {
+    it("should not initialize twice", async () => {
+      await truffleAssert.reverts(rbac.mockInit(), "Initializable: contract is not initializing");
+    });
+  });
+
   describe("role permissions", () => {
     it("should add allowed permissions to role", async () => {
       let allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
@@ -294,6 +300,24 @@ describe("RBAC", () => {
     it("should work correctly", async () => {
       await rbac.addPermissionsToRole("ROLE1", [{ resource: "*", permissions: ["permission"] }], true);
       await rbac.addPermissionsToRole("ROLE2", [{ resource: "resource", permissions: ["permission"] }], false);
+
+      await rbac.grantRoles(SECOND, ["ROLE1", "ROLE2"]);
+
+      assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission"));
+    });
+
+    it("should work correctly (2)", async () => {
+      await rbac.addPermissionsToRole("ROLE1", [{ resource: "*", permissions: ["*"] }], true);
+      await rbac.addPermissionsToRole("ROLE2", [{ resource: "resource", permissions: ["*"] }], false);
+
+      await rbac.grantRoles(SECOND, ["ROLE1", "ROLE2"]);
+
+      assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission"));
+    });
+
+    it("should work correctly (3)", async () => {
+      await rbac.addPermissionsToRole("ROLE1", [{ resource: "resource", permissions: ["*"] }], true);
+      await rbac.addPermissionsToRole("ROLE2", [{ resource: "*", permissions: ["*"] }], false);
 
       await rbac.grantRoles(SECOND, ["ROLE1", "ROLE2"]);
 

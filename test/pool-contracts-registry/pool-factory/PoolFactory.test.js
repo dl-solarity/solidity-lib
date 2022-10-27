@@ -60,6 +60,12 @@ describe("PoolFactory", () => {
     NAME_2 = await poolContractsRegistry.POOL_2_NAME();
   });
 
+  describe("access", () => {
+    it("should not set dependencies from non dependant", async () => {
+      await truffleAssert.reverts(poolFactory.setDependencies(OWNER), "Dependant: Not an injector");
+    });
+  });
+
   describe("deploy()", () => {
     let poolImpl;
 

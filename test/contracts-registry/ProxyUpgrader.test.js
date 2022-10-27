@@ -29,7 +29,16 @@ describe("ProxyUpgrader", () => {
     proxy = await Proxy.new(token.address, proxyUpgrader.address, []);
   });
 
-  describe("functions", () => {
+  describe("upgrade", () => {
+    it("only owner should upgrade", async () => {
+      await truffleAssert.reverts(
+        proxyUpgrader.upgrade(proxy.address, proxy.address, "0x", { from: SECOND }),
+        "ProxyUpgrader: Not an owner"
+      );
+    });
+  });
+
+  describe("getImplementation", () => {
     it("should get implementation", async () => {
       assert.equal(await proxyUpgrader.getImplementation(proxy.address), token.address);
     });
