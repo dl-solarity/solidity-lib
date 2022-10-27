@@ -1,6 +1,5 @@
 require("@nomiclabs/hardhat-web3");
 require("@nomiclabs/hardhat-truffle5");
-require("@nomiclabs/hardhat-etherscan");
 require("@typechain/hardhat");
 require("hardhat-contract-sizer");
 require("hardhat-gas-reporter");
@@ -8,10 +7,6 @@ require("solidity-coverage");
 
 const dotenv = require("dotenv");
 dotenv.config();
-
-function privateKey() {
-  return process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [];
-}
 
 function typechainTarget() {
   const target = process.env.TYPECHAIN_TARGET;

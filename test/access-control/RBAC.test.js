@@ -1,5 +1,5 @@
 const { assert } = require("chai");
-const { accounts } = require("../../scripts/helpers/utils");
+const { accounts } = require("../../scripts/utils/utils");
 const truffleAssert = require("truffle-assertions");
 
 const RBACMock = artifacts.require("RBACMock");

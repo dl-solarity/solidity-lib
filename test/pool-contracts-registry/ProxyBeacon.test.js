@@ -1,5 +1,6 @@
 const { assert } = require("chai");
-const { accounts } = require("../../scripts/helpers/utils");
+const { accounts } = require("../../scripts/utils/utils");
+const { ZERO_ADDR } = require("../../scripts/utils/constants");
 const truffleAssert = require("truffle-assertions");
 
 const ProxyBeacon = artifacts.require("ProxyBeacon");
@@ -9,7 +10,6 @@ ProxyBeacon.numberFormat = "BigNumber";
 ERC20Mock.numberFormat = "BigNumber";
 
 describe("ProxyUpgrader", () => {
-  let ZERO = "0x0000000000000000000000000000000000000000";
   let OWNER;
   let SECOND;
 
@@ -28,7 +28,7 @@ describe("ProxyUpgrader", () => {
 
   describe("functions", () => {
     it("should upgrade", async () => {
-      assert.equal(await proxyBeacon.implementation(), ZERO);
+      assert.equal(await proxyBeacon.implementation(), ZERO_ADDR);
 
       await proxyBeacon.upgrade(token.address);
 

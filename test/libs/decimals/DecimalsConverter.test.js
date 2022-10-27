@@ -1,5 +1,5 @@
 const { assert } = require("chai");
-const { toBN, wei } = require("../../../scripts/helpers/utils");
+const { toBN, wei } = require("../../../scripts/utils/utils");
 const truffleAssert = require("truffle-assertions");
 
 const DecimalsConverterMock = artifacts.require("DecimalsConverterMock");

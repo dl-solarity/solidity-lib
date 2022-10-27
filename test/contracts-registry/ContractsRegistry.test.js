@@ -1,5 +1,6 @@
 const { assert } = require("chai");
-const { toBN, accounts } = require("../../scripts/helpers/utils");
+const { toBN, accounts } = require("../../scripts/utils/utils");
+const { ZERO_ADDR } = require("../../scripts/utils/constants");
 const truffleAssert = require("truffle-assertions");
 
 const ContractsRegistry = artifacts.require("ContractsRegistry1");
@@ -13,7 +14,6 @@ CRDependantUpgrade.numberFormat = "BigNumber";
 ERC20Mock.numberFormat = "BigNumber";
 
 describe("ContractsRegistry", () => {
-  let ZERO = "0x0000000000000000000000000000000000000000";
   let OWNER;
   let SECOND;
 
@@ -46,27 +46,27 @@ describe("ContractsRegistry", () => {
       );
 
       await truffleAssert.reverts(
-        contractsRegistry.upgradeContract("", ZERO, { from: SECOND }),
+        contractsRegistry.upgradeContract("", ZERO_ADDR, { from: SECOND }),
         "Ownable: caller is not the owner"
       );
 
       await truffleAssert.reverts(
-        contractsRegistry.upgradeContractAndCall("", ZERO, "0x", { from: SECOND }),
+        contractsRegistry.upgradeContractAndCall("", ZERO_ADDR, "0x", { from: SECOND }),
         "Ownable: caller is not the owner"
       );
 
       await truffleAssert.reverts(
-        contractsRegistry.addContract("", ZERO, { from: SECOND }),
+        contractsRegistry.addContract("", ZERO_ADDR, { from: SECOND }),
         "Ownable: caller is not the owner"
       );
 
       await truffleAssert.reverts(
-        contractsRegistry.addProxyContract("", ZERO, { from: SECOND }),
+        contractsRegistry.addProxyContract("", ZERO_ADDR, { from: SECOND }),
         "Ownable: caller is not the owner"
       );
 
       await truffleAssert.reverts(
-        contractsRegistry.justAddProxyContract("", ZERO, { from: SECOND }),
+        contractsRegistry.justAddProxyContract("", ZERO_ADDR, { from: SECOND }),
         "Ownable: caller is not the owner"
       );
 
@@ -78,19 +78,19 @@ describe("ContractsRegistry", () => {
   });
 
   describe("contract management", async () => {
-    it("should fail adding zero address", async () => {
+    it("should fail adding zero_ADDR address", async () => {
       await truffleAssert.reverts(
-        contractsRegistry.addContract(await contractsRegistry.CRDEPENDANT_NAME(), ZERO),
+        contractsRegistry.addContract(await contractsRegistry.CRDEPENDANT_NAME(), ZERO_ADDR),
         "ContractsRegistry: Null address is forbidden"
       );
 
       await truffleAssert.reverts(
-        contractsRegistry.addProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), ZERO),
+        contractsRegistry.addProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), ZERO_ADDR),
         "ContractsRegistry: Null address is forbidden"
       );
 
       await truffleAssert.reverts(
-        contractsRegistry.justAddProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), ZERO),
+        contractsRegistry.justAddProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), ZERO_ADDR),
         "ContractsRegistry: Null address is forbidden"
       );
     });
@@ -253,7 +253,7 @@ describe("ContractsRegistry", () => {
     });
 
     it("should inject dependencies", async () => {
-      assert.equal(await crd.token(), ZERO);
+      assert.equal(await crd.token(), ZERO_ADDR);
 
       await contractsRegistry.injectDependencies(await contractsRegistry.CRDEPENDANT_NAME());
 
