@@ -78,7 +78,7 @@ describe("ContractsRegistry", () => {
   });
 
   describe("contract management", async () => {
-    it("should fail adding zero_ADDR address", async () => {
+    it("should fail adding ZERO_ADDR address", async () => {
       await truffleAssert.reverts(
         contractsRegistry.addContract(await contractsRegistry.CRDEPENDANT_NAME(), ZERO_ADDR),
         "ContractsRegistry: Null address is forbidden"

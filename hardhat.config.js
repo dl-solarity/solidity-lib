@@ -14,6 +14,10 @@ function typechainTarget() {
   return target == "" || target == undefined ? "ethers-v5" : target;
 }
 
+function forceTypechain() {
+  return process.env.TYPECHAIN_FORCE == "true";
+}
+
 module.exports = {
   networks: {
     hardhat: {
@@ -60,6 +64,6 @@ module.exports = {
     target: typechainTarget(),
     alwaysGenerateOverloads: true,
     discriminateTypes: true,
-    dontOverrideCompile: true,
+    dontOverrideCompile: true & !forceTypechain(),
   },
 };

@@ -20,7 +20,7 @@
     "coverage": "npx hardhat coverage",
     "test": "npx hardhat test",
     "private-network": "npx hardhat node",
-    "generate-types": "npx hardhat typechain",
+    "generate-types": "TYPECHAIN_FORCE=true npx hardhat typechain",
     "lint-fix": "npm run lint-sol-fix && npm run lint-js-fix && npm run lint-json-fix",
     "lint-json-fix": "prettier --write \"./[a-zA-Z0-9.]+(?!-lock).json\"",
     "lint-js-fix": "prettier --write \"./**/*.js\"",
@@ -30,7 +30,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "4.5.0",
     "@openzeppelin/contracts-upgradeable": "4.5.0",
-    "hardhat": "^2.11.0",
+    "hardhat": "^2.12.0",
     "typechain": "^8.1.0"
   },
   "devDependencies": {
