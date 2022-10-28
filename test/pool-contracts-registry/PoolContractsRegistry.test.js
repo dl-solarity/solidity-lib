@@ -1,5 +1,6 @@
 const { assert } = require("chai");
-const { accounts } = require("../../scripts/helpers/utils");
+const { accounts } = require("../../scripts/utils/utils");
+const { ZERO_ADDR } = require("../../scripts/utils/constants");
 const truffleAssert = require("truffle-assertions");
 
 const PoolContractsRegistry = artifacts.require("PoolContractsRegistry");
@@ -15,8 +16,8 @@ PoolUpgrade.numberFormat = "BigNumber";
 ERC20Mock.numberFormat = "BigNumber";
 
 describe("PoolContractsRegistry", () => {
-  let ZERO = "0x0000000000000000000000000000000000000000";
   let OWNER;
+  let SECOND;
 
   let poolContractsRegistry;
   let contractsRegistry;
@@ -30,6 +31,7 @@ describe("PoolContractsRegistry", () => {
 
   before("setup", async () => {
     OWNER = await accounts(0);
+    SECOND = await accounts(1);
 
     POOL_1 = await accounts(3);
     POOL_2 = await accounts(4);
@@ -59,12 +61,39 @@ describe("PoolContractsRegistry", () => {
     NAME_2 = await poolContractsRegistry.POOL_2_NAME();
   });
 
+  describe("access", () => {
+    it("should not initialize twice", async () => {
+      await truffleAssert.reverts(
+        poolContractsRegistry.__OwnablePoolContractsRegistry_init(),
+        "Initializable: contract is already initialized"
+      );
+
+      await truffleAssert.reverts(poolContractsRegistry.mockInit(), "Initializable: contract is not initializing");
+    });
+
+    it("should not set dependencies from non dependant", async () => {
+      await truffleAssert.reverts(poolContractsRegistry.setDependencies(OWNER), "Dependant: Not an injector");
+    });
+
+    it("only owner should call these functions", async () => {
+      await truffleAssert.reverts(
+        poolContractsRegistry.setNewImplementations([], [], { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+
+      await truffleAssert.reverts(
+        poolContractsRegistry.injectDependenciesToExistingPools("", 0, 0, { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+    });
+  });
+
   describe("setNewImplementations()", () => {
     it("should successfully add and get implementation", async () => {
       await poolContractsRegistry.setNewImplementations([NAME_1], [token.address]);
 
       assert.equal(await poolContractsRegistry.getImplementation(NAME_1), token.address);
-      assert.notEqual(await poolContractsRegistry.getProxyBeacon(NAME_1), ZERO);
+      assert.notEqual(await poolContractsRegistry.getProxyBeacon(NAME_1), ZERO_ADDR);
     });
 
     it("should not get not existing implementation", async () => {
@@ -117,7 +146,7 @@ describe("PoolContractsRegistry", () => {
     it("should inject dependencies", async () => {
       await poolContractsRegistry.addProxyPool(NAME_1, pool.address);
 
-      assert.equal(await pool.token(), ZERO);
+      assert.equal(await pool.token(), ZERO_ADDR);
 
       await poolContractsRegistry.injectDependenciesToExistingPools(NAME_1, 0, 1);
 

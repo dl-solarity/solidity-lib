@@ -1,5 +1,6 @@
 const { assert } = require("chai");
-const { accounts, wei } = require("../../scripts/helpers/utils");
+const { accounts, wei } = require("../../scripts/utils/utils");
+const { ZERO_ADDR } = require("../../scripts/utils/constants");
 const truffleAssert = require("truffle-assertions");
 
 const OwnableDiamond = artifacts.require("OwnableDiamond");
@@ -13,7 +14,6 @@ function getSelectors(contract) {
 }
 
 describe("Diamond", () => {
-  let ZERO = "0x0000000000000000000000000000000000000000";
   let OWNER;
   let SECOND;
 
@@ -44,7 +44,7 @@ describe("Diamond", () => {
     });
 
     it("should not transfer ownership to zero address", async () => {
-      await truffleAssert.reverts(diamond.transferOwnership(ZERO), "OwnableDiamond: zero address owner");
+      await truffleAssert.reverts(diamond.transferOwnership(ZERO_ADDR), "OwnableDiamond: zero address owner");
     });
   });
 
@@ -59,7 +59,7 @@ describe("Diamond", () => {
       it("should return empty data", async () => {
         assert.deepEqual(await diamond.getFacets(), []);
         assert.deepEqual(await diamond.getFacetSelectors(dummyFacet.address), []);
-        assert.equal(await diamond.getFacetBySelector("0x11223344"), ZERO);
+        assert.equal(await diamond.getFacetBySelector("0x11223344"), ZERO_ADDR);
       });
     });
 
@@ -165,7 +165,7 @@ describe("Diamond", () => {
         assert.deepEqual(await diamond.getFacets(), [dummyFacet.address]);
         assert.deepEqual(await diamond.getFacetSelectors(dummyFacet.address), [selectors[0]]);
         assert.equal(await diamond.getFacetBySelector(selectors[0]), dummyFacet.address);
-        assert.equal(await diamond.getFacetBySelector(selectors[1]), ZERO);
+        assert.equal(await diamond.getFacetBySelector(selectors[1]), ZERO_ADDR);
       });
 
       it("should not remove facet when no selectors provided", async () => {
@@ -180,7 +180,7 @@ describe("Diamond", () => {
 
         assert.deepEqual(await diamond.getFacets(), []);
         assert.deepEqual(await diamond.getFacetSelectors(dummyFacet.address), []);
-        assert.equal(await diamond.getFacetBySelector(selectors[0]), ZERO);
+        assert.equal(await diamond.getFacetBySelector(selectors[0]), ZERO_ADDR);
       });
 
       it("should not remove selectors from another facet", async () => {
@@ -214,7 +214,7 @@ describe("Diamond", () => {
         await diamond.updateFacet(dummyFacet.address, [selectors[0]], [selectors[1]]);
 
         assert.deepEqual(await diamond.getFacetSelectors(dummyFacet.address), [selectors[1]]);
-        assert.equal(await diamond.getFacetBySelector(selectors[0]), ZERO);
+        assert.equal(await diamond.getFacetBySelector(selectors[0]), ZERO_ADDR);
         assert.equal(await diamond.getFacetBySelector(selectors[1]), dummyFacet.address);
       });
 

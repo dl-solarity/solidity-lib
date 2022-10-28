@@ -1,5 +1,5 @@
 const { assert } = require("chai");
-const { accounts } = require("../../scripts/helpers/utils");
+const { accounts } = require("../../scripts/utils/utils");
 const truffleAssert = require("truffle-assertions");
 
 const ProxyUpgrader = artifacts.require("ProxyUpgrader");
@@ -29,7 +29,16 @@ describe("ProxyUpgrader", () => {
     proxy = await Proxy.new(token.address, proxyUpgrader.address, []);
   });
 
-  describe("functions", () => {
+  describe("upgrade", () => {
+    it("only owner should upgrade", async () => {
+      await truffleAssert.reverts(
+        proxyUpgrader.upgrade(proxy.address, proxy.address, "0x", { from: SECOND }),
+        "ProxyUpgrader: Not an owner"
+      );
+    });
+  });
+
+  describe("getImplementation", () => {
     it("should get implementation", async () => {
       assert.equal(await proxyUpgrader.getImplementation(proxy.address), token.address);
     });

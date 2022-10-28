@@ -16,6 +16,10 @@ contract PoolContractsRegistry is OwnablePoolContractsRegistry {
         _;
     }
 
+    function mockInit() external {
+        __PoolContractsRegistry_init();
+    }
+
     function setDependencies(address contractsRegistry) public override {
         super.setDependencies(contractsRegistry);
 

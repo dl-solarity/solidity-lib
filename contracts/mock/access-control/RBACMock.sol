@@ -11,4 +11,8 @@ contract RBACMock is RBAC {
 
         _grantRoles(msg.sender, MASTER_ROLE.asArray());
     }
+
+    function mockInit() external {
+        __RBAC_init();
+    }
 }

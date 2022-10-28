@@ -10,3 +10,6 @@ coverage
 
 # IDE files
 .idea
+
+# Typechain generated files
+generated-types

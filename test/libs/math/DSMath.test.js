@@ -1,5 +1,5 @@
 const { assert } = require("chai");
-const { toBN } = require("../../../scripts/helpers/utils");
+const { toBN } = require("../../../scripts/utils/utils");
 
 const DSMath = artifacts.require("DSMathMock");
 

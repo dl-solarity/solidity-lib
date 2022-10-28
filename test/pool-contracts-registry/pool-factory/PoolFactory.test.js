@@ -1,5 +1,5 @@
 const { assert } = require("chai");
-const { toBN, accounts } = require("../../../scripts/helpers/utils");
+const { toBN, accounts } = require("../../../scripts/utils/utils");
 const truffleAssert = require("truffle-assertions");
 
 const PoolFactory = artifacts.require("PoolFactory");
@@ -58,6 +58,12 @@ describe("PoolFactory", () => {
 
     NAME_1 = await poolContractsRegistry.POOL_1_NAME();
     NAME_2 = await poolContractsRegistry.POOL_2_NAME();
+  });
+
+  describe("access", () => {
+    it("should not set dependencies from non dependant", async () => {
+      await truffleAssert.reverts(poolFactory.setDependencies(OWNER), "Dependant: Not an injector");
+    });
   });
 
   describe("deploy()", () => {
