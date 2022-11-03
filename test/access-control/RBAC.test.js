@@ -120,6 +120,16 @@ describe("RBAC", () => {
   });
 
   describe("user roles", () => {
+    describe("empty roles", () => {
+      it("should not grant empty roles", async () => {
+        await truffleAssert.reverts(rbac.grantRoles(SECOND, []), "RBAC: empty roles");
+      });
+
+      it("should not revoke empty roles", async () => {
+        await truffleAssert.reverts(rbac.revokeRoles(SECOND, []), "RBAC: empty roles");
+      });
+    });
+
     describe("allowed permissions", () => {
       it("should grant roles and check permissions (1)", async () => {
         await rbac.addPermissionsToRole(

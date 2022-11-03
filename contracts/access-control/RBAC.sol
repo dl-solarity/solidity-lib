@@ -38,11 +38,8 @@ abstract contract RBAC is IRBAC, Initializable {
 
     string public constant RBAC_RESOURCE = "RBAC_RESOURCE";
 
-    mapping(string => mapping(string => StringSet.Set)) private _roleAllowedPermissions;
-    mapping(string => mapping(string => StringSet.Set)) private _roleDisallowedPermissions;
-
-    mapping(string => StringSet.Set) private _roleAllowedResources;
-    mapping(string => StringSet.Set) private _roleDisallowedResources;
+    mapping(string => mapping(bool => mapping(string => StringSet.Set))) private _rolePermissions;
+    mapping(string => mapping(bool => StringSet.Set)) private _roleResources;
 
     mapping(address => StringSet.Set) private _userRoles;
 
@@ -85,6 +82,8 @@ abstract contract RBAC is IRBAC, Initializable {
         override
         onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION)
     {
+        require(rolesToGrant.length > 0, "RBAC: empty roles");
+
         _grantRoles(to, rolesToGrant);
     }
 
@@ -99,6 +98,8 @@ abstract contract RBAC is IRBAC, Initializable {
         override
         onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION)
     {
+        require(rolesToRevoke.length > 0, "RBAC: empty roles");
+
         _revokeRoles(from, rolesToRevoke);
     }
 
@@ -168,18 +169,25 @@ abstract contract RBAC is IRBAC, Initializable {
             ResourceWithPermissions[] memory disallowed
         )
     {
-        allowed = new ResourceWithPermissions[](_roleAllowedResources[role].length());
-        disallowed = new ResourceWithPermissions[](_roleDisallowedResources[role].length());
+        StringSet.Set storage allowedResources = _roleResources[role][true];
+        StringSet.Set storage disallowedResources = _roleResources[role][false];
+
+        mapping(string => StringSet.Set) storage allowedPermissions = _rolePermissions[role][true];
+        mapping(string => StringSet.Set) storage disallowedPermissions = _rolePermissions[role][
+            false
+        ];
+
+        allowed = new ResourceWithPermissions[](allowedResources.length());
+        disallowed = new ResourceWithPermissions[](disallowedResources.length());
 
         for (uint256 i = 0; i < allowed.length; i++) {
-            allowed[i].resource = _roleAllowedResources[role].at(i);
-            allowed[i].permissions = _roleAllowedPermissions[role][allowed[i].resource].values();
+            allowed[i].resource = allowedResources.at(i);
+            allowed[i].permissions = allowedPermissions[allowed[i].resource].values();
         }
 
         for (uint256 i = 0; i < disallowed.length; i++) {
-            disallowed[i].resource = _roleDisallowedResources[role].at(i);
-            disallowed[i].permissions = _roleDisallowedPermissions[role][disallowed[i].resource]
-                .values();
+            disallowed[i].resource = disallowedResources.at(i);
+            disallowed[i].permissions = disallowedPermissions[disallowed[i].resource].values();
         }
     }
 
@@ -203,11 +211,11 @@ abstract contract RBAC is IRBAC, Initializable {
         for (uint256 i = 0; i < length; i++) {
             string memory role = roles.at(i);
 
-            StringSet.Set storage allDisallowed = _roleDisallowedPermissions[role][ALL_RESOURCE];
-            StringSet.Set storage allAllowed = _roleAllowedPermissions[role][ALL_RESOURCE];
+            StringSet.Set storage allDisallowed = _rolePermissions[role][false][ALL_RESOURCE];
+            StringSet.Set storage allAllowed = _rolePermissions[role][true][ALL_RESOURCE];
 
-            StringSet.Set storage disallowed = _roleDisallowedPermissions[role][resource];
-            StringSet.Set storage allowed = _roleAllowedPermissions[role][resource];
+            StringSet.Set storage disallowed = _rolePermissions[role][false][resource];
+            StringSet.Set storage allowed = _rolePermissions[role][true][resource];
 
             if (
                 allDisallowed.contains(ALL_PERMISSION) ||
@@ -266,13 +274,8 @@ abstract contract RBAC is IRBAC, Initializable {
         string[] memory permissionsToAdd,
         bool allowed
     ) internal {
-        StringSet.Set storage resources = allowed
-            ? _roleAllowedResources[role]
-            : _roleDisallowedResources[role];
-
-        StringSet.Set storage permissions = allowed
-            ? _roleAllowedPermissions[role][resourceToAdd]
-            : _roleDisallowedPermissions[role][resourceToAdd];
+        StringSet.Set storage resources = _roleResources[role][allowed];
+        StringSet.Set storage permissions = _rolePermissions[role][allowed][resourceToAdd];
 
         permissions.add(permissionsToAdd);
         resources.add(resourceToAdd);
@@ -293,13 +296,8 @@ abstract contract RBAC is IRBAC, Initializable {
         string[] memory permissionsToRemove,
         bool allowed
     ) internal {
-        StringSet.Set storage resources = allowed
-            ? _roleAllowedResources[role]
-            : _roleDisallowedResources[role];
-
-        StringSet.Set storage permissions = allowed
-            ? _roleAllowedPermissions[role][resourceToRemove]
-            : _roleDisallowedPermissions[role][resourceToRemove];
+        StringSet.Set storage resources = _roleResources[role][allowed];
+        StringSet.Set storage permissions = _rolePermissions[role][allowed][resourceToRemove];
 
         permissions.remove(permissionsToRemove);
 
