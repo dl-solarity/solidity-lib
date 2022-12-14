@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "../../contracts-registry/AbstractDependant.sol";
 import "../AbstractPoolContractsRegistry.sol";
@@ -43,11 +43,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     /**
      *  @notice The internal function that registers newly deployed pool in the provided PoolContractRegistry
      */
-    function _register(
-        address poolRegistry,
-        string memory poolType,
-        address poolProxy
-    ) internal {
+    function _register(address poolRegistry, string memory poolType, address poolProxy) internal {
         (bool success, ) = poolRegistry.call(
             abi.encodeWithSignature("addProxyPool(string,address)", poolType, poolProxy)
         );

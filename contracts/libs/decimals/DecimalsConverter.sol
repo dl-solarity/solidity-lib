@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 /**
  *  @notice This library is used to convert numbers that use token's N decimals to M decimals.
@@ -36,9 +36,9 @@ library DecimalsConverter {
         uint256 destDecimals
     ) internal pure returns (uint256) {
         if (baseDecimals > destDecimals) {
-            amount = amount / 10**(baseDecimals - destDecimals);
+            amount = amount / 10 ** (baseDecimals - destDecimals);
         } else if (baseDecimals < destDecimals) {
-            amount = amount * 10**(destDecimals - baseDecimals);
+            amount = amount * 10 ** (destDecimals - baseDecimals);
         }
 
         return amount;
@@ -48,11 +48,10 @@ library DecimalsConverter {
         return convert(amount, baseDecimals, 18);
     }
 
-    function to18Safe(uint256 amount, uint256 baseDecimals)
-        internal
-        pure
-        returns (uint256 resultAmount)
-    {
+    function to18Safe(
+        uint256 amount,
+        uint256 baseDecimals
+    ) internal pure returns (uint256 resultAmount) {
         return convertSafe(amount, baseDecimals, to18);
     }
 

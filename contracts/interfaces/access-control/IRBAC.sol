@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "../../libs/data-structures/StringSet.sol";
 
@@ -30,7 +30,9 @@ interface IRBAC {
 
     function getUserRoles(address who) external view returns (string[] memory roles);
 
-    function getRolePermissions(string calldata role)
+    function getRolePermissions(
+        string calldata role
+    )
         external
         view
         returns (

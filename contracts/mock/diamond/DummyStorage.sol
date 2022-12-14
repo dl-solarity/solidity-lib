@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 contract DummyStorage {
     bytes32 public constant DUMMY_STORAGE_SLOT = keccak256("diamond.standard.dummyfacet.storage");

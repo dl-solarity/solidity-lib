@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
@@ -76,12 +76,10 @@ abstract contract RBAC is IRBAC, Initializable {
      *  @param to the user to grant roles to
      *  @param rolesToGrant roles to grant
      */
-    function grantRoles(address to, string[] memory rolesToGrant)
-        public
-        virtual
-        override
-        onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION)
-    {
+    function grantRoles(
+        address to,
+        string[] memory rolesToGrant
+    ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
         require(rolesToGrant.length > 0, "RBAC: empty roles");
 
         _grantRoles(to, rolesToGrant);
@@ -92,12 +90,10 @@ abstract contract RBAC is IRBAC, Initializable {
      *  @param from the user to revoke roles from
      *  @param rolesToRevoke the roles to revoke
      */
-    function revokeRoles(address from, string[] memory rolesToRevoke)
-        public
-        virtual
-        override
-        onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION)
-    {
+    function revokeRoles(
+        address from,
+        string[] memory rolesToRevoke
+    ) public virtual override onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION) {
         require(rolesToRevoke.length > 0, "RBAC: empty roles");
 
         _revokeRoles(from, rolesToRevoke);
@@ -160,7 +156,9 @@ abstract contract RBAC is IRBAC, Initializable {
      *  @return allowed the list of allowed permissions of the role
      *  @return disallowed the list of disallowed permissions of the role
      */
-    function getRolePermissions(string memory role)
+    function getRolePermissions(
+        string memory role
+    )
         public
         view
         override

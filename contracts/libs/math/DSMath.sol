@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: ALGPL-3.0-or-later-or-later
 // from https://github.com/makerdao/dss/blob/master/src/jug.sol
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 library DSMath {
     /**
      * @dev github.com/makerdao/dss implementation of exponentiation by squaring
      * @dev nth power of x where x is decimal number with b precision
      */
-    function rpow(
-        uint256 x,
-        uint256 n,
-        uint256 b
-    ) internal pure returns (uint256 z) {
+    function rpow(uint256 x, uint256 n, uint256 b) internal pure returns (uint256 z) {
         assembly {
             switch x
             case 0 {
