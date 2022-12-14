@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -26,11 +26,7 @@ contract ProxyUpgrader {
         _owner = msg.sender;
     }
 
-    function upgrade(
-        address what,
-        address to,
-        bytes calldata data
-    ) external onlyOwner {
+    function upgrade(address what, address to, bytes calldata data) external onlyOwner {
         if (data.length > 0) {
             TransparentUpgradeableProxy(payable(what)).upgradeToAndCall(to, data);
         } else {

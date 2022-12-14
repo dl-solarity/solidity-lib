@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -17,10 +17,10 @@ abstract contract OwnablePoolContractsRegistry is
         __PoolContractsRegistry_init();
     }
 
-    function setNewImplementations(string[] calldata names, address[] calldata newImplementations)
-        external
-        onlyOwner
-    {
+    function setNewImplementations(
+        string[] calldata names,
+        address[] calldata newImplementations
+    ) external onlyOwner {
         _setNewImplementations(names, newImplementations);
     }
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -38,10 +38,10 @@ contract OwnableContractsRegistry is AbstractContractsRegistry, OwnableUpgradeab
         _addProxyContract(name, contractAddress);
     }
 
-    function justAddProxyContract(string calldata name, address contractAddress)
-        external
-        onlyOwner
-    {
+    function justAddProxyContract(
+        string calldata name,
+        address contractAddress
+    ) external onlyOwner {
         _justAddProxyContract(name, contractAddress);
     }
 

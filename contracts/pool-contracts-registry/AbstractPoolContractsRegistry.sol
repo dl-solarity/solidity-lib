@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -103,9 +103,10 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
      *  @param names the names that are associated with the pools implementations
      *  @param newImplementations the new implementations of the pools (ProxyBeacons will point to these)
      */
-    function _setNewImplementations(string[] memory names, address[] memory newImplementations)
-        internal
-    {
+    function _setNewImplementations(
+        string[] memory names,
+        address[] memory newImplementations
+    ) internal {
         for (uint256 i = 0; i < names.length; i++) {
             if (address(_beacons[names[i]]) == address(0)) {
                 _beacons[names[i]] = new ProxyBeacon();

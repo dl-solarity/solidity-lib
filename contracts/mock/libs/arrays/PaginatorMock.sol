@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "../../../libs/arrays/Paginator.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -61,19 +61,17 @@ contract PaginatorMock {
         return uintSet.part(offset, limit);
     }
 
-    function partAddressArr(uint256 offset, uint256 limit)
-        external
-        view
-        returns (address[] memory)
-    {
+    function partAddressArr(
+        uint256 offset,
+        uint256 limit
+    ) external view returns (address[] memory) {
         return addressArr.part(offset, limit);
     }
 
-    function partAddressSet(uint256 offset, uint256 limit)
-        external
-        view
-        returns (address[] memory)
-    {
+    function partAddressSet(
+        uint256 offset,
+        uint256 limit
+    ) external view returns (address[] memory) {
         return addressSet.part(offset, limit);
     }
 

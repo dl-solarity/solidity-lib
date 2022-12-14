@@ -1,6 +1,6 @@
 {
   "name": "dlsl",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "license": "MIT",
   "author": "Distributed Lab",
   "description": "Solidity Development Modules by Distributed Lab",
@@ -11,7 +11,7 @@
   "keywords": [
     "solidity",
     "ethereum",
-    "smartcontracts",
+    "smart-contracts",
     "distributedlab"
   ],
   "scripts": {
@@ -30,7 +30,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "4.5.0",
     "@openzeppelin/contracts-upgradeable": "4.5.0",
-    "hardhat": "^2.12.0",
+    "hardhat": "^2.12.2",
     "typechain": "^8.1.0"
   },
   "devDependencies": {
