@@ -1,4 +1,6 @@
-[![npm](https://img.shields.io/npm/v/@dlsl/dev-modules.svg)](https://www.npmjs.com/package/@dlsl/dev-modules) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm](https://img.shields.io/npm/v/@dlsl/dev-modules.svg)](https://www.npmjs.com/package/@dlsl/dev-modules) 
+[![Coverage Status](https://codecov.io/gh/distributedlab-solidity-library/dev-modules/graph/badge.svg)](https://codecov.io/gh/distributedlab-solidity-library/dev-modules)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Solidity Development Modules by Distributed Lab
 
