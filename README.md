@@ -8,10 +8,10 @@
 
 The library consist of modules and utilities that are built on top of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) but goes far beyond the mediocre solidity. 
 
-- Implementation **Contracts Registry** pattern
+- Implementation of **Contracts Registry** pattern
 - Versatile **RBAC** smart contract
 - Enhanced and simplified **Diamond** pattern
-- Utilities to ease work with arrays and sets
+- Utilities to ease work with ERC20 decimals, arrays and sets
 
 ## Overview
 
@@ -39,7 +39,7 @@ contract ContractsRegistry is OwnableContractsRegistry {
 }
 ```
 
-> It is important to use the library as it shipped and not copy-paste the code from untrusted sources.
+> It is important to use the library as it is shipped and not copy-paste the code from untrusted sources.
 
 ## License
 
