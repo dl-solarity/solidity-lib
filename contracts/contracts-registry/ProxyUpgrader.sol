@@ -15,7 +15,7 @@ contract ProxyUpgrader {
 
     address private immutable _owner;
 
-    event Upgraded(address indexed proxy, address indexed implementation);
+    event Upgraded(address proxy, address implementation);
 
     modifier onlyOwner() {
         require(_owner == msg.sender, "ProxyUpgrader: Not an owner");

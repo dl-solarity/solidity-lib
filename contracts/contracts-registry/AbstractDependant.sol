@@ -13,13 +13,13 @@ pragma solidity ^0.8.4;
 abstract contract AbstractDependant {
     /**
      *  @notice The slot where the dependency injector is located.
-     *  @dev keccak256(AbstractDependant.setInjector(address)) - 1
+     *  @dev bytes32(uint256(keccak256("eip6224.dependant.slot")) - 1)
      *
      *  Only the injector is allowed to inject dependencies.
      *  The first to call the setDependencies() (with the modifier applied) function becomes an injector
      */
     bytes32 private constant _INJECTOR_SLOT =
-        0xd6b8f2e074594ceb05d47c27386969754b6ad0c15e5eb8f691399cd0be980e76;
+        0x3d1f25f1ac447e55e7fec744471c4dab1c6a2b6ffb897825f9ea3d2e8c9be583;
 
     modifier dependant() {
         _checkInjector();
