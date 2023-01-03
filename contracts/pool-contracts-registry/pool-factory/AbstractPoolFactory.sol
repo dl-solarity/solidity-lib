@@ -40,6 +40,20 @@ abstract contract AbstractPoolFactory is AbstractDependant {
             );
     }
 
+    function _deploy2(
+        address poolRegistry,
+        string memory poolType,
+        bytes32 salt
+    ) internal returns (address) {
+        return
+            address(
+                new PublicBeaconProxy{salt: salt}(
+                    AbstractPoolContractsRegistry(poolRegistry).getProxyBeacon(poolType),
+                    ""
+                )
+            );
+    }
+
     /**
      *  @notice The internal function that registers newly deployed pool in the provided PoolContractRegistry
      */
@@ -58,5 +72,26 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     function _injectDependencies(address poolRegistry, address proxy) internal {
         AbstractDependant(proxy).setDependencies(_contractsRegistry);
         AbstractDependant(proxy).setInjector(poolRegistry);
+    }
+
+    function _predictDeploy2Address(
+        bytes memory bytecode,
+        bytes32 salt
+    ) internal view returns (address) {
+        return
+            address(
+                uint160(
+                    uint256(
+                        keccak256(
+                            abi.encodePacked(
+                                bytes1(0xff),
+                                address(this),
+                                salt,
+                                keccak256(bytecode)
+                            )
+                        )
+                    )
+                )
+            );
     }
 }
