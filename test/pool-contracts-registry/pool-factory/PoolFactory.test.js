@@ -132,4 +132,43 @@ describe("PoolFactory", () => {
       assert.equal(toBN(await pool2.addedFunction()).toFixed(), "42");
     });
   });
+
+  describe("deploy2() predictPoolAddress()", () => {
+    let poolImpl;
+
+    beforeEach("setup", async () => {
+      poolImpl = await Pool.new();
+
+      await poolContractsRegistry.setNewImplementations([NAME_1], [poolImpl.address]);
+    });
+
+    it("should deploy on the predicted address", async () => {
+      const SALT1 = "pool_salt1";
+      const SALT2 = "pool_salt2";
+
+      const predictedAddress1 = await poolFactory.predictPoolAddress(SALT1);
+      const predictedAddress2 = await poolFactory.predictPoolAddress(SALT2);
+
+      await poolFactory.deploy2Pool(SALT1);
+      await poolFactory.deploy2Pool(SALT2);
+
+      assert.equal(toBN(await poolContractsRegistry.countPools(NAME_1)).toFixed(), "2");
+      assert.equal(toBN(await poolContractsRegistry.countPools(NAME_2)).toFixed(), "0");
+
+      const pools = await poolContractsRegistry.listPools(NAME_1, 0, 2);
+
+      assert.deepEqual(pools, [predictedAddress1, predictedAddress2]);
+
+      const poolProxies = await Promise.all(pools.map(async (pool) => await Pool.at(pool)));
+      const beaconProxies = await Promise.all(pools.map(async (pool) => await BeaconProxy.at(pool)));
+
+      const tokens = await Promise.all(poolProxies.map(async (poolContract) => await poolContract.token()));
+      const implementations = await Promise.all(
+        beaconProxies.map(async (beaconProxy) => await beaconProxy.implementation())
+      );
+
+      assert.deepEqual(tokens, [token.address, token.address]);
+      assert.deepEqual(implementations, [poolImpl.address, poolImpl.address]);
+    });
+  });
 });

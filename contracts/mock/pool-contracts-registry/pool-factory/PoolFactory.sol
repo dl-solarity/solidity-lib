@@ -23,4 +23,21 @@ contract PoolFactory is AbstractPoolFactory {
         _register(poolContractsRegistry, poolType, poolProxy);
         _injectDependencies(poolContractsRegistry, poolProxy);
     }
+
+    function deploy2Pool(string calldata salt) external {
+        string memory poolType = PoolContractsRegistry(poolContractsRegistry).POOL_1_NAME();
+
+        address poolProxy = _deploy2(poolContractsRegistry, poolType, bytes32(bytes(salt)));
+        _register(poolContractsRegistry, poolType, poolProxy);
+        _injectDependencies(poolContractsRegistry, poolProxy);
+    }
+
+    function predictPoolAddress(string calldata salt) external view returns (address) {
+        return
+            _predictPoolAddress(
+                poolContractsRegistry,
+                PoolContractsRegistry(poolContractsRegistry).POOL_1_NAME(),
+                bytes32(bytes(salt))
+            );
+    }
 }
