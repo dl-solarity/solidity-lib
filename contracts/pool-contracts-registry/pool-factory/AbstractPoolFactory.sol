@@ -73,4 +73,20 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         AbstractDependant(proxy).setDependencies(_contractsRegistry);
         AbstractDependant(proxy).setInjector(poolRegistry);
     }
+
+    function _getDeploy2ProxyBytecodeHash(
+        address poolRegistry,
+        string memory poolType
+    ) internal view returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    type(PublicBeaconProxy).creationCode,
+                    abi.encode(
+                        AbstractPoolContractsRegistry(poolRegistry).getProxyBeacon(poolType),
+                        ""
+                    )
+                )
+            );
+    }
 }
