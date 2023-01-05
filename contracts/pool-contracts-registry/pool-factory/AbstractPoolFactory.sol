@@ -42,6 +42,10 @@ abstract contract AbstractPoolFactory is AbstractDependant {
             );
     }
 
+    /**
+     *  @notice The internal deploy function that deploys BeaconProxy pointing to the
+     *  pool implementation taken from the PoolContractRegistry using the create2 mechanism
+     */
     function _deploy2(
         address poolRegistry,
         string memory poolType,
@@ -76,6 +80,10 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         AbstractDependant(proxy).setInjector(poolRegistry);
     }
 
+    /**
+     *  @notice The view function that computes the address where the pool will be
+     *  stored if deployed via _deploy2
+     */
     function _predictPoolAddress(
         address poolRegistry,
         string memory poolType,
