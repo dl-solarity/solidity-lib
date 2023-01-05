@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "@openzeppelin/contracts/utils/Create2.sol";
+
 import "../../contracts-registry/AbstractDependant.sol";
 import "../AbstractPoolContractsRegistry.sol";
 
@@ -74,19 +76,21 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         AbstractDependant(proxy).setInjector(poolRegistry);
     }
 
-    function _getDeploy2ProxyBytecodeHash(
+    function _predictPoolAddress(
         address poolRegistry,
-        string memory poolType
-    ) internal view returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    type(PublicBeaconProxy).creationCode,
-                    abi.encode(
-                        AbstractPoolContractsRegistry(poolRegistry).getProxyBeacon(poolType),
-                        ""
-                    )
+        string memory poolType,
+        bytes32 salt
+    ) internal view returns (address) {
+        bytes32 bytecodeHash = keccak256(
+            abi.encodePacked(
+                type(PublicBeaconProxy).creationCode,
+                abi.encode(
+                    AbstractPoolContractsRegistry(poolRegistry).getProxyBeacon(poolType),
+                    ""
                 )
-            );
+            )
+        );
+
+        return Create2.computeAddress(salt, bytecodeHash);
     }
 }
