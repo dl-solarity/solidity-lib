@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "@openzeppelin/contracts/utils/Create2.sol";
+
 import "../../contracts-registry/AbstractDependant.sol";
 import "../AbstractPoolContractsRegistry.sol";
 
@@ -41,6 +43,24 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     }
 
     /**
+     *  @notice The internal deploy function that deploys BeaconProxy pointing to the
+     *  pool implementation taken from the PoolContractRegistry using the create2 mechanism
+     */
+    function _deploy2(
+        address poolRegistry,
+        string memory poolType,
+        bytes32 salt
+    ) internal returns (address) {
+        return
+            address(
+                new PublicBeaconProxy{salt: salt}(
+                    AbstractPoolContractsRegistry(poolRegistry).getProxyBeacon(poolType),
+                    ""
+                )
+            );
+    }
+
+    /**
      *  @notice The internal function that registers newly deployed pool in the provided PoolContractRegistry
      */
     function _register(address poolRegistry, string memory poolType, address poolProxy) internal {
@@ -58,5 +78,27 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     function _injectDependencies(address poolRegistry, address proxy) internal {
         AbstractDependant(proxy).setDependencies(_contractsRegistry);
         AbstractDependant(proxy).setInjector(poolRegistry);
+    }
+
+    /**
+     *  @notice The view function that computes the address where the pool will be
+     *  stored if deployed via _deploy2
+     */
+    function _predictPoolAddress(
+        address poolRegistry,
+        string memory poolType,
+        bytes32 salt
+    ) internal view returns (address) {
+        bytes32 bytecodeHash = keccak256(
+            abi.encodePacked(
+                type(PublicBeaconProxy).creationCode,
+                abi.encode(
+                    AbstractPoolContractsRegistry(poolRegistry).getProxyBeacon(poolType),
+                    ""
+                )
+            )
+        );
+
+        return Create2.computeAddress(salt, bytecodeHash);
     }
 }
