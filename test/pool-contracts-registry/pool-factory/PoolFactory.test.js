@@ -162,6 +162,11 @@ describe("PoolFactory", () => {
         assert.deepEqual(tokens, [token.address, token.address]);
         assert.deepEqual(implementations, [poolImpl.address, poolImpl.address]);
       });
+
+      it("should revert when deploying the pool with the same salt", async () => {
+        await poolFactory.deploy2Pool(SALT1);
+        await truffleAssert.reverts(poolFactory.deploy2Pool(SALT1), "VM Exception while processing transaction");
+      });
     });
   });
 });
