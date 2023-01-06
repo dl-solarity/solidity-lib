@@ -81,8 +81,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     }
 
     /**
-     *  @notice The view function that computes the address where the pool will be
-     *  stored if deployed via _deploy2
+     *  @notice The view function that computes the address of the pool if deployed via _deploy2
      */
     function _predictPoolAddress(
         address poolRegistry,

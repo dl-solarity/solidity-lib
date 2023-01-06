@@ -1,5 +1,6 @@
 const { assert } = require("chai");
 const { toBN, accounts } = require("../../../scripts/utils/utils");
+const { ZERO_ADDR } = require("../../../scripts/utils/constants");
 const truffleAssert = require("truffle-assertions");
 
 const PoolFactory = artifacts.require("PoolFactory");
@@ -18,7 +19,6 @@ PoolUpgrade.numberFormat = "BigNumber";
 ERC20Mock.numberFormat = "BigNumber";
 
 describe("PoolFactory", () => {
-  let ZERO = "0x0000000000000000000000000000000000000000";
   let OWNER;
 
   let poolFactory;
@@ -86,7 +86,7 @@ describe("PoolFactory", () => {
         const beaconProxy = await BeaconProxy.at(pool.address);
 
         assert.equal(await beaconProxy.implementation(), poolImpl.address);
-        assert.notEqual(await pool.token(), ZERO);
+        assert.notEqual(await pool.token(), ZERO_ADDR);
       });
 
       it("should not register pools", async () => {
@@ -137,7 +137,7 @@ describe("PoolFactory", () => {
       const SALT1 = "pool_salt1";
       const SALT2 = "pool_salt2";
 
-      it("should deploy on the predicted address", async () => {
+      it("should deploy to the predicted address", async () => {
         const predictedAddress1 = await poolFactory.predictPoolAddress(SALT1);
         const predictedAddress2 = await poolFactory.predictPoolAddress(SALT2);
 
