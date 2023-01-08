@@ -50,7 +50,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     }
 
     /**
-     *  @notice The function to force-update the compound rate, sets isMaxRateReached to true
+     *  @notice The function to force-update the compound rate if the getter reverts, sets isMaxRateReached to true
      */
     function emergencyUpdateCompoundRate() public override {
         try this.getCompoundRate() returns (uint256 rate_) {
@@ -118,11 +118,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      *  @param capitalizationRate_ new capitalization rate
      */
     function _setCapitalizationRate(uint256 capitalizationRate_) internal {
-        require(!isMaxRateReached, "CRK: max rate is reached");
-
-        _currentRate = getCompoundRate();
-        lastUpdate = uint64(block.timestamp);
-
+        _update();
         _changeCapitalizationRate(capitalizationRate_);
     }
 
@@ -131,12 +127,18 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      *  @param capitalizationPeriod_ new capitalization period
      */
     function _setCapitalizationPeriod(uint64 capitalizationPeriod_) internal {
+        _update();
+        _changeCapitalizationPeriod(capitalizationPeriod_);
+    }
+
+    /**
+     *  @notice The private function to update the compound rate
+     */
+    function _update() private {
         require(!isMaxRateReached, "CRK: max rate is reached");
 
         _currentRate = getCompoundRate();
         lastUpdate = uint64(block.timestamp);
-
-        _changeCapitalizationPeriod(capitalizationPeriod_);
     }
 
     /**
