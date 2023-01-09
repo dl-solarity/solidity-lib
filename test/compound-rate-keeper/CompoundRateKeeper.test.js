@@ -68,7 +68,7 @@ describe("CompoundRateKeeper", () => {
       assert.equal((await crk.lastUpdate()).toFixed(), toBN(nextBlockTime).toFixed());
     });
 
-    it("should revert if rate is less than zero", async function () {
+    it("should revert if rate is less than zero", async () => {
       await truffleAssert.reverts(crk.setCapitalizationRate(precision(0.99999)), "CRK: rate is less than 1");
     });
 
@@ -131,8 +131,8 @@ describe("CompoundRateKeeper", () => {
     });
   });
 
-  describe("getFutureCompoundRate()", function () {
-    it("check correct compound calculate for 50%, check max timestamp", async function () {
+  describe("getFutureCompoundRate()", () => {
+    it("check correct compound calculate for 50%, check max timestamp", async () => {
       await setNextBlockTime((await getCurrentBlockTime()) + 10);
       await crk.setCapitalizationRate(precision(1.5));
 
@@ -184,7 +184,31 @@ describe("CompoundRateKeeper", () => {
       );
     });
 
-    it("check compound rate when capitalization rate changes", async function () {
+    it("check compound rate when capitalization period changes", async () => {
+      await setNextBlockTime((await getCurrentBlockTime()) + 10);
+      await crk.setCapitalizationRateAndPeriod(precision(1.0000001), 1);
+
+      assert.closeTo(
+        toBN(
+          fromPrecision((await crk.getFutureCompoundRate((await getCurrentBlockTime()) + 31536000)).toFixed())
+        ).toNumber(),
+        23.42,
+        0.01
+      );
+
+      await setNextBlockTime((await getCurrentBlockTime()) + 31536000);
+      await crk.setCapitalizationRateAndPeriod(precision(1.01), 86400);
+
+      assert.closeTo(
+        toBN(
+          fromPrecision((await crk.getFutureCompoundRate((await getCurrentBlockTime()) + 2 * 31536000)).toFixed())
+        ).toNumber(),
+        33434.42,
+        0.01
+      );
+    });
+
+    it("check compound rate when capitalization rate changes", async () => {
       await setNextBlockTime((await getCurrentBlockTime()) + 10);
       await crk.setCapitalizationRate(precision(1.1));
 
@@ -218,31 +242,31 @@ describe("CompoundRateKeeper", () => {
       );
     });
 
-    it("check max timestamp for 10%", async function () {
+    it("check max timestamp for 10%", async () => {
       await checkByParams(1.1);
     });
 
-    it("check max timestamp for 25%", async function () {
+    it("check max timestamp for 25%", async () => {
       await checkByParams(1.25);
     });
 
-    it("check max timestamp for 50%", async function () {
+    it("check max timestamp for 50%", async () => {
       await checkByParams(1.5);
     });
 
-    it("check max timestamp for 100%", async function () {
+    it("check max timestamp for 100%", async () => {
       await checkByParams(2);
     });
 
-    it("check max timestamp for 200%", async function () {
+    it("check max timestamp for 200%", async () => {
       await checkByParams(3);
     });
 
-    it("check max timestamp for 500%", async function () {
+    it("check max timestamp for 500%", async () => {
       await checkByParams(6);
     });
 
-    it("check max timestamp for 1000%", async function () {
+    it("check max timestamp for 1000%", async () => {
       await checkByParams(11);
     });
   });
