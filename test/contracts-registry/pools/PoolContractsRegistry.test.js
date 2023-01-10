@@ -1,6 +1,6 @@
 const { assert } = require("chai");
-const { accounts } = require("../../scripts/utils/utils");
-const { ZERO_ADDR } = require("../../scripts/utils/constants");
+const { accounts } = require("../../../scripts/utils/utils");
+const { ZERO_ADDR } = require("../../../scripts/utils/constants");
 const truffleAssert = require("truffle-assertions");
 
 const PoolContractsRegistry = artifacts.require("PoolContractsRegistry");
@@ -72,7 +72,7 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("should not set dependencies from non dependant", async () => {
-      await truffleAssert.reverts(poolContractsRegistry.setDependencies(OWNER), "Dependant: Not an injector");
+      await truffleAssert.reverts(poolContractsRegistry.setDependencies(OWNER, "0x"), "Dependant: Not an injector");
     });
 
     it("only owner should call these functions", async () => {

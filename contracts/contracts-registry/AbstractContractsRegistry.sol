@@ -4,8 +4,8 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
+import "./proxy/ProxyUpgrader.sol";
 import "./AbstractDependant.sol";
-import "./ProxyUpgrader.sol";
 
 /**
  *  @notice The ContractsRegistry module
@@ -105,7 +105,7 @@ abstract contract AbstractContractsRegistry is Initializable {
         require(contractAddress != address(0), "ContractsRegistry: This mapping doesn't exist");
 
         AbstractDependant dependant = AbstractDependant(contractAddress);
-        dependant.setDependencies(address(this));
+        dependant.setDependencies(address(this), "");
     }
 
     /**

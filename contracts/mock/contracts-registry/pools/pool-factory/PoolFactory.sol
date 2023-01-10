@@ -4,13 +4,13 @@ pragma solidity ^0.8.4;
 import "../ContractsRegistry2.sol";
 import "../PoolContractsRegistry.sol";
 
-import "../../../pool-contracts-registry/pool-factory/AbstractPoolFactory.sol";
+import "../../../../contracts-registry/pools/pool-factory/AbstractPoolFactory.sol";
 
 contract PoolFactory is AbstractPoolFactory {
     address public poolContractsRegistry;
 
-    function setDependencies(address contractsRegistry) public override {
-        super.setDependencies(contractsRegistry);
+    function setDependencies(address contractsRegistry, bytes calldata data) public override {
+        super.setDependencies(contractsRegistry, data);
 
         poolContractsRegistry = ContractsRegistry2(contractsRegistry)
             .getPoolContractsRegistryContract();

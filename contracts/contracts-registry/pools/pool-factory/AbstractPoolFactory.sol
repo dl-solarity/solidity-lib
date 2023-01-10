@@ -3,10 +3,10 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/Create2.sol";
 
-import "../../contracts-registry/AbstractDependant.sol";
+import "../../../contracts-registry/AbstractDependant.sol";
 import "../AbstractPoolContractsRegistry.sol";
 
-import "./PublicBeaconProxy.sol";
+import "./proxy/PublicBeaconProxy.sol";
 
 /**
  *  @notice The PoolContractsRegistry module
@@ -24,7 +24,10 @@ abstract contract AbstractPoolFactory is AbstractDependant {
      *  @notice The function that accepts dependencies from the ContractsRegistry, can be overridden
      *  @param contractsRegistry the dependency registry
      */
-    function setDependencies(address contractsRegistry) public virtual override dependant {
+    function setDependencies(
+        address contractsRegistry,
+        bytes calldata
+    ) public virtual override dependant {
         _contractsRegistry = contractsRegistry;
     }
 
@@ -76,7 +79,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
      *  provided PoolContractsRegistry as an injector
      */
     function _injectDependencies(address poolRegistry, address proxy) internal {
-        AbstractDependant(proxy).setDependencies(_contractsRegistry);
+        AbstractDependant(proxy).setDependencies(_contractsRegistry, "");
         AbstractDependant(proxy).setInjector(poolRegistry);
     }
 

@@ -5,11 +5,11 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
-import "../libs/arrays/Paginator.sol";
+import "../../libs/arrays/Paginator.sol";
 
-import "../contracts-registry/AbstractDependant.sol";
+import "../../contracts-registry/AbstractDependant.sol";
 
-import "./ProxyBeacon.sol";
+import "./proxy/ProxyBeacon.sol";
 
 /**
  *  @notice The PoolContractsRegistry module
@@ -44,7 +44,10 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
      *  @notice The function that accepts dependencies from the ContractsRegistry, can be overridden
      *  @param contractsRegistry the dependency registry
      */
-    function setDependencies(address contractsRegistry) public virtual override dependant {
+    function setDependencies(
+        address contractsRegistry,
+        bytes calldata
+    ) public virtual override dependant {
         _contractsRegistry = contractsRegistry;
     }
 
@@ -139,7 +142,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
         address contractsRegistry = _contractsRegistry;
 
         for (uint256 i = offset; i < to; i++) {
-            AbstractDependant(pools.at(i)).setDependencies(contractsRegistry);
+            AbstractDependant(pools.at(i)).setDependencies(contractsRegistry, "");
         }
     }
 

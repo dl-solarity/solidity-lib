@@ -1,6 +1,6 @@
 const { assert } = require("chai");
-const { accounts } = require("../../scripts/utils/utils");
-const { ZERO_ADDR } = require("../../scripts/utils/constants");
+const { accounts } = require("../../../scripts/utils/utils");
+const { ZERO_ADDR } = require("../../../scripts/utils/constants");
 const truffleAssert = require("truffle-assertions");
 
 const ProxyBeacon = artifacts.require("ProxyBeacon");

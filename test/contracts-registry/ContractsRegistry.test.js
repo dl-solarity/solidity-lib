@@ -272,7 +272,7 @@ describe("ContractsRegistry", () => {
 
       assert.equal(await crd.getInjector(), contractsRegistry.address);
 
-      await truffleAssert.reverts(crd.setDependencies(contractsRegistry.address), "Dependant: Not an injector");
+      await truffleAssert.reverts(crd.setDependencies(contractsRegistry.address, "0x"), "Dependant: Not an injector");
     });
 
     it("should not allow random users to set new injector", async () => {

@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import "./ContractsRegistry2.sol";
 
-import "../../pool-contracts-registry/presets/OwnablePoolContractsRegistry.sol";
+import "../../../contracts-registry/pools/presets/OwnablePoolContractsRegistry.sol";
 
 contract PoolContractsRegistry is OwnablePoolContractsRegistry {
     string public constant POOL_1_NAME = "POOL_1";
@@ -20,8 +20,8 @@ contract PoolContractsRegistry is OwnablePoolContractsRegistry {
         __PoolContractsRegistry_init();
     }
 
-    function setDependencies(address contractsRegistry) public override {
-        super.setDependencies(contractsRegistry);
+    function setDependencies(address contractsRegistry, bytes calldata data) public override {
+        super.setDependencies(contractsRegistry, data);
 
         poolFactory = ContractsRegistry2(contractsRegistry).getPoolFactoryContract();
     }

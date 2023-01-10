@@ -1,6 +1,6 @@
 const { assert } = require("chai");
-const { toBN, accounts } = require("../../../scripts/utils/utils");
-const { ZERO_ADDR } = require("../../../scripts/utils/constants");
+const { toBN, accounts } = require("../../../../scripts/utils/utils");
+const { ZERO_ADDR } = require("../../../../scripts/utils/constants");
 const truffleAssert = require("truffle-assertions");
 
 const PoolFactory = artifacts.require("PoolFactory");
@@ -62,7 +62,7 @@ describe("PoolFactory", () => {
 
   describe("access", () => {
     it("should not set dependencies from non dependant", async () => {
-      await truffleAssert.reverts(poolFactory.setDependencies(OWNER), "Dependant: Not an injector");
+      await truffleAssert.reverts(poolFactory.setDependencies(OWNER, "0x"), "Dependant: Not an injector");
     });
   });
 
@@ -112,7 +112,10 @@ describe("PoolFactory", () => {
           poolContractsRegistry.addProxyPool(NAME_1, poolFactory.address),
           "PoolContractsRegistry: not a factory"
         );
-        await truffleAssert.reverts(pool.setDependencies(contractsRegistry.address), "Dependant: Not an injector");
+        await truffleAssert.reverts(
+          pool.setDependencies(contractsRegistry.address, "0x"),
+          "Dependant: Not an injector"
+        );
       });
 
       it("should upgrade pools", async () => {
