@@ -28,45 +28,45 @@ contract DiamondStorage {
 
     /**
      *  @notice The internal function to get the diamond proxy storage
-     *  @return ds the struct from the DIAMOND_STORAGE_SLOT
+     *  @return _ds the struct from the DIAMOND_STORAGE_SLOT
      */
-    function getDiamondStorage() internal pure returns (DStorage storage ds) {
-        bytes32 slot = DIAMOND_STORAGE_SLOT;
+    function getDiamondStorage() internal pure returns (DStorage storage _ds) {
+        bytes32 slot_ = DIAMOND_STORAGE_SLOT;
 
         assembly {
-            ds.slot := slot
+            _ds.slot := slot_
         }
     }
 
     /**
      *  @notice The function to get all the facets of this diamond
-     *  @return facets the array of facets' addresses
+     *  @return facets_ the array of facets' addresses
      */
-    function getFacets() public view returns (address[] memory facets) {
+    function getFacets() public view returns (address[] memory facets_) {
         return getDiamondStorage().facets.values();
     }
 
     /**
      *  @notice The function to get all the selectors assigned to the facet
-     *  @param facet the facet to get assigned selectors of
-     *  @return selectors the array of assigned selectors
+     *  @param facet_ the facet to get assigned selectors of
+     *  @return selectors_ the array of assigned selectors
      */
-    function getFacetSelectors(address facet) public view returns (bytes4[] memory selectors) {
-        EnumerableSet.Bytes32Set storage f2s = getDiamondStorage().facetToSelectors[facet];
+    function getFacetSelectors(address facet_) public view returns (bytes4[] memory selectors_) {
+        EnumerableSet.Bytes32Set storage _f2s = getDiamondStorage().facetToSelectors[facet_];
 
-        selectors = new bytes4[](f2s.length());
+        selectors_ = new bytes4[](_f2s.length());
 
-        for (uint256 i = 0; i < selectors.length; i++) {
-            selectors[i] = bytes4(f2s.at(i));
+        for (uint256 i = 0; i < selectors_.length; i++) {
+            selectors_[i] = bytes4(_f2s.at(i));
         }
     }
 
     /**
      *  @notice The function to get associated facet by the selector
-     *  @param selector the selector
-     *  @return facet the associated facet address
+     *  @param selector_ the selector
+     *  @return facet_ the associated facet address
      */
-    function getFacetBySelector(bytes4 selector) public view returns (address facet) {
-        return getDiamondStorage().selectorToFacet[selector];
+    function getFacetBySelector(bytes4 selector_) public view returns (address facet_) {
+        return getDiamondStorage().selectorToFacet[selector_];
     }
 }

@@ -37,7 +37,7 @@ describe("DecimalsConverter", () => {
     });
 
     it("should get exception if the result of conversion is zero", async () => {
-      const reason = "DecimalsConverter: Incorrect amount after conversion";
+      const reason = "DecimalsConverter: conversion failed";
 
       await truffleAssert.reverts(mock.to18Safe(wei("1", 11), 30), reason);
     });
@@ -60,7 +60,7 @@ describe("DecimalsConverter", () => {
     });
 
     it("should get exception if the result of conversion is zero", async () => {
-      const reason = "DecimalsConverter: Incorrect amount after conversion";
+      const reason = "DecimalsConverter: conversion failed";
 
       await truffleAssert.reverts(mock.from18Safe(wei("1", 6), 6), reason);
     });
@@ -83,7 +83,7 @@ describe("DecimalsConverter", () => {
 
   describe("round18Safe", () => {
     it("should get exception if the result of conversion is zero", async () => {
-      const reason = "DecimalsConverter: Incorrect amount after conversion";
+      const reason = "DecimalsConverter: conversion failed";
 
       await truffleAssert.reverts(mock.round18Safe(wei("1", 6), 6), reason);
     });

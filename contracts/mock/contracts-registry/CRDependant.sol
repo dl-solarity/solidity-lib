@@ -9,11 +9,9 @@ contract CRDependant is AbstractDependant {
     address public token;
 
     function setDependencies(
-        address contractsRegistry,
+        address contractsRegistry_,
         bytes calldata
     ) external override dependant {
-        ContractsRegistry1 registry = ContractsRegistry1(contractsRegistry);
-
-        token = registry.getTokenContract();
+        token = ContractsRegistry1(contractsRegistry_).getTokenContract();
     }
 }

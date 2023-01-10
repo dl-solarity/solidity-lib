@@ -62,7 +62,7 @@ describe("PoolFactory", () => {
 
   describe("access", () => {
     it("should not set dependencies from non dependant", async () => {
-      await truffleAssert.reverts(poolFactory.setDependencies(OWNER, "0x"), "Dependant: Not an injector");
+      await truffleAssert.reverts(poolFactory.setDependencies(OWNER, "0x"), "Dependant: not an injector");
     });
   });
 
@@ -114,7 +114,7 @@ describe("PoolFactory", () => {
         );
         await truffleAssert.reverts(
           pool.setDependencies(contractsRegistry.address, "0x"),
-          "Dependant: Not an injector"
+          "Dependant: not an injector"
         );
       });
 
@@ -168,6 +168,7 @@ describe("PoolFactory", () => {
 
       it("should revert when deploying the pool with the same salt", async () => {
         await poolFactory.deploy2Pool(SALT1);
+
         await truffleAssert.reverts(poolFactory.deploy2Pool(SALT1), "VM Exception while processing transaction");
       });
     });

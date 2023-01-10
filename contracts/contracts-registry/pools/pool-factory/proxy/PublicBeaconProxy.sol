@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
  *  Etherscan. This means that the implementation must not have such a function declared.
  */
 contract PublicBeaconProxy is BeaconProxy {
-    constructor(address beacon, bytes memory data) payable BeaconProxy(beacon, data) {}
+    constructor(address beacon_, bytes memory data_) payable BeaconProxy(beacon_, data_) {}
 
     /**
      *  @notice The function that returns implementation contract this proxy points to

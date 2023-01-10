@@ -9,9 +9,9 @@ contract Pool is AbstractDependant {
     address public token;
 
     function setDependencies(
-        address contractsRegistry,
+        address contractsRegistry_,
         bytes calldata
     ) external override dependant {
-        token = ContractsRegistry2(contractsRegistry).getTokenContract();
+        token = ContractsRegistry2(contractsRegistry_).getTokenContract();
     }
 }

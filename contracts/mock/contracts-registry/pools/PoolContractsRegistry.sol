@@ -9,10 +9,10 @@ contract PoolContractsRegistry is OwnablePoolContractsRegistry {
     string public constant POOL_1_NAME = "POOL_1";
     string public constant POOL_2_NAME = "POOL_2";
 
-    address internal poolFactory;
+    address internal _poolFactory;
 
     modifier onlyPoolFactory() {
-        require(poolFactory == msg.sender, "PoolContractsRegistry: not a factory");
+        require(_poolFactory == msg.sender, "PoolContractsRegistry: not a factory");
         _;
     }
 
@@ -20,13 +20,13 @@ contract PoolContractsRegistry is OwnablePoolContractsRegistry {
         __PoolContractsRegistry_init();
     }
 
-    function setDependencies(address contractsRegistry, bytes calldata data) public override {
-        super.setDependencies(contractsRegistry, data);
+    function setDependencies(address contractsRegistry_, bytes calldata data_) public override {
+        super.setDependencies(contractsRegistry_, data_);
 
-        poolFactory = ContractsRegistry2(contractsRegistry).getPoolFactoryContract();
+        _poolFactory = ContractsRegistry2(contractsRegistry_).getPoolFactoryContract();
     }
 
-    function addProxyPool(string calldata name, address poolAddress) external onlyPoolFactory {
-        _addProxyPool(name, poolAddress);
+    function addProxyPool(string calldata name_, address poolAddress_) external onlyPoolFactory {
+        _addProxyPool(name_, poolAddress_);
     }
 }

@@ -72,7 +72,7 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("should not set dependencies from non dependant", async () => {
-      await truffleAssert.reverts(poolContractsRegistry.setDependencies(OWNER, "0x"), "Dependant: Not an injector");
+      await truffleAssert.reverts(poolContractsRegistry.setDependencies(OWNER, "0x"), "Dependant: not an injector");
     });
 
     it("only owner should call these functions", async () => {
@@ -99,11 +99,11 @@ describe("PoolContractsRegistry", () => {
     it("should not get not existing implementation", async () => {
       await truffleAssert.reverts(
         poolContractsRegistry.getImplementation(NAME_1),
-        "PoolContractsRegistry: This mapping doesn't exist"
+        "PoolContractsRegistry: this mapping doesn't exist"
       );
       await truffleAssert.reverts(
         poolContractsRegistry.getProxyBeacon(NAME_1),
-        "PoolContractsRegistry: Bad ProxyBeacon"
+        "PoolContractsRegistry: bad ProxyBeacon"
       );
     });
   });
@@ -156,7 +156,7 @@ describe("PoolContractsRegistry", () => {
     it("should not inject dependencies to 0 pools", async () => {
       await truffleAssert.reverts(
         poolContractsRegistry.injectDependenciesToExistingPools(NAME_1, 0, 1),
-        "PoolContractsRegistry: No pools to inject"
+        "PoolContractsRegistry: no pools to inject"
       );
     });
   });

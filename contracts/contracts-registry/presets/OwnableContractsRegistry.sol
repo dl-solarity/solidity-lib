@@ -14,38 +14,41 @@ contract OwnableContractsRegistry is AbstractContractsRegistry, OwnableUpgradeab
         __ContractsRegistry_init();
     }
 
-    function injectDependencies(string calldata name) external onlyOwner {
-        _injectDependencies(name);
+    function injectDependencies(string calldata name_) external onlyOwner {
+        _injectDependencies(name_);
     }
 
-    function upgradeContract(string calldata name, address newImplementation) external onlyOwner {
-        _upgradeContract(name, newImplementation);
+    function upgradeContract(
+        string calldata name_,
+        address newImplementation_
+    ) external onlyOwner {
+        _upgradeContract(name_, newImplementation_);
     }
 
     function upgradeContractAndCall(
-        string calldata name,
-        address newImplementation,
-        bytes calldata data
+        string calldata name_,
+        address newImplementation_,
+        bytes calldata data_
     ) external onlyOwner {
-        _upgradeContractAndCall(name, newImplementation, data);
+        _upgradeContractAndCall(name_, newImplementation_, data_);
     }
 
-    function addContract(string calldata name, address contractAddress) external onlyOwner {
-        _addContract(name, contractAddress);
+    function addContract(string calldata name_, address contractAddress_) external onlyOwner {
+        _addContract(name_, contractAddress_);
     }
 
-    function addProxyContract(string calldata name, address contractAddress) external onlyOwner {
-        _addProxyContract(name, contractAddress);
+    function addProxyContract(string calldata name_, address contractAddress_) external onlyOwner {
+        _addProxyContract(name_, contractAddress_);
     }
 
     function justAddProxyContract(
-        string calldata name,
-        address contractAddress
+        string calldata name_,
+        address contractAddress_
     ) external onlyOwner {
-        _justAddProxyContract(name, contractAddress);
+        _justAddProxyContract(name_, contractAddress_);
     }
 
-    function removeContract(string calldata name) external onlyOwner {
-        _removeContract(name);
+    function removeContract(string calldata name_) external onlyOwner {
+        _removeContract(name_);
     }
 }

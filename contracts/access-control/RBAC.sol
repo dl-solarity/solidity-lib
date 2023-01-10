@@ -23,8 +23,8 @@ import "../libs/arrays/SetHelper.sol";
  */
 abstract contract RBAC is IRBAC, Initializable {
     using StringSet for StringSet.Set;
-    using ArrayHelper for string;
     using SetHelper for StringSet.Set;
+    using ArrayHelper for string;
 
     string public constant MASTER_ROLE = "MASTER";
 
@@ -43,22 +43,11 @@ abstract contract RBAC is IRBAC, Initializable {
 
     mapping(address => StringSet.Set) private _userRoles;
 
-    event GrantedRoles(address to, string[] rolesToGrant);
-    event RevokedRoles(address from, string[] rolesToRevoke);
-
-    event AddedPermissions(string role, string resource, string[] permissionsToAdd, bool allowed);
-    event RemovedPermissions(
-        string role,
-        string resource,
-        string[] permissionsToRemove,
-        bool allowed
-    );
-
-    modifier onlyPermission(string memory resource, string memory permission) {
+    modifier onlyPermission(string memory resource_, string memory permission_) {
         require(
-            hasPermission(msg.sender, resource, permission),
+            hasPermission(msg.sender, resource_, permission_),
             string(
-                abi.encodePacked("RBAC: no ", permission, " permission for resource ", resource)
+                abi.encodePacked("RBAC: no ", permission_, " permission for resource ", resource_)
             )
         );
         _;
@@ -73,236 +62,238 @@ abstract contract RBAC is IRBAC, Initializable {
 
     /**
      *  @notice The function to grant roles to a user
-     *  @param to the user to grant roles to
-     *  @param rolesToGrant roles to grant
+     *  @param to_ the user to grant roles to
+     *  @param rolesToGrant_ roles to grant
      */
     function grantRoles(
-        address to,
-        string[] memory rolesToGrant
+        address to_,
+        string[] memory rolesToGrant_
     ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
-        require(rolesToGrant.length > 0, "RBAC: empty roles");
+        require(rolesToGrant_.length > 0, "RBAC: empty roles");
 
-        _grantRoles(to, rolesToGrant);
+        _grantRoles(to_, rolesToGrant_);
     }
 
     /**
      *  @notice The function to revoke roles
-     *  @param from the user to revoke roles from
-     *  @param rolesToRevoke the roles to revoke
+     *  @param from_ the user to revoke roles from
+     *  @param rolesToRevoke_ the roles to revoke
      */
     function revokeRoles(
-        address from,
-        string[] memory rolesToRevoke
+        address from_,
+        string[] memory rolesToRevoke_
     ) public virtual override onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION) {
-        require(rolesToRevoke.length > 0, "RBAC: empty roles");
+        require(rolesToRevoke_.length > 0, "RBAC: empty roles");
 
-        _revokeRoles(from, rolesToRevoke);
+        _revokeRoles(from_, rolesToRevoke_);
     }
 
     /**
      *  @notice The function to add resource permission to role
-     *  @param role the role to add permissions to
-     *  @param permissionsToAdd the array of resources and permissions to add to the role
-     *  @param allowed indicates whether to add permissions to an allowlist or disallowlist
+     *  @param role_ the role to add permissions to
+     *  @param permissionsToAdd_ the array of resources and permissions to add to the role
+     *  @param allowed_ indicates whether to add permissions to an allowlist or disallowlist
      */
     function addPermissionsToRole(
-        string memory role,
-        ResourceWithPermissions[] memory permissionsToAdd,
-        bool allowed
+        string memory role_,
+        ResourceWithPermissions[] memory permissionsToAdd_,
+        bool allowed_
     ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
-        for (uint256 i = 0; i < permissionsToAdd.length; i++) {
+        for (uint256 i = 0; i < permissionsToAdd_.length; i++) {
             _addPermissionsToRole(
-                role,
-                permissionsToAdd[i].resource,
-                permissionsToAdd[i].permissions,
-                allowed
+                role_,
+                permissionsToAdd_[i].resource,
+                permissionsToAdd_[i].permissions,
+                allowed_
             );
         }
     }
 
     /**
      *  @notice The function to remove permissions from role
-     *  @param role the role to remove permissions from
-     *  @param permissionsToRemove the array of resources and permissions to remove from the role
-     *  @param allowed indicates whether to remove permissions from the allowlist or disallowlist
+     *  @param role_ the role to remove permissions from
+     *  @param permissionsToRemove_ the array of resources and permissions to remove from the role
+     *  @param allowed_ indicates whether to remove permissions from the allowlist or disallowlist
      */
     function removePermissionsFromRole(
-        string memory role,
-        ResourceWithPermissions[] memory permissionsToRemove,
-        bool allowed
+        string memory role_,
+        ResourceWithPermissions[] memory permissionsToRemove_,
+        bool allowed_
     ) public virtual override onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION) {
-        for (uint256 i = 0; i < permissionsToRemove.length; i++) {
+        for (uint256 i = 0; i < permissionsToRemove_.length; i++) {
             _removePermissionsFromRole(
-                role,
-                permissionsToRemove[i].resource,
-                permissionsToRemove[i].permissions,
-                allowed
+                role_,
+                permissionsToRemove_[i].resource,
+                permissionsToRemove_[i].permissions,
+                allowed_
             );
         }
     }
 
     /**
      *  @notice The function to get the list of user roles
-     *  @param who the user
-     *  @return roles the roes of the user
+     *  @param who_ the user
+     *  @return roles_ the roes of the user
      */
-    function getUserRoles(address who) public view override returns (string[] memory roles) {
-        return _userRoles[who].values();
+    function getUserRoles(address who_) public view override returns (string[] memory roles_) {
+        return _userRoles[who_].values();
     }
 
     /**
      *  @notice The function to get the permissions of the role
-     *  @param role the role
-     *  @return allowed the list of allowed permissions of the role
-     *  @return disallowed the list of disallowed permissions of the role
+     *  @param role_ the role
+     *  @return allowed_ the list of allowed permissions of the role
+     *  @return disallowed_ the list of disallowed permissions of the role
      */
     function getRolePermissions(
-        string memory role
+        string memory role_
     )
         public
         view
         override
         returns (
-            ResourceWithPermissions[] memory allowed,
-            ResourceWithPermissions[] memory disallowed
+            ResourceWithPermissions[] memory allowed_,
+            ResourceWithPermissions[] memory disallowed_
         )
     {
-        StringSet.Set storage allowedResources = _roleResources[role][true];
-        StringSet.Set storage disallowedResources = _roleResources[role][false];
+        StringSet.Set storage _allowedResources = _roleResources[role_][true];
+        StringSet.Set storage _disallowedResources = _roleResources[role_][false];
 
-        mapping(string => StringSet.Set) storage allowedPermissions = _rolePermissions[role][true];
-        mapping(string => StringSet.Set) storage disallowedPermissions = _rolePermissions[role][
+        mapping(string => StringSet.Set) storage _allowedPermissions = _rolePermissions[role_][
+            true
+        ];
+        mapping(string => StringSet.Set) storage _disallowedPermissions = _rolePermissions[role_][
             false
         ];
 
-        allowed = new ResourceWithPermissions[](allowedResources.length());
-        disallowed = new ResourceWithPermissions[](disallowedResources.length());
+        allowed_ = new ResourceWithPermissions[](_allowedResources.length());
+        disallowed_ = new ResourceWithPermissions[](_disallowedResources.length());
 
-        for (uint256 i = 0; i < allowed.length; i++) {
-            allowed[i].resource = allowedResources.at(i);
-            allowed[i].permissions = allowedPermissions[allowed[i].resource].values();
+        for (uint256 i = 0; i < allowed_.length; i++) {
+            allowed_[i].resource = _allowedResources.at(i);
+            allowed_[i].permissions = _allowedPermissions[allowed_[i].resource].values();
         }
 
-        for (uint256 i = 0; i < disallowed.length; i++) {
-            disallowed[i].resource = disallowedResources.at(i);
-            disallowed[i].permissions = disallowedPermissions[disallowed[i].resource].values();
+        for (uint256 i = 0; i < disallowed_.length; i++) {
+            disallowed_[i].resource = _disallowedResources.at(i);
+            disallowed_[i].permissions = _disallowedPermissions[disallowed_[i].resource].values();
         }
     }
 
     /**
      *  @notice The function to check the user's possesion of the role
-     *  @param who the user
-     *  @param resource the resource the user has to have the permission of
-     *  @param permission the permission the user has to have
-     *  @return true if user has the permission, false otherwise
+     *  @param who_ the user
+     *  @param resource_ the resource the user has to have the permission of
+     *  @param permission_ the permission the user has to have
+     *  @return true_ if user has the permission, false otherwise
      */
     function hasPermission(
-        address who,
-        string memory resource,
-        string memory permission
+        address who_,
+        string memory resource_,
+        string memory permission_
     ) public view override returns (bool) {
-        StringSet.Set storage roles = _userRoles[who];
+        StringSet.Set storage _roles = _userRoles[who_];
 
-        uint256 length = roles.length();
-        bool isAllowed;
+        uint256 length_ = _roles.length();
+        bool isAllowed_;
 
-        for (uint256 i = 0; i < length; i++) {
-            string memory role = roles.at(i);
+        for (uint256 i = 0; i < length_; i++) {
+            string memory role_ = _roles.at(i);
 
-            StringSet.Set storage allDisallowed = _rolePermissions[role][false][ALL_RESOURCE];
-            StringSet.Set storage allAllowed = _rolePermissions[role][true][ALL_RESOURCE];
+            StringSet.Set storage _allDisallowed = _rolePermissions[role_][false][ALL_RESOURCE];
+            StringSet.Set storage _allAllowed = _rolePermissions[role_][true][ALL_RESOURCE];
 
-            StringSet.Set storage disallowed = _rolePermissions[role][false][resource];
-            StringSet.Set storage allowed = _rolePermissions[role][true][resource];
+            StringSet.Set storage _disallowed = _rolePermissions[role_][false][resource_];
+            StringSet.Set storage _allowed = _rolePermissions[role_][true][resource_];
 
             if (
-                allDisallowed.contains(ALL_PERMISSION) ||
-                allDisallowed.contains(permission) ||
-                disallowed.contains(ALL_PERMISSION) ||
-                disallowed.contains(permission)
+                _allDisallowed.contains(ALL_PERMISSION) ||
+                _allDisallowed.contains(permission_) ||
+                _disallowed.contains(ALL_PERMISSION) ||
+                _disallowed.contains(permission_)
             ) {
                 return false;
             }
 
             if (
-                allAllowed.contains(ALL_PERMISSION) ||
-                allAllowed.contains(permission) ||
-                allowed.contains(ALL_PERMISSION) ||
-                allowed.contains(permission)
+                _allAllowed.contains(ALL_PERMISSION) ||
+                _allAllowed.contains(permission_) ||
+                _allowed.contains(ALL_PERMISSION) ||
+                _allowed.contains(permission_)
             ) {
-                isAllowed = true;
+                isAllowed_ = true;
             }
         }
 
-        return isAllowed;
+        return isAllowed_;
     }
 
     /**
      *  @notice The internal function to grant roles
-     *  @param to the user to grant roles to
-     *  @param rolesToGrant the roles to grant
+     *  @param to_ the user to grant roles to
+     *  @param rolesToGrant_ the roles to grant
      */
-    function _grantRoles(address to, string[] memory rolesToGrant) internal {
-        _userRoles[to].add(rolesToGrant);
+    function _grantRoles(address to_, string[] memory rolesToGrant_) internal {
+        _userRoles[to_].add(rolesToGrant_);
 
-        emit GrantedRoles(to, rolesToGrant);
+        emit GrantedRoles(to_, rolesToGrant_);
     }
 
     /**
      *  @notice The internal function to revoke roles
-     *  @param from the user to revoke roles from
-     *  @param rolesToRevoke the roles to revoke
+     *  @param from_ the user to revoke roles from
+     *  @param rolesToRevoke_ the roles to revoke
      */
-    function _revokeRoles(address from, string[] memory rolesToRevoke) internal {
-        _userRoles[from].remove(rolesToRevoke);
+    function _revokeRoles(address from_, string[] memory rolesToRevoke_) internal {
+        _userRoles[from_].remove(rolesToRevoke_);
 
-        emit RevokedRoles(from, rolesToRevoke);
+        emit RevokedRoles(from_, rolesToRevoke_);
     }
 
     /**
      *  @notice The internal function to add permission to the role
-     *  @param role the role to add permissions to
-     *  @param resourceToAdd the resource to which the permissions belong
-     *  @param permissionsToAdd the permissions of the resource
-     *  @param allowed whether to add permissions to the allowlist or the disallowlist
+     *  @param role_ the role to add permissions to
+     *  @param resourceToAdd_ the resource to which the permissions belong
+     *  @param permissionsToAdd_ the permissions of the resource
+     *  @param allowed_ whether to add permissions to the allowlist or the disallowlist
      */
     function _addPermissionsToRole(
-        string memory role,
-        string memory resourceToAdd,
-        string[] memory permissionsToAdd,
-        bool allowed
+        string memory role_,
+        string memory resourceToAdd_,
+        string[] memory permissionsToAdd_,
+        bool allowed_
     ) internal {
-        StringSet.Set storage resources = _roleResources[role][allowed];
-        StringSet.Set storage permissions = _rolePermissions[role][allowed][resourceToAdd];
+        StringSet.Set storage _resources = _roleResources[role_][allowed_];
+        StringSet.Set storage _permissions = _rolePermissions[role_][allowed_][resourceToAdd_];
 
-        permissions.add(permissionsToAdd);
-        resources.add(resourceToAdd);
+        _permissions.add(permissionsToAdd_);
+        _resources.add(resourceToAdd_);
 
-        emit AddedPermissions(role, resourceToAdd, permissionsToAdd, allowed);
+        emit AddedPermissions(role_, resourceToAdd_, permissionsToAdd_, allowed_);
     }
 
     /**
      *  @notice The internal function to remove permissions from the role
-     *  @param role the role to remove permissions from
-     *  @param resourceToRemove the resource to which the permissions belong
-     *  @param permissionsToRemove the permissions of the resource
-     *  @param allowed whether to remove permissions from the allowlist or the disallowlist
+     *  @param role_ the role to remove permissions from
+     *  @param resourceToRemove_ the resource to which the permissions belong
+     *  @param permissionsToRemove_ the permissions of the resource
+     *  @param allowed_ whether to remove permissions from the allowlist or the disallowlist
      */
     function _removePermissionsFromRole(
-        string memory role,
-        string memory resourceToRemove,
-        string[] memory permissionsToRemove,
-        bool allowed
+        string memory role_,
+        string memory resourceToRemove_,
+        string[] memory permissionsToRemove_,
+        bool allowed_
     ) internal {
-        StringSet.Set storage resources = _roleResources[role][allowed];
-        StringSet.Set storage permissions = _rolePermissions[role][allowed][resourceToRemove];
+        StringSet.Set storage _resources = _roleResources[role_][allowed_];
+        StringSet.Set storage _permissions = _rolePermissions[role_][allowed_][resourceToRemove_];
 
-        permissions.remove(permissionsToRemove);
+        _permissions.remove(permissionsToRemove_);
 
-        if (permissions.length() == 0) {
-            resources.remove(resourceToRemove);
+        if (_permissions.length() == 0) {
+            _resources.remove(resourceToRemove_);
         }
 
-        emit RemovedPermissions(role, resourceToRemove, permissionsToRemove, allowed);
+        emit RemovedPermissions(role_, resourceToRemove_, permissionsToRemove_, allowed_);
     }
 }

@@ -42,81 +42,83 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
 
     /**
      *  @notice The function that accepts dependencies from the ContractsRegistry, can be overridden
-     *  @param contractsRegistry the dependency registry
+     *  @param contractsRegistry_ the dependency registry
      */
     function setDependencies(
-        address contractsRegistry,
+        address contractsRegistry_,
         bytes calldata
     ) public virtual override dependant {
-        _contractsRegistry = contractsRegistry;
+        _contractsRegistry = contractsRegistry_;
     }
 
     /**
      *  @notice The function to get implementation of the specific pools
-     *  @param name the name of the pools
-     *  @return address the implementation these pools point to
+     *  @param name_ the name of the pools
+     *  @return address_ the implementation these pools point to
      */
-    function getImplementation(string memory name) public view returns (address) {
+    function getImplementation(string memory name_) public view returns (address) {
         require(
-            address(_beacons[name]) != address(0),
-            "PoolContractsRegistry: This mapping doesn't exist"
+            address(_beacons[name_]) != address(0),
+            "PoolContractsRegistry: this mapping doesn't exist"
         );
 
-        return _beacons[name].implementation();
+        return _beacons[name_].implementation();
     }
 
     /**
      *  @notice The function to get the BeaconProxy of the specific pools (mostly needed in the factories)
-     *  @param name the name of the pools
+     *  @param name_ the name of the pools
      *  @return address the BeaconProxy address
      */
-    function getProxyBeacon(string memory name) public view returns (address) {
-        require(address(_beacons[name]) != address(0), "PoolContractsRegistry: Bad ProxyBeacon");
+    function getProxyBeacon(string memory name_) public view returns (address) {
+        address beacon_ = address(_beacons[name_]);
 
-        return address(_beacons[name]);
+        require(beacon_ != address(0), "PoolContractsRegistry: bad ProxyBeacon");
+
+        return beacon_;
     }
 
     /**
      *  @notice The function to count pools by specified name
-     *  @param name the associated pools name
+     *  @param name_ the associated pools name
      *  @return the number of pools with this name
      */
-    function countPools(string memory name) public view returns (uint256) {
-        return _pools[name].length();
+    function countPools(string memory name_) public view returns (uint256) {
+        return _pools[name_].length();
     }
 
     /**
      *  @notice The paginated function to list pools by their name (call `countPools()` to account for pagination)
-     *  @param name the associated pools name
-     *  @param offset the starting index in the pools array
-     *  @param limit the number of pools
-     *  @return pools the array of pools proxies
+     *  @param name_ the associated pools name
+     *  @param offset_ the starting index in the pools array
+     *  @param limit_ the number of pools
+     *  @return pools_ the array of pools proxies
      */
     function listPools(
-        string memory name,
-        uint256 offset,
-        uint256 limit
-    ) public view returns (address[] memory pools) {
-        return _pools[name].part(offset, limit);
+        string memory name_,
+        uint256 offset_,
+        uint256 limit_
+    ) public view returns (address[] memory pools_) {
+        return _pools[name_].part(offset_, limit_);
     }
 
     /**
      *  @notice The function that sets pools' implementations. Deploys ProxyBeacons on the first set.
      *  This function is also used to upgrade pools
-     *  @param names the names that are associated with the pools implementations
-     *  @param newImplementations the new implementations of the pools (ProxyBeacons will point to these)
+     *  @param names_ the names that are associated with the pools implementations
+     *  @param newImplementations_ the new implementations of the pools (ProxyBeacons will point to these)
      */
     function _setNewImplementations(
-        string[] memory names,
-        address[] memory newImplementations
+        string[] memory names_,
+        address[] memory newImplementations_
     ) internal {
-        for (uint256 i = 0; i < names.length; i++) {
-            if (address(_beacons[names[i]]) == address(0)) {
-                _beacons[names[i]] = new ProxyBeacon();
+        for (uint256 i = 0; i < names_.length; i++) {
+            if (address(_beacons[names_[i]]) == address(0)) {
+                _beacons[names_[i]] = new ProxyBeacon();
             }
 
-            if (_beacons[names[i]].implementation() != newImplementations[i]) {
-                _beacons[names[i]].upgrade(newImplementations[i]);
+            if (_beacons[names_[i]].implementation() != newImplementations_[i]) {
+                _beacons[names_[i]].upgrade(newImplementations_[i]);
             }
         }
     }
@@ -124,34 +126,34 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
     /**
      *  @notice The paginated function that injects new dependencies to the pools. Can be used when the dependant contract
      *  gets fully replaced to update the pools' dependencies
-     *  @param name the pools name that will be injected
-     *  @param offset the starting index in the pools array
-     *  @param limit the number of pools
+     *  @param name_ the pools name that will be injected
+     *  @param offset_ the starting index in the pools array
+     *  @param limit_ the number of pools
      */
     function _injectDependenciesToExistingPools(
-        string memory name,
-        uint256 offset,
-        uint256 limit
-    ) internal {
-        EnumerableSet.AddressSet storage pools = _pools[name];
+        string memory name_,
+        uint256 offset_,
+        uint256 limit_
+    ) internal virtual {
+        EnumerableSet.AddressSet storage _namedPools = _pools[name_];
 
-        uint256 to = (offset + limit).min(pools.length()).max(offset);
+        uint256 to_ = (offset_ + limit_).min(_namedPools.length()).max(offset_);
 
-        require(to != offset, "PoolContractsRegistry: No pools to inject");
+        require(to_ != offset_, "PoolContractsRegistry: no pools to inject");
 
-        address contractsRegistry = _contractsRegistry;
+        address contractsRegistry_ = _contractsRegistry;
 
-        for (uint256 i = offset; i < to; i++) {
-            AbstractDependant(pools.at(i)).setDependencies(contractsRegistry, "");
+        for (uint256 i = offset_; i < to_; i++) {
+            AbstractDependant(_namedPools.at(i)).setDependencies(contractsRegistry_, bytes(""));
         }
     }
 
     /**
      *  @notice The function to add new pools into the registry
-     *  @param name the pool's associated name
-     *  @param poolAddress the proxy address of the pool
+     *  @param name_ the pool's associated name
+     *  @param poolAddress_ the proxy address of the pool
      */
-    function _addProxyPool(string memory name, address poolAddress) internal {
-        _pools[name].add(poolAddress);
+    function _addProxyPool(string memory name_, address poolAddress_) internal {
+        _pools[name_].add(poolAddress_);
     }
 }

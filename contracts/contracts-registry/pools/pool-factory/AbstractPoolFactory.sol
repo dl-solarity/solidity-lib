@@ -22,25 +22,25 @@ abstract contract AbstractPoolFactory is AbstractDependant {
 
     /**
      *  @notice The function that accepts dependencies from the ContractsRegistry, can be overridden
-     *  @param contractsRegistry the dependency registry
+     *  @param contractsRegistry_ the dependency registry
      */
     function setDependencies(
-        address contractsRegistry,
+        address contractsRegistry_,
         bytes calldata
     ) public virtual override dependant {
-        _contractsRegistry = contractsRegistry;
+        _contractsRegistry = contractsRegistry_;
     }
 
     /**
      *  @notice The internal deploy function that deploys BeaconProxy pointing to the
      *  pool implementation taken from the PoolContractRegistry
      */
-    function _deploy(address poolRegistry, string memory poolType) internal returns (address) {
+    function _deploy(address poolRegistry_, string memory poolType_) internal returns (address) {
         return
             address(
                 new PublicBeaconProxy(
-                    AbstractPoolContractsRegistry(poolRegistry).getProxyBeacon(poolType),
-                    ""
+                    AbstractPoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
+                    bytes("")
                 )
             );
     }
@@ -50,15 +50,15 @@ abstract contract AbstractPoolFactory is AbstractDependant {
      *  pool implementation taken from the PoolContractRegistry using the create2 mechanism
      */
     function _deploy2(
-        address poolRegistry,
-        string memory poolType,
-        bytes32 salt
+        address poolRegistry_,
+        string memory poolType_,
+        bytes32 salt_
     ) internal returns (address) {
         return
             address(
-                new PublicBeaconProxy{salt: salt}(
-                    AbstractPoolContractsRegistry(poolRegistry).getProxyBeacon(poolType),
-                    ""
+                new PublicBeaconProxy{salt: salt_}(
+                    AbstractPoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
+                    bytes("")
                 )
             );
     }
@@ -66,9 +66,13 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     /**
      *  @notice The internal function that registers newly deployed pool in the provided PoolContractRegistry
      */
-    function _register(address poolRegistry, string memory poolType, address poolProxy) internal {
-        (bool success, ) = poolRegistry.call(
-            abi.encodeWithSignature("addProxyPool(string,address)", poolType, poolProxy)
+    function _register(
+        address poolRegistry_,
+        string memory poolType_,
+        address poolProxy_
+    ) internal {
+        (bool success, ) = poolRegistry_.call(
+            abi.encodeWithSignature("addProxyPool(string,address)", poolType_, poolProxy_)
         );
 
         require(success, "AbstractPoolFactory: failed to register contract");
@@ -78,29 +82,29 @@ abstract contract AbstractPoolFactory is AbstractDependant {
      *  @notice The function that injects dependencies to the newly deployed pool and sets
      *  provided PoolContractsRegistry as an injector
      */
-    function _injectDependencies(address poolRegistry, address proxy) internal {
-        AbstractDependant(proxy).setDependencies(_contractsRegistry, "");
-        AbstractDependant(proxy).setInjector(poolRegistry);
+    function _injectDependencies(address poolRegistry_, address proxy_) internal {
+        AbstractDependant(proxy_).setDependencies(_contractsRegistry, bytes(""));
+        AbstractDependant(proxy_).setInjector(poolRegistry_);
     }
 
     /**
      *  @notice The view function that computes the address of the pool if deployed via _deploy2
      */
     function _predictPoolAddress(
-        address poolRegistry,
-        string memory poolType,
-        bytes32 salt
+        address poolRegistry_,
+        string memory poolType_,
+        bytes32 salt_
     ) internal view returns (address) {
         bytes32 bytecodeHash = keccak256(
             abi.encodePacked(
                 type(PublicBeaconProxy).creationCode,
                 abi.encode(
-                    AbstractPoolContractsRegistry(poolRegistry).getProxyBeacon(poolType),
-                    ""
+                    AbstractPoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
+                    bytes("")
                 )
             )
         );
 
-        return Create2.computeAddress(salt, bytecodeHash);
+        return Create2.computeAddress(salt_, bytecodeHash);
     }
 }

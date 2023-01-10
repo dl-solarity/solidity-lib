@@ -9,35 +9,37 @@ import "../../../../contracts-registry/pools/pool-factory/AbstractPoolFactory.so
 contract PoolFactory is AbstractPoolFactory {
     address public poolContractsRegistry;
 
-    function setDependencies(address contractsRegistry, bytes calldata data) public override {
-        super.setDependencies(contractsRegistry, data);
+    function setDependencies(address contractsRegistry_, bytes calldata data_) public override {
+        super.setDependencies(contractsRegistry_, data_);
 
-        poolContractsRegistry = ContractsRegistry2(contractsRegistry)
+        poolContractsRegistry = ContractsRegistry2(contractsRegistry_)
             .getPoolContractsRegistryContract();
     }
 
     function deployPool() external {
-        string memory poolType = PoolContractsRegistry(poolContractsRegistry).POOL_1_NAME();
+        string memory poolType_ = PoolContractsRegistry(poolContractsRegistry).POOL_1_NAME();
 
-        address poolProxy = _deploy(poolContractsRegistry, poolType);
-        _register(poolContractsRegistry, poolType, poolProxy);
-        _injectDependencies(poolContractsRegistry, poolProxy);
+        address poolProxy_ = _deploy(poolContractsRegistry, poolType_);
+
+        _register(poolContractsRegistry, poolType_, poolProxy_);
+        _injectDependencies(poolContractsRegistry, poolProxy_);
     }
 
-    function deploy2Pool(string calldata salt) external {
-        string memory poolType = PoolContractsRegistry(poolContractsRegistry).POOL_1_NAME();
+    function deploy2Pool(string calldata salt_) external {
+        string memory poolType_ = PoolContractsRegistry(poolContractsRegistry).POOL_1_NAME();
 
-        address poolProxy = _deploy2(poolContractsRegistry, poolType, bytes32(bytes(salt)));
-        _register(poolContractsRegistry, poolType, poolProxy);
-        _injectDependencies(poolContractsRegistry, poolProxy);
+        address poolProxy_ = _deploy2(poolContractsRegistry, poolType_, bytes32(bytes(salt_)));
+
+        _register(poolContractsRegistry, poolType_, poolProxy_);
+        _injectDependencies(poolContractsRegistry, poolProxy_);
     }
 
-    function predictPoolAddress(string calldata salt) external view returns (address) {
+    function predictPoolAddress(string calldata salt_) external view returns (address) {
         return
             _predictPoolAddress(
                 poolContractsRegistry,
                 PoolContractsRegistry(poolContractsRegistry).POOL_1_NAME(),
-                bytes32(bytes(salt))
+                bytes32(bytes(salt_))
             );
     }
 }

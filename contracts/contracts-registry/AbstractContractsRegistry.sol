@@ -53,24 +53,24 @@ abstract contract AbstractContractsRegistry is Initializable {
 
     /**
      *  @notice The function that returns an associated contract with the name
-     *  @param name the name of the contract
+     *  @param name_ the name of the contract
      *  @return the address of the contract
      */
-    function getContract(string memory name) public view returns (address) {
-        address contractAddress = _contracts[name];
+    function getContract(string memory name_) public view returns (address) {
+        address contractAddress_ = _contracts[name_];
 
-        require(contractAddress != address(0), "ContractsRegistry: This mapping doesn't exist");
+        require(contractAddress_ != address(0), "ContractsRegistry: this mapping doesn't exist");
 
-        return contractAddress;
+        return contractAddress_;
     }
 
     /**
      *  @notice The function that check if a contract with a given name has been added
-     *  @param name the name of the contract
+     *  @param name_ the name of the contract
      *  @return true if the contract is present in the registry
      */
-    function hasContract(string memory name) public view returns (bool) {
-        return _contracts[name] != address(0);
+    function hasContract(string memory name_) public view returns (bool) {
+        return _contracts[name_] != address(0);
     }
 
     /**
@@ -83,122 +83,124 @@ abstract contract AbstractContractsRegistry is Initializable {
 
     /**
      *  @notice The function that returns an implementation of the given proxy contract
-     *  @param name the name of the contract
+     *  @param name_ the name of the contract
      *  @return the implementation address
      */
-    function getImplementation(string memory name) public view returns (address) {
-        address contractProxy = _contracts[name];
+    function getImplementation(string memory name_) public view returns (address) {
+        address contractProxy_ = _contracts[name_];
 
-        require(contractProxy != address(0), "ContractsRegistry: This mapping doesn't exist");
-        require(_isProxy[contractProxy], "ContractsRegistry: Not a proxy contract");
+        require(contractProxy_ != address(0), "ContractsRegistry: this mapping doesn't exist");
+        require(_isProxy[contractProxy_], "ContractsRegistry: not a proxy contract");
 
-        return _proxyUpgrader.getImplementation(contractProxy);
+        return _proxyUpgrader.getImplementation(contractProxy_);
     }
 
     /**
      *  @notice The function that injects the dependencies into the given contract
-     *  @param name the name of the contract
+     *  @param name_ the name of the contract
      */
-    function _injectDependencies(string memory name) internal {
-        address contractAddress = _contracts[name];
+    function _injectDependencies(string memory name_) internal virtual {
+        address contractAddress_ = _contracts[name_];
 
-        require(contractAddress != address(0), "ContractsRegistry: This mapping doesn't exist");
+        require(contractAddress_ != address(0), "ContractsRegistry: this mapping doesn't exist");
 
-        AbstractDependant dependant = AbstractDependant(contractAddress);
-        dependant.setDependencies(address(this), "");
+        AbstractDependant dependant_ = AbstractDependant(contractAddress_);
+        dependant_.setDependencies(address(this), bytes(""));
     }
 
     /**
      *  @notice The function to upgrade added proxy contract with a new implementation
-     *  @param name the name of the proxy contract
-     *  @param newImplementation the new implementation the proxy should be upgraded to
+     *  @param name_ the name of the proxy contract
+     *  @param newImplementation_ the new implementation the proxy should be upgraded to
      *
      *  It is the Owner's responsibility to ensure the compatibility between implementations
      */
-    function _upgradeContract(string memory name, address newImplementation) internal {
-        _upgradeContractAndCall(name, newImplementation, bytes(""));
+    function _upgradeContract(string memory name_, address newImplementation_) internal {
+        _upgradeContractAndCall(name_, newImplementation_, bytes(""));
     }
 
     /**
      *  @notice The function to upgrade added proxy contract with a new implementation, providing data
-     *  @param name the name of the proxy contract
-     *  @param newImplementation the new implementation the proxy should be upgraded to
-     *  @param data the data that the new implementation will be called with. This can be an ABI encoded function call
+     *  @param name_ the name of the proxy contract
+     *  @param newImplementation_ the new implementation the proxy should be upgraded to
+     *  @param data_ the data that the new implementation will be called with. This can be an ABI encoded function call
      *
      *  It is the Owner's responsibility to ensure the compatibility between implementations
      */
     function _upgradeContractAndCall(
-        string memory name,
-        address newImplementation,
-        bytes memory data
+        string memory name_,
+        address newImplementation_,
+        bytes memory data_
     ) internal {
-        address contractToUpgrade = _contracts[name];
+        address contractToUpgrade_ = _contracts[name_];
 
-        require(contractToUpgrade != address(0), "ContractsRegistry: This mapping doesn't exist");
-        require(_isProxy[contractToUpgrade], "ContractsRegistry: Not a proxy contract");
+        require(contractToUpgrade_ != address(0), "ContractsRegistry: this mapping doesn't exist");
+        require(_isProxy[contractToUpgrade_], "ContractsRegistry: not a proxy contract");
 
-        _proxyUpgrader.upgrade(contractToUpgrade, newImplementation, data);
+        _proxyUpgrader.upgrade(contractToUpgrade_, newImplementation_, data_);
     }
 
     /**
      *  @notice The function to add pure contracts to the ContractsRegistry. These should either be
      *  the contracts the system does not have direct upgradeability control over, or the contracts that are not upgradeable
-     *  @param name the name to associate the contract with
-     *  @param contractAddress the address of the contract
+     *  @param name_ the name to associate the contract with
+     *  @param contractAddress_ the address of the contract
      */
-    function _addContract(string memory name, address contractAddress) internal {
-        require(contractAddress != address(0), "ContractsRegistry: Null address is forbidden");
+    function _addContract(string memory name_, address contractAddress_) internal {
+        require(contractAddress_ != address(0), "ContractsRegistry: zero address is forbidden");
 
-        _contracts[name] = contractAddress;
+        _contracts[name_] = contractAddress_;
 
-        emit AddedContract(name, contractAddress, false);
+        emit AddedContract(name_, contractAddress_, false);
     }
 
     /**
      *  @notice The function to add the contracts and deploy the proxy above them. It should be used to add
      *  contract that the ContractsRegistry should be able to upgrade
-     *  @param name the name to associate the contract with
-     *  @param contractAddress the address of the implementation
+     *  @param name_ the name to associate the contract with
+     *  @param contractAddress_ the address of the implementation
      */
-    function _addProxyContract(string memory name, address contractAddress) internal {
-        require(contractAddress != address(0), "ContractsRegistry: Null address is forbidden");
+    function _addProxyContract(string memory name_, address contractAddress_) internal {
+        require(contractAddress_ != address(0), "ContractsRegistry: zero address is forbidden");
 
-        address proxyAddr = address(
-            new TransparentUpgradeableProxy(contractAddress, address(_proxyUpgrader), "")
+        address proxyAddr_ = address(
+            new TransparentUpgradeableProxy(contractAddress_, address(_proxyUpgrader), bytes(""))
         );
 
-        _contracts[name] = proxyAddr;
-        _isProxy[proxyAddr] = true;
+        _contracts[name_] = proxyAddr_;
+        _isProxy[proxyAddr_] = true;
 
-        emit AddedContract(name, proxyAddr, true);
+        emit AddedContract(name_, proxyAddr_, true);
     }
 
     /**
      *  @notice The function to add the already deployed proxy to the ContractsRegistry. This might be used
      *  when the system migrates to a new ContractRegistry. This means that the new ProxyUpgrader must have the
      *  credentials to upgrade the added proxies
-     *  @param name the name to associate the contract with
-     *  @param contractAddress the address of the proxy
+     *  @param name_ the name to associate the contract with
+     *  @param contractAddress_ the address of the proxy
      */
-    function _justAddProxyContract(string memory name, address contractAddress) internal {
-        require(contractAddress != address(0), "ContractsRegistry: Null address is forbidden");
+    function _justAddProxyContract(string memory name_, address contractAddress_) internal {
+        require(contractAddress_ != address(0), "ContractsRegistry: zero address is forbidden");
 
-        _contracts[name] = contractAddress;
-        _isProxy[contractAddress] = true;
+        _contracts[name_] = contractAddress_;
+        _isProxy[contractAddress_] = true;
 
-        emit AddedContract(name, contractAddress, true);
+        emit AddedContract(name_, contractAddress_, true);
     }
 
     /**
      *  @notice The function to remove the contract from the ContractsRegistry
-     *  @param name the associated name with the contract
+     *  @param name_ the associated name with the contract
      */
-    function _removeContract(string memory name) internal {
-        require(_contracts[name] != address(0), "ContractsRegistry: This mapping doesn't exist");
+    function _removeContract(string memory name_) internal {
+        address contractAddress_ = _contracts[name_];
 
-        delete _isProxy[_contracts[name]];
-        delete _contracts[name];
+        require(contractAddress_ != address(0), "ContractsRegistry: this mapping doesn't exist");
 
-        emit RemovedContract(name);
+        delete _isProxy[contractAddress_];
+        delete _contracts[name_];
+
+        emit RemovedContract(name_);
     }
 }

@@ -8,15 +8,15 @@ contract DummyStorage {
         string dummyString;
     }
 
-    function getDummyFacetStorage() internal pure returns (DummyFacetStorage storage ods) {
-        bytes32 position = DUMMY_STORAGE_SLOT;
+    function getDummyFacetStorage() internal pure returns (DummyFacetStorage storage _ods) {
+        bytes32 position_ = DUMMY_STORAGE_SLOT;
 
         assembly {
-            ods.slot := position
+            _ods.slot := position_
         }
     }
 
-    function getDummyString() external view returns (string memory dummyString) {
+    function getDummyString() external view returns (string memory dummyString_) {
         return getDummyFacetStorage().dummyString;
     }
 }
