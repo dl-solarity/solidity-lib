@@ -18,28 +18,28 @@ contract SetHelperMock {
     EnumerableSet.UintSet internal uintSet;
     StringSet.Set internal stringSet;
 
-    function addToAddressSet(address[] memory arr) external {
-        addressSet.add(arr);
+    function addToAddressSet(address[] memory arr_) external {
+        addressSet.add(arr_);
     }
 
-    function addToUintSet(uint256[] memory arr) external {
-        uintSet.add(arr);
+    function addToUintSet(uint256[] memory arr_) external {
+        uintSet.add(arr_);
     }
 
-    function addToStringSet(string[] memory arr) external {
-        stringSet.add(arr);
+    function addToStringSet(string[] memory arr_) external {
+        stringSet.add(arr_);
     }
 
-    function removeFromAddressSet(address[] memory arr) external {
-        addressSet.remove(arr);
+    function removeFromAddressSet(address[] memory arr_) external {
+        addressSet.remove(arr_);
     }
 
-    function removeFromUintSet(uint256[] memory arr) external {
-        uintSet.remove(arr);
+    function removeFromUintSet(uint256[] memory arr_) external {
+        uintSet.remove(arr_);
     }
 
-    function removeFromStringSet(string[] memory arr) external {
-        stringSet.remove(arr);
+    function removeFromStringSet(string[] memory arr_) external {
+        stringSet.remove(arr_);
     }
 
     function getAddressSet() external view returns (address[] memory) {

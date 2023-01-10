@@ -33,7 +33,7 @@ describe("ProxyUpgrader", () => {
     it("only owner should upgrade", async () => {
       await truffleAssert.reverts(
         proxyUpgrader.upgrade(proxy.address, proxy.address, "0x", { from: SECOND }),
-        "ProxyUpgrader: Not an owner"
+        "ProxyUpgrader: not an owner"
       );
     });
   });
@@ -50,7 +50,7 @@ describe("ProxyUpgrader", () => {
     it("only owner should get implementation", async () => {
       await truffleAssert.reverts(
         proxyUpgrader.getImplementation(proxy.address, { from: SECOND }),
-        "ProxyUpgrader: Not an owner"
+        "ProxyUpgrader: not an owner"
       );
     });
   });

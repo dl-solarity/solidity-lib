@@ -1,6 +1,6 @@
 const { assert } = require("chai");
-const { accounts } = require("../../scripts/utils/utils");
-const { ZERO_ADDR } = require("../../scripts/utils/constants");
+const { accounts } = require("../../../scripts/utils/utils");
+const { ZERO_ADDR } = require("../../../scripts/utils/constants");
 const truffleAssert = require("truffle-assertions");
 
 const ProxyBeacon = artifacts.require("ProxyBeacon");
@@ -36,11 +36,11 @@ describe("ProxyUpgrader", () => {
     });
 
     it("should not upgrade to non-contract", async () => {
-      await truffleAssert.reverts(proxyBeacon.upgrade(SECOND), "ProxyBeacon: Not a contract");
+      await truffleAssert.reverts(proxyBeacon.upgrade(SECOND), "ProxyBeacon: not a contract");
     });
 
     it("only owner should upgrade", async () => {
-      await truffleAssert.reverts(proxyBeacon.upgrade(token.address, { from: SECOND }), "ProxyBeacon: Not an owner");
+      await truffleAssert.reverts(proxyBeacon.upgrade(token.address, { from: SECOND }), "ProxyBeacon: not an owner");
     });
   });
 });

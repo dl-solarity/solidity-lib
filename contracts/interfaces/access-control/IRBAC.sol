@@ -12,37 +12,48 @@ interface IRBAC {
         string[] permissions;
     }
 
-    function grantRoles(address to, string[] memory rolesToGrant) external;
+    event GrantedRoles(address to, string[] rolesToGrant);
+    event RevokedRoles(address from, string[] rolesToRevoke);
 
-    function revokeRoles(address from, string[] memory rolesToRevoke) external;
+    event AddedPermissions(string role, string resource, string[] permissionsToAdd, bool allowed);
+    event RemovedPermissions(
+        string role,
+        string resource,
+        string[] permissionsToRemove,
+        bool allowed
+    );
+
+    function grantRoles(address to_, string[] memory rolesToGrant_) external;
+
+    function revokeRoles(address from_, string[] memory rolesToRevoke_) external;
 
     function addPermissionsToRole(
-        string calldata role,
-        ResourceWithPermissions[] calldata permissionsToAdd,
-        bool allowed
+        string calldata role_,
+        ResourceWithPermissions[] calldata permissionsToAdd_,
+        bool allowed_
     ) external;
 
     function removePermissionsFromRole(
-        string calldata role,
-        ResourceWithPermissions[] calldata permissionsToRemove,
-        bool allowed
+        string calldata role_,
+        ResourceWithPermissions[] calldata permissionsToRemove_,
+        bool allowed_
     ) external;
 
-    function getUserRoles(address who) external view returns (string[] memory roles);
+    function getUserRoles(address who_) external view returns (string[] memory roles_);
 
     function getRolePermissions(
-        string calldata role
+        string calldata role_
     )
         external
         view
         returns (
-            ResourceWithPermissions[] calldata allowed,
-            ResourceWithPermissions[] calldata disallowed
+            ResourceWithPermissions[] calldata allowed_,
+            ResourceWithPermissions[] calldata disallowed_
         );
 
     function hasPermission(
-        address who,
-        string calldata resource,
-        string calldata permission
+        address who_,
+        string calldata resource_,
+        string calldata permission_
     ) external view returns (bool);
 }

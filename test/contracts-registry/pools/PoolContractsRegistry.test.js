@@ -1,6 +1,6 @@
 const { assert } = require("chai");
-const { accounts } = require("../../scripts/utils/utils");
-const { ZERO_ADDR } = require("../../scripts/utils/constants");
+const { accounts } = require("../../../scripts/utils/utils");
+const { ZERO_ADDR } = require("../../../scripts/utils/constants");
 const truffleAssert = require("truffle-assertions");
 
 const PoolContractsRegistry = artifacts.require("PoolContractsRegistry");
@@ -72,7 +72,7 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("should not set dependencies from non dependant", async () => {
-      await truffleAssert.reverts(poolContractsRegistry.setDependencies(OWNER), "Dependant: Not an injector");
+      await truffleAssert.reverts(poolContractsRegistry.setDependencies(OWNER, "0x"), "Dependant: not an injector");
     });
 
     it("only owner should call these functions", async () => {
@@ -83,6 +83,11 @@ describe("PoolContractsRegistry", () => {
 
       await truffleAssert.reverts(
         poolContractsRegistry.injectDependenciesToExistingPools("", 0, 0, { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+
+      await truffleAssert.reverts(
+        poolContractsRegistry.injectDependenciesToExistingPoolsWithData("", "0x", 0, 0, { from: SECOND }),
         "Ownable: caller is not the owner"
       );
     });
@@ -99,11 +104,11 @@ describe("PoolContractsRegistry", () => {
     it("should not get not existing implementation", async () => {
       await truffleAssert.reverts(
         poolContractsRegistry.getImplementation(NAME_1),
-        "PoolContractsRegistry: This mapping doesn't exist"
+        "PoolContractsRegistry: this mapping doesn't exist"
       );
       await truffleAssert.reverts(
         poolContractsRegistry.getProxyBeacon(NAME_1),
-        "PoolContractsRegistry: Bad ProxyBeacon"
+        "PoolContractsRegistry: bad ProxyBeacon"
       );
     });
   });
@@ -153,10 +158,20 @@ describe("PoolContractsRegistry", () => {
       assert.equal(await pool.token(), token.address);
     });
 
+    it("should inject dependencies with data", async () => {
+      await poolContractsRegistry.addProxyPool(NAME_1, pool.address);
+
+      assert.equal(await pool.token(), ZERO_ADDR);
+
+      await poolContractsRegistry.injectDependenciesToExistingPoolsWithData(NAME_1, "0x", 0, 1);
+
+      assert.equal(await pool.token(), token.address);
+    });
+
     it("should not inject dependencies to 0 pools", async () => {
       await truffleAssert.reverts(
         poolContractsRegistry.injectDependenciesToExistingPools(NAME_1, 0, 1),
-        "PoolContractsRegistry: No pools to inject"
+        "PoolContractsRegistry: no pools to inject"
       );
     });
   });

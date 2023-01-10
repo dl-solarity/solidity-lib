@@ -13,34 +13,34 @@ import "@openzeppelin/contracts/utils/Address.sol";
 contract ProxyUpgrader {
     using Address for address;
 
-    address private immutable _owner;
+    address private immutable _OWNER;
 
     event Upgraded(address proxy, address implementation);
 
     modifier onlyOwner() {
-        require(_owner == msg.sender, "ProxyUpgrader: Not an owner");
+        require(_OWNER == msg.sender, "ProxyUpgrader: not an owner");
         _;
     }
 
     constructor() {
-        _owner = msg.sender;
+        _OWNER = msg.sender;
     }
 
-    function upgrade(address what, address to, bytes calldata data) external onlyOwner {
-        if (data.length > 0) {
-            TransparentUpgradeableProxy(payable(what)).upgradeToAndCall(to, data);
+    function upgrade(address what_, address to_, bytes calldata data_) external onlyOwner {
+        if (data_.length > 0) {
+            TransparentUpgradeableProxy(payable(what_)).upgradeToAndCall(to_, data_);
         } else {
-            TransparentUpgradeableProxy(payable(what)).upgradeTo(to);
+            TransparentUpgradeableProxy(payable(what_)).upgradeTo(to_);
         }
 
-        emit Upgraded(what, to);
+        emit Upgraded(what_, to_);
     }
 
-    function getImplementation(address what) external view onlyOwner returns (address) {
+    function getImplementation(address what_) external view onlyOwner returns (address) {
         // bytes4(keccak256("implementation()")) == 0x5c60da1b
-        (bool success, bytes memory returndata) = address(what).staticcall(hex"5c60da1b");
-        require(success);
+        (bool success_, bytes memory returndata_) = address(what_).staticcall(hex"5c60da1b");
+        require(success_);
 
-        return abi.decode(returndata, (address));
+        return abi.decode(returndata_, (address));
     }
 }

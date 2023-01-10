@@ -46,6 +46,11 @@ describe("ContractsRegistry", () => {
       );
 
       await truffleAssert.reverts(
+        contractsRegistry.injectDependenciesWithData("", "0x", { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+
+      await truffleAssert.reverts(
         contractsRegistry.upgradeContract("", ZERO_ADDR, { from: SECOND }),
         "Ownable: caller is not the owner"
       );
@@ -81,17 +86,17 @@ describe("ContractsRegistry", () => {
     it("should fail adding ZERO_ADDR address", async () => {
       await truffleAssert.reverts(
         contractsRegistry.addContract(await contractsRegistry.CRDEPENDANT_NAME(), ZERO_ADDR),
-        "ContractsRegistry: Null address is forbidden"
+        "ContractsRegistry: zero address is forbidden"
       );
 
       await truffleAssert.reverts(
         contractsRegistry.addProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), ZERO_ADDR),
-        "ContractsRegistry: Null address is forbidden"
+        "ContractsRegistry: zero address is forbidden"
       );
 
       await truffleAssert.reverts(
         contractsRegistry.justAddProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), ZERO_ADDR),
-        "ContractsRegistry: Null address is forbidden"
+        "ContractsRegistry: zero address is forbidden"
       );
     });
 
@@ -100,7 +105,7 @@ describe("ContractsRegistry", () => {
 
       await truffleAssert.reverts(
         contractsRegistry.removeContract(await contractsRegistry.CRDEPENDANT_NAME()),
-        "ContractsRegistry: This mapping doesn't exist"
+        "ContractsRegistry: this mapping doesn't exist"
       );
 
       await contractsRegistry.addContract(await contractsRegistry.CRDEPENDANT_NAME(), crd.address);
@@ -112,7 +117,7 @@ describe("ContractsRegistry", () => {
 
       await truffleAssert.reverts(
         contractsRegistry.getCRDependantContract(),
-        "ContractsRegistry: This mapping doesn't exist"
+        "ContractsRegistry: this mapping doesn't exist"
       );
       assert.isFalse(await contractsRegistry.hasContract(await contractsRegistry.CRDEPENDANT_NAME()));
     });
@@ -122,7 +127,7 @@ describe("ContractsRegistry", () => {
 
       await truffleAssert.reverts(
         contractsRegistry.getImplementation(await contractsRegistry.CRDEPENDANT_NAME()),
-        "ContractsRegistry: This mapping doesn't exist"
+        "ContractsRegistry: this mapping doesn't exist"
       );
 
       await contractsRegistry.addProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), _crd.address);
@@ -182,12 +187,12 @@ describe("ContractsRegistry", () => {
 
       await truffleAssert.reverts(
         contractsRegistry.getImplementation(await contractsRegistry.CRDEPENDANT_NAME()),
-        "ContractsRegistry: Not a proxy contract"
+        "ContractsRegistry: not a proxy contract"
       );
 
       await truffleAssert.reverts(
         contractsRegistry.upgradeContract(await contractsRegistry.CRDEPENDANT_NAME(), _crdu.address),
-        "ContractsRegistry: Not a proxy contract"
+        "ContractsRegistry: not a proxy contract"
       );
     });
 
@@ -211,7 +216,7 @@ describe("ContractsRegistry", () => {
     it("should not upgrade non existing contract", async () => {
       await truffleAssert.reverts(
         contractsRegistry.upgradeContract("RANDOM CONTRACT", _crdu.address),
-        "ContractsRegistry: This mapping doesn't exist"
+        "ContractsRegistry: this mapping doesn't exist"
       );
     });
 
@@ -260,10 +265,18 @@ describe("ContractsRegistry", () => {
       assert.equal(await crd.token(), token.address);
     });
 
+    it("should inject dependencies with data", async () => {
+      assert.equal(await crd.token(), ZERO_ADDR);
+
+      await contractsRegistry.injectDependenciesWithData(await contractsRegistry.CRDEPENDANT_NAME(), "0x112233");
+
+      assert.equal(await crd.token(), token.address);
+    });
+
     it("should not inject dependencies", async () => {
       await truffleAssert.reverts(
         contractsRegistry.injectDependencies("RANDOM CONTRACT"),
-        "ContractsRegistry: This mapping doesn't exist"
+        "ContractsRegistry: this mapping doesn't exist"
       );
     });
 
@@ -272,13 +285,13 @@ describe("ContractsRegistry", () => {
 
       assert.equal(await crd.getInjector(), contractsRegistry.address);
 
-      await truffleAssert.reverts(crd.setDependencies(contractsRegistry.address), "Dependant: Not an injector");
+      await truffleAssert.reverts(crd.setDependencies(contractsRegistry.address, "0x"), "Dependant: not an injector");
     });
 
     it("should not allow random users to set new injector", async () => {
       await contractsRegistry.injectDependencies(await contractsRegistry.CRDEPENDANT_NAME());
 
-      await truffleAssert.reverts(crd.setInjector(OWNER), "Dependant: Not an injector");
+      await truffleAssert.reverts(crd.setInjector(OWNER), "Dependant: not an injector");
     });
   });
 });

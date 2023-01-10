@@ -12,22 +12,22 @@ contract OwnableDiamondStorage {
         address owner;
     }
 
-    function getOwnableDiamondStorage() internal pure returns (ODStorage storage ods) {
-        bytes32 slot = OWNABLE_DIAMOND_STORAGE_SLOT;
-
-        assembly {
-            ods.slot := slot
-        }
-    }
-
     modifier onlyOwner() {
-        address diamondOwner = owner();
+        address diamondOwner_ = owner();
 
         require(
-            diamondOwner == address(0) || diamondOwner == msg.sender,
+            diamondOwner_ == address(0) || diamondOwner_ == msg.sender,
             "ODStorage: not an owner"
         );
         _;
+    }
+
+    function getOwnableDiamondStorage() internal pure returns (ODStorage storage _ods) {
+        bytes32 slot_ = OWNABLE_DIAMOND_STORAGE_SLOT;
+
+        assembly {
+            _ods.slot := slot_
+        }
     }
 
     function owner() public view returns (address) {

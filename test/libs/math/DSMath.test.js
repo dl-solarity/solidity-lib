@@ -31,6 +31,7 @@ describe("DSMath", () => {
 
       for (const [base, exponent, mod, expected] of cases) {
         const result = await dsMath.rpow(base, exponent, mod);
+
         assertBNequal(result, expected);
       }
     });

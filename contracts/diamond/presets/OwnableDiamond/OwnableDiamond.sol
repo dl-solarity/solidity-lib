@@ -12,25 +12,25 @@ contract OwnableDiamond is Diamond, OwnableDiamondStorage {
         transferOwnership(msg.sender);
     }
 
-    function transferOwnership(address newOwner) public onlyOwner {
-        require(newOwner != address(0), "OwnableDiamond: zero address owner");
+    function transferOwnership(address newOwner_) public onlyOwner {
+        require(newOwner_ != address(0), "OwnableDiamond: zero address owner");
 
-        getOwnableDiamondStorage().owner = newOwner;
+        getOwnableDiamondStorage().owner = newOwner_;
     }
 
-    function addFacet(address facet, bytes4[] memory selectors) public onlyOwner {
-        _addFacet(facet, selectors);
+    function addFacet(address facet_, bytes4[] memory selectors_) public onlyOwner {
+        _addFacet(facet_, selectors_);
     }
 
-    function removeFacet(address facet, bytes4[] memory selectors) public onlyOwner {
-        _removeFacet(facet, selectors);
+    function removeFacet(address facet_, bytes4[] memory selectors_) public onlyOwner {
+        _removeFacet(facet_, selectors_);
     }
 
     function updateFacet(
-        address facet,
-        bytes4[] memory fromSelectors,
-        bytes4[] memory toSelectors
+        address facet_,
+        bytes4[] memory fromSelectors_,
+        bytes4[] memory toSelectors_
     ) public onlyOwner {
-        _updateFacet(facet, fromSelectors, toSelectors);
+        _updateFacet(facet_, fromSelectors_, toSelectors_);
     }
 }

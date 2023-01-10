@@ -29,30 +29,42 @@ abstract contract AbstractDependant {
 
     /**
      *  @notice The function that will be called from the ContractsRegistry (or factory) to inject dependencies.
-     *  @param contractsRegistry the registry to pull dependencies from
+     *  @param contractsRegistry_ the registry to pull dependencies from
+     *  @param data_ the extra data that might provide additional context
      *
      *  The Dependant must apply dependant() modifier to this function
      */
-    function setDependencies(address contractsRegistry) external virtual;
+    function setDependencies(address contractsRegistry_, bytes calldata data_) external virtual;
 
     /**
      *  @notice The function is made external to allow for the factories to set the injector to the ContractsRegistry
-     *  @param _injector the new injector
+     *  @param injector_ the new injector
      */
-    function setInjector(address _injector) external {
+    function setInjector(address injector_) external {
         _checkInjector();
-        _setInjector(_injector);
+        _setInjector(injector_);
     }
 
     /**
      *  @notice The function to get the current injector
-     *  @return _injector the current injector
+     *  @return injector_ the current injector
      */
-    function getInjector() public view returns (address _injector) {
-        bytes32 slot = _INJECTOR_SLOT;
+    function getInjector() public view returns (address injector_) {
+        bytes32 slot_ = _INJECTOR_SLOT;
 
         assembly {
-            _injector := sload(slot)
+            injector_ := sload(slot_)
+        }
+    }
+
+    /**
+     *  @notice Internal function that sets the injector
+     */
+    function _setInjector(address injector_) internal {
+        bytes32 slot_ = _INJECTOR_SLOT;
+
+        assembly {
+            sstore(slot_, injector_)
         }
     }
 
@@ -60,19 +72,8 @@ abstract contract AbstractDependant {
      *  @notice Internal function that checks the injector credentials
      */
     function _checkInjector() internal view {
-        address _injector = getInjector();
+        address injector_ = getInjector();
 
-        require(_injector == address(0) || _injector == msg.sender, "Dependant: Not an injector");
-    }
-
-    /**
-     *  @notice Internal function that sets the injector
-     */
-    function _setInjector(address _injector) internal {
-        bytes32 slot = _INJECTOR_SLOT;
-
-        assembly {
-            sstore(slot, _injector)
-        }
+        require(injector_ == address(0) || injector_ == msg.sender, "Dependant: not an injector");
     }
 }

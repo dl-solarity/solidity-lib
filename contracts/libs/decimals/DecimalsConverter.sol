@@ -30,54 +30,102 @@ pragma solidity ^0.8.4;
  *  }
  */
 library DecimalsConverter {
+    /**
+     *  @notice The function to bring the number to 18 decimals of precision
+     *  @param amount_ the number to convert
+     *  @param baseDecimals_ the current precision of the number
+     *  @return the number brought to 18 decimals of precision
+     */
+    function to18(uint256 amount_, uint256 baseDecimals_) internal pure returns (uint256) {
+        return convert(amount_, baseDecimals_, 18);
+    }
+
+    /**
+     *  @notice The function to bring the number to 18 decimals of precision. Reverts if output is zero
+     *  @param amount_ the number to convert
+     *  @param baseDecimals_ the current precision of the number
+     *  @return the number brought to 18 decimals of precision
+     */
+    function to18Safe(uint256 amount_, uint256 baseDecimals_) internal pure returns (uint256) {
+        return convertSafe(amount_, baseDecimals_, to18);
+    }
+
+    /**
+     *  @notice The function to bring the number from 18 decimals to the desired decimals of precision
+     *  @param amount_ the number to covert
+     *  @param destDecimals_ the desired precision decimals
+     *  @return the number brought from 18 to desired decimals of precision
+     */
+    function from18(uint256 amount_, uint256 destDecimals_) internal pure returns (uint256) {
+        return convert(amount_, 18, destDecimals_);
+    }
+
+    /**
+     *  @notice The function to bring the number from 18 decimals to the desired decimals of precision.
+     *  Reverts if output is zero
+     *  @param amount_ the number to covert
+     *  @param destDecimals_ the desired precision decimals
+     *  @return the number brought from 18 to desired decimals of precision
+     */
+    function from18Safe(uint256 amount_, uint256 destDecimals_) internal pure returns (uint256) {
+        return convertSafe(amount_, destDecimals_, from18);
+    }
+
+    /**
+     *  @notice The function to substitute the trailing digits of a number with zeros
+     *  @param amount_ the number to round. Should be with 18 precision decimals
+     *  @param decimals_ the required number precision
+     *  @return the rounded number. Comes with 18 precision decimals
+     */
+    function round18(uint256 amount_, uint256 decimals_) internal pure returns (uint256) {
+        return to18(from18(amount_, decimals_), decimals_);
+    }
+
+    /**
+     *  @notice The function to substitute the trailing digits of a number with zeros. Reverts if output is zero
+     *  @param amount_ the number to round. Should be with 18 precision decimals
+     *  @param decimals_ the required number precision
+     *  @return the rounded number. Comes with 18 precision decimals
+     */
+    function round18Safe(uint256 amount_, uint256 decimals_) internal pure returns (uint256) {
+        return convertSafe(amount_, decimals_, round18);
+    }
+
+    /**
+     *  @notice The function to do the precision convertion
+     *  @param amount_ the amount to covert
+     *  @param baseDecimals_ current number precision
+     *  @param destDecimals_ desired number precision
+     *  @return the converted number
+     */
     function convert(
-        uint256 amount,
-        uint256 baseDecimals,
-        uint256 destDecimals
+        uint256 amount_,
+        uint256 baseDecimals_,
+        uint256 destDecimals_
     ) internal pure returns (uint256) {
-        if (baseDecimals > destDecimals) {
-            amount = amount / 10 ** (baseDecimals - destDecimals);
-        } else if (baseDecimals < destDecimals) {
-            amount = amount * 10 ** (destDecimals - baseDecimals);
+        if (baseDecimals_ > destDecimals_) {
+            amount_ = amount_ / 10 ** (baseDecimals_ - destDecimals_);
+        } else if (baseDecimals_ < destDecimals_) {
+            amount_ = amount_ * 10 ** (destDecimals_ - baseDecimals_);
         }
 
-        return amount;
+        return amount_;
     }
 
-    function to18(uint256 amount, uint256 baseDecimals) internal pure returns (uint256) {
-        return convert(amount, baseDecimals, 18);
-    }
-
-    function to18Safe(
-        uint256 amount,
-        uint256 baseDecimals
-    ) internal pure returns (uint256 resultAmount) {
-        return convertSafe(amount, baseDecimals, to18);
-    }
-
-    function from18(uint256 amount, uint256 destDecimals) internal pure returns (uint256) {
-        return convert(amount, 18, destDecimals);
-    }
-
-    function from18Safe(uint256 amount, uint256 destDecimals) internal pure returns (uint256) {
-        return convertSafe(amount, destDecimals, from18);
-    }
-
-    function round18(uint256 amount, uint256 decimals) internal pure returns (uint256) {
-        return to18(from18(amount, decimals), decimals);
-    }
-
-    function round18Safe(uint256 amount, uint256 decimals) internal pure returns (uint256) {
-        return convertSafe(amount, decimals, round18);
-    }
-
+    /**
+     *  @notice The function wrapper to do the safe precision convertion. Reverts if output is zero
+     *  @param amount_ the amount to covert
+     *  @param decimals_ the precision decimals
+     *  @param _convertFunc the internal function pointer to "from", "to", or "round" functions
+     *  @return conversionResult_ the convertion result
+     */
     function convertSafe(
-        uint256 amount,
-        uint256 decimals,
-        function(uint256, uint256) internal pure returns (uint256) convertFunc
-    ) internal pure returns (uint256 conversionResult) {
-        conversionResult = convertFunc(amount, decimals);
+        uint256 amount_,
+        uint256 decimals_,
+        function(uint256, uint256) internal pure returns (uint256) _convertFunc
+    ) internal pure returns (uint256 conversionResult_) {
+        conversionResult_ = _convertFunc(amount_, decimals_);
 
-        require(conversionResult > 0, "DecimalsConverter: Incorrect amount after conversion");
+        require(conversionResult_ > 0, "DecimalsConverter: conversion failed");
     }
 }
