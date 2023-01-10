@@ -124,8 +124,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
     }
 
     /**
-     *  @notice The paginated function that injects new dependencies to the pools. Can be used when the dependant contract
-     *  gets fully replaced to update the pools' dependencies
+     *  @notice The paginated function that injects new dependencies to the pools
      *  @param name_ the pools name that will be injected
      *  @param offset_ the starting index in the pools array
      *  @param limit_ the number of pools
@@ -134,7 +133,23 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
         string memory name_,
         uint256 offset_,
         uint256 limit_
-    ) internal virtual {
+    ) internal {
+        _injectDependenciesToExistingPoolsWithData(name_, bytes(""), offset_, limit_);
+    }
+
+    /**
+     *  @notice The paginated function that injects new dependencies to the pools with the data
+     *  @param name_ the pools name that will be injected
+     *  @param data_ the extra context data
+     *  @param offset_ the starting index in the pools array
+     *  @param limit_ the number of pools
+     */
+    function _injectDependenciesToExistingPoolsWithData(
+        string memory name_,
+        bytes memory data_,
+        uint256 offset_,
+        uint256 limit_
+    ) internal {
         EnumerableSet.AddressSet storage _namedPools = _pools[name_];
 
         uint256 to_ = (offset_ + limit_).min(_namedPools.length()).max(offset_);
@@ -144,7 +159,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
         address contractsRegistry_ = _contractsRegistry;
 
         for (uint256 i = offset_; i < to_; i++) {
-            AbstractDependant(_namedPools.at(i)).setDependencies(contractsRegistry_, bytes(""));
+            AbstractDependant(_namedPools.at(i)).setDependencies(contractsRegistry_, data_);
         }
     }
 

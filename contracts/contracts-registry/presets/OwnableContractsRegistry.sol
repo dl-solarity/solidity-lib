@@ -18,6 +18,13 @@ contract OwnableContractsRegistry is AbstractContractsRegistry, OwnableUpgradeab
         _injectDependencies(name_);
     }
 
+    function injectDependenciesWithData(
+        string calldata name_,
+        bytes calldata data_
+    ) external onlyOwner {
+        _injectDependenciesWithData(name_, data_);
+    }
+
     function upgradeContract(
         string calldata name_,
         address newImplementation_

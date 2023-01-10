@@ -46,6 +46,11 @@ describe("ContractsRegistry", () => {
       );
 
       await truffleAssert.reverts(
+        contractsRegistry.injectDependenciesWithData("", "0x", { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+
+      await truffleAssert.reverts(
         contractsRegistry.upgradeContract("", ZERO_ADDR, { from: SECOND }),
         "Ownable: caller is not the owner"
       );
@@ -256,6 +261,14 @@ describe("ContractsRegistry", () => {
       assert.equal(await crd.token(), ZERO_ADDR);
 
       await contractsRegistry.injectDependencies(await contractsRegistry.CRDEPENDANT_NAME());
+
+      assert.equal(await crd.token(), token.address);
+    });
+
+    it("should inject dependencies with data", async () => {
+      assert.equal(await crd.token(), ZERO_ADDR);
+
+      await contractsRegistry.injectDependenciesWithData(await contractsRegistry.CRDEPENDANT_NAME(), "0x112233");
 
       assert.equal(await crd.token(), token.address);
     });

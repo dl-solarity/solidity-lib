@@ -31,4 +31,13 @@ abstract contract OwnablePoolContractsRegistry is
     ) external onlyOwner {
         _injectDependenciesToExistingPools(name_, offset_, limit_);
     }
+
+    function injectDependenciesToExistingPoolsWithData(
+        string calldata name_,
+        bytes calldata data_,
+        uint256 offset_,
+        uint256 limit_
+    ) external onlyOwner {
+        _injectDependenciesToExistingPoolsWithData(name_, data_, offset_, limit_);
+    }
 }

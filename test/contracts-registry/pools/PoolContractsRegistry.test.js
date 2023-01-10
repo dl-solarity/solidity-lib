@@ -85,6 +85,11 @@ describe("PoolContractsRegistry", () => {
         poolContractsRegistry.injectDependenciesToExistingPools("", 0, 0, { from: SECOND }),
         "Ownable: caller is not the owner"
       );
+
+      await truffleAssert.reverts(
+        poolContractsRegistry.injectDependenciesToExistingPoolsWithData("", "0x", 0, 0, { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
     });
   });
 
@@ -149,6 +154,16 @@ describe("PoolContractsRegistry", () => {
       assert.equal(await pool.token(), ZERO_ADDR);
 
       await poolContractsRegistry.injectDependenciesToExistingPools(NAME_1, 0, 1);
+
+      assert.equal(await pool.token(), token.address);
+    });
+
+    it("should inject dependencies with data", async () => {
+      await poolContractsRegistry.addProxyPool(NAME_1, pool.address);
+
+      assert.equal(await pool.token(), ZERO_ADDR);
+
+      await poolContractsRegistry.injectDependenciesToExistingPoolsWithData(NAME_1, "0x", 0, 1);
 
       assert.equal(await pool.token(), token.address);
     });

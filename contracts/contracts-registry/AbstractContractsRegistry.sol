@@ -99,13 +99,22 @@ abstract contract AbstractContractsRegistry is Initializable {
      *  @notice The function that injects the dependencies into the given contract
      *  @param name_ the name of the contract
      */
-    function _injectDependencies(string memory name_) internal virtual {
+    function _injectDependencies(string memory name_) internal {
+        _injectDependenciesWithData(name_, bytes(""));
+    }
+
+    /**
+     *  @notice The function that injects the dependencies into the given contract with data
+     *  @param name_ the name of the contract
+     *  @param data_ the extra context data
+     */
+    function _injectDependenciesWithData(string memory name_, bytes memory data_) internal {
         address contractAddress_ = _contracts[name_];
 
         require(contractAddress_ != address(0), "ContractsRegistry: this mapping doesn't exist");
 
         AbstractDependant dependant_ = AbstractDependant(contractAddress_);
-        dependant_.setDependencies(address(this), bytes(""));
+        dependant_.setDependencies(address(this), data_);
     }
 
     /**
