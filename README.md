@@ -5,13 +5,13 @@
 
 # Solidity Development Modules by Distributed Lab
 
-**Handful solidity development modules library by DL.**
+**Elaborate solidity development modules library by DL.**
 
 The library consist of modules and utilities that are built on top of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) but goes far beyond the mediocre solidity. 
 
-- Implementation of **Contracts Registry** pattern
+- Implementation of [**Contracts Registry**](https://eips.ethereum.org/EIPS/eip-6224) pattern
 - Versatile **RBAC** smart contract
-- Enhanced and simplified **Diamond** pattern
+- Enhanced and simplified [**Diamond**](https://eips.ethereum.org/EIPS/eip-2535) pattern
 - Utilities to ease work with ERC20 decimals, arrays and sets
 
 ## Overview
