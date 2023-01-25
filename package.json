@@ -1,12 +1,12 @@
 {
   "name": "dlsl",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "license": "MIT",
   "author": "Distributed Lab",
   "description": "Solidity Development Modules by Distributed Lab",
   "repository": {
     "type": "git",
-    "url": "https://github.com/distributedlab-solidity-library/dev-modules"
+    "url": "https://github.com/dl-solidity-library/dev-modules"
   },
   "keywords": [
     "solidity",
