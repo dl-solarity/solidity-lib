@@ -63,7 +63,7 @@ library DSMath {
      * @notice The function that computes square roots using the Babylonian method
      * @dev The original implementation can be found here github.com/abdk-consulting/abdk-libraries-solidity
      */
-    function sqrt(uint256 x) private pure returns (uint128) {
+    function sqrt(uint256 x) internal pure returns (uint128) {
         unchecked {
             if (x == 0) {
                 return 0;
