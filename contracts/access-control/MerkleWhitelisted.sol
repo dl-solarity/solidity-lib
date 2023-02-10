@@ -8,21 +8,27 @@ abstract contract MerkleWhitelisted {
 
     bytes32 internal _merkleRoot;
 
-    modifier onlyWhitelisted(bytes32[] calldata merkleProof_) {
-        require(isWhitelisted(msg.sender, merkleProof_), "MerkleWhitelisted: not whitelisted");
+    modifier onlyWhitelisted(bytes calldata data, bytes32[] calldata merkleProof_) {
+        require(
+            isWhitelisted(keccak256(data), merkleProof_),
+            "MerkleWhitelisted: not whitelisted"
+        );
         _;
     }
 
     modifier onlyWhitelistedUser(address user_, bytes32[] calldata merkleProof_) {
-        require(isWhitelisted(user_, merkleProof_), "MerkleWhitelisted: not whitelisted");
+        require(
+            isWhitelisted(keccak256(abi.encodePacked(user_)), merkleProof_),
+            "MerkleWhitelisted: not whitelisted"
+        );
         _;
     }
 
     function isWhitelisted(
-        address user_,
+        bytes32 leaf_,
         bytes32[] calldata merkleProof_
     ) public view returns (bool) {
-        return merkleProof_.verifyCalldata(_merkleRoot, keccak256(abi.encodePacked(user_)));
+        return merkleProof_.verifyCalldata(_merkleRoot, leaf_);
     }
 
     function _setMerkleRoot(bytes32 merkleRoot_) internal {
