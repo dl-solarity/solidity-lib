@@ -26,6 +26,6 @@ abstract contract MerkleWhitelist {
         address user_,
         bytes32[] calldata merkleProof_
     ) public view returns (bool) {
-        return merkleProof_.verify(_merkleRoot, keccak256(abi.encodePacked(user_)));
+        return merkleProof_.verifyCalldata(_merkleRoot, keccak256(abi.encodePacked(user_)));
     }
 }

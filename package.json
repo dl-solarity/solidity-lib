@@ -27,7 +27,7 @@
     "publish-to-npm": "npm run lint-fix && bash ./scripts/publish.sh"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "4.5.0",
+    "@openzeppelin/contracts": "4.8.0",
     "@openzeppelin/contracts-upgradeable": "4.5.0",
     "hardhat": "^2.12.2"
   },
