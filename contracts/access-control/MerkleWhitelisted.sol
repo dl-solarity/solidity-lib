@@ -17,10 +17,7 @@ abstract contract MerkleWhitelisted {
     }
 
     modifier onlyWhitelistedUser(address user_, bytes32[] calldata merkleProof_) {
-        require(
-            isWhitelisted(_convertUserToLeaf(user_), merkleProof_),
-            "MerkleWhitelisted: not whitelisted"
-        );
+        require(isWhitelistedUser(user_, merkleProof_), "MerkleWhitelisted: not whitelisted");
         _;
     }
 
@@ -35,7 +32,7 @@ abstract contract MerkleWhitelisted {
         address user_,
         bytes32[] calldata merkleProof_
     ) public view returns (bool) {
-        return merkleProof_.verifyCalldata(_merkleRoot, _convertUserToLeaf(user_));
+        return isWhitelisted(keccak256(abi.encodePacked(user_)), merkleProof_);
     }
 
     function getMerkleRoot() public view returns (bytes32) {
@@ -44,9 +41,5 @@ abstract contract MerkleWhitelisted {
 
     function _setMerkleRoot(bytes32 merkleRoot_) internal {
         _merkleRoot = merkleRoot_;
-    }
-
-    function _convertUserToLeaf(address user_) private pure returns (bytes32) {
-        return keccak256(abi.encodePacked(user_));
     }
 }
