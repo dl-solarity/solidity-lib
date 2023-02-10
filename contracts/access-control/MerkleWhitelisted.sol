@@ -8,9 +8,9 @@ abstract contract MerkleWhitelisted {
 
     bytes32 internal _merkleRoot;
 
-    modifier onlyWhitelisted(bytes calldata data, bytes32[] calldata merkleProof_) {
+    modifier onlyWhitelisted(bytes calldata data_, bytes32[] calldata merkleProof_) {
         require(
-            isWhitelisted(keccak256(data), merkleProof_),
+            isWhitelisted(keccak256(data_), merkleProof_),
             "MerkleWhitelisted: not whitelisted"
         );
         _;
