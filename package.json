@@ -35,9 +35,9 @@
     "@metamask/eth-sig-util": "^4.0.0",
     "@nomiclabs/hardhat-truffle5": "^2.0.1",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "dotenv": "^10.0.0",
     "bignumber.js": "^9.0.1",
     "chai": "^4.3.4",
+    "dotenv": "^10.0.0",
     "hardhat-contract-sizer": "^2.1.1",
     "hardhat-gas-reporter": "^1.0.4",
     "husky": "^7.0.2",
@@ -48,6 +48,7 @@
     "solhint-plugin-prettier": "^0.0.5",
     "solidity-coverage": "^0.8.2",
     "truffle-assertions": "^0.9.2",
-    "web3": "^1.7.5"
+    "web3": "^1.7.5",
+    "merkletreejs": "^0.3.9"
   }
 }
