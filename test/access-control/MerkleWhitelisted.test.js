@@ -1,5 +1,4 @@
 const { MerkleTree } = require("merkletreejs");
-
 const { assert } = require("chai");
 const { accounts } = require("../../scripts/utils/utils");
 const truffleAssert = require("truffle-assertions");
