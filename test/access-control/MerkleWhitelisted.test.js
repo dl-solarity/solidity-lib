@@ -9,7 +9,6 @@ const MerkleWhitelisted = artifacts.require("MerkleWhitelistedMock");
 
 describe("MerkleWhitelisted", () => {
   let OWNER;
-
   let merkle;
   let leaves;
   let tree;
