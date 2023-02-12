@@ -6,11 +6,16 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 /**
  *  @notice The Whitelist Access Control module
  *
- *  This is the simple abstract contract that implements whitelisting logic.
+ *  This is a simple abstract contract that implements whitelisting logic.
  *
- *  It is based on the Merkle tree. This means that you first need to compute the Merkle tree off-chain
- *  and set its root using `_setMerkleRoot` function from your child contract. You also need to perform
- *  this action every time the state of the whitelist changes.
+ *  The contract is based on a Merkle tree, which allows for the huge whitelists to be cheaply validated courtesy of
+ *  O(log(n)) tree complexity. The whitelist itself is stored in the tree leaves and only the root of the tree is saved on-chain.
+ *
+ *  To validate the whitelist belonging, the tree leaf (the whitelist element) has to be computed and passed to the
+ *  "root-construction" function together with the corresponding tree branches. The function will then check the
+ *  roots equality. If the roots match, the element belongs to the whitelist.
+ *
+ *  Note: the branch nodes are sorted numerically.
  */
 abstract contract MerkleWhitelisted {
     using MerkleProof for bytes32[];
