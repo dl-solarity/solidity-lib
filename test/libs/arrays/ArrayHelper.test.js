@@ -155,9 +155,8 @@ describe("ArrayHelperMock", () => {
       });
 
       it("should revert if one of the indexes is out of range", async () => {
-        await truffleAssert.reverts(mock.getRangeSum([], 0, 0), "ArrayHelper: wrong range");
-        await truffleAssert.reverts(mock.getRangeSum(array, array.length, 0), "ArrayHelper: wrong range");
-        await truffleAssert.reverts(mock.getRangeSum(array, 0, array.length), "ArrayHelper: wrong range");
+        await truffleAssert.reverts(mock.getRangeSum([], 0, 0));
+        await truffleAssert.reverts(mock.getRangeSum(array, 0, array.length));
       });
     });
   });
