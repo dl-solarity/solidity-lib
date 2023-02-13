@@ -104,7 +104,7 @@ library ArrayHelper {
     }
 
     /**
-     *  @notice The function to compute prefix sum array
+     *  @notice The function to compute the prefix sum array
      *  @param arr_ the initial array to be turned into the prefix sum array
      *  @return prefixes_ the prefix sum array
      */
@@ -124,8 +124,8 @@ library ArrayHelper {
     }
 
     /**
-     *  @notice The function that calculates the sum of all array elements from
-     *  `beginIndex_` to `endIndex_` inclusive using its prefix sum array
+     *  @notice The function that calculates the sum of all array elements from `beginIndex_` to
+     *  `endIndex_` inclusive using its prefix sum array
      *  @param beginIndex_ the index of the first range element
      *  @param endIndex_ the index of the last range element
      *  @return the sum of all elements of the range
