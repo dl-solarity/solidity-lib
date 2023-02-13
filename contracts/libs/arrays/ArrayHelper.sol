@@ -135,6 +135,13 @@ library ArrayHelper {
         uint256 beginIndex_,
         uint256 endIndex_
     ) internal pure returns (uint256) {
+        require(
+            beginIndex_ <= endIndex_ &&
+                beginIndex_ < prefixes_.length &&
+                endIndex_ < prefixes_.length,
+            "ArrayHelper: wrong range"
+        );
+
         if (beginIndex_ == 0) {
             return prefixes_[endIndex_];
         }
