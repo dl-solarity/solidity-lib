@@ -181,7 +181,7 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The function to check the user's possesion of the role
+     *  @notice The function to check the user's possession of the role
      *  @param who_ the user
      *  @param resource_ the resource the user has to have the permission of
      *  @param permission_ the permission the user has to have
@@ -191,41 +191,8 @@ abstract contract RBAC is IRBAC, Initializable {
         address who_,
         string memory resource_,
         string memory permission_
-    ) public view override returns (bool) {
-        StringSet.Set storage _roles = _userRoles[who_];
-
-        uint256 length_ = _roles.length();
-        bool isAllowed_;
-
-        for (uint256 i = 0; i < length_; i++) {
-            string memory role_ = _roles.at(i);
-
-            StringSet.Set storage _allDisallowed = _rolePermissions[role_][false][ALL_RESOURCE];
-            StringSet.Set storage _allAllowed = _rolePermissions[role_][true][ALL_RESOURCE];
-
-            StringSet.Set storage _disallowed = _rolePermissions[role_][false][resource_];
-            StringSet.Set storage _allowed = _rolePermissions[role_][true][resource_];
-
-            if (
-                _allDisallowed.contains(ALL_PERMISSION) ||
-                _allDisallowed.contains(permission_) ||
-                _disallowed.contains(ALL_PERMISSION) ||
-                _disallowed.contains(permission_)
-            ) {
-                return false;
-            }
-
-            if (
-                _allAllowed.contains(ALL_PERMISSION) ||
-                _allAllowed.contains(permission_) ||
-                _allowed.contains(ALL_PERMISSION) ||
-                _allowed.contains(permission_)
-            ) {
-                isAllowed_ = true;
-            }
-        }
-
-        return isAllowed_;
+    ) public view virtual override returns (bool) {
+        return _hasPermission(who_, resource_, permission_) == PermissionStatus.AllowsPermission;
     }
 
     /**
@@ -295,5 +262,51 @@ abstract contract RBAC is IRBAC, Initializable {
         }
 
         emit RemovedPermissions(role_, resourceToRemove_, permissionsToRemove_, allowed_);
+    }
+
+    function _hasPermission(
+        address who_,
+        string memory resource_,
+        string memory permission_
+    ) internal view virtual returns (PermissionStatus) {
+        return _getRolesPermissionStatus(getUserRoles(who_), resource_, permission_);
+    }
+
+    function _getRolesPermissionStatus(
+        string[] memory roles_,
+        string memory resource_,
+        string memory permission_
+    ) internal view returns (PermissionStatus) {
+        PermissionStatus rolesPermissionStatus_;
+
+        for (uint256 i = 0; i < roles_.length; i++) {
+            string memory role_ = roles_[i];
+
+            StringSet.Set storage _allDisallowed = _rolePermissions[role_][false][ALL_RESOURCE];
+            StringSet.Set storage _allAllowed = _rolePermissions[role_][true][ALL_RESOURCE];
+
+            StringSet.Set storage _disallowed = _rolePermissions[role_][false][resource_];
+            StringSet.Set storage _allowed = _rolePermissions[role_][true][resource_];
+
+            if (
+                _allDisallowed.contains(ALL_PERMISSION) ||
+                _allDisallowed.contains(permission_) ||
+                _disallowed.contains(ALL_PERMISSION) ||
+                _disallowed.contains(permission_)
+            ) {
+                return PermissionStatus.DisallowsPermission;
+            }
+
+            if (
+                _allAllowed.contains(ALL_PERMISSION) ||
+                _allAllowed.contains(permission_) ||
+                _allowed.contains(ALL_PERMISSION) ||
+                _allowed.contains(permission_)
+            ) {
+                rolesPermissionStatus_ = PermissionStatus.AllowsPermission;
+            }
+        }
+
+        return rolesPermissionStatus_;
     }
 }

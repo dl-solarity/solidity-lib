@@ -7,6 +7,12 @@ import "../../libs/data-structures/StringSet.sol";
  *  @notice The RBAC module
  */
 interface IRBAC {
+    enum PermissionStatus {
+        DoesNotHavePermission,
+        AllowsPermission,
+        DisallowsPermission
+    }
+
     struct ResourceWithPermissions {
         string resource;
         string[] permissions;
