@@ -22,19 +22,6 @@ import "../libs/arrays/SetHelper.sol";
  *  resources or permissions.
  */
 abstract contract RBAC is IRBAC, Initializable {
-    /**
-     *  @notice The internal enum of permission statuses, which is used to override `_hasPermission`.
-     *  This enum can describe the permission status of the user / role / group of roles
-     *  @param None the permission and antipermission are absent
-     *  @param Allows the permission is not absent
-     *  @param Disallows the antipermission is not absent (must override `Allows`)
-     */
-    enum PermissionStatus {
-        None,
-        Allows,
-        Disallows
-    }
-
     using StringSet for StringSet.Set;
     using SetHelper for StringSet.Set;
     using ArrayHelper for string;
@@ -198,14 +185,24 @@ abstract contract RBAC is IRBAC, Initializable {
      *  @param who_ the user
      *  @param resource_ the resource the user has to have the permission of
      *  @param permission_ the permission the user has to have
-     *  @return true_ if user has the permission, false otherwise
+     *  @return isAllowed_ true if the user has the permission, false otherwise
      */
     function hasPermission(
         address who_,
         string memory resource_,
         string memory permission_
-    ) public view override returns (bool) {
-        return _hasPermission(who_, resource_, permission_) == PermissionStatus.Allows;
+    ) public view virtual override returns (bool isAllowed_) {
+        string[] memory roles_ = getUserRoles(who_);
+
+        for (uint256 i = 0; i < roles_.length; i++) {
+            string memory role_ = roles_[i];
+
+            if (_isDisallowed(role_, resource_, permission_)) {
+                return false;
+            }
+
+            isAllowed_ = _isAllowed(role_, resource_, permission_);
+        }
     }
 
     /**
@@ -278,65 +275,52 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The internal function to check the user permission status, can be overridden in
-     *  the child contract
-     *  @param who_ the user
-     *  @param resource_ the resource the user has to have the permission of
-     *  @param permission_ the permission the user has to have
-     *  @return userPermissionStatus_ the user permission status
+     *  @notice The function to check if the role has the permission
+     *  @param role_ the role to search the permission in
+     *  @param resource_ the role resource to search the permission in
+     *  @param permission_ the permission to search
+     *  @return isAllowed_ true if the role has the permission, false otherwise
      */
-    function _hasPermission(
-        address who_,
+    function _isAllowed(
+        string memory role_,
         string memory resource_,
         string memory permission_
-    ) internal view virtual returns (PermissionStatus userPermissionStatus_) {
-        return _hasRolesPermission(getUserRoles(who_), resource_, permission_);
+    ) internal view returns (bool) {
+        mapping(string => StringSet.Set) storage _allAllowedResources = _rolePermissions[role_][
+            true
+        ];
+
+        StringSet.Set storage _allAllowed = _allAllowedResources[ALL_RESOURCE];
+        StringSet.Set storage _allowed = _allAllowedResources[resource_];
+
+        return (_allAllowed.contains(ALL_PERMISSION) ||
+            _allAllowed.contains(permission_) ||
+            _allowed.contains(ALL_PERMISSION) ||
+            _allowed.contains(permission_));
     }
 
     /**
-     *  @notice The internal function to check the roles permission status
-     *  @param roles_ roles whose status needs to be checked
-     *  @param resource_ the resource roles have to have the permission of
-     *  @param permission_ the permission roles have to have
-     *  @return rolesPermissionStatus_ the roles permission status
+     *  @notice The function to check if the role has the antipermission
+     *  @param role_ the role to search the antipermission in
+     *  @param resource_ the role resource to search the antipermission in
+     *  @param permission_ the antipermission to search
+     *  @return isAllowed_ true if the role has the antipermission, false otherwise
      */
-    function _hasRolesPermission(
-        string[] memory roles_,
+    function _isDisallowed(
+        string memory role_,
         string memory resource_,
         string memory permission_
-    ) internal view returns (PermissionStatus rolesPermissionStatus_) {
-        for (uint256 i = 0; i < roles_.length; i++) {
-            mapping(bool => mapping(string => StringSet.Set))
-                storage _allResources = _rolePermissions[roles_[i]];
+    ) internal view returns (bool) {
+        mapping(string => StringSet.Set) storage _allDisallowedResources = _rolePermissions[role_][
+            false
+        ];
 
-            mapping(string => StringSet.Set) storage _allAllowedResources = _allResources[true];
-            mapping(string => StringSet.Set) storage _allDisallowedResources = _allResources[
-                false
-            ];
+        StringSet.Set storage _allDisallowed = _allDisallowedResources[ALL_RESOURCE];
+        StringSet.Set storage _disallowed = _allDisallowedResources[resource_];
 
-            StringSet.Set storage _allDisallowed = _allDisallowedResources[ALL_RESOURCE];
-            StringSet.Set storage _allAllowed = _allAllowedResources[ALL_RESOURCE];
-
-            StringSet.Set storage _disallowed = _allDisallowedResources[resource_];
-            StringSet.Set storage _allowed = _allAllowedResources[resource_];
-
-            if (
-                _allDisallowed.contains(ALL_PERMISSION) ||
-                _allDisallowed.contains(permission_) ||
-                _disallowed.contains(ALL_PERMISSION) ||
-                _disallowed.contains(permission_)
-            ) {
-                return PermissionStatus.Disallows;
-            }
-
-            if (
-                _allAllowed.contains(ALL_PERMISSION) ||
-                _allAllowed.contains(permission_) ||
-                _allowed.contains(ALL_PERMISSION) ||
-                _allowed.contains(permission_)
-            ) {
-                rolesPermissionStatus_ = PermissionStatus.Allows;
-            }
-        }
+        return (_allDisallowed.contains(ALL_PERMISSION) ||
+            _allDisallowed.contains(permission_) ||
+            _disallowed.contains(ALL_PERMISSION) ||
+            _disallowed.contains(permission_));
     }
 }

@@ -55,5 +55,5 @@ interface IRBAC {
         address who_,
         string calldata resource_,
         string calldata permission_
-    ) external view returns (bool);
+    ) external view returns (bool isAllowed_);
 }

@@ -104,6 +104,48 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
+     *  @notice The function to check the user's possession of the role. Unlike the base method,
+     *  this method also looks up the required permission in the user's groups
+     *  @param who_ the user
+     *  @param resource_ the resource the user has to have the permission of
+     *  @param permission_ the permission the user has to have
+     *  @return isAllowed_ true if the user has the permission, false otherwise
+     */
+    function hasPermission(
+        address who_,
+        string memory resource_,
+        string memory permission_
+    ) public view virtual override returns (bool isAllowed_) {
+        string[] memory roles_ = getUserRoles(who_);
+
+        for (uint256 i = 0; i < roles_.length; i++) {
+            string memory role_ = roles_[i];
+
+            if (_isDisallowed(role_, resource_, permission_)) {
+                return false;
+            }
+
+            isAllowed_ = _isAllowed(role_, resource_, permission_);
+        }
+
+        string[] memory groups_ = getUserGroups(who_);
+
+        for (uint256 i = 0; i < groups_.length; i++) {
+            roles_ = getGroupRoles(groups_[i]);
+
+            for (uint256 j = 0; j < roles_.length; j++) {
+                string memory role_ = roles_[j];
+
+                if (_isDisallowed(role_, resource_, permission_)) {
+                    return false;
+                }
+
+                isAllowed_ = _isAllowed(role_, resource_, permission_);
+            }
+        }
+    }
+
+    /**
      *  @notice The internal function to assign groups to the user
      *  @param who_ the user to assign groups to
      *  @param groupsToAddTo_ the list of groups to be assigned
@@ -145,43 +187,5 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         _groupRoles[groupFrom_].remove(rolesToRevoke_);
 
         emit RevokedGroupRoles(groupFrom_, rolesToRevoke_);
-    }
-
-    /**
-     *  @notice The internal function to check the user permission status. Unlike the base method,
-     *  this method also looks up the required permission in the user's groups
-     *  @param who_ the user
-     *  @param resource_ the resource the user has to have the permission of
-     *  @param permission_ the permission the user has to have
-     *  @return userPermissionStatus_ the user permission status
-     */
-    function _hasPermission(
-        address who_,
-        string memory resource_,
-        string memory permission_
-    ) internal view virtual override returns (PermissionStatus userPermissionStatus_) {
-        userPermissionStatus_ = super._hasPermission(who_, resource_, permission_);
-
-        if (userPermissionStatus_ == PermissionStatus.Disallows) {
-            return PermissionStatus.Disallows;
-        }
-
-        string[] memory groups_ = getUserGroups(who_);
-
-        for (uint256 i = 0; i < groups_.length; i++) {
-            PermissionStatus rolesPermissionStatus_ = _hasRolesPermission(
-                getGroupRoles(groups_[i]),
-                resource_,
-                permission_
-            );
-
-            if (rolesPermissionStatus_ == PermissionStatus.Disallows) {
-                return PermissionStatus.Disallows;
-            }
-
-            if (rolesPermissionStatus_ == PermissionStatus.Allows) {
-                userPermissionStatus_ = rolesPermissionStatus_;
-            }
-        }
     }
 }
