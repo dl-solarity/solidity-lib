@@ -279,7 +279,7 @@ abstract contract RBAC is IRBAC, Initializable {
      *  @param role_ the role to search the permission in
      *  @param resource_ the role resource to search the permission in
      *  @param permission_ the permission to search
-     *  @return isAllowed_ true if the role has the permission, false otherwise
+     *  @return true_ if the role has the permission, false otherwise
      */
     function _isAllowed(
         string memory role_,
@@ -304,7 +304,7 @@ abstract contract RBAC is IRBAC, Initializable {
      *  @param role_ the role to search the antipermission in
      *  @param resource_ the role resource to search the antipermission in
      *  @param permission_ the antipermission to search
-     *  @return isAllowed_ true if the role has the antipermission, false otherwise
+     *  @return true_ if the role has the antipermission, false otherwise
      */
     function _isDisallowed(
         string memory role_,
