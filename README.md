@@ -7,12 +7,13 @@
 
 **Elaborate solidity development modules library by DL.**
 
-The library consist of modules and utilities that are built on top of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) but goes far beyond the mediocre solidity. 
+The library consists of modules and utilities that are built on top of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) but go far beyond mediocre solidity.
 
 - Implementation of [**Contracts Registry**](https://eips.ethereum.org/EIPS/eip-6224) pattern
 - Versatile **RBAC** smart contract
 - Enhanced and simplified [**Diamond**](https://eips.ethereum.org/EIPS/eip-2535) pattern
-- Utilities to ease work with ERC20 decimals, arrays and sets
+- Heap based priority queue library
+- Utilities to ease work with ERC20 decimals, arrays, and sets
 
 ## Overview
 
@@ -26,7 +27,7 @@ The latest stable version is always in the `master` branch.
 
 ## Usage
 
-You will find the smart contracts in the `/contracts` directory. Fell free to play around and check the source code, it is rather descriptive.
+You will find the smart contracts in the `/contracts` directory. Feel free to play around and check the source code, it is rather descriptive.
 
 Once the [npm package](https://www.npmjs.com/package/@dlsl/dev-modules) is installed, one can use the modules just like that:
 
