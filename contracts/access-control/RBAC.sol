@@ -284,10 +284,8 @@ abstract contract RBAC is IRBAC, Initializable {
         string memory permission_
     ) internal view returns (PermissionStatus rolesPermissionStatus_) {
         for (uint256 i = 0; i < roles_.length; i++) {
-            string memory role_ = roles_[i];
-
             mapping(bool => mapping(string => StringSet.Set))
-                storage _allResources = _rolePermissions[role_];
+                storage _allResources = _rolePermissions[roles_[i]];
 
             mapping(string => StringSet.Set) storage _allAllowedResources = _allResources[true];
             mapping(string => StringSet.Set) storage _allDisallowedResources = _allResources[
