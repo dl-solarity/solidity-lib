@@ -53,4 +53,16 @@ contract ArrayHelperMock {
     function asArrayString(string memory elem_) external pure returns (string[] memory array_) {
         return elem_.asArray();
     }
+
+    function countPrefixes(uint256[] memory arr_) external pure returns (uint256[] memory) {
+        return arr_.countPrefixes();
+    }
+
+    function getRangeSum(
+        uint256[] memory arr_,
+        uint256 beginIndex_,
+        uint256 endIndex_
+    ) external pure returns (uint256) {
+        return arr_.countPrefixes().getRangeSum(beginIndex_, endIndex_);
+    }
 }

@@ -65,7 +65,7 @@ abstract contract AbstractContractsRegistry is Initializable {
     }
 
     /**
-     *  @notice The function that check if a contract with a given name has been added
+     *  @notice The function that checks if a contract with a given name has been added
      *  @param name_ the name of the contract
      *  @return true if the contract is present in the registry
      */
