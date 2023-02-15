@@ -92,12 +92,8 @@ abstract contract RBACGroupable is RBAC, IRBACGroupable {
         address who_,
         string memory resource_,
         string memory permission_
-    ) internal view virtual override returns (PermissionStatus) {
-        PermissionStatus userPermissionStatus_ = super._hasPermission(
-            who_,
-            resource_,
-            permission_
-        );
+    ) internal view virtual override returns (PermissionStatus userPermissionStatus_) {
+        userPermissionStatus_ = super._hasPermission(who_, resource_, permission_);
 
         if (userPermissionStatus_ == PermissionStatus.DisallowsPermission) {
             return userPermissionStatus_;
@@ -120,7 +116,5 @@ abstract contract RBACGroupable is RBAC, IRBACGroupable {
                 userPermissionStatus_ = rolesPermissionStatus_;
             }
         }
-
-        return userPermissionStatus_;
     }
 }

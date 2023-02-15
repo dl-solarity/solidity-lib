@@ -276,9 +276,7 @@ abstract contract RBAC is IRBAC, Initializable {
         string[] memory roles_,
         string memory resource_,
         string memory permission_
-    ) internal view returns (PermissionStatus) {
-        PermissionStatus rolesPermissionStatus_;
-
+    ) internal view returns (PermissionStatus rolesPermissionStatus_) {
         for (uint256 i = 0; i < roles_.length; i++) {
             string memory role_ = roles_[i];
 
@@ -306,7 +304,5 @@ abstract contract RBAC is IRBAC, Initializable {
                 rolesPermissionStatus_ = PermissionStatus.AllowsPermission;
             }
         }
-
-        return rolesPermissionStatus_;
     }
 }
