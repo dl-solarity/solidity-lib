@@ -29,9 +29,9 @@ interface IRBAC {
         bool allowed
     );
 
-    function grantRoles(address to_, string[] memory rolesToGrant_) external;
+    function grantRoles(address to_, string[] calldata rolesToGrant_) external;
 
-    function revokeRoles(address from_, string[] memory rolesToRevoke_) external;
+    function revokeRoles(address from_, string[] calldata rolesToRevoke_) external;
 
     function addPermissionsToRole(
         string calldata role_,
@@ -45,7 +45,7 @@ interface IRBAC {
         bool allowed_
     ) external;
 
-    function getUserRoles(address who_) external view returns (string[] memory roles_);
+    function getUserRoles(address who_) external view returns (string[] calldata roles_);
 
     function getRolePermissions(
         string calldata role_

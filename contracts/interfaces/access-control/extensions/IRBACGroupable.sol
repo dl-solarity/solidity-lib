@@ -8,15 +8,20 @@ interface IRBACGroupable {
     event GrantedGroupRoles(string groupTo, string[] rolesToGrant);
     event RevokedGroupRoles(string groupFrom, string[] rolesToRevoke);
 
-    function addUserToGroups(address who_, string[] memory groupsToAddTo_) external;
+    function addUserToGroups(address who_, string[] calldata groupsToAddTo_) external;
 
-    function removeUserFromGroups(address who_, string[] memory groupsToRemoveFrom_) external;
+    function removeUserFromGroups(address who_, string[] calldata groupsToRemoveFrom_) external;
 
-    function grantGroupRoles(string calldata groupTo_, string[] memory rolesToGrant_) external;
+    function grantGroupRoles(string calldata groupTo_, string[] calldata rolesToGrant_) external;
 
-    function revokeGroupRoles(string calldata groupFrom_, string[] memory rolesToRevoke_) external;
+    function revokeGroupRoles(
+        string calldata groupFrom_,
+        string[] calldata rolesToRevoke_
+    ) external;
 
-    function getUserGroups(address who_) external view returns (string[] memory groups_);
+    function getUserGroups(address who_) external view returns (string[] calldata groups_);
 
-    function getGroupRoles(string memory group_) external view returns (string[] memory roles_);
+    function getGroupRoles(
+        string calldata group_
+    ) external view returns (string[] calldata roles_);
 }

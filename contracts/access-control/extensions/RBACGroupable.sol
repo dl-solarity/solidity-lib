@@ -37,7 +37,7 @@ abstract contract RBACGroupable is RBAC, IRBACGroupable {
     }
 
     function grantGroupRoles(
-        string calldata groupTo_,
+        string memory groupTo_,
         string[] memory rolesToGrant_
     ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
         require(rolesToGrant_.length > 0, "RBACGroupable: empty roles");
@@ -46,7 +46,7 @@ abstract contract RBACGroupable is RBAC, IRBACGroupable {
     }
 
     function revokeGroupRoles(
-        string calldata groupFrom_,
+        string memory groupFrom_,
         string[] memory rolesToRevoke_
     ) public virtual override onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION) {
         require(rolesToRevoke_.length > 0, "RBACGroupable: empty roles");
@@ -76,16 +76,13 @@ abstract contract RBACGroupable is RBAC, IRBACGroupable {
         emit RemovedFromGroups(who_, groupsToRemoveFrom_);
     }
 
-    function _grantGroupRoles(string calldata groupTo_, string[] memory rolesToGrant_) internal {
+    function _grantGroupRoles(string memory groupTo_, string[] memory rolesToGrant_) internal {
         _groupRoles[groupTo_].add(rolesToGrant_);
 
         emit GrantedGroupRoles(groupTo_, rolesToGrant_);
     }
 
-    function _revokeGroupRoles(
-        string calldata groupFrom_,
-        string[] memory rolesToRevoke_
-    ) internal {
+    function _revokeGroupRoles(string memory groupFrom_, string[] memory rolesToRevoke_) internal {
         _groupRoles[groupFrom_].remove(rolesToRevoke_);
 
         emit RevokedGroupRoles(groupFrom_, rolesToRevoke_);
