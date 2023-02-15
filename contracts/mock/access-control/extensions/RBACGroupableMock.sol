@@ -13,6 +13,6 @@ contract RBACMockGroupableMock is RBACGroupable {
     }
 
     function mockInit() external {
-        __RBAC_init();
+        __RBACGroupable_init();
     }
 }
