@@ -286,12 +286,10 @@ abstract contract RBAC is IRBAC, Initializable {
         string memory resource_,
         string memory permission_
     ) internal view returns (bool) {
-        mapping(string => StringSet.Set) storage _allAllowedResources = _rolePermissions[role_][
-            true
-        ];
+        mapping(string => StringSet.Set) storage _resources = _rolePermissions[role_][true];
 
-        StringSet.Set storage _allAllowed = _allAllowedResources[ALL_RESOURCE];
-        StringSet.Set storage _allowed = _allAllowedResources[resource_];
+        StringSet.Set storage _allAllowed = _resources[ALL_RESOURCE];
+        StringSet.Set storage _allowed = _resources[resource_];
 
         return (_allAllowed.contains(ALL_PERMISSION) ||
             _allAllowed.contains(permission_) ||
@@ -311,12 +309,10 @@ abstract contract RBAC is IRBAC, Initializable {
         string memory resource_,
         string memory permission_
     ) internal view returns (bool) {
-        mapping(string => StringSet.Set) storage _allDisallowedResources = _rolePermissions[role_][
-            false
-        ];
+        mapping(string => StringSet.Set) storage _resources = _rolePermissions[role_][false];
 
-        StringSet.Set storage _allDisallowed = _allDisallowedResources[ALL_RESOURCE];
-        StringSet.Set storage _disallowed = _allDisallowedResources[resource_];
+        StringSet.Set storage _allDisallowed = _resources[ALL_RESOURCE];
+        StringSet.Set storage _disallowed = _resources[resource_];
 
         return (_allDisallowed.contains(ALL_PERMISSION) ||
             _allDisallowed.contains(permission_) ||
