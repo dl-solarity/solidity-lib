@@ -201,7 +201,7 @@ abstract contract RBAC is IRBAC, Initializable {
                 return false;
             }
 
-            isAllowed_ = _isAllowed(role_, resource_, permission_);
+            isAllowed_ = isAllowed_ || _isAllowed(role_, resource_, permission_);
         }
     }
 

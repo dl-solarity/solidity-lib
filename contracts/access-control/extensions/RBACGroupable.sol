@@ -125,7 +125,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
                 return false;
             }
 
-            isAllowed_ = _isAllowed(role_, resource_, permission_);
+            isAllowed_ = isAllowed_ || _isAllowed(role_, resource_, permission_);
         }
 
         string[] memory groups_ = getUserGroups(who_);
@@ -140,7 +140,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
                     return false;
                 }
 
-                isAllowed_ = _isAllowed(role_, resource_, permission_);
+                isAllowed_ = isAllowed_ || _isAllowed(role_, resource_, permission_);
             }
         }
     }
