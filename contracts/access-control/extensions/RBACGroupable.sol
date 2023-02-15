@@ -11,7 +11,7 @@ import "../RBAC.sol";
  *  @notice The Role Based Access Control (RBAC) module
  *
  *  This contract is an extension for the RBAC contract to provide the ability to organize roles
- *  into groups and assign groups to users.
+ *  into groups and assign users to them.
  */
 abstract contract RBACGroupable is IRBACGroupable, RBAC {
     using StringSet for StringSet.Set;
@@ -28,9 +28,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
-     *  @notice The function to assign groups to the user
-     *  @param who_ the user to assign groups to
-     *  @param groupsToAddTo_ the list of groups to be assigned
+     *  @notice The function to assign the user to groups
+     *  @param who_ the user to be assigned
+     *  @param groupsToAddTo_ the list of groups to assign the user to
      */
     function addUserToGroups(
         address who_,
