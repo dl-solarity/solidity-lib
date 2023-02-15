@@ -286,11 +286,19 @@ abstract contract RBAC is IRBAC, Initializable {
         for (uint256 i = 0; i < roles_.length; i++) {
             string memory role_ = roles_[i];
 
-            StringSet.Set storage _allDisallowed = _rolePermissions[role_][false][ALL_RESOURCE];
-            StringSet.Set storage _allAllowed = _rolePermissions[role_][true][ALL_RESOURCE];
+            mapping(bool => mapping(string => StringSet.Set))
+                storage _allResources = _rolePermissions[role_];
 
-            StringSet.Set storage _disallowed = _rolePermissions[role_][false][resource_];
-            StringSet.Set storage _allowed = _rolePermissions[role_][true][resource_];
+            mapping(string => StringSet.Set) storage _allAllowedResources = _allResources[true];
+            mapping(string => StringSet.Set) storage _allDisallowedResources = _allResources[
+                false
+            ];
+
+            StringSet.Set storage _allDisallowed = _allDisallowedResources[ALL_RESOURCE];
+            StringSet.Set storage _allAllowed = _allAllowedResources[ALL_RESOURCE];
+
+            StringSet.Set storage _disallowed = _allDisallowedResources[resource_];
+            StringSet.Set storage _allowed = _allAllowedResources[resource_];
 
             if (
                 _allDisallowed.contains(ALL_PERMISSION) ||
