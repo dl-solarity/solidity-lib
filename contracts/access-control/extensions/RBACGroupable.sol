@@ -96,7 +96,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         userPermissionStatus_ = super._hasPermission(who_, resource_, permission_);
 
         if (userPermissionStatus_ == PermissionStatus.Disallows) {
-            return userPermissionStatus_;
+            return PermissionStatus.Disallows;
         }
 
         string[] memory groups_ = getUserGroups(who_);
@@ -109,7 +109,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
             );
 
             if (rolesPermissionStatus_ == PermissionStatus.Disallows) {
-                return rolesPermissionStatus_;
+                return PermissionStatus.Disallows;
             }
 
             if (rolesPermissionStatus_ == PermissionStatus.Allows) {
