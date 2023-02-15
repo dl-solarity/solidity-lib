@@ -1,6 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+/**
+ *  @notice The library that realizes a heap based priority queue.
+ *
+ *  Courtesy of heap property,
+ *  add(), remove(), and removeTop() operations are O(log(n)) complex
+ *  top() operation is O(1)
+ *
+ *  The library might be useful to implement priority withdrawals/purchases, reputation based systems, and similar logic.
+ *
+ *  The library is a maximal priority queue. The element with the highest priority is the topmost element.
+ *  If you wish a minimal queue, change the priority of the elements to type(uint256).max - priority.
+ *
+ *  Note the queue order of the elements with the same priority is not guaranteed.
+ *
+ *  Usage example:
+ *
+ *  using PriorityQueue for PriorityQueue.UintQueue;
+ *  using PriorityQueue for PriorityQueue.AddressQueue;
+ *  using PriorityQueue for PriorityQueue.Bytes32Queue;
+ */
 library PriorityQueue {
     /**
      ************************
@@ -12,36 +32,80 @@ library PriorityQueue {
         Queue _queue;
     }
 
+    /**
+     *  @notice The function to add an element to the queue. O(log(n)) complex
+     *  @param queue self
+     *  @param value_ the element value
+     *  @param priority_ the element priority
+     */
     function add(UintQueue storage queue, uint256 value_, uint256 priority_) internal {
         _add(queue._queue, bytes32(value_), priority_);
     }
 
+    /**
+     *  @notice The function to remove an element from the queue by index. O(log(n)) complex
+     *  @param queue self
+     *  @param index_ the index of the element to remove
+     */
     function remove(UintQueue storage queue, uint256 index_) internal {
         _remove(queue._queue, index_);
     }
 
+    /**
+     *  @notice The function to remove the element with the highest priority. O(log(n)) complex
+     *  @param queue self
+     */
     function removeTop(UintQueue storage queue) internal {
         _removeTop(queue._queue);
     }
 
+    /**
+     *  @notice The function to read the element with the highest priority. O(1) complex
+     *  @param queue self
+     *  @return the element with the highest priority
+     */
     function top(UintQueue storage queue) internal view returns (uint256) {
         return uint256(_top(queue._queue));
     }
 
+    /**
+     *  @notice The function to read the size of the queue. O(1) complex
+     *  @param queue self
+     *  @return the size of the queue
+     */
     function length(UintQueue storage queue) internal view returns (uint256) {
         return _length(queue._queue);
     }
 
-    function values(UintQueue storage queue) internal view returns (uint256[] memory result_) {
+    /**
+     *  @notice The function to read the element of the queue by index. O(1) complex
+     *  @param queue self
+     *  @param index_ the index of the element to read
+     *  @return the value and the priority of the element
+     */
+    function at(UintQueue storage queue, uint256 index_) internal view returns (uint256, uint256) {
+        (bytes32 value_, uint256 priority_) = _at(queue._queue, index_);
+
+        return (uint256(value_), priority_);
+    }
+
+    /**
+     *  @notice The function to get the values and priorities stored in the queue. O(n) complex
+     *  It is very expensive to call this function as it reads all the queue elements. Use cautiously
+     *  @param queue self
+     *  @return values_ the values of the elements stored
+     *  @return priorities_ the priorities of the elements stored
+     */
+    function values(
+        UintQueue storage queue
+    ) internal view returns (uint256[] memory values_, uint256[] memory priorities_) {
         bytes32[] memory vals_ = _values(queue._queue);
 
         assembly {
-            result_ := vals_
+            values_ := vals_
         }
-    }
 
-    function priorities(UintQueue storage queue) internal view returns (uint256[] memory) {
-        return _priorities(queue._queue);
+        priorities_ = _priorities(queue._queue);
     }
 
     /**
@@ -74,12 +138,18 @@ library PriorityQueue {
         return _length(queue._queue);
     }
 
-    function values(Bytes32Queue storage queue) internal view returns (bytes32[] memory result_) {
-        result_ = _values(queue._queue);
+    function at(
+        Bytes32Queue storage queue,
+        uint256 index_
+    ) internal view returns (bytes32, uint256) {
+        return _at(queue._queue, index_);
     }
 
-    function priorities(Bytes32Queue storage queue) internal view returns (uint256[] memory) {
-        return _priorities(queue._queue);
+    function values(
+        Bytes32Queue storage queue
+    ) internal view returns (bytes32[] memory values_, uint256[] memory priorities_) {
+        values_ = _values(queue._queue);
+        priorities_ = _priorities(queue._queue);
     }
 
     /**
@@ -112,21 +182,30 @@ library PriorityQueue {
         return _length(queue._queue);
     }
 
-    function values(AddressQueue storage queue) internal view returns (address[] memory result_) {
+    function at(
+        AddressQueue storage queue,
+        uint256 index_
+    ) internal view returns (address, uint256) {
+        (bytes32 value_, uint256 priority_) = _at(queue._queue, index_);
+
+        return (address(uint160(uint256(value_))), priority_);
+    }
+
+    function values(
+        AddressQueue storage queue
+    ) internal view returns (address[] memory values_, uint256[] memory priorities_) {
         bytes32[] memory vals_ = _values(queue._queue);
 
         assembly {
-            result_ := vals_
+            values_ := vals_
         }
-    }
 
-    function priorities(AddressQueue storage queue) internal view returns (uint256[] memory) {
-        return _priorities(queue._queue);
+        priorities_ = _priorities(queue._queue);
     }
 
     /**
      ************************
-     *        Queue         *
+     *    Internal Queue    *
      ************************
      */
 
@@ -143,6 +222,8 @@ library PriorityQueue {
     }
 
     function _remove(Queue storage queue, uint256 index_) private {
+        _requireNotEmpty(queue);
+
         if (index_ > 0) {
             queue._priorities[index_] = queue._priorities[0] + 1;
 
@@ -153,7 +234,9 @@ library PriorityQueue {
     }
 
     function _removeTop(Queue storage queue) private {
-        uint256 length_ = queue._values.length;
+        _requireNotEmpty(queue);
+
+        uint256 length_ = _length(queue);
 
         queue._values[0] = queue._values[length_ - 1];
         queue._priorities[0] = queue._priorities[length_ - 1];
@@ -165,11 +248,17 @@ library PriorityQueue {
     }
 
     function _top(Queue storage queue) private view returns (bytes32) {
+        _requireNotEmpty(queue);
+
         return queue._values[0];
     }
 
     function _length(Queue storage queue) private view returns (uint256) {
         return queue._values.length;
+    }
+
+    function _at(Queue storage queue, uint256 index_) private view returns (bytes32, uint256) {
+        return (queue._values[index_], queue._priorities[index_]);
     }
 
     function _values(Queue storage queue) private view returns (bytes32[] memory) {
@@ -184,7 +273,7 @@ library PriorityQueue {
         while (index_ > 0) {
             uint256 parent_ = _parent(index_);
 
-            if (queue._priorities[parent_] < queue._priorities[index_]) {
+            if (queue._priorities[parent_] >= queue._priorities[index_]) {
                 break;
             }
 
@@ -250,5 +339,9 @@ library PriorityQueue {
 
     function _rightChild(uint256 index_) private pure returns (uint256) {
         return index_ * 2 + 2;
+    }
+
+    function _requireNotEmpty(Queue storage queue) private view {
+        require(_length(queue) > 0, "PriorityQueue: empty queue");
     }
 }
