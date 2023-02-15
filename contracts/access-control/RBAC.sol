@@ -181,6 +181,8 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
+     *  @dev DO NOT call `super.hasPermission(...)` in derived contracts, because this method
+     *  handles not 2 but 3 states: NO PERMISSION, ALLOWED, DISALLOWED
      *  @notice The function to check the user's possession of the role
      *  @param who_ the user
      *  @param resource_ the resource the user has to have the permission of

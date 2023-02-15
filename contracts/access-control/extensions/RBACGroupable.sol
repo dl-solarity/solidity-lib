@@ -3,8 +3,6 @@ pragma solidity ^0.8.4;
 
 import "../../interfaces/access-control/extensions/IRBACGroupable.sol";
 
-import "../../libs/arrays/SetHelper.sol";
-
 import "../RBAC.sol";
 
 /**
@@ -104,6 +102,8 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
+     *  @dev DO NOT call `super.hasPermission(...)` in derived contracts, because this method
+     *  handles not 2 but 3 states: NO PERMISSION, ALLOWED, DISALLOWED
      *  @notice The function to check the user's possession of the role. Unlike the base method,
      *  this method also looks up the required permission in the user's groups
      *  @param who_ the user
