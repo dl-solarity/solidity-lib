@@ -23,7 +23,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     /**
      *  @notice The init function
      */
-    function __GroupRBAC_init() internal onlyInitializing {
+    function __RBACGroupable_init() internal onlyInitializing {
         __RBAC_init();
     }
 
