@@ -22,6 +22,12 @@ import "../libs/arrays/SetHelper.sol";
  *  resources or permissions.
  */
 abstract contract RBAC is IRBAC, Initializable {
+    enum PermissionStatus {
+        None,
+        Allows,
+        Disallows
+    }
+
     using StringSet for StringSet.Set;
     using SetHelper for StringSet.Set;
     using ArrayHelper for string;
@@ -192,7 +198,7 @@ abstract contract RBAC is IRBAC, Initializable {
         string memory resource_,
         string memory permission_
     ) public view override returns (bool) {
-        return _hasPermission(who_, resource_, permission_) == PermissionStatus.AllowsPermission;
+        return _hasPermission(who_, resource_, permission_) == PermissionStatus.Allows;
     }
 
     /**
@@ -292,7 +298,7 @@ abstract contract RBAC is IRBAC, Initializable {
                 _disallowed.contains(ALL_PERMISSION) ||
                 _disallowed.contains(permission_)
             ) {
-                return PermissionStatus.DisallowsPermission;
+                return PermissionStatus.Disallows;
             }
 
             if (
@@ -301,7 +307,7 @@ abstract contract RBAC is IRBAC, Initializable {
                 _allowed.contains(ALL_PERMISSION) ||
                 _allowed.contains(permission_)
             ) {
-                rolesPermissionStatus_ = PermissionStatus.AllowsPermission;
+                rolesPermissionStatus_ = PermissionStatus.Allows;
             }
         }
     }
