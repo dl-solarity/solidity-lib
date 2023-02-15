@@ -7,7 +7,7 @@ import "../../libs/arrays/SetHelper.sol";
 
 import "../RBAC.sol";
 
-abstract contract RBACGroupable is RBAC, IRBACGroupable {
+abstract contract RBACGroupable is IRBACGroupable, RBAC {
     using StringSet for StringSet.Set;
     using SetHelper for StringSet.Set;
 
