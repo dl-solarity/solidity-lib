@@ -6,7 +6,7 @@ import "../../../access-control/extensions/RBACGroupable.sol";
 contract RBACGroupableMock is RBACGroupable {
     using ArrayHelper for string;
 
-    function __RBACMock_init() external initializer {
+    function __RBACGroupableMock_init() external initializer {
         __RBACGroupable_init();
 
         _grantRoles(msg.sender, MASTER_ROLE.asArray());
