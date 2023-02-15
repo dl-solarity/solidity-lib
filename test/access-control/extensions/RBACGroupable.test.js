@@ -185,7 +185,7 @@ describe("RBAC", () => {
             assert.isTrue(await rbac.hasPermission(OWNER, "*", "*"));
           });
 
-          it("should not have the permission if own antipermission", async () => {
+          it("should not have the permission if the user has an antipermission", async () => {
             const BANNED_ZERO_ROLE = "BANNED_ZERO_ROLE";
 
             await rbac.addPermissionsToRole(BANNED_ZERO_ROLE, roles[0].resourcesWithPermissions, false);
@@ -200,7 +200,7 @@ describe("RBAC", () => {
             );
           });
 
-          it("should not have the permission if group antipermission", async () => {
+          it("should not have the permission if the group has an antipermission", async () => {
             const BANNED_ZERO_ROLE = "BANNED_ZERO_ROLE";
 
             await rbac.addPermissionsToRole(BANNED_ZERO_ROLE, roles[0].resourcesWithPermissions, false);
