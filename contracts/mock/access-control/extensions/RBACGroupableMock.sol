@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import "../../../access-control/extensions/RBACGroupable.sol";
 
-contract RBACMockGroupableMock is RBACGroupable {
+contract RBACGroupableMock is RBACGroupable {
     using ArrayHelper for string;
 
     function __RBACMock_init() external initializer {
