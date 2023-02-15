@@ -191,7 +191,7 @@ abstract contract RBAC is IRBAC, Initializable {
         address who_,
         string memory resource_,
         string memory permission_
-    ) public view virtual override returns (bool) {
+    ) public view override returns (bool) {
         return _hasPermission(who_, resource_, permission_) == PermissionStatus.AllowsPermission;
     }
 
