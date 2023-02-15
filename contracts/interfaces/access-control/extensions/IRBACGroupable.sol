@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+/**
+ *  @notice The RBAC module
+ */
 interface IRBACGroupable {
     event AddedToGroups(address who, string[] groupsToAddTo);
     event RemovedFromGroups(address who, string[] groupsToRemoveFrom);

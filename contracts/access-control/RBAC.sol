@@ -22,6 +22,13 @@ import "../libs/arrays/SetHelper.sol";
  *  resources or permissions.
  */
 abstract contract RBAC is IRBAC, Initializable {
+    /**
+     *  @notice The internal enum of permission statuses, which is used to override `_hasPermission`.
+     *  This enum can describe the permission status of the user / role / group of roles
+     *  @param None the permission and antipermission are absent
+     *  @param Allows the permission is not absent
+     *  @param Disallows the antipermission is not absent (should override `Allows`)
+     */
     enum PermissionStatus {
         None,
         Allows,
@@ -139,7 +146,7 @@ abstract contract RBAC is IRBAC, Initializable {
     /**
      *  @notice The function to get the list of user roles
      *  @param who_ the user
-     *  @return roles_ the roes of the user
+     *  @return roles_ the roles of the user
      */
     function getUserRoles(address who_) public view override returns (string[] memory roles_) {
         return _userRoles[who_].values();
@@ -270,14 +277,29 @@ abstract contract RBAC is IRBAC, Initializable {
         emit RemovedPermissions(role_, resourceToRemove_, permissionsToRemove_, allowed_);
     }
 
+    /**
+     *  @notice The internal function to check the user permission status, can be overridden in
+     *  the child contract
+     *  @param who_ the user
+     *  @param resource_ the resource the user has to have the permission of
+     *  @param permission_ the permission the user has to have
+     *  @return userPermissionStatus_ the user permission status
+     */
     function _hasPermission(
         address who_,
         string memory resource_,
         string memory permission_
-    ) internal view virtual returns (PermissionStatus) {
+    ) internal view virtual returns (PermissionStatus userPermissionStatus_) {
         return _hasRolesPermission(getUserRoles(who_), resource_, permission_);
     }
 
+    /**
+     *  @notice The internal function to check the roles permission status
+     *  @param roles_ roles whose status needs to be checked
+     *  @param resource_ the resource roles have to have the permission of
+     *  @param permission_ the permission roles have to have
+     *  @return rolesPermissionStatus_ the roles permission status
+     */
     function _hasRolesPermission(
         string[] memory roles_,
         string memory resource_,
