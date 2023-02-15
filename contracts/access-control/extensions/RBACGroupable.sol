@@ -102,7 +102,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         string[] memory groups_ = getUserGroups(who_);
 
         for (uint256 i = 0; i < groups_.length; i++) {
-            PermissionStatus rolesPermissionStatus_ = _getRolesPermissionStatus(
+            PermissionStatus rolesPermissionStatus_ = _hasRolesPermission(
                 getGroupRoles(groups_[i]),
                 resource_,
                 permission_

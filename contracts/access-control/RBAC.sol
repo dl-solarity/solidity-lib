@@ -275,10 +275,10 @@ abstract contract RBAC is IRBAC, Initializable {
         string memory resource_,
         string memory permission_
     ) internal view virtual returns (PermissionStatus) {
-        return _getRolesPermissionStatus(getUserRoles(who_), resource_, permission_);
+        return _hasRolesPermission(getUserRoles(who_), resource_, permission_);
     }
 
-    function _getRolesPermissionStatus(
+    function _hasRolesPermission(
         string[] memory roles_,
         string memory resource_,
         string memory permission_
