@@ -27,7 +27,7 @@ abstract contract RBAC is IRBAC, Initializable {
      *  This enum can describe the permission status of the user / role / group of roles
      *  @param None the permission and antipermission are absent
      *  @param Allows the permission is not absent
-     *  @param Disallows the antipermission is not absent (should override `Allows`)
+     *  @param Disallows the antipermission is not absent (must override `Allows`)
      */
     enum PermissionStatus {
         None,
