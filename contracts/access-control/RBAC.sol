@@ -133,7 +133,7 @@ abstract contract RBAC is IRBAC, Initializable {
     /**
      *  @notice The function to get the list of user roles
      *  @param who_ the user
-     *  @return roles_ the roes of the user
+     *  @return roles_ the roles of the user
      */
     function getUserRoles(address who_) public view override returns (string[] memory roles_) {
         return _userRoles[who_].values();
@@ -181,51 +181,30 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The function to check the user's possesion of the role
+     *  @dev DO NOT call `super.hasPermission(...)` in derived contracts, because this method
+     *  handles not 2 but 3 states: NO PERMISSION, ALLOWED, DISALLOWED
+     *  @notice The function to check the user's possession of the role
      *  @param who_ the user
      *  @param resource_ the resource the user has to have the permission of
      *  @param permission_ the permission the user has to have
-     *  @return true_ if user has the permission, false otherwise
+     *  @return isAllowed_ true if the user has the permission, false otherwise
      */
     function hasPermission(
         address who_,
         string memory resource_,
         string memory permission_
-    ) public view override returns (bool) {
-        StringSet.Set storage _roles = _userRoles[who_];
+    ) public view virtual override returns (bool isAllowed_) {
+        string[] memory roles_ = getUserRoles(who_);
 
-        uint256 length_ = _roles.length();
-        bool isAllowed_;
+        for (uint256 i = 0; i < roles_.length; i++) {
+            string memory role_ = roles_[i];
 
-        for (uint256 i = 0; i < length_; i++) {
-            string memory role_ = _roles.at(i);
-
-            StringSet.Set storage _allDisallowed = _rolePermissions[role_][false][ALL_RESOURCE];
-            StringSet.Set storage _allAllowed = _rolePermissions[role_][true][ALL_RESOURCE];
-
-            StringSet.Set storage _disallowed = _rolePermissions[role_][false][resource_];
-            StringSet.Set storage _allowed = _rolePermissions[role_][true][resource_];
-
-            if (
-                _allDisallowed.contains(ALL_PERMISSION) ||
-                _allDisallowed.contains(permission_) ||
-                _disallowed.contains(ALL_PERMISSION) ||
-                _disallowed.contains(permission_)
-            ) {
+            if (_isDisallowed(role_, resource_, permission_)) {
                 return false;
             }
 
-            if (
-                _allAllowed.contains(ALL_PERMISSION) ||
-                _allAllowed.contains(permission_) ||
-                _allowed.contains(ALL_PERMISSION) ||
-                _allowed.contains(permission_)
-            ) {
-                isAllowed_ = true;
-            }
+            isAllowed_ = isAllowed_ || _isAllowed(role_, resource_, permission_);
         }
-
-        return isAllowed_;
     }
 
     /**
@@ -295,5 +274,51 @@ abstract contract RBAC is IRBAC, Initializable {
         }
 
         emit RemovedPermissions(role_, resourceToRemove_, permissionsToRemove_, allowed_);
+    }
+
+    /**
+     *  @notice The function to check if the role has the permission
+     *  @param role_ the role to search the permission in
+     *  @param resource_ the role resource to search the permission in
+     *  @param permission_ the permission to search
+     *  @return true_ if the role has the permission, false otherwise
+     */
+    function _isAllowed(
+        string memory role_,
+        string memory resource_,
+        string memory permission_
+    ) internal view returns (bool) {
+        mapping(string => StringSet.Set) storage _resources = _rolePermissions[role_][true];
+
+        StringSet.Set storage _allAllowed = _resources[ALL_RESOURCE];
+        StringSet.Set storage _allowed = _resources[resource_];
+
+        return (_allAllowed.contains(ALL_PERMISSION) ||
+            _allAllowed.contains(permission_) ||
+            _allowed.contains(ALL_PERMISSION) ||
+            _allowed.contains(permission_));
+    }
+
+    /**
+     *  @notice The function to check if the role has the antipermission
+     *  @param role_ the role to search the antipermission in
+     *  @param resource_ the role resource to search the antipermission in
+     *  @param permission_ the antipermission to search
+     *  @return true_ if the role has the antipermission, false otherwise
+     */
+    function _isDisallowed(
+        string memory role_,
+        string memory resource_,
+        string memory permission_
+    ) internal view returns (bool) {
+        mapping(string => StringSet.Set) storage _resources = _rolePermissions[role_][false];
+
+        StringSet.Set storage _allDisallowed = _resources[ALL_RESOURCE];
+        StringSet.Set storage _disallowed = _resources[resource_];
+
+        return (_allDisallowed.contains(ALL_PERMISSION) ||
+            _allDisallowed.contains(permission_) ||
+            _disallowed.contains(ALL_PERMISSION) ||
+            _disallowed.contains(permission_));
     }
 }
