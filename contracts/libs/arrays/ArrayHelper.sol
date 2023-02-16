@@ -103,6 +103,14 @@ library ArrayHelper {
         array_[0] = elem_;
     }
 
+    function asArray(
+        string[2] memory staticArray_
+    ) internal pure returns (string[] memory array_) {
+        array_ = new string[](2);
+        array_[0] = staticArray_[0];
+        array_[1] = staticArray_[1];
+    }
+
     /**
      *  @notice The function to compute the prefix sum array
      *  @param arr_ the initial array to be turned into the prefix sum array
