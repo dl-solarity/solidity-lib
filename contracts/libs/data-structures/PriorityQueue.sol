@@ -270,10 +270,12 @@ library PriorityQueue {
     }
 
     function _shiftUp(Queue storage queue, uint256 index_) private {
+        uint256 priority_ = queue._priorities[index_];
+
         while (index_ > 0) {
             uint256 parent_ = _parent(index_);
 
-            if (queue._priorities[parent_] >= queue._priorities[index_]) {
+            if (queue._priorities[parent_] >= priority_) {
                 break;
             }
 
