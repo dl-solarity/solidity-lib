@@ -36,18 +36,6 @@ library ConstantsRegistryUtils {
 
     function set(
         ConstantsRegistryStorage storage constants,
-        string memory key_,
-        string memory subKey_,
-        bytes memory value_
-    ) internal {
-        ConstantsRegistryStorage storage _constant = _dive(constants, [key_, subKey_].asArray());
-
-        _constant._value = value_;
-        _constant._exists = true;
-    }
-
-    function set(
-        ConstantsRegistryStorage storage constants,
         string[] memory key_,
         bytes memory value_
     ) internal {
@@ -81,18 +69,6 @@ library ConstantsRegistryUtils {
 
     function remove(
         ConstantsRegistryStorage storage constants,
-        string memory key_,
-        string memory subKey_,
-        bytes memory value_
-    ) internal {
-        ConstantsRegistryStorage storage _constant = _dive(constants, [key_, subKey_].asArray());
-
-        _constant._value = bytes("");
-        _constant._exists = false;
-    }
-
-    function remove(
-        ConstantsRegistryStorage storage constants,
         string[] memory key_,
         bytes memory value_
     ) internal {
@@ -118,14 +94,6 @@ library ConstantsRegistryUtils {
 
     function get(
         ConstantsRegistryStorage storage constants,
-        string memory key_,
-        string memory subKey_
-    ) internal view returns (bytes memory) {
-        return _dive(constants, [key_, subKey_].asArray())._value;
-    }
-
-    function get(
-        ConstantsRegistryStorage storage constants,
         string[] memory key_
     ) internal view returns (bytes memory) {
         return _dive(constants, key_)._value;
@@ -143,14 +111,6 @@ library ConstantsRegistryUtils {
         string[2] memory key_
     ) internal view returns (bool) {
         return _dive(constants, key_.asArray())._exists;
-    }
-
-    function exists(
-        ConstantsRegistryStorage storage constants,
-        string memory key_,
-        string memory subKey_
-    ) internal view returns (bool) {
-        return _dive(constants, [key_, subKey_].asArray())._exists;
     }
 
     function exists(
