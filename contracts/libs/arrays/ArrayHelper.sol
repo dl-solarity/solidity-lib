@@ -102,4 +102,45 @@ library ArrayHelper {
         array_ = new string[](1);
         array_[0] = elem_;
     }
+
+    /**
+     *  @notice The function to compute the prefix sum array
+     *  @param arr_ the initial array to be turned into the prefix sum array
+     *  @return prefixes_ the prefix sum array
+     */
+    function countPrefixes(
+        uint256[] memory arr_
+    ) internal pure returns (uint256[] memory prefixes_) {
+        if (arr_.length == 0) {
+            return prefixes_;
+        }
+
+        prefixes_ = new uint256[](arr_.length);
+        prefixes_[0] = arr_[0];
+
+        for (uint256 i = 1; i < prefixes_.length; i++) {
+            prefixes_[i] = prefixes_[i - 1] + arr_[i];
+        }
+    }
+
+    /**
+     *  @notice The function that calculates the sum of all array elements from `beginIndex_` to
+     *  `endIndex_` inclusive using its prefix sum array
+     *  @param beginIndex_ the index of the first range element
+     *  @param endIndex_ the index of the last range element
+     *  @return the sum of all elements of the range
+     */
+    function getRangeSum(
+        uint256[] memory prefixes_,
+        uint256 beginIndex_,
+        uint256 endIndex_
+    ) internal pure returns (uint256) {
+        require(beginIndex_ <= endIndex_, "ArrayHelper: wrong range");
+
+        if (beginIndex_ == 0) {
+            return prefixes_[endIndex_];
+        }
+
+        return prefixes_[endIndex_] - prefixes_[beginIndex_ - 1];
+    }
 }

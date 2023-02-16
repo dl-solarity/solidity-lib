@@ -117,4 +117,47 @@ describe("ArrayHelperMock", () => {
       assert.deepEqual(await mock.asArrayString("1"), ["1"]);
     });
   });
+
+  describe("prefix sum array", () => {
+    function getArraySum(arr) {
+      return arr.reduce((prev, cur) => prev + cur, 0);
+    }
+
+    function countPrefixes(arr) {
+      return arr.map((e, idx) => getArraySum(arr.slice(0, idx + 1)));
+    }
+
+    const array = [0, 100, 50, 4, 34, 520, 4];
+
+    describe("countPrefixes", () => {
+      it("should compute prefix array properly", async () => {
+        assert.deepEqual(await mock.countPrefixes([]), []);
+        assert.deepEqual(
+          (await mock.countPrefixes(array)).map((e) => e.toNumber()),
+          countPrefixes(array)
+        );
+      });
+    });
+
+    describe("getRangeSum", () => {
+      it("should get the range sum properly if all conditions are met", async () => {
+        for (let l = 0; l < array.length; l++) {
+          for (let r = l; r < array.length; r++) {
+            assert.equal((await mock.getRangeSum(array, l, r)).toNumber(), getArraySum(array.slice(l, r + 1)));
+          }
+        }
+      });
+
+      it("should revert if the first index is greater than the last one", async () => {
+        await truffleAssert.reverts(mock.getRangeSum(array, array.length - 1, 0), "ArrayHelper: wrong range");
+        await truffleAssert.reverts(mock.getRangeSum(array, 1, 0), "ArrayHelper: wrong range");
+        await truffleAssert.reverts(mock.getRangeSum(array, 2, 1), "ArrayHelper: wrong range");
+      });
+
+      it("should revert if one of the indexes is out of range", async () => {
+        await truffleAssert.reverts(mock.getRangeSum([], 0, 0));
+        await truffleAssert.reverts(mock.getRangeSum(array, 0, array.length));
+      });
+    });
+  });
 });
