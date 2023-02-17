@@ -9,7 +9,7 @@ contract RBACGroupableMock is RBACGroupable {
     function __RBACGroupableMock_init() external initializer {
         __RBACGroupable_init();
 
-        _grantRoles(msg.sender, MASTER_ROLE.asArray());
+        _grantRoles(msg.sender, MASTER_ROLE.asSingletonArray());
     }
 
     function mockInit() external {

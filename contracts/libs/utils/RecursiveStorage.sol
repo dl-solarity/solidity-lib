@@ -12,7 +12,7 @@ library RecursiveStorage {
     }
 
     function set(Storage storage self, string memory key_, bytes memory value_) internal {
-        _set(self, key_.asArray(), value_);
+        _set(self, key_.asSingletonArray(), value_);
     }
 
     function set(Storage storage self, string[] memory key_, bytes memory value_) internal {
@@ -20,7 +20,7 @@ library RecursiveStorage {
     }
 
     function remove(Storage storage self, string memory key_) internal {
-        _remove(self, key_.asArray());
+        _remove(self, key_.asSingletonArray());
     }
 
     function remove(Storage storage self, string[] memory key_) internal {
@@ -28,7 +28,7 @@ library RecursiveStorage {
     }
 
     function get(Storage storage self, string memory key_) internal view returns (bytes memory) {
-        return _dive(self, key_.asArray())._value;
+        return _dive(self, key_.asSingletonArray())._value;
     }
 
     function get(Storage storage self, string[] memory key_) internal view returns (bytes memory) {

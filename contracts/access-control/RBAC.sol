@@ -57,7 +57,7 @@ abstract contract RBAC is IRBAC, Initializable {
      *  @notice The init function
      */
     function __RBAC_init() internal onlyInitializing {
-        _addPermissionsToRole(MASTER_ROLE, ALL_RESOURCE, ALL_PERMISSION.asArray(), true);
+        _addPermissionsToRole(MASTER_ROLE, ALL_RESOURCE, ALL_PERMISSION.asSingletonArray(), true);
     }
 
     /**

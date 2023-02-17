@@ -19,11 +19,11 @@ contract RecursiveStorageMock {
     }
 
     function setUint256(string memory key_, uint256 value_) external {
-        _recursiveStorage.set(key_, value_.toBytes());
+        _recursiveStorage.set(key_, value_.asBytes());
     }
 
     function setCompositeKeyUint256(string[] memory key_, uint256 value_) external {
-        _recursiveStorage.set(key_, value_.toBytes());
+        _recursiveStorage.set(key_, value_.asBytes());
     }
 
     function remove(string memory key_) external {
