@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "../interfaces/access-control/IRBAC.sol";
 
-import "../libs/arrays/ArrayHelper.sol";
+import "../libs/utils/TypeCaster.sol";
 import "../libs/arrays/SetHelper.sol";
 
 /**
@@ -24,7 +24,7 @@ import "../libs/arrays/SetHelper.sol";
 abstract contract RBAC is IRBAC, Initializable {
     using StringSet for StringSet.Set;
     using SetHelper for StringSet.Set;
-    using ArrayHelper for string;
+    using TypeCaster for string;
 
     string public constant MASTER_ROLE = "MASTER";
 

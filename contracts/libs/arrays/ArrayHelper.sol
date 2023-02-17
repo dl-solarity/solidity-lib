@@ -84,26 +84,6 @@ library ArrayHelper {
     }
 
     /**
-     *  @notice The function to transform an element into an array
-     *  @param elem_ the element
-     *  @return array_ the element as an array
-     */
-    function asArray(uint256 elem_) internal pure returns (uint256[] memory array_) {
-        array_ = new uint256[](1);
-        array_[0] = elem_;
-    }
-
-    function asArray(address elem_) internal pure returns (address[] memory array_) {
-        array_ = new address[](1);
-        array_[0] = elem_;
-    }
-
-    function asArray(string memory elem_) internal pure returns (string[] memory array_) {
-        array_ = new string[](1);
-        array_[0] = elem_;
-    }
-
-    /**
      *  @notice The function to compute the prefix sum array
      *  @param arr_ the initial array to be turned into the prefix sum array
      *  @return prefixes_ the prefix sum array
