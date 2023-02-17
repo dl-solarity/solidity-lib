@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.4;
 
-import "../arrays/ArrayHelper.sol";
+import "./TypeCaster.sol";
 
 library ConstantsRegistryUtils {
-    using ArrayHelper for *;
+    using TypeCaster for *;
 
     struct ConstantsRegistryStorage {
-        bool _exists;
         bytes _value;
         mapping(string => ConstantsRegistryStorage) _values;
     }
@@ -17,21 +16,9 @@ library ConstantsRegistryUtils {
         string memory key_,
         bytes memory value_
     ) internal {
-        ConstantsRegistryStorage storage _constant = _dive(constants, key_.asArray());
+        require(value_.length > 0, "ConstantsRegistryUtils: empty value");
 
-        _constant._value = value_;
-        _constant._exists = true;
-    }
-
-    function set(
-        ConstantsRegistryStorage storage constants,
-        string[2] memory key_,
-        bytes memory value_
-    ) internal {
-        ConstantsRegistryStorage storage _constant = _dive(constants, key_.asArray());
-
-        _constant._value = value_;
-        _constant._exists = true;
+        _dive(constants, key_.asArray())._value = value_;
     }
 
     function set(
@@ -39,55 +26,30 @@ library ConstantsRegistryUtils {
         string[] memory key_,
         bytes memory value_
     ) internal {
-        ConstantsRegistryStorage storage _constant = _dive(constants, key_);
+        require(value_.length > 0, "ConstantsRegistryUtils: empty value");
 
-        _constant._value = value_;
-        _constant._exists = true;
+        _dive(constants, key_)._value = value_;
     }
 
-    function remove(
-        ConstantsRegistryStorage storage constants,
-        string memory key_,
-        bytes memory value_
-    ) internal {
-        ConstantsRegistryStorage storage _constant = _dive(constants, key_.asArray());
+    function remove(ConstantsRegistryStorage storage constants, string memory key_) internal {
+        ConstantsRegistryStorage storage _constants = _dive(constants, key_.asArray());
 
-        _constant._value = bytes("");
-        _constant._exists = false;
+        require(_constants._value.length > 0, "ConstantsRegistryUtils: constant does not exist");
+
+        _constants._value = bytes("");
     }
 
-    function remove(
-        ConstantsRegistryStorage storage constants,
-        string[2] memory key_,
-        bytes memory value_
-    ) internal {
-        ConstantsRegistryStorage storage _constant = _dive(constants, key_.asArray());
+    function remove(ConstantsRegistryStorage storage constants, string[] memory key_) internal {
+        ConstantsRegistryStorage storage _constants = _dive(constants, key_);
 
-        _constant._value = bytes("");
-        _constant._exists = false;
-    }
+        require(_constants._value.length > 0, "ConstantsRegistryUtils: constant does not exist");
 
-    function remove(
-        ConstantsRegistryStorage storage constants,
-        string[] memory key_,
-        bytes memory value_
-    ) internal {
-        ConstantsRegistryStorage storage _constant = _dive(constants, key_);
-
-        _constant._value = bytes("");
-        _constant._exists = false;
+        _constants._value = bytes("");
     }
 
     function get(
         ConstantsRegistryStorage storage constants,
         string memory key_
-    ) internal view returns (bytes memory) {
-        return _dive(constants, key_.asArray())._value;
-    }
-
-    function get(
-        ConstantsRegistryStorage storage constants,
-        string[2] memory key_
     ) internal view returns (bytes memory) {
         return _dive(constants, key_.asArray())._value;
     }
@@ -97,27 +59,6 @@ library ConstantsRegistryUtils {
         string[] memory key_
     ) internal view returns (bytes memory) {
         return _dive(constants, key_)._value;
-    }
-
-    function exists(
-        ConstantsRegistryStorage storage constants,
-        string memory key_
-    ) internal view returns (bool) {
-        return _dive(constants, key_.asArray())._exists;
-    }
-
-    function exists(
-        ConstantsRegistryStorage storage constants,
-        string[2] memory key_
-    ) internal view returns (bool) {
-        return _dive(constants, key_.asArray())._exists;
-    }
-
-    function exists(
-        ConstantsRegistryStorage storage constants,
-        string[] memory key_
-    ) internal view returns (bool) {
-        return _dive(constants, key_)._exists;
     }
 
     function _dive(

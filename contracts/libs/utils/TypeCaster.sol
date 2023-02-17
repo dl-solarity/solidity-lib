@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-library BytesCaster {
+library TypeCaster {
     function toBytes(bool arg) internal pure returns (bytes memory) {
         return abi.encode(arg);
     }
@@ -40,5 +40,20 @@ library BytesCaster {
 
     function asString(bytes memory arg) internal pure returns (string memory) {
         return abi.decode(arg, (string));
+    }
+
+    function asArray(uint256 elem) internal pure returns (uint256[] memory array_) {
+        array_ = new uint256[](1);
+        array_[0] = elem;
+    }
+
+    function asArray(address elem) internal pure returns (address[] memory array_) {
+        array_ = new address[](1);
+        array_[0] = elem;
+    }
+
+    function asArray(string memory elem) internal pure returns (string[] memory array_) {
+        array_ = new string[](1);
+        array_[0] = elem;
     }
 }
