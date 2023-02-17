@@ -12,31 +12,19 @@ library RecursiveStorage {
     }
 
     function set(Storage storage self, string memory key_, bytes memory value_) internal {
-        require(value_.length > 0, "RecursiveStorage: empty value");
-
-        _dive(self, key_.asArray())._value = value_;
+        _set(self, key_.asArray(), value_);
     }
 
     function set(Storage storage self, string[] memory key_, bytes memory value_) internal {
-        require(value_.length > 0, "RecursiveStorage: empty value");
-
-        _dive(self, key_)._value = value_;
+        _set(self, key_, value_);
     }
 
     function remove(Storage storage self, string memory key_) internal {
-        Storage storage _storage = _dive(self, key_.asArray());
-
-        require(_storage._value.length > 0, "RecursiveStorage: value does not exist");
-
-        _storage._value = bytes("");
+        _remove(self, key_.asArray());
     }
 
     function remove(Storage storage self, string[] memory key_) internal {
-        Storage storage _storage = _dive(self, key_);
-
-        require(_storage._value.length > 0, "RecursiveStorage: value does not exist");
-
-        _storage._value = bytes("");
+        _remove(self, key_);
     }
 
     function get(Storage storage self, string memory key_) internal view returns (bytes memory) {
@@ -58,5 +46,19 @@ library RecursiveStorage {
         }
 
         return _storage;
+    }
+
+    function _set(Storage storage self, string[] memory key_, bytes memory value_) private {
+        require(value_.length > 0, "RecursiveStorage: empty value");
+
+        _dive(self, key_)._value = value_;
+    }
+
+    function _remove(Storage storage self, string[] memory key_) private {
+        Storage storage _storage = _dive(self, key_);
+
+        require(_storage._value.length > 0, "RecursiveStorage: value does not exist");
+
+        _storage._value = bytes("");
     }
 }
