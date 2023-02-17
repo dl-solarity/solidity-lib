@@ -2,13 +2,13 @@
 pragma solidity ^0.8.4;
 
 import "../../../libs/utils/TypeCaster.sol";
-import "../../../libs/utils/RecursiveStorageUtils.sol";
+import "../../../libs/utils/RecursiveStorage.sol";
 
 contract RecursiveStorageMock {
     using TypeCaster for *;
-    using RecursiveStorageUtils for *;
+    using RecursiveStorage for *;
 
-    RecursiveStorageUtils.RecursiveStorage private _recursiveStorage;
+    RecursiveStorage.Storage private _recursiveStorage;
 
     function setUint256(string memory key_, uint256 value_) external {
         _recursiveStorage.set(key_, value_.toBytes());
