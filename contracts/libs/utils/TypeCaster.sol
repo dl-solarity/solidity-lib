@@ -3,9 +3,9 @@ pragma solidity ^0.8.4;
 
 library TypeCaster {
     /**
-     *  @notice The function that casts the list of `X` types to the list of `Y` types
-     *  @param from the list of `X` types
-     *  @return array_ the list of `Y` types
+     *  @notice The function that casts the list of `X`-type elements to the list of uint256
+     *  @param from the list of `X`-type elements
+     *  @return array_ the list of uint256
      */
     function asUint256Array(
         bytes32[] memory from
@@ -23,6 +23,11 @@ library TypeCaster {
         }
     }
 
+    /**
+     *  @notice The function that casts the list of `X`-type elements to the list of addresses
+     *  @param from the list of `X`-type elements
+     *  @return array_ the list of addresses
+     */
     function asAddressArray(
         bytes32[] memory from
     ) internal pure returns (address[] memory array_) {
@@ -39,6 +44,11 @@ library TypeCaster {
         }
     }
 
+    /**
+     *  @notice The function that casts the list of `X`-type elements to the list of bytes32
+     *  @param from the list of `X`-type elements
+     *  @return array_ the list of bytes32
+     */
     function asBytes32Array(
         uint256[] memory from
     ) internal pure returns (bytes32[] memory array_) {
