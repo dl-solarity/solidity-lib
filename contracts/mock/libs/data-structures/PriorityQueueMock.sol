@@ -16,15 +16,15 @@ contract PriorityQueueMock {
         _uintQueue.add(value_, priority_);
     }
 
-    function removeUint(uint256 index_) external {
-        _uintQueue.remove(index_);
-    }
-
     function removeTopUint() external {
         _uintQueue.removeTop();
     }
 
-    function topUint() external view returns (uint256) {
+    function topValueUint() external view returns (uint256) {
+        return _uintQueue.topValue();
+    }
+
+    function topUint() external view returns (uint256, uint256) {
         return _uintQueue.top();
     }
 
@@ -32,12 +32,12 @@ contract PriorityQueueMock {
         return _uintQueue.length();
     }
 
-    function atUint(uint256 index_) external view returns (uint256, uint256) {
-        return _uintQueue.at(index_);
+    function valuesUint() external view returns (uint256[] memory) {
+        return _uintQueue.values();
     }
 
-    function valuesUint() external view returns (uint256[] memory, uint256[] memory) {
-        return _uintQueue.values();
+    function elementsUint() external view returns (uint256[] memory, uint256[] memory) {
+        return _uintQueue.elements();
     }
 
     // bytes32
@@ -46,15 +46,15 @@ contract PriorityQueueMock {
         _bytes32Queue.add(value_, priority_);
     }
 
-    function removeBytes32(uint256 index_) external {
-        _bytes32Queue.remove(index_);
-    }
-
     function removeTopBytes32() external {
         _bytes32Queue.removeTop();
     }
 
-    function topBytes32() external view returns (bytes32) {
+    function topValueBytes32() external view returns (bytes32) {
+        return _bytes32Queue.topValue();
+    }
+
+    function topBytes32() external view returns (bytes32, uint256) {
         return _bytes32Queue.top();
     }
 
@@ -62,12 +62,12 @@ contract PriorityQueueMock {
         return _bytes32Queue.length();
     }
 
-    function atBytes32(uint256 index_) external view returns (bytes32, uint256) {
-        return _bytes32Queue.at(index_);
+    function valuesBytes32() external view returns (bytes32[] memory) {
+        return _bytes32Queue.values();
     }
 
-    function valuesBytes32() external view returns (bytes32[] memory, uint256[] memory) {
-        return _bytes32Queue.values();
+    function elementsBytes32() external view returns (bytes32[] memory, uint256[] memory) {
+        return _bytes32Queue.elements();
     }
 
     // Address
@@ -76,15 +76,15 @@ contract PriorityQueueMock {
         _addressQueue.add(value_, priority_);
     }
 
-    function removeAddress(uint256 index_) external {
-        _addressQueue.remove(index_);
-    }
-
     function removeTopAddress() external {
         _addressQueue.removeTop();
     }
 
-    function topAddress() external view returns (address) {
+    function topValueAddress() external view returns (address) {
+        return _addressQueue.topValue();
+    }
+
+    function topAddress() external view returns (address, uint256) {
         return _addressQueue.top();
     }
 
@@ -92,11 +92,11 @@ contract PriorityQueueMock {
         return _addressQueue.length();
     }
 
-    function atAddress(uint256 index_) external view returns (address, uint256) {
-        return _addressQueue.at(index_);
+    function valuesAddress() external view returns (address[] memory) {
+        return _addressQueue.values();
     }
 
-    function valuesAddress() external view returns (address[] memory, uint256[] memory) {
-        return _addressQueue.values();
+    function elementsAddress() external view returns (address[] memory, uint256[] memory) {
+        return _addressQueue.elements();
     }
 }
