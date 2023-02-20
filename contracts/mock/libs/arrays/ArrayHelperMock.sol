@@ -18,6 +18,10 @@ contract ArrayHelperMock {
         return arr_.reverse();
     }
 
+    function reverseBytes32(bytes32[] memory arr_) external pure returns (bytes32[] memory) {
+        return arr_.reverse();
+    }
+
     function insertUint(
         uint256[] memory to_,
         uint256 index_,
@@ -42,6 +46,14 @@ contract ArrayHelperMock {
         return (to_.insert(index_, what_), to_);
     }
 
+    function insertBytes32(
+        bytes32[] memory to_,
+        uint256 index_,
+        bytes32[] memory what_
+    ) external pure returns (uint256, bytes32[] memory) {
+        return (to_.insert(index_, what_), to_);
+    }
+
     function countPrefixes(uint256[] memory arr_) external pure returns (uint256[] memory) {
         return arr_.countPrefixes();
     }
@@ -52,5 +64,13 @@ contract ArrayHelperMock {
         uint256 endIndex_
     ) external pure returns (uint256) {
         return arr_.countPrefixes().getRangeSum(beginIndex_, endIndex_);
+    }
+
+    function lowerBound(uint256[] memory arr_, uint256 element_) external pure returns (uint256) {
+        return arr_.lowerBound(element_);
+    }
+
+    function upperBound(uint256[] memory arr_, uint256 element_) external pure returns (uint256) {
+        return arr_.upperBound(element_);
     }
 }
