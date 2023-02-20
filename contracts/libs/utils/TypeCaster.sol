@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+/**
+ *  @notice This library simplifies non-obvious type castings
+ */
 library TypeCaster {
     /**
      *  @notice The function that casts the list of `X`-type elements to the list of uint256
