@@ -159,19 +159,19 @@ library ArrayHelper {
         uint256[] memory array_,
         uint256 element_
     ) internal pure returns (uint256 index_) {
-        (uint256 low, uint256 high) = (0, array_.length);
+        (uint256 low_, uint256 high_) = (0, array_.length);
 
-        while (low < high) {
-            uint256 mid = Math.average(low, high);
+        while (low_ < high_) {
+            uint256 mid_ = Math.average(low_, high_);
 
-            if (array_[mid] >= element_) {
-                high = mid;
+            if (array_[mid_] >= element_) {
+                high_ = mid_;
             } else {
-                low = mid + 1;
+                low_ = mid_ + 1;
             }
         }
 
-        return high;
+        return high_;
     }
 
     /**
@@ -185,18 +185,18 @@ library ArrayHelper {
         uint256[] memory array_,
         uint256 element_
     ) internal pure returns (uint256 index_) {
-        (uint256 low, uint256 high) = (0, array_.length);
+        (uint256 low_, uint256 high_) = (0, array_.length);
 
-        while (low < high) {
-            uint256 mid = Math.average(low, high);
+        while (low_ < high_) {
+            uint256 mid_ = Math.average(low_, high_);
 
-            if (array_[mid] > element_) {
-                high = mid;
+            if (array_[mid_] > element_) {
+                high_ = mid_;
             } else {
-                low = mid + 1;
+                low_ = mid_ + 1;
             }
         }
 
-        return high;
+        return high_;
     }
 }
