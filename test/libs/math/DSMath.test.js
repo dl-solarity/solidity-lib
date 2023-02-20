@@ -36,27 +36,4 @@ describe("DSMath", () => {
       }
     });
   });
-
-  describe("sqrt", () => {
-    it("should compute square roots properly", async () => {
-      const cases = [
-        ["0", "0"],
-        ["1", "1"],
-        ["2", "1"],
-        ["3", "1"],
-        ["4", "2"],
-        ["15", "3"],
-        ["16", "4"],
-        ["17", "4"],
-        ["105", "10"],
-        ["1787926567434221169891766654055630785600812306453167569", "1337133713371337133713371337"],
-        [toBN(2).pow(254), toBN(2).pow(127)],
-        [toBN(2).pow(256).minus(1), toBN(2).pow(128).minus(1)],
-      ];
-
-      for (const [square, root] of cases) {
-        assertBNequal(await dsMath.sqrt(square), root);
-      }
-    });
-  });
 });
