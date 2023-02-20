@@ -153,22 +153,22 @@ library ArrayHelper {
      *  greater than or equal to the `element_` passed. The time complexity is O(log n)
      *  @param array_ the array to search in
      *  @param element_ the element
-     *  @return index_ the index of the found element or `array_.length` if no such element
+     *  @return index_ the index of the found element or the length of the `array_` if no such element
      */
     function lowerBound(
         uint256[] memory array_,
         uint256 element_
     ) internal pure returns (uint256 index_) {
-        if (array_.length == 0 || element_ >= array_[0]) {
+        if (array_.length == 0 || array_[0] >= element_) {
             return 0;
         }
 
-        (uint256 low, uint256 high) = (0, array_.length - 1);
+        (uint256 low, uint256 high) = (0, array_.length);
 
-        while (low < high) {
+        while (low + 1 < high) {
             uint256 mid = Math.average(low, high);
 
-            if (mid >= array_[mid]) {
+            if (array_[mid] >= element_) {
                 high = mid;
             } else {
                 low = mid;
@@ -183,22 +183,22 @@ library ArrayHelper {
      *  greater than the `element_` passed. The time complexity is O(log n)
      *  @param array_ the array to search in
      *  @param element_ the element
-     *  @return index_ the index of the found element or `array_.length` if no such element
+     *  @return index_ the index of the found element or the length of the `array_` if no such element
      */
     function upperBound(
         uint256[] memory array_,
         uint256 element_
     ) internal pure returns (uint256 index_) {
-        if (array_.length == 0 || element_ > array_[0]) {
+        if (array_.length == 0 || array_[0] > element_) {
             return 0;
         }
 
-        (uint256 low, uint256 high) = (0, array_.length - 1);
+        (uint256 low, uint256 high) = (0, array_.length);
 
-        while (low < high) {
+        while (low + 1 < high) {
             uint256 mid = Math.average(low, high);
 
-            if (mid > array_[mid]) {
+            if (array_[mid] > element_) {
                 high = mid;
             } else {
                 low = mid;
