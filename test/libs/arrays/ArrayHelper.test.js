@@ -53,18 +53,18 @@ describe("ArrayHelperMock", () => {
     });
 
     it("should reverse bytes32 array", async () => {
-      const bytes32Array = [
+      const bytes32Arrays = [
         ZERO_BYTES32.replaceAll("0000", "1234"),
         ZERO_BYTES32.replaceAll("0000", "4321"),
         ZERO_BYTES32.replaceAll("0000", "abcd"),
       ];
 
-      const arr = await mock.reverseBytes32(bytes32Array);
+      const arr = await mock.reverseBytes32(bytes32Arrays);
 
       assert.equal(arr.length, 3);
-      assert.equal(arr[0], bytes32Array[2]);
-      assert.equal(arr[1], bytes32Array[1]);
-      assert.equal(arr[2], bytes32Array[0]);
+      assert.equal(arr[0], bytes32Arrays[2]);
+      assert.equal(arr[1], bytes32Arrays[1]);
+      assert.equal(arr[2], bytes32Arrays[0]);
     });
 
     it("should reverse empty array", async () => {
@@ -120,20 +120,20 @@ describe("ArrayHelperMock", () => {
     });
 
     it("should insert bytes32 array", async () => {
-      const bytes32Array = [
+      const bytes32Arrays = [
         ZERO_BYTES32.replaceAll("0000", "1111"),
         ZERO_BYTES32.replaceAll("0000", "2222"),
         ZERO_BYTES32.replaceAll("0000", "3333"),
       ];
 
-      const base = [bytes32Array[0], bytes32Array[1]];
+      const base = [bytes32Arrays[0], bytes32Arrays[1]];
       const index = 1;
-      const what = [bytes32Array[2]];
+      const what = [bytes32Arrays[2]];
 
       const res = await mock.insertBytes32(base, index, what);
 
       assert.equal(res[0].toFixed(), 2);
-      assert.deepEqual(res[1], [bytes32Array[0], bytes32Array[2]]);
+      assert.deepEqual(res[1], [bytes32Arrays[0], bytes32Arrays[2]]);
     });
 
     it("should revert in case of out of bound insertion", async () => {
