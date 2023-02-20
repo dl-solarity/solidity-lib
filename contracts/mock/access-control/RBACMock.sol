@@ -4,12 +4,12 @@ pragma solidity ^0.8.4;
 import "../../access-control/RBAC.sol";
 
 contract RBACMock is RBAC {
-    using ArrayHelper for string;
+    using TypeCaster for string;
 
     function __RBACMock_init() external initializer {
         __RBAC_init();
 
-        _grantRoles(msg.sender, MASTER_ROLE.asArray());
+        _grantRoles(msg.sender, MASTER_ROLE.asSingletonArray());
     }
 
     function mockInit() external {
