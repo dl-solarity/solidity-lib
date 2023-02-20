@@ -18,6 +18,10 @@ contract ArrayHelperMock {
         return arr_.reverse();
     }
 
+    function reverseBytes32(bytes32[] memory arr_) external pure returns (bytes32[] memory) {
+        return arr_.reverse();
+    }
+
     function insertUint(
         uint256[] memory to_,
         uint256 index_,
@@ -39,6 +43,14 @@ contract ArrayHelperMock {
         uint256 index_,
         string[] memory what_
     ) external pure returns (uint256, string[] memory) {
+        return (to_.insert(index_, what_), to_);
+    }
+
+    function insertString(
+        bytes32[] memory to_,
+        uint256 index_,
+        bytes32[] memory what_
+    ) external pure returns (uint256, bytes32[] memory) {
         return (to_.insert(index_, what_), to_);
     }
 

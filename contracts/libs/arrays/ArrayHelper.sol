@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "@openzeppelin/contracts/utils/math/Math.sol";
+
 /**
  *  @notice A simple library to work with arrays
  */
@@ -32,6 +34,16 @@ library ArrayHelper {
 
     function reverse(string[] memory arr_) internal pure returns (string[] memory reversed_) {
         reversed_ = new string[](arr_.length);
+        uint256 i = arr_.length;
+
+        while (i > 0) {
+            i--;
+            reversed_[arr_.length - 1 - i] = arr_[i];
+        }
+    }
+
+    function reverse(bytes32[] memory arr_) internal pure returns (bytes32[] memory reversed_) {
+        reversed_ = new bytes32[](arr_.length);
         uint256 i = arr_.length;
 
         while (i > 0) {
@@ -83,6 +95,18 @@ library ArrayHelper {
         return index_ + what_.length;
     }
 
+    function insert(
+        bytes32[] memory to_,
+        uint256 index_,
+        bytes32[] memory what_
+    ) internal pure returns (uint256) {
+        for (uint256 i = 0; i < what_.length; i++) {
+            to_[index_ + i] = what_[i];
+        }
+
+        return index_ + what_.length;
+    }
+
     /**
      *  @notice The function to compute the prefix sum array
      *  @param arr_ the initial array to be turned into the prefix sum array
@@ -122,5 +146,65 @@ library ArrayHelper {
         }
 
         return prefixes_[endIndex_] - prefixes_[beginIndex_ - 1];
+    }
+
+    /**
+     *  @notice The function that searches for the index of the first occurring element, which is
+     *  greater than or equal to the `element_` passed. The time complexity is O(log n)
+     *  @param array_ the array to search in
+     *  @param element_ the element
+     *  @return index_ the index of the found element or `array_.length` if no such element
+     */
+    function lowerBound(
+        uint256[] memory array_,
+        uint256 element_
+    ) internal pure returns (uint256 index_) {
+        if (array_.length == 0 || element_ >= array_[0]) {
+            return 0;
+        }
+
+        (uint256 low, uint256 high) = (0, array_.length - 1);
+
+        while (low < high) {
+            uint256 mid = Math.average(low, high);
+
+            if (mid >= array_[mid]) {
+                high = mid;
+            } else {
+                low = mid;
+            }
+        }
+
+        return high;
+    }
+
+    /**
+     *  @notice The function that searches for the index of the first occurring element, which is
+     *  greater than the `element_` passed. The time complexity is O(log n)
+     *  @param array_ the array to search in
+     *  @param element_ the element
+     *  @return index_ the index of the found element or `array_.length` if no such element
+     */
+    function upperBound(
+        uint256[] memory array_,
+        uint256 element_
+    ) internal pure returns (uint256 index_) {
+        if (array_.length == 0 || element_ > array_[0]) {
+            return 0;
+        }
+
+        (uint256 low, uint256 high) = (0, array_.length - 1);
+
+        while (low < high) {
+            uint256 mid = Math.average(low, high);
+
+            if (mid > array_[mid]) {
+                high = mid;
+            } else {
+                low = mid;
+            }
+        }
+
+        return high;
     }
 }
