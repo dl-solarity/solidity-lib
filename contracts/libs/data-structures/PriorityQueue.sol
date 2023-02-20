@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "../utils/TypeCaster.sol";
+
 /**
  *  @notice The library that realizes a heap based priority queue.
  *
@@ -24,6 +26,8 @@ pragma solidity ^0.8.4;
  *  using PriorityQueue for PriorityQueue.Bytes32Queue;
  */
 library PriorityQueue {
+    using TypeCaster for *;
+
     /**
      ************************
      *      UintQueue       *
@@ -88,11 +92,7 @@ library PriorityQueue {
      *  @return values_ the values of the elements stored
      */
     function values(UintQueue storage queue) internal view returns (uint256[] memory values_) {
-        bytes32[] memory vals_ = _values(queue._queue);
-
-        assembly {
-            values_ := vals_
-        }
+        return _values(queue._queue).asUint256Array();
     }
 
     /**
@@ -105,13 +105,7 @@ library PriorityQueue {
     function elements(
         UintQueue storage queue
     ) internal view returns (uint256[] memory values_, uint256[] memory priorities_) {
-        bytes32[] memory vals_ = _values(queue._queue);
-
-        assembly {
-            values_ := vals_
-        }
-
-        priorities_ = _priorities(queue._queue);
+        return (_values(queue._queue).asUint256Array(), _priorities(queue._queue));
     }
 
     /**
@@ -188,23 +182,13 @@ library PriorityQueue {
     }
 
     function values(AddressQueue storage queue) internal view returns (address[] memory values_) {
-        bytes32[] memory vals_ = _values(queue._queue);
-
-        assembly {
-            values_ := vals_
-        }
+        return _values(queue._queue).asAddressArray();
     }
 
     function elements(
         AddressQueue storage queue
     ) internal view returns (address[] memory values_, uint256[] memory priorities_) {
-        bytes32[] memory vals_ = _values(queue._queue);
-
-        assembly {
-            values_ := vals_
-        }
-
-        priorities_ = _priorities(queue._queue);
+        return (_values(queue._queue).asAddressArray(), _priorities(queue._queue));
     }
 
     /**

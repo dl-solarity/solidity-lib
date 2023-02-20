@@ -107,17 +107,6 @@ describe("ArrayHelperMock", () => {
     });
   });
 
-  describe("asArray", () => {
-    it("should build arrays", async () => {
-      assert.deepEqual(
-        (await mock.asArrayUint("123")).map((e) => e.toFixed()),
-        ["123"]
-      );
-      assert.deepEqual(await mock.asArrayAddress(FIRST), [FIRST]);
-      assert.deepEqual(await mock.asArrayString("1"), ["1"]);
-    });
-  });
-
   describe("prefix sum array", () => {
     function getArraySum(arr) {
       return arr.reduce((prev, cur) => prev + cur, 0);

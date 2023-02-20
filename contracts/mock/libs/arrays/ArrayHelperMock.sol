@@ -42,18 +42,6 @@ contract ArrayHelperMock {
         return (to_.insert(index_, what_), to_);
     }
 
-    function asArrayUint(uint256 elem_) external pure returns (uint256[] memory array_) {
-        return elem_.asArray();
-    }
-
-    function asArrayAddress(address elem_) external pure returns (address[] memory array_) {
-        return elem_.asArray();
-    }
-
-    function asArrayString(string memory elem_) external pure returns (string[] memory array_) {
-        return elem_.asArray();
-    }
-
     function countPrefixes(uint256[] memory arr_) external pure returns (uint256[] memory) {
         return arr_.countPrefixes();
     }
