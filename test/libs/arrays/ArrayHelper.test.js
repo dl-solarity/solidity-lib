@@ -1,6 +1,7 @@
 const { assert } = require("chai");
 const { accounts } = require("../../../scripts/utils/utils");
 const truffleAssert = require("truffle-assertions");
+const { ZERO_BYTES32 } = require("../../../scripts/utils/constants");
 
 const ArrayHelperMock = artifacts.require("ArrayHelperMock");
 
@@ -51,6 +52,21 @@ describe("ArrayHelperMock", () => {
       assert.equal(arr[2], "1");
     });
 
+    it("should reverse bytes32 array", async () => {
+      const bytes32Arrays = [
+        ZERO_BYTES32.replaceAll("0000", "1234"),
+        ZERO_BYTES32.replaceAll("0000", "4321"),
+        ZERO_BYTES32.replaceAll("0000", "abcd"),
+      ];
+
+      const arr = await mock.reverseBytes32(bytes32Arrays);
+
+      assert.equal(arr.length, 3);
+      assert.equal(arr[0], bytes32Arrays[2]);
+      assert.equal(arr[1], bytes32Arrays[1]);
+      assert.equal(arr[2], bytes32Arrays[0]);
+    });
+
     it("should reverse empty array", async () => {
       let arr = await mock.reverseUint([]);
       assert.equal(arr.length, 0);
@@ -59,6 +75,9 @@ describe("ArrayHelperMock", () => {
       assert.equal(arr.length, 0);
 
       arr = await mock.reverseString([]);
+      assert.equal(arr.length, 0);
+
+      arr = await mock.reverseBytes32([]);
       assert.equal(arr.length, 0);
     });
   });
@@ -100,21 +119,27 @@ describe("ArrayHelperMock", () => {
       assert.deepEqual(res[1], ["1", "3"]);
     });
 
+    it("should insert bytes32 array", async () => {
+      const bytes32Arrays = [
+        ZERO_BYTES32.replaceAll("0000", "1111"),
+        ZERO_BYTES32.replaceAll("0000", "2222"),
+        ZERO_BYTES32.replaceAll("0000", "3333"),
+      ];
+
+      const base = [bytes32Arrays[0], bytes32Arrays[1]];
+      const index = 1;
+      const what = [bytes32Arrays[2]];
+
+      const res = await mock.insertBytes32(base, index, what);
+
+      assert.equal(res[0].toFixed(), 2);
+      assert.deepEqual(res[1], [bytes32Arrays[0], bytes32Arrays[2]]);
+    });
+
     it("should revert in case of out of bound insertion", async () => {
       await truffleAssert.reverts(mock.insertUint([1], 1, [2]));
       await truffleAssert.reverts(mock.insertAddress([], 0, [FIRST]));
       await truffleAssert.reverts(mock.insertString(["1", "2"], 2, ["1"]));
-    });
-  });
-
-  describe("asArray", () => {
-    it("should build arrays", async () => {
-      assert.deepEqual(
-        (await mock.asArrayUint("123")).map((e) => e.toFixed()),
-        ["123"]
-      );
-      assert.deepEqual(await mock.asArrayAddress(FIRST), [FIRST]);
-      assert.deepEqual(await mock.asArrayString("1"), ["1"]);
     });
   });
 
@@ -157,6 +182,76 @@ describe("ArrayHelperMock", () => {
       it("should revert if one of the indexes is out of range", async () => {
         await truffleAssert.reverts(mock.getRangeSum([], 0, 0));
         await truffleAssert.reverts(mock.getRangeSum(array, 0, array.length));
+      });
+    });
+
+    describe("bounds", () => {
+      const arbitraryArray = [10, 20, 30, 30, 30, 40, 50];
+      const singletonArray = [100];
+      const identicalElemsArray = [100, 100, 100, 100, 100];
+
+      describe("lowerBound", () => {
+        it("should find the correct indices in the arbitrary array", async () => {
+          assert.equal((await mock.lowerBound(arbitraryArray, 1)).toNumber(), 0);
+          assert.equal((await mock.lowerBound(arbitraryArray, 10)).toNumber(), 0);
+          assert.equal((await mock.lowerBound(arbitraryArray, 15)).toNumber(), 1);
+          assert.equal((await mock.lowerBound(arbitraryArray, 20)).toNumber(), 1);
+          assert.equal((await mock.lowerBound(arbitraryArray, 25)).toNumber(), 2);
+          assert.equal((await mock.lowerBound(arbitraryArray, 30)).toNumber(), 2);
+          assert.equal((await mock.lowerBound(arbitraryArray, 35)).toNumber(), 5);
+          assert.equal((await mock.lowerBound(arbitraryArray, 40)).toNumber(), 5);
+          assert.equal((await mock.lowerBound(arbitraryArray, 45)).toNumber(), 6);
+          assert.equal((await mock.lowerBound(arbitraryArray, 50)).toNumber(), 6);
+          assert.equal((await mock.lowerBound(arbitraryArray, 100)).toNumber(), 7);
+        });
+
+        it("should find the correct indices in the singleton array", async () => {
+          assert.equal((await mock.lowerBound(singletonArray, 1)).toNumber(), 0);
+          assert.equal((await mock.lowerBound(singletonArray, 100)).toNumber(), 0);
+          assert.equal((await mock.lowerBound(singletonArray, 150)).toNumber(), 1);
+        });
+
+        it("should find the correct indices in the identical elements array", async () => {
+          assert.equal((await mock.lowerBound(identicalElemsArray, 1)).toNumber(), 0);
+          assert.equal((await mock.lowerBound(identicalElemsArray, 100)).toNumber(), 0);
+          assert.equal((await mock.lowerBound(identicalElemsArray, 150)).toNumber(), 5);
+        });
+
+        it("should find the correct indices in the empty array", async () => {
+          assert.equal((await mock.lowerBound([], 100)).toNumber(), 0);
+        });
+      });
+
+      describe("upperBound", () => {
+        it("should find the correct indices in the arbitrary array", async () => {
+          assert.equal((await mock.upperBound(arbitraryArray, 1)).toNumber(), 0);
+          assert.equal((await mock.upperBound(arbitraryArray, 10)).toNumber(), 1);
+          assert.equal((await mock.upperBound(arbitraryArray, 15)).toNumber(), 1);
+          assert.equal((await mock.upperBound(arbitraryArray, 20)).toNumber(), 2);
+          assert.equal((await mock.upperBound(arbitraryArray, 25)).toNumber(), 2);
+          assert.equal((await mock.upperBound(arbitraryArray, 30)).toNumber(), 5);
+          assert.equal((await mock.upperBound(arbitraryArray, 35)).toNumber(), 5);
+          assert.equal((await mock.upperBound(arbitraryArray, 40)).toNumber(), 6);
+          assert.equal((await mock.upperBound(arbitraryArray, 45)).toNumber(), 6);
+          assert.equal((await mock.upperBound(arbitraryArray, 50)).toNumber(), 7);
+          assert.equal((await mock.upperBound(arbitraryArray, 100)).toNumber(), 7);
+        });
+
+        it("should find the correct indices in the singleton array", async () => {
+          assert.equal((await mock.upperBound(singletonArray, 1)).toNumber(), 0);
+          assert.equal((await mock.upperBound(singletonArray, 100)).toNumber(), 1);
+          assert.equal((await mock.upperBound(singletonArray, 150)).toNumber(), 1);
+        });
+
+        it("should find the correct indices in the identical elements array", async () => {
+          assert.equal((await mock.upperBound(identicalElemsArray, 1)).toNumber(), 0);
+          assert.equal((await mock.upperBound(identicalElemsArray, 100)).toNumber(), 5);
+          assert.equal((await mock.upperBound(identicalElemsArray, 150)).toNumber(), 5);
+        });
+
+        it("should find the correct indices in the empty array", async () => {
+          assert.equal((await mock.upperBound([], 100)).toNumber(), 0);
+        });
       });
     });
   });
