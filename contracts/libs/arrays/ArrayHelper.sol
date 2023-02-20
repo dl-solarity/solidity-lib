@@ -150,7 +150,7 @@ library ArrayHelper {
 
     /**
      *  @notice The function that searches for the index of the first occurring element, which is
-     *  greater than or equal to the `element_` passed. The time complexity is O(log n)
+     *  greater than or equal to the `element_`. The time complexity is O(log n)
      *  @param array_ the array to search in
      *  @param element_ the element
      *  @return index_ the index of the found element or the length of the `array_` if no such element
@@ -180,7 +180,7 @@ library ArrayHelper {
 
     /**
      *  @notice The function that searches for the index of the first occurring element, which is
-     *  greater than the `element_` passed. The time complexity is O(log n)
+     *  greater than the `element_`. The time complexity is O(log n)
      *  @param array_ the array to search in
      *  @param element_ the element
      *  @return index_ the index of the found element or the length of the `array_` if no such element
