@@ -11,6 +11,10 @@ describe("Vector", () => {
     vector = await VectorMock.new();
   });
 
+  it("should test init", async () => {
+    await vector.testInit();
+  });
+
   it("should test push and pop", async () => {
     await vector.testPushAndPop();
   });

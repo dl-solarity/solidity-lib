@@ -8,14 +8,21 @@ library Vector {
     }
 
     function init() internal pure returns (Vector memory self) {
+        uint256 dataPointer_ = _allocate(5);
+
+        _clean(dataPointer_, 1);
+
         self._allocation = 5;
-        self._dataPointer = _allocate(5);
+        self._dataPointer = dataPointer_;
     }
 
     function init(uint256 length_) internal pure returns (Vector memory self) {
-        uint256 dataPointer_ = _allocate(length_ + 1);
+        uint256 allocation_ = length_ + 1;
+        uint256 dataPointer_ = _allocate(allocation_);
 
-        self._allocation = length_ + 1;
+        _clean(dataPointer_, allocation_);
+
+        self._allocation = allocation_;
         self._dataPointer = dataPointer_;
 
         assembly {
@@ -105,6 +112,18 @@ library Vector {
 
     function _requireInBounds(Vector memory self, uint256 index_) private pure {
         require(index_ < length(self), "Vector: out of bounds");
+    }
+
+    function _clean(uint256 dataPointer_, uint256 slots_) private pure {
+        assembly {
+            for {
+                let i := 0
+            } lt(i, mul(slots_, 0x20)) {
+                i := add(i, 0x20)
+            } {
+                mstore(add(dataPointer_, i), 0x0)
+            }
+        }
     }
 
     function _allocate(uint256 allocation_) private pure returns (uint256 pointer_) {

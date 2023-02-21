@@ -3,10 +3,32 @@ pragma solidity ^0.8.4;
 
 import "../../../../libs/data-structures/memory/Vector.sol";
 
-import "hardhat/console.sol";
-
 contract VectorMock {
     using Vector for Vector.Vector;
+
+    function testInit() external pure {
+        assembly {
+            mstore(add(mload(0x40), 0x40), 0x3)
+        }
+
+        Vector.Vector memory vector1_ = Vector.init();
+
+        require(vector1_.length() == 0);
+
+        assembly {
+            mstore(add(mload(0x40), 0x40), 0x1)
+            mstore(add(mload(0x40), 0x60), 0x2)
+            mstore(add(mload(0x80), 0x80), 0x3)
+        }
+
+        Vector.Vector memory vector2_ = Vector.init(3);
+
+        require(vector2_.length() == 3);
+
+        for (uint256 i = 0; i < vector2_.length(); i++) {
+            require(vector2_.at(i) == bytes32(0));
+        }
+    }
 
     function testPushAndPop() external pure {
         Vector.Vector memory vector_ = Vector.init();
@@ -43,6 +65,7 @@ contract VectorMock {
             vector_.push(bytes32(i));
         }
 
+        require(vector_._allocation == 16);
         require(vector_.length() == 10);
 
         bytes32[] memory array_ = vector_.toArray();
