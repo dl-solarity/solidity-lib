@@ -13,6 +13,7 @@ The library consists of modules and utilities that are built on top of [Openzepp
 - Versatile **RBAC** smart contract
 - Enhanced and simplified [**Diamond**](https://eips.ethereum.org/EIPS/eip-2535) pattern
 - Heap based priority queue library
+- Memory data structures
 - Utilities to ease work with ERC20 decimals, arrays, and sets
 
 ## Overview
