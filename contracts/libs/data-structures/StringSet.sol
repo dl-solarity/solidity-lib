@@ -43,10 +43,10 @@ library StringSet {
             uint256 lastIndex_ = set._values.length - 1;
 
             if (lastIndex_ != toDeleteIndex_) {
-                string memory lastvalue_ = set._values[lastIndex_];
+                string memory lastValue_ = set._values[lastIndex_];
 
-                set._values[toDeleteIndex_] = lastvalue_;
-                set._indexes[lastvalue_] = valueIndex_;
+                set._values[toDeleteIndex_] = lastValue_;
+                set._indexes[lastValue_] = valueIndex_;
             }
 
             set._values.pop();
