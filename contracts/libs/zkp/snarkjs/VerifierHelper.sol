@@ -139,8 +139,9 @@ library VerifierHelper {
             )
         );
 
+        // We must use abi.encodePacked to encode a dynamic array as a static array (without offset and length)
         (bool success_, bytes memory returnData_) = verifier_.staticcall(
-            abi.encodeWithSignature(funcSign_, a_, b_, c_, pubSignals_)
+            abi.encodePacked(abi.encodeWithSignature(funcSign_, a_, b_, c_), pubSignals_)
         );
 
         require(success_, "VerifierHelper: failed to call verifyProof function");
