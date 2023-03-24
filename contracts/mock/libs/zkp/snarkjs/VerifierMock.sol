@@ -52,7 +52,7 @@ contract Verifier3Mock is BaseVerifierMock {
         uint256[3] memory inputs_
     ) external view returns (bool) {
         for (uint256 i = 0; i < inputs_.length; i++) {
-            require(inputs_[i] == expectedInputs[i], "Verifier2Mock: invalid inputs");
+            require(inputs_[i] == expectedInputs[i], "Verifier3Mock: invalid inputs");
         }
 
         return verifyResult;
