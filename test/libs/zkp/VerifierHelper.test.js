@@ -24,8 +24,8 @@ describe("VerifierHelper", () => {
   beforeEach("setup", async () => {
     verifierHelper = await VerifierHelperMock.new();
 
-    verifier2 = await Verifier2Mock.new(true);
-    verifier3 = await Verifier3Mock.new(true);
+    verifier2 = await Verifier2Mock.new(true, pubSignals2);
+    verifier3 = await Verifier3Mock.new(true, pubSignals3);
   });
 
   describe("verifyProof", () => {
