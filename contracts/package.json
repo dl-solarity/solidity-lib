@@ -1,8 +1,9 @@
 {
   "name": "@dlsl/dev-modules",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "license": "MIT",
   "author": "Distributed Lab",
+  "readme": "README.md",
   "description": "Solidity Development Modules by Distributed Lab",
   "repository": {
     "type": "git",
