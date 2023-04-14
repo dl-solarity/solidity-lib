@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import "../data-structures/StringSet.sol";
+import {StringSet} from "../data-structures/StringSet.sol";
 
 /**
  *  @notice A simple library to work with sets

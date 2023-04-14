@@ -1,6 +1,6 @@
 {
   "name": "dlsl",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "license": "MIT",
   "author": "Distributed Lab",
   "description": "Solidity Development Modules by Distributed Lab",
@@ -29,7 +29,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "4.8.0",
     "@openzeppelin/contracts-upgradeable": "4.8.0",
-    "hardhat": "^2.12.2"
+    "hardhat": "^2.13.0"
   },
   "devDependencies": {
     "@metamask/eth-sig-util": "^4.0.0",
@@ -43,7 +43,7 @@
     "husky": "^7.0.2",
     "mocha": "^9.1.1",
     "prettier": "^2.7.1",
-    "prettier-plugin-solidity": "^1.0.0-beta.24",
+    "prettier-plugin-solidity": "^1.0.0",
     "solhint": "^3.3.6",
     "solhint-plugin-prettier": "^0.0.5",
     "solidity-coverage": "^0.8.2",

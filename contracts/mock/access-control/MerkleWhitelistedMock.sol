@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../access-control/MerkleWhitelisted.sol";
+import {MerkleWhitelisted} from "../../access-control/MerkleWhitelisted.sol";
 
 contract MerkleWhitelistedMock is MerkleWhitelisted {
     event WhitelistedUser();

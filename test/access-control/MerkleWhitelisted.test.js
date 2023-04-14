@@ -48,7 +48,7 @@ describe("MerkleWhitelisted", () => {
     merkle = await MerkleWhitelisted.new();
   });
 
-  describe("#getMerkleRoot #_setMerkleRoot", () => {
+  describe("getMerkleRoot, _setMerkleRoot", () => {
     beforeEach(async () => {
       leaves = [];
 
@@ -73,7 +73,7 @@ describe("MerkleWhitelisted", () => {
     });
   });
 
-  describe("#onlyWhitelisted", () => {
+  describe("onlyWhitelisted", () => {
     const amounts = [100, 500, 200, 1, 3000];
 
     beforeEach(async () => {
@@ -113,7 +113,7 @@ describe("MerkleWhitelisted", () => {
     });
   });
 
-  describe("#onlyWhitelistedUser", () => {
+  describe("onlyWhitelistedUser", () => {
     beforeEach(async () => {
       leaves = users;
 

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/utils/Strings.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-import "../../../libs/arrays/Paginator.sol";
+import {StringSet} from "../../../libs/data-structures/StringSet.sol";
+import {Paginator} from "../../../libs/arrays/Paginator.sol";
 
 contract PaginatorMock {
     using Paginator for *;

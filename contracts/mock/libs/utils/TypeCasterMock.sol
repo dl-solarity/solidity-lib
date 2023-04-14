@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../../libs/utils/TypeCaster.sol";
+import {TypeCaster} from "../../../libs/utils/TypeCaster.sol";
 
 contract TypeCasterMock {
     using TypeCaster for *;

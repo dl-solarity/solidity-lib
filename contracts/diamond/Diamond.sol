@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/utils/Address.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import "./DiamondStorage.sol";
+import {DiamondStorage} from "./DiamondStorage.sol";
 
 /**
  *  @notice The Diamond standard module

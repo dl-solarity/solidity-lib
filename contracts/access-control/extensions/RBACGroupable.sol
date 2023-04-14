@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../interfaces/access-control/extensions/IRBACGroupable.sol";
+import {IRBACGroupable} from "../../interfaces/access-control/extensions/IRBACGroupable.sol";
 
-import "../RBAC.sol";
+import {StringSet} from "../../libs/data-structures/StringSet.sol";
+import {SetHelper} from "../../libs/arrays/SetHelper.sol";
+
+import {RBAC} from "../RBAC.sol";
 
 /**
  *  @notice The Role Based Access Control (RBAC) module

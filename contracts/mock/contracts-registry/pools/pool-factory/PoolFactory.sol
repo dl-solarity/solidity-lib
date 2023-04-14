@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../ContractsRegistry2.sol";
-import "../PoolContractsRegistry.sol";
+import {ContractsRegistry2} from "../ContractsRegistry2.sol";
+import {PoolContractsRegistry} from "../PoolContractsRegistry.sol";
 
-import "../../../../contracts-registry/pools/pool-factory/AbstractPoolFactory.sol";
+import {AbstractPoolFactory} from "../../../../contracts-registry/pools/pool-factory/AbstractPoolFactory.sol";
 
 contract PoolFactory is AbstractPoolFactory {
     address public poolContractsRegistry;

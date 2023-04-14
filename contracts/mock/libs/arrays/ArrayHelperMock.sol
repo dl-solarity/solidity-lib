@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../../libs/arrays/ArrayHelper.sol";
+import {ArrayHelper} from "../../../libs/arrays/ArrayHelper.sol";
 
 contract ArrayHelperMock {
     using ArrayHelper for *;

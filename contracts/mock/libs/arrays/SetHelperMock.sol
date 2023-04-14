@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import "../../../libs/data-structures/StringSet.sol";
-import "../../../libs/arrays/SetHelper.sol";
+import {StringSet} from "../../../libs/data-structures/StringSet.sol";
+import {SetHelper} from "../../../libs/arrays/SetHelper.sol";
 
 contract SetHelperMock {
     using EnumerableSet for EnumerableSet.UintSet;

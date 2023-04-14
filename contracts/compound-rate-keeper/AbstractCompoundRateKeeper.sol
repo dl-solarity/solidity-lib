@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import "../interfaces/compound-rate-keeper/ICompoundRateKeeper.sol";
+import {ICompoundRateKeeper} from "../interfaces/compound-rate-keeper/ICompoundRateKeeper.sol";
 
-import "../libs/math/DSMath.sol";
+import {DSMath} from "../libs/math/DSMath.sol";
 
-import "../utils/Globals.sol";
+import {PRECISION} from "../utils/Globals.sol";
 
 /**
  *  @notice The Compound Rate Keeper module

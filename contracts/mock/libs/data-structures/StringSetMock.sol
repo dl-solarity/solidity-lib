@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../../libs/data-structures/StringSet.sol";
+import {StringSet} from "../../../libs/data-structures/StringSet.sol";
 
 contract StringSetMock {
     using StringSet for StringSet.Set;

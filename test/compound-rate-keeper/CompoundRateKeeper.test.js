@@ -297,13 +297,8 @@ describe("CompoundRateKeeper", () => {
           assert.closeTo(toBN(calcRate).minus(expectedRate).toNumber(), 0, 100000000000000000000);
         }
       } catch (e) {
-        console.log(
-          `Base percent: ${toBN(rate).minus(1).times(100).toFixed()}%. Max rate will be reached at ${y} month.`
-        );
         return;
       }
     }
-
-    console.log(`Base percent: ${toBN(rate).minus(1).times(100).toFixed()}%. Done.`);
   }
 });

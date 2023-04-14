@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../../access-control/extensions/RBACGroupable.sol";
+import {TypeCaster} from "../../../libs/utils/TypeCaster.sol";
+
+import {RBACGroupable} from "../../../access-control/extensions/RBACGroupable.sol";
 
 contract RBACGroupableMock is RBACGroupable {
     using TypeCaster for string;

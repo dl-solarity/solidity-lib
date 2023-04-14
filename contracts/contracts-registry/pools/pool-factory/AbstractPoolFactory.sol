@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/utils/Create2.sol";
+import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 
-import "../../../contracts-registry/AbstractDependant.sol";
-import "../AbstractPoolContractsRegistry.sol";
+import {AbstractDependant} from "../../../contracts-registry/AbstractDependant.sol";
+import {AbstractPoolContractsRegistry} from "../AbstractPoolContractsRegistry.sol";
 
-import "./proxy/PublicBeaconProxy.sol";
+import {PublicBeaconProxy} from "./proxy/PublicBeaconProxy.sol";
 
 /**
  *  @notice The PoolContractsRegistry module

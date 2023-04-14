@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../../../libs/zkp/snarkjs/VerifierHelper.sol";
+import {VerifierHelper} from "../../../../libs/zkp/snarkjs/VerifierHelper.sol";
 
 contract VerifierHelperMock {
     using VerifierHelper for address;

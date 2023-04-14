@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  *  @notice A simple library to work with arrays

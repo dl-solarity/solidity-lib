@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./ContractsRegistry2.sol";
+import {ContractsRegistry2} from "./ContractsRegistry2.sol";
 
-import "../../../contracts-registry/pools/presets/OwnablePoolContractsRegistry.sol";
+import {OwnablePoolContractsRegistry} from "../../../contracts-registry/pools/presets/OwnablePoolContractsRegistry.sol";
 
 contract PoolContractsRegistry is OwnablePoolContractsRegistry {
     string public constant POOL_1_NAME = "POOL_1";

@@ -23,7 +23,7 @@ describe("RBAC", () => {
     await rbac.__RBACGroupableMock_init();
   });
 
-  describe("#__RBACGroupable_init", () => {
+  describe("__RBACGroupable_init", () => {
     it("should not initialize twice", async () => {
       await truffleAssert.reverts(rbac.mockInit(), "Initializable: contract is not initializing");
     });
@@ -74,7 +74,7 @@ describe("RBAC", () => {
       }
     });
 
-    describe("#grantGroupRoles", () => {
+    describe("grantGroupRoles", () => {
       it("should revert if no permission", async () => {
         await truffleAssert.reverts(
           rbac.grantGroupRoles(GROUP_ALL_ROLES, ALL_ROLES, { from: SECOND }),
@@ -102,7 +102,7 @@ describe("RBAC", () => {
         await rbac.grantGroupRoles(GROUP_ROLES12, ROLES_12);
       });
 
-      describe("#revokeGroupRoles", () => {
+      describe("revokeGroupRoles", () => {
         it("should revert if no permission", async () => {
           await truffleAssert.reverts(
             rbac.revokeGroupRoles(GROUP_ALL_ROLES, ROLES_01, { from: SECOND }),
@@ -123,7 +123,7 @@ describe("RBAC", () => {
         });
       });
 
-      describe("#addUserToGroups", () => {
+      describe("addUserToGroups", () => {
         it("should revert if no permission", async () => {
           await truffleAssert.reverts(
             rbac.addUserToGroups(SECOND, [GROUP_ROLES01, GROUP_ROLES12], { from: SECOND }),
@@ -149,7 +149,7 @@ describe("RBAC", () => {
           await rbac.addUserToGroups(SECOND, [GROUP_ROLES01, GROUP_ROLES12]);
         });
 
-        describe("#removeUserFromGroups", () => {
+        describe("removeUserFromGroups", () => {
           it("should revert if no permission", async () => {
             await truffleAssert.reverts(
               rbac.removeUserFromGroups(SECOND, [GROUP_ROLES01], { from: SECOND }),
@@ -170,7 +170,7 @@ describe("RBAC", () => {
           });
         });
 
-        describe("#hasPermission", () => {
+        describe("hasPermission", () => {
           it("should have the permission if only the group role", async () => {
             assert.isTrue(
               await rbac.hasPermission(

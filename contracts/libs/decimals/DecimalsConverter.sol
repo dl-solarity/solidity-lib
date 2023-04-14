@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
 /**
  *  @notice This library is used to convert numbers that use token's N decimals to M decimals.
  *  Comes extremely handy with standardizing the business logic that is intended to work with many different ERC20 tokens
@@ -30,6 +32,15 @@ pragma solidity ^0.8.4;
  *  }
  */
 library DecimalsConverter {
+    /**
+     *  @notice The function to get the decimals of ERC20 token. Needed for bytecode optimization
+     *  @param token_ the ERC20 token
+     *  @return the decimals of provided token
+     */
+    function decimals(address token_) internal view returns (uint256) {
+        return ERC20(token_).decimals();
+    }
+
     /**
      *  @notice The function to bring the number to 18 decimals of precision
      *  @param amount_ the number to convert

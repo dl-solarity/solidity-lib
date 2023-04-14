@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../../contracts-registry/AbstractDependant.sol";
+import {AbstractDependant} from "../../../contracts-registry/AbstractDependant.sol";
 
-import "./ContractsRegistry2.sol";
+import {ContractsRegistry2} from "./ContractsRegistry2.sol";
 
 contract Pool is AbstractDependant {
     address public token;

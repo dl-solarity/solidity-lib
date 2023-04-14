@@ -2,8 +2,10 @@ const { assert } = require("chai");
 const { toBN, wei } = require("../../../scripts/utils/utils");
 const truffleAssert = require("truffle-assertions");
 
+const ERC20Mock = artifacts.require("ERC20Mock");
 const DecimalsConverterMock = artifacts.require("DecimalsConverterMock");
 
+ERC20Mock.numberFormat = "BigNumber";
 DecimalsConverterMock.numberFormat = "BigNumber";
 
 describe("DecimalsConverter", () => {
@@ -11,6 +13,16 @@ describe("DecimalsConverter", () => {
 
   beforeEach("setup", async () => {
     mock = await DecimalsConverterMock.new();
+  });
+
+  describe("decimals", () => {
+    it("should return correct decimals", async () => {
+      const token1 = await ERC20Mock.new("MK1", "MK1", 18);
+      const token2 = await ERC20Mock.new("MK2", "MK2", 3);
+
+      assert.equal(await mock.decimals(token1.address), 18);
+      assert.equal(await mock.decimals(token2.address), 3);
+    });
   });
 
   describe("convert", () => {

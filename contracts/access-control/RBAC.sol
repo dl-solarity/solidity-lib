@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import "../interfaces/access-control/IRBAC.sol";
+import {IRBAC} from "../interfaces/access-control/IRBAC.sol";
 
-import "../libs/utils/TypeCaster.sol";
-import "../libs/arrays/SetHelper.sol";
+import {TypeCaster} from "../libs/utils/TypeCaster.sol";
+import {SetHelper} from "../libs/arrays/SetHelper.sol";
+import {StringSet} from "../libs/data-structures/StringSet.sol";
 
 /**
  *  @notice The Role Based Access Control (RBAC) module

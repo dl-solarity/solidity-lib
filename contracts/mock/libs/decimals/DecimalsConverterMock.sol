@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../../libs/decimals/DecimalsConverter.sol";
+import {DecimalsConverter} from "../../../libs/decimals/DecimalsConverter.sol";
 
 contract DecimalsConverterMock {
-    using DecimalsConverter for uint256;
+    using DecimalsConverter for *;
+
+    function decimals(address token_) external view returns (uint256) {
+        return token_.decimals();
+    }
 
     function to18(uint256 amount_, uint256 baseDecimals_) external pure returns (uint256) {
         return amount_.to18(baseDecimals_);

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import "../../libs/arrays/Paginator.sol";
+import {Paginator} from "../../libs/arrays/Paginator.sol";
 
-import "../../contracts-registry/AbstractDependant.sol";
+import {AbstractDependant} from "../../contracts-registry/AbstractDependant.sol";
 
-import "./proxy/ProxyBeacon.sol";
+import {ProxyBeacon} from "./proxy/ProxyBeacon.sol";
 
 /**
  *  @notice The PoolContractsRegistry module

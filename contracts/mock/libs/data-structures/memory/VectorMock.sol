@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../../../libs/data-structures/memory/Vector.sol";
+import {Vector} from "../../../../libs/data-structures/memory/Vector.sol";
 
 contract VectorMock {
     using Vector for *;

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../Diamond.sol";
-import "./OwnableDiamondStorage.sol";
+import {Diamond} from "../../Diamond.sol";
+import {OwnableDiamondStorage} from "./OwnableDiamondStorage.sol";
 
 /**
  *  @notice The Ownable preset of Diamond proxy

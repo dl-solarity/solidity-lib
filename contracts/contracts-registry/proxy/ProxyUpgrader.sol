@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
  *  @notice The ContractsRegistry module

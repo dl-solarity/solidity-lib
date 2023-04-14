@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
  *  @notice The PoolContractsRegistry module
