@@ -41,8 +41,10 @@ abstract contract AbstractContractsRegistry is Initializable {
     mapping(string => address) private _contracts;
     mapping(address => bool) private _isProxy;
 
-    event AddedContract(string name, address contractAddress, bool isProxy);
-    event RemovedContract(string name);
+    event ContractAdded(string name, address contractAddress);
+    event ProxyContractAdded(string name, address contractAddress, address implementation);
+    event ProxyContractUpgraded(string name, address newImplementation);
+    event ContractRemoved(string name);
 
     /**
      *  @notice The proxy initializer function
@@ -147,6 +149,8 @@ abstract contract AbstractContractsRegistry is Initializable {
         require(_isProxy[contractToUpgrade_], "ContractsRegistry: not a proxy contract");
 
         _proxyUpgrader.upgrade(contractToUpgrade_, newImplementation_, data_);
+
+        emit ProxyContractUpgraded(name_, newImplementation_);
     }
 
     /**
@@ -160,7 +164,7 @@ abstract contract AbstractContractsRegistry is Initializable {
 
         _contracts[name_] = contractAddress_;
 
-        emit AddedContract(name_, contractAddress_, false);
+        emit ContractAdded(name_, contractAddress_);
     }
 
     /**
@@ -179,7 +183,7 @@ abstract contract AbstractContractsRegistry is Initializable {
         _contracts[name_] = proxyAddr_;
         _isProxy[proxyAddr_] = true;
 
-        emit AddedContract(name_, proxyAddr_, true);
+        emit ProxyContractAdded(name_, proxyAddr_, contractAddress_);
     }
 
     /**
@@ -195,7 +199,11 @@ abstract contract AbstractContractsRegistry is Initializable {
         _contracts[name_] = contractAddress_;
         _isProxy[contractAddress_] = true;
 
-        emit AddedContract(name_, contractAddress_, true);
+        emit ProxyContractAdded(
+            name_,
+            contractAddress_,
+            _proxyUpgrader.getImplementation(contractAddress_)
+        );
     }
 
     /**
@@ -210,6 +218,6 @@ abstract contract AbstractContractsRegistry is Initializable {
         delete _isProxy[contractAddress_];
         delete _contracts[name_];
 
-        emit RemovedContract(name_);
+        emit ContractRemoved(name_);
     }
 }

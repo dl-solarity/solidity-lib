@@ -10,7 +10,6 @@ import {StringSet} from "../data-structures/StringSet.sol";
  *
  *  Supports the following data types `uin256[]`, `address[]`, `bytes32[]`, `UintSet`,
  *  `AddressSet`, `BytesSet`, `StringSet`.
- *
  */
 library Paginator {
     using EnumerableSet for *;
@@ -34,7 +33,7 @@ library Paginator {
         uint256 offset_,
         uint256 limit_
     ) internal view returns (uint256[] memory list_) {
-        uint256 to_ = _handleIncomingParametersForPart(arr.length, offset_, limit_);
+        uint256 to_ = getTo(arr.length, offset_, limit_);
 
         list_ = new uint256[](to_ - offset_);
 
@@ -48,7 +47,7 @@ library Paginator {
         uint256 offset_,
         uint256 limit_
     ) internal view returns (address[] memory list_) {
-        uint256 to_ = _handleIncomingParametersForPart(arr.length, offset_, limit_);
+        uint256 to_ = getTo(arr.length, offset_, limit_);
 
         list_ = new address[](to_ - offset_);
 
@@ -62,7 +61,7 @@ library Paginator {
         uint256 offset_,
         uint256 limit_
     ) internal view returns (bytes32[] memory list_) {
-        uint256 to_ = _handleIncomingParametersForPart(arr.length, offset_, limit_);
+        uint256 to_ = getTo(arr.length, offset_, limit_);
 
         list_ = new bytes32[](to_ - offset_);
 
@@ -76,7 +75,7 @@ library Paginator {
         uint256 offset_,
         uint256 limit_
     ) internal view returns (uint256[] memory list_) {
-        uint256 to_ = _handleIncomingParametersForPart(set.length(), offset_, limit_);
+        uint256 to_ = getTo(set.length(), offset_, limit_);
 
         list_ = new uint256[](to_ - offset_);
 
@@ -90,7 +89,7 @@ library Paginator {
         uint256 offset_,
         uint256 limit_
     ) internal view returns (address[] memory list_) {
-        uint256 to_ = _handleIncomingParametersForPart(set.length(), offset_, limit_);
+        uint256 to_ = getTo(set.length(), offset_, limit_);
 
         list_ = new address[](to_ - offset_);
 
@@ -104,7 +103,7 @@ library Paginator {
         uint256 offset_,
         uint256 limit_
     ) internal view returns (bytes32[] memory list_) {
-        uint256 to_ = _handleIncomingParametersForPart(set.length(), offset_, limit_);
+        uint256 to_ = getTo(set.length(), offset_, limit_);
 
         list_ = new bytes32[](to_ - offset_);
 
@@ -118,7 +117,7 @@ library Paginator {
         uint256 offset_,
         uint256 limit_
     ) internal view returns (string[] memory list_) {
-        uint256 to_ = _handleIncomingParametersForPart(set.length(), offset_, limit_);
+        uint256 to_ = getTo(set.length(), offset_, limit_);
 
         list_ = new string[](to_ - offset_);
 
@@ -127,11 +126,11 @@ library Paginator {
         }
     }
 
-    function _handleIncomingParametersForPart(
+    function getTo(
         uint256 length_,
         uint256 offset_,
         uint256 limit_
-    ) private pure returns (uint256 to_) {
+    ) internal pure returns (uint256 to_) {
         to_ = offset_ + limit_;
 
         if (to_ > length_) {

@@ -15,10 +15,8 @@ contract ProxyUpgrader {
 
     address private immutable _OWNER;
 
-    event Upgraded(address proxy, address implementation);
-
     modifier onlyOwner() {
-        require(_OWNER == msg.sender, "ProxyUpgrader: not an owner");
+        _onlyOwner();
         _;
     }
 
@@ -32,15 +30,18 @@ contract ProxyUpgrader {
         } else {
             TransparentUpgradeableProxy(payable(what_)).upgradeTo(to_);
         }
-
-        emit Upgraded(what_, to_);
     }
 
     function getImplementation(address what_) external view onlyOwner returns (address) {
         // bytes4(keccak256("implementation()")) == 0x5c60da1b
         (bool success_, bytes memory returndata_) = address(what_).staticcall(hex"5c60da1b");
-        require(success_);
+
+        require(success_, "ProxyUpgrader: not a proxy");
 
         return abi.decode(returndata_, (address));
+    }
+
+    function _onlyOwner() internal view {
+        require(_OWNER == msg.sender, "ProxyUpgrader: not an owner");
     }
 }

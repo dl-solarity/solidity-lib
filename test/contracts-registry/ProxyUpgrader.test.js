@@ -44,7 +44,7 @@ describe("ProxyUpgrader", () => {
     });
 
     it("should not get implementation", async () => {
-      await truffleAssert.reverts(proxyUpgrader.getImplementation(token.address));
+      await truffleAssert.reverts(proxyUpgrader.getImplementation(token.address), "ProxyUpgrader: not a proxy");
     });
 
     it("only owner should get implementation", async () => {
