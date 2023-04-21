@@ -28,7 +28,7 @@ contract Diamond is DiamondStorage {
      *  @notice The payable fallback function that delegatecall's the facet with associated selector
      */
     // solhint-disable-next-line
-    fallback() external payable {
+    fallback() external payable virtual {
         address facet_ = getFacetBySelector(msg.sig);
 
         require(facet_ != address(0), "Diamond: selector is not registered");
