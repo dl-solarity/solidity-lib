@@ -18,11 +18,11 @@ contract OwnableDiamond is Diamond, OwnableDiamondStorage {
         getOwnableDiamondStorage().owner = newOwner_;
     }
 
-    function addFacet(address facet_, bytes4[] memory selectors_) public onlyOwner {
+    function addFacet(address facet_, bytes4[] memory selectors_) public virtual onlyOwner {
         _addFacet(facet_, selectors_);
     }
 
-    function removeFacet(address facet_, bytes4[] memory selectors_) public onlyOwner {
+    function removeFacet(address facet_, bytes4[] memory selectors_) public virtual onlyOwner {
         _removeFacet(facet_, selectors_);
     }
 
@@ -30,7 +30,7 @@ contract OwnableDiamond is Diamond, OwnableDiamondStorage {
         address facet_,
         bytes4[] memory fromSelectors_,
         bytes4[] memory toSelectors_
-    ) public onlyOwner {
+    ) public virtual onlyOwner {
         _updateFacet(facet_, fromSelectors_, toSelectors_);
     }
 }
