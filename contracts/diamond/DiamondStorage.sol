@@ -30,7 +30,7 @@ contract DiamondStorage {
      *  @notice The internal function to get the diamond proxy storage
      *  @return _ds the struct from the DIAMOND_STORAGE_SLOT
      */
-    function getDiamondStorage() internal pure returns (DStorage storage _ds) {
+    function _getDiamondStorage() internal pure returns (DStorage storage _ds) {
         bytes32 slot_ = DIAMOND_STORAGE_SLOT;
 
         assembly {
@@ -43,7 +43,7 @@ contract DiamondStorage {
      *  @return facets_ the array of facets' addresses
      */
     function getFacets() public view returns (address[] memory facets_) {
-        return getDiamondStorage().facets.values();
+        return _getDiamondStorage().facets.values();
     }
 
     /**
@@ -52,7 +52,7 @@ contract DiamondStorage {
      *  @return selectors_ the array of assigned selectors
      */
     function getFacetSelectors(address facet_) public view returns (bytes4[] memory selectors_) {
-        EnumerableSet.Bytes32Set storage _f2s = getDiamondStorage().facetToSelectors[facet_];
+        EnumerableSet.Bytes32Set storage _f2s = _getDiamondStorage().facetToSelectors[facet_];
 
         selectors_ = new bytes4[](_f2s.length());
 
@@ -67,6 +67,6 @@ contract DiamondStorage {
      *  @return facet_ the associated facet address
      */
     function getFacetBySelector(bytes4 selector_) public view returns (address facet_) {
-        return getDiamondStorage().selectorToFacet[selector_];
+        return _getDiamondStorage().selectorToFacet[selector_];
     }
 }

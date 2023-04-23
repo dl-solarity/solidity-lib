@@ -22,7 +22,7 @@ contract OwnableDiamondStorage {
         _;
     }
 
-    function getOwnableDiamondStorage() internal pure returns (ODStorage storage _ods) {
+    function _getOwnableDiamondStorage() internal pure returns (ODStorage storage _ods) {
         bytes32 slot_ = OWNABLE_DIAMOND_STORAGE_SLOT;
 
         assembly {
@@ -31,6 +31,6 @@ contract OwnableDiamondStorage {
     }
 
     function owner() public view returns (address) {
-        return getOwnableDiamondStorage().owner;
+        return _getOwnableDiamondStorage().owner;
     }
 }

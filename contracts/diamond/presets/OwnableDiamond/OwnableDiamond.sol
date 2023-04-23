@@ -15,7 +15,7 @@ contract OwnableDiamond is Diamond, OwnableDiamondStorage {
     function transferOwnership(address newOwner_) public onlyOwner {
         require(newOwner_ != address(0), "OwnableDiamond: zero address owner");
 
-        getOwnableDiamondStorage().owner = newOwner_;
+        _getOwnableDiamondStorage().owner = newOwner_;
     }
 
     function addFacet(address facet_, bytes4[] memory selectors_) public virtual onlyOwner {

@@ -59,7 +59,7 @@ contract Diamond is DiamondStorage {
         require(facet_.isContract(), "Diamond: facet is not a contract");
         require(selectors_.length > 0, "Diamond: no selectors provided");
 
-        DStorage storage _ds = getDiamondStorage();
+        DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i = 0; i < selectors_.length; i++) {
             require(
@@ -82,7 +82,7 @@ contract Diamond is DiamondStorage {
     function _removeFacet(address facet_, bytes4[] memory selectors_) internal {
         require(selectors_.length > 0, "Diamond: no selectors provided");
 
-        DStorage storage _ds = getDiamondStorage();
+        DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i = 0; i < selectors_.length; i++) {
             require(
