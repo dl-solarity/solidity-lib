@@ -33,6 +33,8 @@ contract Diamond is DiamondStorage {
 
         require(facet_ != address(0), "Diamond: selector is not registered");
 
+        _beforeFallback(facet_, msg.sig);
+
         assembly {
             calldatacopy(0, 0, calldatasize())
             let result_ := delegatecall(gas(), facet_, 0, calldatasize(), 0, 0)
@@ -57,7 +59,7 @@ contract Diamond is DiamondStorage {
         require(facet_.isContract(), "Diamond: facet is not a contract");
         require(selectors_.length > 0, "Diamond: no selectors provided");
 
-        DStorage storage _ds = getDiamondStorage();
+        DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i = 0; i < selectors_.length; i++) {
             require(
@@ -80,7 +82,7 @@ contract Diamond is DiamondStorage {
     function _removeFacet(address facet_, bytes4[] memory selectors_) internal {
         require(selectors_.length > 0, "Diamond: no selectors provided");
 
-        DStorage storage _ds = getDiamondStorage();
+        DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i = 0; i < selectors_.length; i++) {
             require(
@@ -111,4 +113,6 @@ contract Diamond is DiamondStorage {
         _addFacet(facet_, toSelectors_);
         _removeFacet(facet_, fromSelectors_);
     }
+
+    function _beforeFallback(address facet_, bytes4 selector_) internal virtual {}
 }
