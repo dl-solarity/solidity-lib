@@ -7,7 +7,7 @@
 
 **Elaborate solidity development modules library by DL.**
 
-The library consists of modules and utilities that are built on top of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) but go far beyond mediocre solidity.
+The library consists of modules and utilities that are built with a help of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (4.8.0) and go far beyond mediocre solidity.
 
 - Implementation of [**Contracts Registry**](https://eips.ethereum.org/EIPS/eip-6224) pattern
 - Versatile **RBAC** smart contract
