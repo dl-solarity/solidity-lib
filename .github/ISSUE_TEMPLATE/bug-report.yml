@@ -1,0 +1,28 @@
+name: Bug Report
+description: File a bug report
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: version
+    attributes:
+      label: "DLSL version"
+      placeholder: "1.2.3"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A brief description of what happened and what you expected to happen
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: "Minimal reproduction steps"
+      description: "The minimal steps needed to reproduce the bug"
+    validations:
+      required: true
