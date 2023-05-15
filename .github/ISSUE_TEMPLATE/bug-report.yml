@@ -1,6 +1,8 @@
 name: Bug Report
 description: File a bug report
 labels: ['bug']
+assignees: 
+  - arvolear
 body:
   - type: markdown
     attributes:
