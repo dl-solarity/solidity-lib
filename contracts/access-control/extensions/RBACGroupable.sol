@@ -109,13 +109,13 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     function getUserGroups(address who_) public view override returns (string[] memory groups_) {
         string[] memory userGroups_ = _userGroups[who_].values();
 
-        uint256 enabled_;
+        uint256 defaultGroupEnabled_;
         assembly {
-            enabled_ := sload(defaultGroupEnabled.slot)
+            defaultGroupEnabled_ := sload(defaultGroupEnabled.slot)
         }
 
-        groups_ = new string[](userGroups_.length + enabled_);
-        groups_.insert(enabled_, userGroups_);
+        groups_ = new string[](userGroups_.length + defaultGroupEnabled_);
+        groups_.insert(defaultGroupEnabled_, userGroups_);
     }
 
     /**
