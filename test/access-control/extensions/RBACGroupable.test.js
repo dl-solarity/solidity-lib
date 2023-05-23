@@ -144,6 +144,27 @@ describe("RBAC", () => {
         });
       });
 
+      describe("toggleDefaultGroup", () => {
+        it("should revert if no permission", async () => {
+          await truffleAssert.reverts(
+            rbac.toggleDefaultGroup({ from: SECOND }),
+            "RBAC: no UPDATE permission for resource RBAC_RESOURCE"
+          );
+        });
+
+        it("should add the user to the default group automatically", async () => {
+          assert.deepEqual(await rbac.getUserGroups(SECOND), []);
+
+          await rbac.toggleDefaultGroup();
+
+          assert.deepEqual(await rbac.getUserGroups(SECOND), [""]);
+
+          await rbac.addUserToGroups(SECOND, [GROUP_ROLES01, GROUP_ROLES12]);
+
+          assert.deepEqual(await rbac.getUserGroups(SECOND), ["", GROUP_ROLES01, GROUP_ROLES12]);
+        });
+      });
+
       context("if the user is assigned to groups", () => {
         beforeEach(async () => {
           await rbac.addUserToGroups(SECOND, [GROUP_ROLES01, GROUP_ROLES12]);

@@ -111,7 +111,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
 
         uint256 enabled_;
         assembly {
-            enabled_ := defaultGroupEnabled.slot
+            enabled_ := sload(defaultGroupEnabled.slot)
         }
 
         groups_ = new string[](userGroups_.length + enabled_);
