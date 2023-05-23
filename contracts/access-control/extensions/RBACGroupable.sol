@@ -5,6 +5,7 @@ import {IRBACGroupable} from "../../interfaces/access-control/extensions/IRBACGr
 
 import {StringSet} from "../../libs/data-structures/StringSet.sol";
 import {SetHelper} from "../../libs/arrays/SetHelper.sol";
+import {ArrayHelper} from "../../libs/arrays/ArrayHelper.sol";
 
 import {RBAC} from "../RBAC.sol";
 
@@ -17,6 +18,9 @@ import {RBAC} from "../RBAC.sol";
 abstract contract RBACGroupable is IRBACGroupable, RBAC {
     using StringSet for StringSet.Set;
     using SetHelper for StringSet.Set;
+    using ArrayHelper for string[];
+
+    bool public defaultGroupEnabled;
 
     mapping(address => StringSet.Set) private _userGroups;
     mapping(string => StringSet.Set) private _groupRoles;
@@ -85,12 +89,33 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
+     * @notice The function to toggle the default group state. When `defaultGroupEnabled` is set
+     * to true, the default group is enabled, otherwise it is disabled
+     */
+    function toggleDefaultGroup()
+        public
+        virtual
+        override
+        onlyPermission(RBAC_RESOURCE, UPDATE_PERMISSION)
+    {
+        defaultGroupEnabled = !defaultGroupEnabled;
+    }
+
+    /**
      *  @notice The function to get the list of user groups
      *  @param who_ the user
      *  @return groups_ the list of user groups
      */
     function getUserGroups(address who_) public view override returns (string[] memory groups_) {
-        return _userGroups[who_].values();
+        string[] memory userGroups_ = _userGroups[who_].values();
+
+        uint256 enabled_;
+        assembly {
+            enabled_ := defaultGroupEnabled.slot
+        }
+
+        groups_ = new string[](userGroups_.length + enabled_);
+        groups_.insert(enabled_, userGroups_);
     }
 
     /**

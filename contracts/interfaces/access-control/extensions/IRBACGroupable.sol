@@ -22,6 +22,8 @@ interface IRBACGroupable {
         string[] calldata rolesToRevoke_
     ) external;
 
+    function toggleDefaultGroup() external;
+
     function getUserGroups(address who_) external view returns (string[] calldata groups_);
 
     function getGroupRoles(
