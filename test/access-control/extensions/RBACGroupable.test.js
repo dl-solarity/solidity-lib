@@ -161,7 +161,11 @@ describe("RBAC", () => {
 
           await rbac.addUserToGroups(SECOND, [GROUP_ROLES01, GROUP_ROLES12]);
 
-          assert.deepEqual(await rbac.getUserGroups(SECOND), ["", GROUP_ROLES01, GROUP_ROLES12]);
+          assert.deepEqual(await rbac.getUserGroups(SECOND), [GROUP_ROLES01, GROUP_ROLES12, ""]);
+
+          await rbac.toggleDefaultGroup();
+
+          assert.deepEqual(await rbac.getUserGroups(SECOND), [GROUP_ROLES01, GROUP_ROLES12]);
         });
       });
 

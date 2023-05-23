@@ -5,7 +5,6 @@ import {IRBACGroupable} from "../../interfaces/access-control/extensions/IRBACGr
 
 import {StringSet} from "../../libs/data-structures/StringSet.sol";
 import {SetHelper} from "../../libs/arrays/SetHelper.sol";
-import {ArrayHelper} from "../../libs/arrays/ArrayHelper.sol";
 
 import {RBAC} from "../RBAC.sol";
 
@@ -18,7 +17,6 @@ import {RBAC} from "../RBAC.sol";
 abstract contract RBACGroupable is IRBACGroupable, RBAC {
     using StringSet for StringSet.Set;
     using SetHelper for StringSet.Set;
-    using ArrayHelper for string[];
 
     bool public defaultGroupEnabled;
 
@@ -107,15 +105,20 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
      *  @return groups_ the list of user groups
      */
     function getUserGroups(address who_) public view override returns (string[] memory groups_) {
-        string[] memory userGroups_ = _userGroups[who_].values();
+        StringSet.Set storage userGroups = _userGroups[who_];
 
         uint256 defaultGroupEnabled_;
         assembly {
             defaultGroupEnabled_ := sload(defaultGroupEnabled.slot)
         }
 
-        groups_ = new string[](userGroups_.length + defaultGroupEnabled_);
-        groups_.insert(defaultGroupEnabled_, userGroups_);
+        uint256 userGroupsLength_ = userGroups.length();
+
+        groups_ = new string[](userGroupsLength_ + defaultGroupEnabled_);
+
+        for (uint256 i = 0; i < userGroupsLength_; ++i) {
+            groups_[i] = userGroups.at(i);
+        }
     }
 
     /**
