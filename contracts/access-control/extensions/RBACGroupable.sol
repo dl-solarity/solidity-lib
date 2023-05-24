@@ -18,6 +18,8 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     using StringSet for StringSet.Set;
     using SetHelper for StringSet.Set;
 
+    uint256 private _defaultGroupEnabled;
+
     mapping(address => StringSet.Set) private _userGroups;
     mapping(string => StringSet.Set) private _groupRoles;
 
@@ -85,12 +87,35 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
+     * @notice The function to toggle the default group state. When `defaultGroupEnabled` is set
+     * to true, the default group is enabled, otherwise it is disabled
+     */
+    function toggleDefaultGroup()
+        public
+        virtual
+        override
+        onlyPermission(RBAC_RESOURCE, UPDATE_PERMISSION)
+    {
+        _defaultGroupEnabled ^= 1;
+
+        emit ToggledDefaultGroup(getDefaultGroupEnabled());
+    }
+
+    /**
      *  @notice The function to get the list of user groups
      *  @param who_ the user
      *  @return groups_ the list of user groups
      */
     function getUserGroups(address who_) public view override returns (string[] memory groups_) {
-        return _userGroups[who_].values();
+        StringSet.Set storage userGroups = _userGroups[who_];
+
+        uint256 userGroupsLength_ = userGroups.length();
+
+        groups_ = new string[](userGroupsLength_ + _defaultGroupEnabled);
+
+        for (uint256 i = 0; i < userGroupsLength_; ++i) {
+            groups_[i] = userGroups.at(i);
+        }
     }
 
     /**
@@ -102,6 +127,14 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         string memory group_
     ) public view override returns (string[] memory roles_) {
         return _groupRoles[group_].values();
+    }
+
+    /**
+     *  @notice The function to get the current state of the default group
+     *  @return defaultGroupEnabled_ the boolean indicating whether the default group is enabled
+     */
+    function getDefaultGroupEnabled() public view returns (bool defaultGroupEnabled_) {
+        return _defaultGroupEnabled > 0;
     }
 
     /**
