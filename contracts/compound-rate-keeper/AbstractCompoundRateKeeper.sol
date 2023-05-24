@@ -114,32 +114,32 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     }
 
     /**
-     * @notice The function to get the current capitalization rate
-     * @return capitalizationRate_ the current capitalization rate
+     *  @notice The function to get the current capitalization rate
+     *  @return capitalizationRate_ the current capitalization rate
      */
     function getCapitalizationRate() public view returns (uint256 capitalizationRate_) {
         return _capitalizationRate;
     }
 
     /**
-     * @notice The function to get the current capitalization period
-     * @return capitalizationPeriod_ the current capitalization period
+     *  @notice The function to get the current capitalization period
+     *  @return capitalizationPeriod_ the current capitalization period
      */
     function getCapitalizationPeriod() public view returns (uint64 capitalizationPeriod_) {
         return _capitalizationPeriod;
     }
 
     /**
-     * @notice The function to get the timestamp of the last update
-     * @return lastUpdate_ the timestamp of the last update
+     *  @notice The function to get the timestamp of the last update
+     *  @return lastUpdate_ the timestamp of the last update
      */
     function getLastUpdate() public view returns (uint64 lastUpdate_) {
         return _lastUpdate;
     }
 
     /**
-     * @notice The function to get the status of whether the max rate is reached
-     * @return isMaxRateReached_ the boolean indicating if the max rate is reached
+     *  @notice The function to get the status of whether the max rate is reached
+     *  @return isMaxRateReached_ the boolean indicating if the max rate is reached
      */
     function getIsMaxRateReached() public view returns (bool isMaxRateReached_) {
         return _isMaxRateReached;
