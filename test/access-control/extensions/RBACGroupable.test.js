@@ -264,7 +264,7 @@ describe("RBAC", () => {
             assert.isFalse(await rbac.hasPermission(SECOND, "*", "*"));
           });
 
-          it("should have the default role if it's enabled", async () => {
+          it("should have permissions of the default group if it's enabled", async () => {
             await rbac.toggleDefaultGroup();
 
             assert.isTrue(
@@ -276,7 +276,7 @@ describe("RBAC", () => {
             );
           });
 
-          it("should not have the default role if it's disabled", async () => {
+          it("should not have permissions of the default group if it's disabled", async () => {
             assert.isFalse(
               await rbac.hasPermission(
                 SECOND,
