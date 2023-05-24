@@ -164,7 +164,7 @@ describe("RBAC", () => {
           );
         });
 
-        it.only("should add the user to the default group automatically", async () => {
+        it("should add the user to the default group automatically", async () => {
           assert.deepEqual(await rbac.getUserGroups(SECOND), []);
 
           truffleAssert.eventEmitted(
