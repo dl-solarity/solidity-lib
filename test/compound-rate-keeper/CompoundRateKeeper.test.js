@@ -55,6 +55,7 @@ describe("CompoundRateKeeper", () => {
       await crk.setCapitalizationRate(precision(1.1));
 
       assert.equal(fromPrecision((await crk.getCompoundRate()).toFixed()), "1");
+      assert.equal(fromPrecision((await crk.getCurrentRate()).toFixed()), "1");
       assert.equal(fromPrecision((await crk.getCapitalizationRate()).toFixed()), "1.1");
       assert.equal((await crk.getLastUpdate()).toFixed(), toBN(nextBlockTime).toFixed());
 
