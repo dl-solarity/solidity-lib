@@ -58,15 +58,26 @@ describe("RBAC", () => {
           },
         ],
       },
+      {
+        name: "default_role",
+        resourcesWithPermissions: [
+          {
+            resource: "default_resource",
+            permissions: ["default_permission"],
+          },
+        ],
+      },
     ];
 
     const GROUP_ALL_ROLES = "ALL_ROLES_GROUP";
     const GROUP_ROLES01 = "ROLES_0_1";
     const GROUP_ROLES12 = "ROLES_1_2";
+    const GROUP_DEFAULT = "";
 
     const ALL_ROLES = [roles[0].name, roles[1].name, roles[2].name];
     const ROLES_01 = [roles[0].name, roles[1].name];
     const ROLES_12 = [roles[1].name, roles[2].name];
+    const DEFAULT_ROLES = [roles[3].name];
 
     beforeEach(async () => {
       for (const role of roles) {
@@ -100,6 +111,7 @@ describe("RBAC", () => {
         await rbac.grantGroupRoles(GROUP_ALL_ROLES, ALL_ROLES);
         await rbac.grantGroupRoles(GROUP_ROLES01, ROLES_01);
         await rbac.grantGroupRoles(GROUP_ROLES12, ROLES_12);
+        await rbac.grantGroupRoles(GROUP_DEFAULT, DEFAULT_ROLES);
       });
 
       describe("revokeGroupRoles", () => {
@@ -152,10 +164,14 @@ describe("RBAC", () => {
           );
         });
 
-        it("should add the user to the default group automatically", async () => {
+        it.only("should add the user to the default group automatically", async () => {
           assert.deepEqual(await rbac.getUserGroups(SECOND), []);
 
-          await rbac.toggleDefaultGroup();
+          truffleAssert.eventEmitted(
+            await rbac.toggleDefaultGroup(),
+            "ToggledDefaultGroup",
+            (e) => e.defaultGroupEnabled
+          );
 
           assert.deepEqual(await rbac.getUserGroups(SECOND), [""]);
 
@@ -163,7 +179,11 @@ describe("RBAC", () => {
 
           assert.deepEqual(await rbac.getUserGroups(SECOND), [GROUP_ROLES01, GROUP_ROLES12, ""]);
 
-          await rbac.toggleDefaultGroup();
+          truffleAssert.eventEmitted(
+            await rbac.toggleDefaultGroup(),
+            "ToggledDefaultGroup",
+            (e) => !e.defaultGroupEnabled
+          );
 
           assert.deepEqual(await rbac.getUserGroups(SECOND), [GROUP_ROLES01, GROUP_ROLES12]);
         });
@@ -242,6 +262,39 @@ describe("RBAC", () => {
 
           it("should not have the permission if it is not assigned", async () => {
             assert.isFalse(await rbac.hasPermission(SECOND, "*", "*"));
+          });
+
+          it("should have the default role if it's enabled", async () => {
+            await rbac.toggleDefaultGroup();
+
+            assert.isTrue(
+              await rbac.hasPermission(
+                SECOND,
+                roles[3].resourcesWithPermissions[0].resource,
+                roles[3].resourcesWithPermissions[0].permissions[0]
+              )
+            );
+          });
+
+          it("should not have the default role if it's disabled", async () => {
+            assert.isFalse(
+              await rbac.hasPermission(
+                SECOND,
+                roles[3].resourcesWithPermissions[0].resource,
+                roles[3].resourcesWithPermissions[0].permissions[0]
+              )
+            );
+
+            await rbac.toggleDefaultGroup();
+            await rbac.toggleDefaultGroup();
+
+            assert.isFalse(
+              await rbac.hasPermission(
+                SECOND,
+                roles[3].resourcesWithPermissions[0].resource,
+                roles[3].resourcesWithPermissions[0].permissions[0]
+              )
+            );
           });
         });
       });
