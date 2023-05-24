@@ -18,7 +18,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     using StringSet for StringSet.Set;
     using SetHelper for StringSet.Set;
 
-    bool public defaultGroupEnabled;
+    uint256 private _defaultGroupEnabled;
 
     mapping(address => StringSet.Set) private _userGroups;
     mapping(string => StringSet.Set) private _groupRoles;
@@ -96,7 +96,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         override
         onlyPermission(RBAC_RESOURCE, UPDATE_PERMISSION)
     {
-        defaultGroupEnabled = !defaultGroupEnabled;
+        _defaultGroupEnabled ^= 1;
+
+        emit ToggledDefaultGroup(getDefaultGroupEnabled());
     }
 
     /**
@@ -109,9 +111,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
 
         uint256 userGroupsLength_ = userGroups.length();
 
-        groups_ = new string[](
-            userGroupsLength_ + uint256(bytes32(abi.encode(defaultGroupEnabled)))
-        );
+        groups_ = new string[](userGroupsLength_ + _defaultGroupEnabled);
 
         for (uint256 i = 0; i < userGroupsLength_; ++i) {
             groups_[i] = userGroups.at(i);
@@ -127,6 +127,14 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         string memory group_
     ) public view override returns (string[] memory roles_) {
         return _groupRoles[group_].values();
+    }
+
+    /**
+     *  @notice The function to get the current state of the default group
+     *  @return defaultGroupEnabled_ the boolean indicating whether the default group is enabled
+     */
+    function getDefaultGroupEnabled() public view returns (bool defaultGroupEnabled_) {
+        return _defaultGroupEnabled > 0;
     }
 
     /**

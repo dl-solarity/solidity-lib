@@ -11,6 +11,8 @@ interface IRBACGroupable {
     event GrantedGroupRoles(string groupTo, string[] rolesToGrant);
     event RevokedGroupRoles(string groupFrom, string[] rolesToRevoke);
 
+    event ToggledDefaultGroup(bool defaultGroupEnabled);
+
     function addUserToGroups(address who_, string[] calldata groupsToAddTo_) external;
 
     function removeUserFromGroups(address who_, string[] calldata groupsToRemoveFrom_) external;
@@ -29,4 +31,6 @@ interface IRBACGroupable {
     function getGroupRoles(
         string calldata group_
     ) external view returns (string[] calldata roles_);
+
+    function getDefaultGroupEnabled() external view returns (bool);
 }
