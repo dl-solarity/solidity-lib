@@ -26,14 +26,14 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     using Math for uint256;
     using DSMath for uint256;
 
-    uint256 public capitalizationRate;
-    uint64 public capitalizationPeriod;
+    uint256 private _capitalizationRate;
+    uint64 private _capitalizationPeriod;
 
-    uint64 public lastUpdate;
+    uint64 private _lastUpdate;
 
-    bool public isMaxRateReached;
+    bool private _isMaxRateReached;
 
-    uint256 internal _currentRate;
+    uint256 private _currentRate;
 
     /**
      *  @notice The proxy initializer function
@@ -43,7 +43,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
         uint64 capitalizationPeriod_
     ) internal onlyInitializing {
         _currentRate = PRECISION;
-        lastUpdate = uint64(block.timestamp);
+        _lastUpdate = uint64(block.timestamp);
 
         _changeCapitalizationRate(capitalizationRate_);
         _changeCapitalizationPeriod(capitalizationPeriod_);
@@ -55,10 +55,10 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     function emergencyUpdateCompoundRate() public override {
         try this.getCompoundRate() returns (uint256 rate_) {
             if (rate_ == _getMaxRate()) {
-                isMaxRateReached = true;
+                _isMaxRateReached = true;
             }
         } catch {
-            isMaxRateReached = true;
+            _isMaxRateReached = true;
         }
     }
 
@@ -76,11 +76,11 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      *  @return the compound rate for the provided timestamp
      */
     function getFutureCompoundRate(uint64 timestamp_) public view override returns (uint256) {
-        if (isMaxRateReached) {
+        if (_isMaxRateReached) {
             return _getMaxRate();
         }
 
-        uint64 lastUpdate_ = lastUpdate;
+        uint64 lastUpdate_ = _lastUpdate;
 
         if (lastUpdate_ >= timestamp_) {
             return _currentRate;
@@ -88,11 +88,11 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
 
         uint64 secondsPassed_ = timestamp_ - lastUpdate_;
 
-        uint64 capitalizationPeriod_ = capitalizationPeriod;
+        uint64 capitalizationPeriod_ = _capitalizationPeriod;
         uint64 capitalizationPeriodsNum_ = secondsPassed_ / capitalizationPeriod_;
         uint64 secondsLeft_ = secondsPassed_ % capitalizationPeriod_;
 
-        uint256 capitalizationRate_ = capitalizationRate;
+        uint256 capitalizationRate_ = _capitalizationRate;
         uint256 rate_ = _currentRate;
 
         if (capitalizationPeriodsNum_ != 0) {
@@ -111,6 +111,46 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
         }
 
         return rate_.min(_getMaxRate());
+    }
+
+    /**
+     *  @notice The function to get the current capitalization rate
+     *  @return capitalizationRate_ the current capitalization rate
+     */
+    function getCapitalizationRate() public view returns (uint256 capitalizationRate_) {
+        return _capitalizationRate;
+    }
+
+    /**
+     *  @notice The function to get the current capitalization period
+     *  @return capitalizationPeriod_ the current capitalization period
+     */
+    function getCapitalizationPeriod() public view returns (uint64 capitalizationPeriod_) {
+        return _capitalizationPeriod;
+    }
+
+    /**
+     *  @notice The function to get the timestamp of the last update
+     *  @return lastUpdate_ the timestamp of the last update
+     */
+    function getLastUpdate() public view returns (uint64 lastUpdate_) {
+        return _lastUpdate;
+    }
+
+    /**
+     *  @notice The function to get the status of whether the max rate is reached
+     *  @return isMaxRateReached_ the boolean indicating if the max rate is reached
+     */
+    function getIsMaxRateReached() public view returns (bool isMaxRateReached_) {
+        return _isMaxRateReached;
+    }
+
+    /**
+     *  @notice The function to get the current rate
+     *  @return currentRate_ the current rate
+     */
+    function getCurrentRate() public view returns (uint256 currentRate_) {
+        return _currentRate;
     }
 
     /**
@@ -135,10 +175,10 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      *  @notice The private function to update the compound rate
      */
     function _update() private {
-        require(!isMaxRateReached, "CRK: max rate is reached");
+        require(!_isMaxRateReached, "CRK: max rate is reached");
 
         _currentRate = getCompoundRate();
-        lastUpdate = uint64(block.timestamp);
+        _lastUpdate = uint64(block.timestamp);
     }
 
     /**
@@ -147,7 +187,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     function _changeCapitalizationRate(uint256 capitalizationRate_) private {
         require(capitalizationRate_ >= PRECISION, "CRK: rate is less than 1");
 
-        capitalizationRate = capitalizationRate_;
+        _capitalizationRate = capitalizationRate_;
 
         emit CapitalizationRateChanged(capitalizationRate_);
     }
@@ -158,7 +198,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     function _changeCapitalizationPeriod(uint64 capitalizationPeriod_) private {
         require(capitalizationPeriod_ > 0, "CRK: invalid period");
 
-        capitalizationPeriod = capitalizationPeriod_;
+        _capitalizationPeriod = capitalizationPeriod_;
 
         emit CapitalizationPeriodChanged(capitalizationPeriod_);
     }

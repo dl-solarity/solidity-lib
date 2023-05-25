@@ -13,4 +13,14 @@ interface ICompoundRateKeeper {
     function getCompoundRate() external view returns (uint256);
 
     function getFutureCompoundRate(uint64 timestamp_) external view returns (uint256);
+
+    function getCapitalizationRate() external view returns (uint256);
+
+    function getCapitalizationPeriod() external view returns (uint64);
+
+    function getLastUpdate() external view returns (uint64);
+
+    function getIsMaxRateReached() external view returns (bool);
+
+    function getCurrentRate() external view returns (uint256);
 }

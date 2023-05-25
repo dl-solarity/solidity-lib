@@ -55,8 +55,9 @@ describe("CompoundRateKeeper", () => {
       await crk.setCapitalizationRate(precision(1.1));
 
       assert.equal(fromPrecision((await crk.getCompoundRate()).toFixed()), "1");
-      assert.equal(fromPrecision((await crk.capitalizationRate()).toFixed()), "1.1");
-      assert.equal((await crk.lastUpdate()).toFixed(), toBN(nextBlockTime).toFixed());
+      assert.equal(fromPrecision((await crk.getCurrentRate()).toFixed()), "1");
+      assert.equal(fromPrecision((await crk.getCapitalizationRate()).toFixed()), "1.1");
+      assert.equal((await crk.getLastUpdate()).toFixed(), toBN(nextBlockTime).toFixed());
 
       nextBlockTime = (await getCurrentBlockTime()) + 31536000;
 
@@ -64,8 +65,8 @@ describe("CompoundRateKeeper", () => {
       await crk.setCapitalizationRate(precision(1.2));
 
       assert.equal(fromPrecision((await crk.getCompoundRate()).toFixed()), "1.1");
-      assert.equal(fromPrecision((await crk.capitalizationRate()).toFixed()), "1.2");
-      assert.equal((await crk.lastUpdate()).toFixed(), toBN(nextBlockTime).toFixed());
+      assert.equal(fromPrecision((await crk.getCapitalizationRate()).toFixed()), "1.2");
+      assert.equal((await crk.getLastUpdate()).toFixed(), toBN(nextBlockTime).toFixed());
     });
 
     it("should revert if rate is less than zero", async () => {
@@ -85,13 +86,13 @@ describe("CompoundRateKeeper", () => {
 
   describe("setCapitalizationPeriod()", () => {
     it("should correctly set new capitalization period", async () => {
-      assert.equal((await crk.capitalizationPeriod()).toFixed(), "31536000");
+      assert.equal((await crk.getCapitalizationPeriod()).toFixed(), "31536000");
 
       await crk.setCapitalizationPeriod(10);
-      assert.equal((await crk.capitalizationPeriod()).toFixed(), "10");
+      assert.equal((await crk.getCapitalizationPeriod()).toFixed(), "10");
 
       await crk.setCapitalizationPeriod(157680000);
-      assert.equal((await crk.capitalizationPeriod()).toFixed(), "157680000");
+      assert.equal((await crk.getCapitalizationPeriod()).toFixed(), "157680000");
     });
 
     it("should revert if capitalization period is zero", async () => {
@@ -116,17 +117,17 @@ describe("CompoundRateKeeper", () => {
 
       await crk.emergencyUpdateCompoundRate();
 
-      assert.equal(await crk.isMaxRateReached(), false);
+      assert.equal(await crk.getIsMaxRateReached(), false);
 
       await setNextBlockTime((await getCurrentBlockTime()) + 100 * 31536000);
       await crk.emergencyUpdateCompoundRate();
 
-      assert.equal(await crk.isMaxRateReached(), true);
+      assert.equal(await crk.getIsMaxRateReached(), true);
       assert.equal((await crk.getCompoundRate()).toFixed(), precision(toBN(2).pow(128).minus(1)));
 
       await crk.emergencyUpdateCompoundRate();
 
-      assert.equal(await crk.isMaxRateReached(), true);
+      assert.equal(await crk.getIsMaxRateReached(), true);
       assert.equal((await crk.getCompoundRate()).toFixed(), precision(toBN(2).pow(128).minus(1)));
     });
   });
