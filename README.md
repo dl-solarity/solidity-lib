@@ -13,7 +13,7 @@ The library consists of modules and utilities that are built with a help of [Ope
 - Versatile **RBAC** smart contract
 - Enhanced and simplified [**Diamond**](https://eips.ethereum.org/EIPS/eip-2535) pattern
 - Heap based priority queue library
-- Memory data structures
+- Memory data structures (Vector)
 - Utilities to ease work with ERC20 decimals, arrays, and sets
 
 ## Overview

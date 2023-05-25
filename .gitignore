@@ -7,6 +7,7 @@ cache
 artifacts
 coverage.json
 coverage
+generated-markups
 
 # IDE files
 .idea

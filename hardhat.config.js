@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-web3");
 require("@nomiclabs/hardhat-truffle5");
+require("@dlsl/hardhat-markup");
 require("hardhat-contract-sizer");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
@@ -32,6 +33,9 @@ module.exports = {
       mainnet: `${process.env.ETHERSCAN_KEY}`,
       bsc: `${process.env.BSCSCAN_KEY}`,
     },
+  },
+  markup: {
+    onlyFiles: ["./contracts/"],
   },
   mocha: {
     timeout: 1000000,
