@@ -14,6 +14,7 @@ The library consists of modules and utilities that are built with a help of [Ope
 - Enhanced and simplified [**Diamond**](https://eips.ethereum.org/EIPS/eip-2535) pattern
 - Heap based priority queue library
 - Memory data structures (Vector)
+- Enhanced Incremental Merkle Tree data structure from  [**Deposit Contract Verification**](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf).
 - Utilities to ease work with ERC20 decimals, arrays, and sets
 
 ## Overview
