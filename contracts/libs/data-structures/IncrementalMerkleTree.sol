@@ -2,7 +2,34 @@
 pragma solidity ^0.8.4;
 
 /**
- * @title IncrementalMerkleTree
+ * @title Incremental Merkle Tree module
+ *
+ * This implementation is a modification of the Incremental Merkle Tree data structure mentioned
+ * in [Deposit Contract Verification](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf).
+ *
+ * This implementation aims to optimise and improve the original data structure.
+ *
+ * The main differences are:
+ * - No explicit constructor; the tree is initialised when the first element is added.
+ * - Growth is not constrained; the height of the tree grows as elements are added
+ *
+ * Zero hashes are computed each time the getRoot function is called.
+ *
+ * You can find the gas analysis [here](https://colab.research.google.com/drive/1I-nGhb_LdcWW4pvQtE2F9JVDv371rO5f?usp=sharing).
+ *
+ * ## Usage example:
+ *
+ * using IncrementalMerkleTree for IncrementalMerkleTree.UintIMT;
+ *
+ * IncrementalMerkleTree.UintIMT internal uintTree;
+ *
+ * ................................................
+ *
+ * uintTree.addUint(1234);
+ *
+ * uintTree.getRoot();
+ *
+ * uintTree.getTreeHeight();
  */
 library IncrementalMerkleTree {
     /**
@@ -15,14 +42,34 @@ library IncrementalMerkleTree {
         IMT _tree;
     }
 
+    /**
+     * @notice The function to add a new element to the tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree_ self.
+     * @param element_ The new element to add.
+     */
     function addUint(UintIMT storage tree, uint256 element_) internal {
         _addBytes32(tree._tree, bytes32(element_));
     }
 
+    /**
+     * @notice The function to return the root hash of the tree.
+     * Complexity is O(log(n) + h), where n is the number of elements in the tree and
+     * h is the height of the tree.
+     *
+     * @param tree_ self.
+     * @return The root hash of the Merkle tree.
+     */
     function getRoot(UintIMT storage tree) internal view returns (bytes32) {
         return _getRoot(tree._tree);
     }
 
+    /**
+     * @notice The function to return the height of the tree. Complexity is O(1).
+     * @param tree_ self.
+     * @return The height of the Merkle tree.
+     */
     function getTreeHeight(UintIMT storage tree) internal view returns (uint256) {
         return _getTreeHeight(tree._tree);
     }
