@@ -46,7 +46,7 @@ library IncrementalMerkleTree {
      * @notice The function to add a new element to the tree.
      * Complexity is O(log(n)), where n is the number of elements in the tree.
      *
-     * @param tree_ self.
+     * @param tree self.
      * @param element_ The new element to add.
      */
     function addUint(UintIMT storage tree, uint256 element_) internal {
@@ -58,7 +58,7 @@ library IncrementalMerkleTree {
      * Complexity is O(log(n) + h), where n is the number of elements in the tree and
      * h is the height of the tree.
      *
-     * @param tree_ self.
+     * @param tree self.
      * @return The root hash of the Merkle tree.
      */
     function getRoot(UintIMT storage tree) internal view returns (bytes32) {
@@ -67,7 +67,7 @@ library IncrementalMerkleTree {
 
     /**
      * @notice The function to return the height of the tree. Complexity is O(1).
-     * @param tree_ self.
+     * @param tree self.
      * @return The height of the Merkle tree.
      */
     function getTreeHeight(UintIMT storage tree) internal view returns (uint256) {
