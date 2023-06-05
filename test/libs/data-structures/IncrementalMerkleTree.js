@@ -1,7 +1,7 @@
 const { assert } = require("chai");
 
 const { accounts } = require("../../../scripts/utils/utils");
-const { getRoot, buildSparseMerkleTree } = require("../../helpers/merkleTreeHelper");
+const { getRoot, buildSparseMerkleTree } = require("../../helpers/merkle-tree-helper");
 
 const IncrementalMerkleTreeMock = artifacts.require("IncrementalMerkleTreeMock");
 
@@ -45,6 +45,8 @@ describe("IncrementalMerkleTree", () => {
       localMerkleTree = buildSparseMerkleTree([elementHash], 1);
 
       assert.equal(await merkleTree.getUintRoot(), getRoot(localMerkleTree));
+
+      assert.equal(await merkleTree.getUintTreeLength(), 1);
     });
 
     it("should add elements to tree", async () => {
@@ -62,6 +64,8 @@ describe("IncrementalMerkleTree", () => {
         localMerkleTree = buildSparseMerkleTree(elements, await merkleTree.getUintTreeHeight());
 
         assert.equal(await merkleTree.getUintRoot(), getRoot(localMerkleTree));
+
+        assert.equal(await merkleTree.getUintTreeLength(), i);
       }
     });
 
@@ -81,6 +85,8 @@ describe("IncrementalMerkleTree", () => {
       localMerkleTree = buildSparseMerkleTree([elementHash], 1);
 
       assert.equal(await merkleTree.getBytes32Root(), getRoot(localMerkleTree));
+
+      assert.equal(await merkleTree.getBytes32TreeLength(), 1);
     });
 
     it("should add elements to tree", async () => {
@@ -98,6 +104,8 @@ describe("IncrementalMerkleTree", () => {
         localMerkleTree = buildSparseMerkleTree(elements, await merkleTree.getBytes32TreeHeight());
 
         assert.equal(await merkleTree.getBytes32Root(), getRoot(localMerkleTree));
+
+        assert.equal(await merkleTree.getBytes32TreeLength(), i);
       }
     });
 
@@ -109,7 +117,6 @@ describe("IncrementalMerkleTree", () => {
   describe("Address IMT", () => {
     it("should add element to tree", async () => {
       const element = USER1;
-      console.log(USER1);
 
       await merkleTree.addAddress(element);
 
@@ -118,6 +125,8 @@ describe("IncrementalMerkleTree", () => {
       localMerkleTree = buildSparseMerkleTree([elementHash], 1);
 
       assert.equal(await merkleTree.getAddressRoot(), getRoot(localMerkleTree));
+
+      assert.equal(await merkleTree.getAddressTreeLength(), 1);
     });
 
     it("should add elements to tree", async () => {
@@ -135,6 +144,8 @@ describe("IncrementalMerkleTree", () => {
         localMerkleTree = buildSparseMerkleTree(elements, await merkleTree.getAddressTreeHeight());
 
         assert.equal(await merkleTree.getAddressRoot(), getRoot(localMerkleTree));
+
+        assert.equal(await merkleTree.getAddressTreeLength(), i);
       }
     });
 

@@ -4,47 +4,57 @@ pragma solidity ^0.8.4;
 import {IncrementalMerkleTree} from "../../../libs/data-structures/IncrementalMerkleTree.sol";
 
 contract IncrementalMerkleTreeMock {
-    using IncrementalMerkleTree for IncrementalMerkleTree.UintIMT;
-    using IncrementalMerkleTree for IncrementalMerkleTree.Bytes32IMT;
-    using IncrementalMerkleTree for IncrementalMerkleTree.AddressIMT;
+    using IncrementalMerkleTree for *;
 
-    IncrementalMerkleTree.UintIMT internal uintTree;
-    IncrementalMerkleTree.Bytes32IMT internal bytes32Tree;
-    IncrementalMerkleTree.AddressIMT internal addressTree;
+    IncrementalMerkleTree.UintIMT internal _uintTree;
+    IncrementalMerkleTree.Bytes32IMT internal _bytes32Tree;
+    IncrementalMerkleTree.AddressIMT internal _addressTree;
 
     function addUint(uint256 element_) external {
-        uintTree.addUint(element_);
+        _uintTree.add(element_);
     }
 
     function addBytes32(bytes32 element_) external {
-        bytes32Tree.addBytes32(element_);
+        _bytes32Tree.add(element_);
     }
 
     function addAddress(address element_) external {
-        addressTree.addAddress(element_);
+        _addressTree.add(element_);
     }
 
     function getUintRoot() external view returns (bytes32) {
-        return uintTree.getRoot();
+        return _uintTree.root();
     }
 
     function getBytes32Root() external view returns (bytes32) {
-        return bytes32Tree.getRoot();
+        return _bytes32Tree.root();
     }
 
     function getAddressRoot() external view returns (bytes32) {
-        return addressTree.getRoot();
+        return _addressTree.root();
     }
 
     function getUintTreeHeight() external view returns (uint256) {
-        return uintTree.getTreeHeight();
+        return _uintTree.height();
     }
 
     function getBytes32TreeHeight() external view returns (uint256) {
-        return bytes32Tree.getTreeHeight();
+        return _bytes32Tree.height();
     }
 
     function getAddressTreeHeight() external view returns (uint256) {
-        return addressTree.getTreeHeight();
+        return _addressTree.height();
+    }
+
+    function getUintTreeLength() external view returns (uint256) {
+        return _uintTree.length();
+    }
+
+    function getBytes32TreeLength() external view returns (uint256) {
+        return _bytes32Tree.length();
+    }
+
+    function getAddressTreeLength() external view returns (uint256) {
+        return _addressTree.length();
     }
 }

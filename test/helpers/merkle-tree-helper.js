@@ -1,5 +1,3 @@
-const { web3 } = require("hardhat");
-
 const { MerkleTree } = require("merkletreejs");
 
 function getRoot(tree) {
