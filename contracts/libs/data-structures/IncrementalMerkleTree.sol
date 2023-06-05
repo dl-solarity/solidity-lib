@@ -15,6 +15,19 @@ pragma solidity ^0.8.4;
  *
  *  Zero hashes are computed each time the getRoot function is called.
  *
+ *  Gas usage for _add and _root functions (where count is the number of elements added to the tree):
+ *
+ *  | Statistic | _add         | _root            |
+ *  | --------- | ------------ | ---------------- |
+ *  | count     | 106000.0     | 106000.0         |
+ *  | mean      | 36619.79     | 71941.19         |
+ *  | std       | 3617.04      | 4324.02          |
+ *  | min       | 34053.0      | 28670.0          |
+ *  | 25%       | 34077.0      | 69715.0          |
+ *  | 50%       | 36598.0      | 72641.0          |
+ *  | 75%       | 39143.0      | 75557.0          |
+ *  | max       | 94661.0      | 75637.0          |
+ *
  *  ## Usage example:
  *
  *  ```
