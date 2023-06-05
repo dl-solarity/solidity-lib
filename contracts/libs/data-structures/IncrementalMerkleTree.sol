@@ -2,9 +2,9 @@
 pragma solidity ^0.8.4;
 
 /**
- *  @title Incremental Merkle Tree module
+ *  @notice Incremental Merkle Tree module
  *
- *  @notice This implementation is a modification of the Incremental Merkle Tree data structure described
+ *  This implementation is a modification of the Incremental Merkle Tree data structure described
  *  in [Deposit Contract Verification](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf).
  *
  *  This implementation aims to optimize and improve the original data structure.
