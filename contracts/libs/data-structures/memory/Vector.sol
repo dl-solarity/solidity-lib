@@ -53,7 +53,7 @@ library Vector {
      *  @notice The UintVector constructor, creates a vector instance with defined length, O(n) complex
      *  @dev The length_ number of default value elements will be added to the vector
      *  @param length_ the initial number of elements
-     *  @param vector the newly created instance
+     *  @return vector the newly created instance
      */
     function newUint(uint256 length_) internal pure returns (UintVector memory vector) {
         vector._vector = _new(length_);
