@@ -161,7 +161,7 @@ library IncrementalMerkleTree {
         uint256 leavesCount;
     }
 
-    bytes32 public constant ZERO_HASH = keccak256(abi.encode(0));
+    bytes32 private constant ZERO_HASH = keccak256(abi.encode(0));
 
     function _add(IMT storage tree, bytes32 element_) private {
         bytes32 resultValue_;
