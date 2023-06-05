@@ -1,5 +1,4 @@
 const { assert } = require("chai");
-
 const { accounts } = require("../../../scripts/utils/utils");
 const { getRoot, buildSparseMerkleTree } = require("../../helpers/merkle-tree-helper");
 

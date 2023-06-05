@@ -19,14 +19,14 @@ pragma solidity ^0.8.4;
  *
  *  | Statistic | _add         | _root            |
  *  | --------- | ------------ | ---------------- |
- *  | count     | 106000.0     | 106000.0         |
- *  | mean      | 36619.79     | 71941.19         |
- *  | std       | 3617.04      | 4324.02          |
- *  | min       | 34053.0      | 28670.0          |
- *  | 25%       | 34077.0      | 69715.0          |
- *  | 50%       | 36598.0      | 72641.0          |
- *  | 75%       | 39143.0      | 75557.0          |
- *  | max       | 94661.0      | 75637.0          |
+ *  | count     | 106000       | 106000           |
+ *  | mean      | 36619 gas    | 71941 gas        |
+ *  | std       | 3617 gas     | 4324 gas         |
+ *  | min       | 34053 gas    | 28670 gas        |
+ *  | 25%       | 34077 gas    | 69715 gas        |
+ *  | 50%       | 36598 gas    | 72641 gas        |
+ *  | 75%       | 39143 gas    | 75557 gas        |
+ *  | max       | 94661 gas    | 75637 gas        |
  *
  *  ## Usage example:
  *
@@ -49,7 +49,7 @@ pragma solidity ^0.8.4;
 library IncrementalMerkleTree {
     /**
      ************************
-     *      UintIMT      *
+     *      UintIMT         *
      ************************
      */
 
@@ -100,7 +100,7 @@ library IncrementalMerkleTree {
 
     /**
      ************************
-     *     Bytes32IMT    *
+     *     Bytes32IMT       *
      ************************
      */
 
@@ -126,7 +126,7 @@ library IncrementalMerkleTree {
 
     /**
      ************************
-     *     AddressIMT    *
+     *     AddressIMT       *
      ************************
      */
 
@@ -152,7 +152,7 @@ library IncrementalMerkleTree {
 
     /**
      ************************
-     *      InnerIMT     *
+     *      InnerIMT        *
      ************************
      */
 
