@@ -48,10 +48,10 @@ pragma solidity ^0.8.4;
  */
 library IncrementalMerkleTree {
     /**
-    *********************
-    *      UintIMT      *
-    *********************
-    */
+     *********************
+     *      UintIMT      *
+     *********************
+     */
 
     struct UintIMT {
         IMT _tree;
@@ -99,10 +99,10 @@ library IncrementalMerkleTree {
     }
 
     /**
-    **********************
-    *     Bytes32IMT     *
-    **********************
-    */
+     **********************
+     *     Bytes32IMT     *
+     **********************
+     */
 
     struct Bytes32IMT {
         IMT _tree;
@@ -125,10 +125,10 @@ library IncrementalMerkleTree {
     }
 
     /**
-    ************************
-    *      AddressIMT      *
-    ************************
-    */
+     ************************
+     *      AddressIMT      *
+     ************************
+     */
 
     struct AddressIMT {
         IMT _tree;
