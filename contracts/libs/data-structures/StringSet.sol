@@ -2,11 +2,13 @@
 pragma solidity ^0.8.4;
 
 /**
- *  @notice Example:
+ *  @notice ## Usage example:
  *
+ *  ```
  *  using StringSet for StringSet.Set;
  *
  *  StringSet.Set internal set;
+ *  ```
  */
 library StringSet {
     struct Set {

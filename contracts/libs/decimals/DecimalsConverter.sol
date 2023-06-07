@@ -16,6 +16,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  *
  *  Example:
  *
+ *  ```
  *  contract Taker {
  *      ERC20 public USDC;
  *      uint256 public paid;
@@ -30,6 +31,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  *          USDC.transferFrom(msg.sender, address(this), amount.from18(decimals));
  *      }
  *  }
+ *  ```
  */
 library DecimalsConverter {
     /**
