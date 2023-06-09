@@ -19,11 +19,13 @@ import {TypeCaster} from "../utils/TypeCaster.sol";
  *  The queue order of the elements is NOT guaranteed.
  *  The interaction with the data structure must be made via the topmost element only.
  *
- *  Usage example:
+ *  ## Usage example:
  *
+ *  ```
  *  using PriorityQueue for PriorityQueue.UintQueue;
  *  using PriorityQueue for PriorityQueue.AddressQueue;
  *  using PriorityQueue for PriorityQueue.Bytes32Queue;
+ *  ```
  */
 library PriorityQueue {
     using TypeCaster for *;

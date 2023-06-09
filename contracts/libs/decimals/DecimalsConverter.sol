@@ -14,8 +14,9 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  *  Also it is recommended to call `round18()` function on the first execution line in order to get rid of the
  *  trailing numbers if the destination decimals are less than 18
  *
- *  Example:
+ *  ## Usage example:
  *
+ *  ```
  *  contract Taker {
  *      ERC20 public USDC;
  *      uint256 public paid;
@@ -30,6 +31,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  *          USDC.transferFrom(msg.sender, address(this), amount.from18(decimals));
  *      }
  *  }
+ *  ```
  */
 library DecimalsConverter {
     /**

@@ -20,13 +20,14 @@ import {TypeCaster} from "../../utils/TypeCaster.sol";
  *  number of elements exceed the allocation, the Vector will reallocate the array to a bigger memory chunk and store the
  *  new element there.
  *
- *  Usage example:
- *
+ *  ## Usage example:
+ *  ```
  *  using Vector for Vector.UintVector;
  *
  *  Vector.UintVector memory vector = Vector.newUint();
  *
  *  vector.push(123);
+ *  ```
  */
 library Vector {
     using TypeCaster for *;
