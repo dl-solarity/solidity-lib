@@ -29,7 +29,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.8.0",
-    "@openzeppelin/contracts-upgradeable": "4.8.0"
+    "@openzeppelin/contracts-upgradeable": "4.8.0",
+    "hardhat": "^2.13.0"
   },
   "devDependencies": {
     "@dlsl/hardhat-markup": "^1.0.0-rc.12",
@@ -39,7 +40,6 @@
     "bignumber.js": "^9.0.1",
     "chai": "^4.3.4",
     "dotenv": "^10.0.0",
-    "hardhat": "^2.14.1",
     "hardhat-contract-sizer": "^2.1.1",
     "hardhat-gas-reporter": "^1.0.4",
     "husky": "^7.0.2",

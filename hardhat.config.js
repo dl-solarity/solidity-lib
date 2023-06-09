@@ -35,11 +35,7 @@ module.exports = {
     },
   },
   markup: {
-    outdir: "./generated-markups",    
-    onlyFiles: [], //"./contracts/"   "./contracts/libs/decimals/"
-    skipFiles: [],
-    noCompile: false,
-    verbose: true,
+    onlyFiles: ["./contracts/"],
   },
   mocha: {
     timeout: 1000000,

@@ -14,7 +14,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  *  Also it is recommended to call `round18()` function on the first execution line in order to get rid of the
  *  trailing numbers if the destination decimals are less than 18
  *
- *  ## Usage example:
+ *  Example:
  *
  *  ```
  *  contract Taker {

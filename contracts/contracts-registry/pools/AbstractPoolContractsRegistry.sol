@@ -15,7 +15,7 @@ import {ProxyBeacon} from "./proxy/ProxyBeacon.sol";
  *  @notice The PoolContractsRegistry module
  *
  *  This contract can be used as a pool registry that keeps track of deployed pools by the system.
- *  One can integrate factories to deploy and register pools or add them manually.
+ *  One can integrate factories to deploy and register pools or add them manually
  *
  *  The registry uses BeaconProxy pattern to provide upgradeability and Dependant pattern to provide dependency
  *  injection mechanism into the pools. This module should be used together with the ContractsRegistry module.
