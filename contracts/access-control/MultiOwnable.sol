@@ -8,35 +8,34 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {TypeCaster} from "../libs/utils/TypeCaster.sol";
 import {IMultiOwnable} from "../interfaces/access-control/IMultiOwnable.sol";
 
-
-abstract contract AbstractMultiOwnable is IMultiOwnable, Initializable {  
+abstract contract MultiOwnable is IMultiOwnable, Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     using TypeCaster for address;
 
     EnumerableSet.AddressSet private _owners;
-    
+
     modifier onlyOwner() {
         _checkOwner();
         _;
     }
-    
-    /** 
-    * @dev Initializes the contract setting the msg.sender as the initial owner.
-    */    
-    function __AbstractMultiOwnable_init() internal onlyInitializing { 
-        _addOwners(msg.sender.asSingletonArray());       
+
+    /**
+     * @dev Initializes the contract setting the msg.sender as the initial owner.
+     */
+    function __MultiOwnable_init() internal onlyInitializing {
+        _addOwners(msg.sender.asSingletonArray());
     }
 
-    function addOwners(address[] memory newOwners_) external virtual override onlyOwner {   
-        _addOwners(newOwners_); 
+    function addOwners(address[] memory newOwners_) public virtual override onlyOwner {
+        _addOwners(newOwners_);
     }
 
-    function removeOwners(address[] memory oldOwners_) external virtual override onlyOwner {      
+    function removeOwners(address[] memory oldOwners_) public virtual override onlyOwner {
         _removeOwners(oldOwners_);
     }
-    
-    function renounceOwnership() external virtual override onlyOwner {
+
+    function renounceOwnership() public virtual override onlyOwner {
         _removeOwners(msg.sender.asSingletonArray());
     }
 
@@ -54,40 +53,34 @@ abstract contract AbstractMultiOwnable is IMultiOwnable, Initializable {
      * Address(0) will not be added and function will be reverted.
      * @param newOwners_ the array of addresses to add to _owners
      */
-    function _addOwners(address[] memory newOwners_) internal virtual {
-        for (uint i = 0; i < newOwners_.length; i++) {
-            require (newOwners_[i] != address(0), "AbstractMultiOwnable: zero address can not be added");
+    function _addOwners(address[] memory newOwners_) private {
+        for (uint256 i = 0; i < newOwners_.length; i++) {
+            require(newOwners_[i] != address(0), "MultiOwnable: zero address can not be added");
             _owners.add(newOwners_[i]);
         }
-        
-        emit OwnershipAdded(newOwners_);
+
+        emit OwnerAdded(newOwners_);
     }
 
     /**
      * @notice Removes ownership of the contract for every address in array.
      * Internal function without access restriction.
-     * If no owners left, function will be reverted.
+     * Note: removing ownership may leave the contract without an owner,
+     * thereby disabling any functionality that is only available to the owner.
      * @param oldOwners_ the array of addresses to remove from _owners
      */
-    function _removeOwners(address[] memory oldOwners_) internal virtual {
-        for (uint i = 0; i < oldOwners_.length; i++) {
+    function _removeOwners(address[] memory oldOwners_) private {
+        for (uint256 i = 0; i < oldOwners_.length; i++) {
             _owners.remove(oldOwners_[i]);
-        }        
-        require(_owners.length() >= 1, "AbstractMultiOwnable: no owners left after removal");
+        }
 
-        emit OwnershipRemoved(oldOwners_);
+        emit OwnerRemoved(oldOwners_);
     }
-    
+
     /**
-    * @dev Throws if the sender is not the owner.
-    */
-    function _checkOwner() internal view virtual {
-        require(isOwner(msg.sender), "AbstractMultiOwnable: caller is not the owner");
+     * @dev Throws if the sender is not the owner.
+     */
+    function _checkOwner() private view {
+        require(isOwner(msg.sender), "MultiOwnable: caller is not the owner");
     }
 }
-
-
-
-
-    
-

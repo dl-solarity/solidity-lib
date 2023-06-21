@@ -2,28 +2,28 @@
 
 pragma solidity ^0.8.4;
 
-interface IMultiOwnable {  
-
-    event OwnershipAdded(address[] indexed newOwners);
-    event OwnershipRemoved(address[] indexed removedOwners); 
-   
-    /**
-    * @notice Owner can add new owners to the _owners.
-    * @param newOwners_ the array of addresses to add to _owners
-    */
-    function addOwners(address[] memory newOwners_) external;
+interface IMultiOwnable {
+    event OwnerAdded(address[] newOwners);
+    event OwnerRemoved(address[] removedOwners);
 
     /**
-    * @notice Owner can remove the array of owners from the _owners.
-    * @param oldOwners_ the array of addresses to remove from _owners
-    */
-    function removeOwners(address[] memory oldOwners_) external;
-
-    /**
-     * @notice Allows to remove yourself from list of owners. 
-     * Note: number of Owners must be more than 1.
+     * @notice Owner can add new owners to the _owners.
+     * @param newOwners_ the array of addresses to add to _owners
      */
-    function renounceOwnership() external;  
+    function addOwners(address[] calldata newOwners_) external;
+
+    /**
+     * @notice Owner can remove the array of owners from the _owners.
+     * @param oldOwners_ the array of addresses to remove from _owners
+     */
+    function removeOwners(address[] calldata oldOwners_) external;
+
+    /**
+     * @notice Allows to remove yourself from list of owners.
+     * Note: renouncing ownership may leave the contract without an owner,
+     * thereby disabling any functionality that is only available to the owner.
+     */
+    function renounceOwnership() external;
 
     /**
      * @notice Returns the addresses of the current owners.
@@ -31,7 +31,7 @@ interface IMultiOwnable {
      * @return the array of addresses.
      */
     function getOwners() external view returns (address[] memory);
-    
+
     /**
      * @notice Returns true if address is in _owners.
      * @param address_ the address to check.
