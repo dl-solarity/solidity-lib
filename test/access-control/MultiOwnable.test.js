@@ -45,22 +45,6 @@ describe("MultiOwnable", () => {
     });
   });
 
-  describe("getOwners()", () => {
-    it("should correctly set the owner after inizialization", async () => {      
-      assert.equal((await crk.getOwners()), FIRST);
-    });
-  });
-
-  describe("isOwner()", () => {
-    it("should correctly check the initial owner", async () => {      
-      assert.equal((await crk.isOwner(FIRST)), true);
-    });    
-
-    it("should return false for not owner", async () => {          
-      assert.equal((await crk.isOwner(SECOND)), false);
-    });
-  });
-
   describe("addOwners()", () => {  
     it("should correctly add owners", async () => {
       await crk.addOwners([SECOND, THIRD]);
@@ -82,7 +66,6 @@ describe("MultiOwnable", () => {
 
       assert.equal((await crk.isOwner(SECOND)), false);
       assert.equal((await crk.isOwner(FIRST)), true);
-
     });    
     
     it("should not remove all owners", async () => {    
@@ -103,7 +86,23 @@ describe("MultiOwnable", () => {
 
     it("should not renounce last owner", async () => {         
       await truffleAssert.reverts(
-        crk.renounceOwnership(), "AbstractMultiOwnable: only one owner, cannot renounce ownership");
+        crk.renounceOwnership(), "AbstractMultiOwnable: no owners left after removal");
     });
   }); 
+  
+  describe("getOwners()", () => {
+    it("should correctly set the owner after inizialization", async () => {      
+      assert.equal((await crk.getOwners()), FIRST);
+    });
+  });
+
+  describe("isOwner()", () => {
+    it("should correctly check the initial owner", async () => {      
+      assert.equal((await crk.isOwner(FIRST)), true);
+    });    
+
+    it("should return false for not owner", async () => {          
+      assert.equal((await crk.isOwner(SECOND)), false);
+    });
+  });
 });
