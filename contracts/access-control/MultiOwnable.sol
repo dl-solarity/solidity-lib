@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.4;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -8,6 +7,18 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {TypeCaster} from "../libs/utils/TypeCaster.sol";
 import {IMultiOwnable} from "../interfaces/access-control/IMultiOwnable.sol";
 
+/*
+ *  @notice The MultiOwnable module
+ *
+ *  Contract module which provides a basic access control mechanism, where there is a list of
+ *  owner addresses those can be granted exclusive access to specific functions.
+ *  All owners are equal in their access, they can add new owners, also remove each other and themself.
+ *
+ *  By default, the owner account will be the one that deploys the contract.
+ *
+ *  This module will make available the modifier`onlyOwner`, which can be applied
+ *  to your functions to restrict their use to the owners.
+ */
 abstract contract MultiOwnable is IMultiOwnable, Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -49,8 +60,8 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
 
     /**
      * @notice Gives ownership of the contract to array of new owners.
-     * Internal function without access restriction.
-     * Address(0) will not be added and function will be reverted.
+     * Null address will not be added and function will be reverted.
+     * @dev Internal function without access restriction.
      * @param newOwners_ the array of addresses to add to _owners
      */
     function _addOwners(address[] memory newOwners_) private {
@@ -64,9 +75,9 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
 
     /**
      * @notice Removes ownership of the contract for every address in array.
-     * Internal function without access restriction.
      * Note: removing ownership may leave the contract without an owner,
      * thereby disabling any functionality that is only available to the owner.
+     * @dev Internal function without access restriction.
      * @param oldOwners_ the array of addresses to remove from _owners
      */
     function _removeOwners(address[] memory oldOwners_) private {

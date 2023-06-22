@@ -56,6 +56,7 @@ describe("MultiOwnable", () => {
   describe("addOwners()", () => {
     it("should correctly add owners", async () => {
       await multiOwnable.addOwners([SECOND, THIRD]);
+
       assert.equal(await multiOwnable.isOwner(SECOND), true);
       assert.equal(await multiOwnable.isOwner(THIRD), true);
     });

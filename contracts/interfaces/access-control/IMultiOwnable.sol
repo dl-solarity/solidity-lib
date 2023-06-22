@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.4;
 
+/**
+ *  @notice The MultiOwnable module
+ */
 interface IMultiOwnable {
     event OwnerAdded(address[] newOwners);
     event OwnerRemoved(address[] removedOwners);
 
     /**
-     * @notice Owner can add new owners to the _owners.
-     * @param newOwners_ the array of addresses to add to _owners
+     * @notice Owner can add new owners to the contract's owners list.
+     * @param newOwners_ the array of addresses to add to _owners.
      */
     function addOwners(address[] calldata newOwners_) external;
 
     /**
-     * @notice Owner can remove the array of owners from the _owners.
+     * @notice Owner can remove the array of owners from the contract's owners list.
      * @param oldOwners_ the array of addresses to remove from _owners
      */
     function removeOwners(address[] calldata oldOwners_) external;
@@ -33,7 +35,7 @@ interface IMultiOwnable {
     function getOwners() external view returns (address[] memory);
 
     /**
-     * @notice Returns true if address is in _owners.
+     * @notice Returns true if address is in the contract's owners list.
      * @param address_ the address to check.
      * @return whether the _address in _owners.
      */
