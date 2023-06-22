@@ -7,7 +7,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {TypeCaster} from "../libs/utils/TypeCaster.sol";
 import {IMultiOwnable} from "../interfaces/access-control/IMultiOwnable.sol";
 
-/*
+/** 
  *  @notice The MultiOwnable module
  *
  *  Contract module which provides a basic access control mechanism, where there is a list of
