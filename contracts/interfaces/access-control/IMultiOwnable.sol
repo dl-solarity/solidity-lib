@@ -22,6 +22,7 @@ interface IMultiOwnable {
 
     /**
      * @notice Allows to remove yourself from list of owners.
+     
      * Note: renouncing ownership may leave the contract without an owner,
      * thereby disabling any functionality that is only available to the owner.
      */

@@ -7,7 +7,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {TypeCaster} from "../libs/utils/TypeCaster.sol";
 import {IMultiOwnable} from "../interfaces/access-control/IMultiOwnable.sol";
 
-/** 
+/**
  *  @notice The MultiOwnable module
  *
  *  Contract module which provides a basic access control mechanism, where there is a list of
@@ -16,7 +16,7 @@ import {IMultiOwnable} from "../interfaces/access-control/IMultiOwnable.sol";
  *
  *  By default, the owner account will be the one that deploys the contract.
  *
- *  This module will make available the modifier`onlyOwner`, which can be applied
+ *  This module will make available the modifier `onlyOwner`, which can be applied
  *  to your functions to restrict their use to the owners.
  */
 abstract contract MultiOwnable is IMultiOwnable, Initializable {
@@ -75,8 +75,10 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
 
     /**
      * @notice Removes ownership of the contract for every address in array.
+     *
      * Note: removing ownership may leave the contract without an owner,
      * thereby disabling any functionality that is only available to the owner.
+     *
      * @dev Internal function without access restriction.
      * @param oldOwners_ the array of addresses to remove from _owners
      */
