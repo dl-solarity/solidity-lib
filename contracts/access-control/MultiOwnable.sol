@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
+import {SetHelper} from "../libs/arrays/SetHelper.sol";
 import {TypeCaster} from "../libs/utils/TypeCaster.sol";
 import {IMultiOwnable} from "../interfaces/access-control/IMultiOwnable.sol";
 
@@ -21,8 +22,8 @@ import {IMultiOwnable} from "../interfaces/access-control/IMultiOwnable.sol";
  */
 abstract contract MultiOwnable is IMultiOwnable, Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
-
     using TypeCaster for address;
+    using SetHelper for EnumerableSet.AddressSet;
 
     EnumerableSet.AddressSet private _owners;
 
@@ -65,10 +66,9 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
      * @param newOwners_ the array of addresses to add to _owners
      */
     function _addOwners(address[] memory newOwners_) private {
-        for (uint256 i = 0; i < newOwners_.length; i++) {
-            require(newOwners_[i] != address(0), "MultiOwnable: zero address can not be added");
-            _owners.add(newOwners_[i]);
-        }
+        _owners.add(newOwners_);
+
+        require(!_owners.contains(address(0)), "MultiOwnable: zero address can not be added");
 
         emit OwnerAdded(newOwners_);
     }
@@ -83,9 +83,7 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
      * @param oldOwners_ the array of addresses to remove from _owners
      */
     function _removeOwners(address[] memory oldOwners_) private {
-        for (uint256 i = 0; i < oldOwners_.length; i++) {
-            _owners.remove(oldOwners_[i]);
-        }
+        _owners.remove(oldOwners_);
 
         emit OwnerRemoved(oldOwners_);
     }
