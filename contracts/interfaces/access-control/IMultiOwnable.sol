@@ -5,8 +5,8 @@ pragma solidity ^0.8.4;
  *  @notice The MultiOwnable module
  */
 interface IMultiOwnable {
-    event OwnerAdded(address[] newOwners);
-    event OwnerRemoved(address[] removedOwners);
+    event OwnersAdded(address[] newOwners);
+    event OwnersRemoved(address[] removedOwners);
 
     /**
      * @notice Owner can add new owners to the contract's owners list.
