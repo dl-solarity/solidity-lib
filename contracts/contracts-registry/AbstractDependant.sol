@@ -29,10 +29,9 @@ abstract contract AbstractDependant {
 
     /**
      *  @notice The function that will be called from the ContractsRegistry (or factory) to inject dependencies.
+     *  The Dependant must apply dependant() modifier to this function
      *  @param contractsRegistry_ the registry to pull dependencies from
      *  @param data_ the extra data that might provide additional context
-     *
-     *  The Dependant must apply dependant() modifier to this function
      */
     function setDependencies(address contractsRegistry_, bytes calldata data_) external virtual;
 

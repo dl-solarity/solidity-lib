@@ -19,8 +19,8 @@ import {PRECISION} from "../utils/Globals.sol";
  *  The CompoundRateKeeper can be used in landing protocols to calculate the interest and borrow rates. It can
  *  also be used in regular staking contracts to get users' rewards accrual.
  *
- *  The compound rate is calculated with 10**25 precision.
- *  The maximal possible compound rate is (type(uint128).max * 10**25)
+ *  The compound rate is calculated with 10\**25 precision.
+ *  The maximal possible compound rate is (type(uint128).max * 10\**25)
  */
 abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializable {
     using Math for uint256;
