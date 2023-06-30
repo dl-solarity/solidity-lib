@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: MIT
-// Modified from OpenZeppelin Contracts (last updated v4.8.0) (proxy/utils/Initializable.sol)
-
 pragma solidity ^0.8.4;
 
 /**
@@ -64,22 +62,12 @@ abstract contract InitializableStorage {
     }
 
     /**
-     * @dev Internal function that sets the initializingStorage value.
-     */
-    function _setInitializing(
-        bytes32 storageSlot_,
-        uint8 value_
-    ) internal virtual onlyInitializing {
-        _initializableStorage().initializingStorage[storageSlot_] = value_;
-    }
-
-    /**
      * @dev Locks the contract.
      * It is recommended to use this to lock Diamond Facets contracts.
      *
      * Emits an {Initialized} event the first time it is successfully executed.
      */
-    function _disableInitializers(bytes storageSlot_) internal virtual {
+    function _disableInitializers(bytes32 storageSlot_) internal virtual {
         uint8 initializing_ = _getInitializing(storageSlot_);
 
         require(initializing_ == 0, "Initializable: contract is initializing");
@@ -94,5 +82,15 @@ abstract contract InitializableStorage {
      */
     function _getInitializing(bytes32 storageSlot_) internal view returns (uint8) {
         return _initializableStorage().initializingStorage[storageSlot_];
+    }
+
+    /**
+     * @dev Internal function that sets the initializingStorage value.
+     */
+    function _setInitializing(
+        bytes32 storageSlot_,
+        uint8 value_
+    ) private {
+        _initializableStorage().initializingStorage[storageSlot_] = value_;
     }
 }
