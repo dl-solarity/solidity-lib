@@ -10,10 +10,11 @@ import "../../utils/InitializableStorage.sol";
 /**
  * @dev This is an ERC20 token Storage contract with Diamond Standard support
  */
-abstract contract ERC20Storage is InitializableStorage, Context, IERC20, IERC20Metadata {
-    bytes32 public constant ERC20_STORAGE_SLOT = keccak256("diamond.standard.erc20.storage");
+abstract contract DiamondERC20Storage is InitializableStorage, Context, IERC20, IERC20Metadata {
+    bytes32 public constant DIAMOND_ERC20_STORAGE_SLOT =
+        keccak256("diamond.standard.diamond.erc20.storage");
 
-    struct ERC20Storage {
+    struct DiamondERC20Storage {
         string name;
         string symbol;
         uint256 totalSupply;
@@ -21,8 +22,8 @@ abstract contract ERC20Storage is InitializableStorage, Context, IERC20, IERC20M
         mapping(address => mapping(address => uint256)) allowances;
     }
 
-    function _erc20Storage() internal view returns (ERC20Storage storage _erc20Storage) {
-        bytes32 slot_ = ERC20_STORAGE_SLOT;
+    function _erc20Storage() internal view returns (DiamondERC20Storage storage _erc20Storage) {
+        bytes32 slot_ = DIAMOND_ERC20_STORAGE_SLOT;
 
         assembly {
             _erc20Storage.slot := slot_
@@ -62,5 +63,15 @@ abstract contract ERC20Storage is InitializableStorage, Context, IERC20, IERC20M
      */
     function balanceOf(address account_) public view virtual override returns (uint256) {
         return _erc20Storage().balances[account_];
+    }
+
+    /**
+     * @dev See {IERC20-allowance}.
+     */
+    function allowance(
+        address owner_,
+        address spender_
+    ) public view virtual override returns (uint256) {
+        return _erc20Storage().allowances[owner_][spender_];
     }
 }

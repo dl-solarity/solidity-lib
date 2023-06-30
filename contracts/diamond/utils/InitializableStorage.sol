@@ -87,10 +87,7 @@ abstract contract InitializableStorage {
     /**
      * @dev Internal function that sets the initializingStorage value.
      */
-    function _setInitializing(
-        bytes32 storageSlot_,
-        uint8 value_
-    ) private {
+    function _setInitializing(bytes32 storageSlot_, uint8 value_) private {
         _initializableStorage().initializingStorage[storageSlot_] = value_;
     }
 }

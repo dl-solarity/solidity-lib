@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./ERC20Storage.sol";
+import "./DiamondERC20Storage.sol";
 
 /**
  * @dev This is modified version of OpenZeppelin's ERC20 contract to be used as a Storage contract
  * by the Diamond Standard.
  */
-contract ERC20 is ERC20Storage {
+contract DiamondERC20 is DiamondERC20Storage {
     /**
      * @dev Sets the values for {name} and {symbol}.
      *
      * The default value of {decimals} is 18.
      */
-    function __ERC20_init(string memory name_, string memory symbol_) internal onlyInitializing(ERC20_STORAGE_SLOT) {
-        ERC20Storage storage _erc20Storage = _erc20Storage();
+    function __DiamondERC20_init(
+        string memory name_,
+        string memory symbol_
+    ) internal onlyInitializing(DIAMOND_ERC20_STORAGE_SLOT) {
+        DiamondERC20Storage storage _erc20Storage = _erc20Storage();
 
         _erc20Storage.name = name_;
         _erc20Storage.symbol = symbol_;
@@ -29,16 +32,6 @@ contract ERC20 is ERC20Storage {
         _transfer(owner_, to_, amount_);
 
         return true;
-    }
-
-    /**
-     * @dev See {IERC20-allowance}.
-     */
-    function allowance(
-        address owner_,
-        address spender_
-    ) public view virtual override returns (uint256) {
-        return _erc20Storage().allowances[owner_][spender_];
     }
 
     /**
@@ -110,7 +103,7 @@ contract ERC20 is ERC20Storage {
 
         _beforeTokenTransfer(from_, to_, amount_);
 
-        ERC20Storage storage _erc20Storage = _erc20Storage();
+        DiamondERC20Storage storage _erc20Storage = _erc20Storage();
 
         uint256 fromBalance_ = _erc20Storage.balances[from_];
 
@@ -138,7 +131,7 @@ contract ERC20 is ERC20Storage {
 
         _beforeTokenTransfer(address(0), account_, amount_);
 
-        ERC20Storage storage _erc20Storage = _erc20Storage();
+        DiamondERC20Storage storage _erc20Storage = _erc20Storage();
 
         _erc20Storage.totalSupply += amount_;
 
@@ -161,7 +154,7 @@ contract ERC20 is ERC20Storage {
 
         _beforeTokenTransfer(account_, address(0), amount_);
 
-        ERC20Storage storage _erc20Storage = _erc20Storage();
+        DiamondERC20Storage storage _erc20Storage = _erc20Storage();
 
         uint256 accountBalance_ = _erc20Storage.balances[account_];
         require(accountBalance_ >= amount_, "ERC20: burn amount exceeds balance");
