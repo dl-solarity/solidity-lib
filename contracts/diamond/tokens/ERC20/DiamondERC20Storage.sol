@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "../../utils/InitializableStorage.sol";
 
 /**
- * @dev This is an ERC20 token Storage contract with Diamond Standard support
+ * @notice This is an ERC20 token Storage contract with Diamond Standard support
  */
 abstract contract DiamondERC20Storage is InitializableStorage, Context, IERC20, IERC20Metadata {
     bytes32 public constant DIAMOND_ERC20_STORAGE_SLOT =
@@ -31,42 +31,45 @@ abstract contract DiamondERC20Storage is InitializableStorage, Context, IERC20, 
     }
 
     /**
-     * @dev Returns the name of the token.
+     * @notice The function to get the name of the token.
+     * @return The name of the token.
      */
     function name() public view virtual override returns (string memory) {
         return _erc20Storage().name;
     }
 
     /**
-     * @dev Returns the symbol of the token.
+     * @notice The function to get the symbol of the token.
+     * @return The symbol of the token.
      */
     function symbol() public view virtual override returns (string memory) {
         return _erc20Storage().symbol;
     }
 
     /**
-     * @dev The function returns the number of decimals used for user representation.
+     * @notice The function to get the number of decimals used for user representation.
+     * @return The number of decimals.
      */
     function decimals() public view virtual override returns (uint8) {
         return 18;
     }
 
     /**
-     * @dev See {IERC20-totalSupply}.
+     * @inheritdoc IERC20
      */
     function totalSupply() public view virtual override returns (uint256) {
         return _erc20Storage().totalSupply;
     }
 
     /**
-     * @dev See {IERC20-balanceOf}.
+     * @inheritdoc IERC20
      */
     function balanceOf(address account_) public view virtual override returns (uint256) {
         return _erc20Storage().balances[account_];
     }
 
     /**
-     * @dev See {IERC20-allowance}.
+     * @inheritdoc IERC20
      */
     function allowance(
         address owner_,

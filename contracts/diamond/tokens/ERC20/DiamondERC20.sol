@@ -4,12 +4,12 @@ pragma solidity ^0.8.4;
 import "./DiamondERC20Storage.sol";
 
 /**
- * @dev This is modified version of OpenZeppelin's ERC20 contract to be used as a Storage contract
+ * @notice This is modified version of OpenZeppelin's ERC20 contract to be used as a Storage contract
  * by the Diamond Standard.
  */
 contract DiamondERC20 is DiamondERC20Storage {
     /**
-     * @dev Sets the values for {name} and {symbol}.
+     * @notice Sets the values for {name} and {symbol}.
      *
      * The default value of {decimals} is 18.
      */
@@ -24,7 +24,7 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @dev See {IERC20-transfer}.
+     * @inheritdoc IERC20
      */
     function transfer(address to_, uint256 amount_) public virtual override returns (bool) {
         address owner_ = _msgSender();
@@ -35,7 +35,7 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @dev See {IERC20-approve}.
+     * @inheritdoc IERC20
      */
     function approve(address spender_, uint256 amount_) public virtual override returns (bool) {
         address owner_ = _msgSender();
@@ -46,7 +46,7 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @dev See {IERC20-transferFrom}.
+     * @inheritdoc IERC20
      */
     function transferFrom(
         address from_,
@@ -62,7 +62,7 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @dev Atomically increases the allowance granted to `spender` by the caller.
+     * @notice Atomically increases the allowance granted to `spender` by the caller.
      */
     function increaseAllowance(
         address spender_,
@@ -76,7 +76,7 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @dev Atomically decreases the allowance granted to `spender` by the caller.
+     * @notice Atomically decreases the allowance granted to `spender` by the caller.
      */
     function decreaseAllowance(
         address spender_,
@@ -95,7 +95,7 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @dev Moves `amount` of tokens from `from` to `to`.
+     * @notice Moves `amount` of tokens from `from` to `to`.
      */
     function _transfer(address from_, address to_, uint256 amount_) internal virtual {
         require(from_ != address(0), "ERC20: transfer from the zero address");
@@ -123,7 +123,7 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @dev Creates `amount` tokens and assigns them to `account`, increasing
+     * @notice Creates `amount` tokens and assigns them to `account`, increasing
      * the total supply.
      */
     function _mint(address account_, uint256 amount_) internal virtual {
@@ -146,7 +146,7 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @dev Destroys `amount` tokens from `account`, reducing the
+     * @notice Destroys `amount` tokens from `account`, reducing the
      * total supply.
      */
     function _burn(address account_, uint256 amount_) internal virtual {
@@ -171,7 +171,7 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
+     * @notice Sets `amount` as the allowance of `spender` over the `owner` s tokens.
      */
     function _approve(address owner_, address spender_, uint256 amount_) internal virtual {
         require(owner_ != address(0), "ERC20: approve from the zero address");
@@ -183,7 +183,7 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @dev Updates `owner` s allowance for `spender` based on spent `amount`.
+     * @notice Updates `owner` s allowance for `spender` based on spent `amount`.
      */
     function _spendAllowance(address owner_, address spender_, uint256 amount_) internal virtual {
         uint256 currentAllowance_ = allowance(owner_, spender_);
@@ -198,13 +198,13 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @dev Hook that is called before any transfer of tokens. This includes
+     * @notice Hook that is called before any transfer of tokens. This includes
      * minting and burning.
      */
     function _beforeTokenTransfer(address from_, address to_, uint256 amount_) internal virtual {}
 
     /**
-     * @dev Hook that is called after any transfer of tokens. This includes
+     * @notice Hook that is called after any transfer of tokens. This includes
      * minting and burning.
      */
     function _afterTokenTransfer(address from_, address to_, uint256 amount_) internal virtual {}
