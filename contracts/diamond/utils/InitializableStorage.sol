@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 /**
- * @dev This is a modified version of the OpenZeppelin Initializable contract to be used
+ * @notice This is a modified version of the OpenZeppelin Initializable contract to be compatible
  * with the Diamond Standard.
  */
 abstract contract InitializableStorage {
@@ -12,7 +12,7 @@ abstract contract InitializableStorage {
     /**
      * @param initializingStorage Indicates that the particular storage slot has been initialized.
      */
-    struct InitializableStorage {
+    struct IStorage {
         // storage slot => { 0: not initialized, 1: initializing, 2: initialized }
         mapping(bytes32 => uint8) initializingStorage;
     }
@@ -53,7 +53,7 @@ abstract contract InitializableStorage {
         _;
     }
 
-    function _initializableStorage() internal pure returns (InitializableStorage storage _iss) {
+    function _getInitializableStorage() internal pure returns (IStorage storage _iss) {
         bytes32 slot_ = INITIALIZABLE_STORAGE_SLOT;
 
         assembly {
@@ -81,13 +81,13 @@ abstract contract InitializableStorage {
      * @dev Internal function that returns the initializing for the specified storage slot.
      */
     function _getInitializing(bytes32 storageSlot_) internal view returns (uint8) {
-        return _initializableStorage().initializingStorage[storageSlot_];
+        return _getInitializableStorage().initializingStorage[storageSlot_];
     }
 
     /**
      * @dev Internal function that sets the initializingStorage value.
      */
     function _setInitializing(bytes32 storageSlot_, uint8 value_) private {
-        _initializableStorage().initializingStorage[storageSlot_] = value_;
+        _getInitializableStorage().initializingStorage[storageSlot_] = value_;
     }
 }

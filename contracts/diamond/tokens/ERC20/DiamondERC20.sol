@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./DiamondERC20Storage.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import {DiamondERC20Storage} from "./DiamondERC20Storage.sol";
 
 /**
  * @notice This is modified version of OpenZeppelin's ERC20 contract to be used as a Storage contract
@@ -17,7 +19,7 @@ contract DiamondERC20 is DiamondERC20Storage {
         string memory name_,
         string memory symbol_
     ) internal onlyInitializing(DIAMOND_ERC20_STORAGE_SLOT) {
-        DiamondERC20Storage storage _erc20Storage = _erc20Storage();
+        DERC20Storage storage _erc20Storage = _getErc20Storage();
 
         _erc20Storage.name = name_;
         _erc20Storage.symbol = symbol_;
@@ -103,7 +105,7 @@ contract DiamondERC20 is DiamondERC20Storage {
 
         _beforeTokenTransfer(from_, to_, amount_);
 
-        DiamondERC20Storage storage _erc20Storage = _erc20Storage();
+        DERC20Storage storage _erc20Storage = _getErc20Storage();
 
         uint256 fromBalance_ = _erc20Storage.balances[from_];
 
@@ -131,7 +133,7 @@ contract DiamondERC20 is DiamondERC20Storage {
 
         _beforeTokenTransfer(address(0), account_, amount_);
 
-        DiamondERC20Storage storage _erc20Storage = _erc20Storage();
+        DERC20Storage storage _erc20Storage = _getErc20Storage();
 
         _erc20Storage.totalSupply += amount_;
 
@@ -154,7 +156,7 @@ contract DiamondERC20 is DiamondERC20Storage {
 
         _beforeTokenTransfer(account_, address(0), amount_);
 
-        DiamondERC20Storage storage _erc20Storage = _erc20Storage();
+        DERC20Storage storage _erc20Storage = _getErc20Storage();
 
         uint256 accountBalance_ = _erc20Storage.balances[account_];
         require(accountBalance_ >= amount_, "ERC20: burn amount exceeds balance");
@@ -177,7 +179,7 @@ contract DiamondERC20 is DiamondERC20Storage {
         require(owner_ != address(0), "ERC20: approve from the zero address");
         require(spender_ != address(0), "ERC20: approve to the zero address");
 
-        _erc20Storage().allowances[owner_][spender_] = amount_;
+        _getErc20Storage().allowances[owner_][spender_] = amount_;
 
         emit Approval(owner_, spender_, amount_);
     }

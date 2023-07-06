@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Context} from "@openzeppelin/contracts/utils/Context.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import "../../utils/InitializableStorage.sol";
+import {InitializableStorage} from "../../utils/InitializableStorage.sol";
 
 /**
  * @notice This is an ERC20 token Storage contract with Diamond Standard support
@@ -14,7 +14,7 @@ abstract contract DiamondERC20Storage is InitializableStorage, Context, IERC20, 
     bytes32 public constant DIAMOND_ERC20_STORAGE_SLOT =
         keccak256("diamond.standard.diamond.erc20.storage");
 
-    struct DiamondERC20Storage {
+    struct DERC20Storage {
         string name;
         string symbol;
         uint256 totalSupply;
@@ -22,7 +22,7 @@ abstract contract DiamondERC20Storage is InitializableStorage, Context, IERC20, 
         mapping(address => mapping(address => uint256)) allowances;
     }
 
-    function _erc20Storage() internal view returns (DiamondERC20Storage storage _erc20Storage) {
+    function _getErc20Storage() internal pure returns (DERC20Storage storage _erc20Storage) {
         bytes32 slot_ = DIAMOND_ERC20_STORAGE_SLOT;
 
         assembly {
@@ -35,7 +35,7 @@ abstract contract DiamondERC20Storage is InitializableStorage, Context, IERC20, 
      * @return The name of the token.
      */
     function name() public view virtual override returns (string memory) {
-        return _erc20Storage().name;
+        return _getErc20Storage().name;
     }
 
     /**
@@ -43,7 +43,7 @@ abstract contract DiamondERC20Storage is InitializableStorage, Context, IERC20, 
      * @return The symbol of the token.
      */
     function symbol() public view virtual override returns (string memory) {
-        return _erc20Storage().symbol;
+        return _getErc20Storage().symbol;
     }
 
     /**
@@ -58,14 +58,14 @@ abstract contract DiamondERC20Storage is InitializableStorage, Context, IERC20, 
      * @inheritdoc IERC20
      */
     function totalSupply() public view virtual override returns (uint256) {
-        return _erc20Storage().totalSupply;
+        return _getErc20Storage().totalSupply;
     }
 
     /**
      * @inheritdoc IERC20
      */
     function balanceOf(address account_) public view virtual override returns (uint256) {
-        return _erc20Storage().balances[account_];
+        return _getErc20Storage().balances[account_];
     }
 
     /**
@@ -75,6 +75,6 @@ abstract contract DiamondERC20Storage is InitializableStorage, Context, IERC20, 
         address owner_,
         address spender_
     ) public view virtual override returns (uint256) {
-        return _erc20Storage().allowances[owner_][spender_];
+        return _getErc20Storage().allowances[owner_][spender_];
     }
 }
