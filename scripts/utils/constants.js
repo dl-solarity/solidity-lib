@@ -11,6 +11,8 @@ const PRECISION = new BN(10).pow(25);
 const PERCENTAGE_100 = PRECISION.times(100);
 const DECIMAL = new BN(10).pow(18);
 
+const MAX_UINT256 = web3.utils.toTwosComplement(-1);
+
 module.exports = {
   ZERO_ADDR,
   ZERO_BYTES32,
@@ -20,4 +22,5 @@ module.exports = {
   PRECISION,
   PERCENTAGE_100,
   DECIMAL,
+  MAX_UINT256,
 };

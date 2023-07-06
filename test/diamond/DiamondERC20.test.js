@@ -1,6 +1,6 @@
 const { assert } = require("chai");
 const { accounts, wei } = require("../../scripts/utils/utils");
-const { ZERO_ADDR } = require("../../scripts/utils/constants");
+const { ZERO_ADDR, MAX_UINT256 } = require("../../scripts/utils/constants");
 const truffleAssert = require("truffle-assertions");
 
 const OwnableDiamond = artifacts.require("OwnableDiamond");
@@ -12,8 +12,6 @@ DiamondERC20Mock.numberFormat = "BigNumber";
 function getSelectors(contract) {
   return Object.keys(contract.methods).map((el) => web3.eth.abi.encodeFunctionSignature(el));
 }
-
-const MAX_UINT256 = web3.utils.toTwosComplement(-1);
 
 describe("DiamondERC20 and InitializableStorage", () => {
   let OWNER;
