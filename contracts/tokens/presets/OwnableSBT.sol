@@ -10,12 +10,11 @@ contract OwnableSBT is SBT, Ownable {
     mapping(address => bool) internal availableToClaim;
 
     function __OwnableSBT_init(
-        string memory name_,
-        string memory symbol_,
-        string memory uri_
+        string calldata name_,
+        string calldata symbol_,
+        string calldata baseTokenURI_
     ) public initializer {
-        __SBT_init(name_, symbol_, uri_);
-        availableToClaim[msg.sender] = true;
+        __SBT_init(name_, symbol_, baseTokenURI_);
     }
 
     function mint() public {
@@ -23,7 +22,9 @@ contract OwnableSBT is SBT, Ownable {
 
         availableToClaim[msg.sender] = false;
 
-        _mint(msg.sender, _tokenIdCounter, _basetokenURI);
+        _mint(msg.sender, _tokenIdCounter);
+
+        _setTokenURI(_tokenIdCounter, tokenURI(_tokenIdCounter));
 
         _tokenIdCounter += 1;
     }
@@ -33,15 +34,27 @@ contract OwnableSBT is SBT, Ownable {
         _burn(tokenId_);
     }
 
-    function addToAvailable(address address_) public onlyOwner {
-        availableToClaim[address_] = true;
+    function addToAvailable(address[] memory addresses_) public onlyOwner {
+        for (uint i = 0; i < addresses_.length; i++) {
+            availableToClaim[addresses_[i]] = true;
+        }
     }
 
-    function deleteFromAvailable(address address_) public onlyOwner {
-        availableToClaim[address_] = false;
+    function deleteFromAvailable(address[] memory addresses_) public onlyOwner {
+        for (uint i = 0; i < addresses_.length; i++) {
+            availableToClaim[addresses_[i]] = false;
+        }
     }
 
-    function setBaseTokenURI(string memory tokenURI_) public onlyOwner {
-        _basetokenURI = tokenURI_;
+    function ifAvailable(address address_) public view returns (bool) {
+        return availableToClaim[address_];
+    }
+
+    function setBaseTokenURI(string memory tokenURI_) external onlyOwner {
+        _baseTokenURI = tokenURI_;
+    }
+    
+    function getBaseTokenURI() public view returns (string memory) {
+        return _baseTokenURI;
     }
 }

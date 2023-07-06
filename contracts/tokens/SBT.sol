@@ -3,9 +3,12 @@ pragma solidity ^0.8.4;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ISBT} from "../interfaces/tokens/ISBT.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 abstract contract SBT is ISBT, Initializable {
-    string internal _basetokenURI;
+    using Strings for uint256;
+
+    string internal _baseTokenURI;
     string private _name;
     string private _symbol;
 
@@ -16,13 +19,13 @@ abstract contract SBT is ISBT, Initializable {
     mapping(address => uint256) private _balances;
 
     function __SBT_init(
-        string memory name_,
-        string memory symbol_,
-        string memory uri_
+        string calldata name_,
+        string calldata symbol_,
+        string calldata baseTokenURI_
     ) internal onlyInitializing {
         _name = name_;
         _symbol = symbol_;
-        _basetokenURI = uri_;
+        _baseTokenURI = baseTokenURI_;
     }
 
     function balanceOf(address owner_) public view override returns (uint256) {
@@ -42,15 +45,18 @@ abstract contract SBT is ISBT, Initializable {
     }
 
     function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
-        return _tokenURIs[tokenId_];
+        if (bytes(_tokenURIs[tokenId_]).length != 0) return _tokenURIs[tokenId_];
+        string memory base = _baseURI();
+        if (bytes(base).length != 0)
+            return string(bytes.concat(bytes(base), bytes(tokenId_.toString())));
+        else return "";
     }
 
-    function ifTokenExist(uint256 tokenId_) public view override returns (bool) {
-        if (_ownerOf(tokenId_) != address(0)) return true;
-        else return false;
+    function isTokenExist(uint256 tokenId_) public view override returns (bool) {
+        return _ownerOf(tokenId_) != address(0);
     }
 
-    function _mint(address to_, uint256 tokenId_, string memory tokenURI_) internal {
+    function _mint(address to_, uint256 tokenId_) internal virtual {
         require(to_ != address(0), "SBT: invalidReceiver(address(0)");
 
         require(_ownerOf(tokenId_) == address(0), "SBT: already exist tokenId");
@@ -61,17 +67,13 @@ abstract contract SBT is ISBT, Initializable {
 
         _tokenOwners[tokenId_] = to_;
 
-        string memory empty = "";
-        if (keccak256(bytes(tokenURI_)) != keccak256(bytes(empty)))
-            _setTokenURI(tokenId_, tokenURI_);
-
         emit Minted(to_, tokenId_);
     }
 
-    function _burn(uint256 tokenId_) internal {
+    function _burn(uint256 tokenId_) internal virtual {
         address owner_ = _ownerOf(tokenId_);
 
-        require(owner_ != address(0), "SBT: no owner for sbt you want to burn");
+        require(owner_ != address(0), "SBT: sbt you want to burn don't exist");
 
         _balances[owner_] -= 1;
 
@@ -94,5 +96,9 @@ abstract contract SBT is ISBT, Initializable {
 
     function _ownerOf(uint256 tokenId_) internal view virtual returns (address) {
         return _tokenOwners[tokenId_];
+    }
+
+    function _baseURI() internal view virtual returns (string memory) {
+        return _baseTokenURI;
     }
 }

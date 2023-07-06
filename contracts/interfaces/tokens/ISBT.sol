@@ -15,5 +15,5 @@ interface ISBT {
 
     function tokenURI(uint256 tokenId_) external view returns (string memory);
 
-    function ifTokenExist(uint256 tokenId_) external view returns (bool);
+    function isTokenExist(uint256 tokenId_) external view returns (bool);
 }
