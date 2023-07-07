@@ -13,6 +13,8 @@ interface ISBT {
 
     function symbol() external view returns (string memory);
 
+    function baseURI() external view returns (string memory);
+
     function tokenURI(uint256 tokenId_) external view returns (string memory);
 
     function isTokenExist(uint256 tokenId_) external view returns (bool);

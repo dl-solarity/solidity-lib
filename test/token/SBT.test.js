@@ -10,7 +10,7 @@ const name = "testName";
 const symbol = "TS";
 const baseTokenURI = "https://ipfs.io/ipfs/QmUvdwBdr1CcfLJhxyWZiaMYM7kCciCuXx1V4EKSPWUGzu";
 
-describe("SBT", () => {
+describe.only("SBT", () => {
   let FIRST;
   let SECOND;
 
@@ -24,30 +24,23 @@ describe("SBT", () => {
   beforeEach("setup", async () => {
     sbt = await SBTMock.new();
 
-    await sbt.__OwnableSBT_init(name, symbol, baseTokenURI);
+    await sbt.__WhitelistedSBTMock_init(name, symbol, baseTokenURI, [FIRST]);
   });
 
   describe("access", () => {
     it("should not initialize twice", async () => {
       await truffleAssert.reverts(
-        sbt.mockInit(name, symbol, baseTokenURI),
+        sbt.mockInit(name, symbol, baseTokenURI, []),
         "Initializable: contract is not initializing"
       );
       await truffleAssert.reverts(
-        sbt.__OwnableSBT_init(name, symbol, baseTokenURI),
+        sbt.__SBTMock_init(name, symbol, baseTokenURI),
+        "Initializable: contract is not initializing"
+      );
+      await truffleAssert.reverts(
+        sbt.__WhitelistedSBTMock_init(name, symbol, baseTokenURI, []),
         "Initializable: contract is already initialized"
       );
-    });
-
-    it("only owner should call these functions", async () => {
-      await truffleAssert.reverts(sbt.addToAvailable([SECOND], { from: SECOND }), "Ownable: caller is not the owner");
-
-      await truffleAssert.reverts(
-        sbt.deleteFromAvailable([FIRST], { from: SECOND }),
-        "Ownable: caller is not the owner"
-      );
-
-      await truffleAssert.reverts(sbt.setBaseTokenURI("", { from: SECOND }), "Ownable: caller is not the owner");
     });
   });
 
@@ -55,42 +48,30 @@ describe("SBT", () => {
     it("should correctly init", async () => {
       assert.equal(await sbt.name(), name);
       assert.equal(await sbt.symbol(), symbol);
-      assert.equal(await sbt.getBaseTokenURI(), baseTokenURI);
+      assert.equal(await sbt.baseURI(), baseTokenURI);
+      assert.equal(await sbt.isWhitelisted(FIRST), true);
     });
   });
 
-  describe("addToAvailable()", () => {
-    it("should correctly add addresses", async () => {
-      await sbt.addToAvailable([SECOND, FIRST]);
+  describe("addToWhitelist()", () => {
+    it("should correctly add addresses to whitelist", async () => {
+      await sbt.addToWhitelist([SECOND]);
 
-      assert.equal(await sbt.ifAvailable(SECOND), true);
-      assert.equal(await sbt.ifAvailable(FIRST), true);
+      assert.equal(await sbt.isWhitelisted(SECOND), true);
     });
   });
 
-  describe("deleteFromAvailable()", () => {
-    it("should correctly remove addresses", async () => {
-      await sbt.addToAvailable([SECOND]);
+  describe("deleteFromWhitelist()", () => {
+    it("should correctly remove addresses from whitelist", async () => {
+      await sbt.deleteFromWhitelist([FIRST]);
 
-      await sbt.deleteFromAvailable([SECOND]);
-
-      assert.equal(await sbt.ifAvailable(SECOND), false);
-    });
-  });
-
-  describe("setBaseTokenURI()", () => {
-    it("should correctly set the base URI", async () => {
-      await sbt.setBaseTokenURI("testURI");
-
-      assert.equal(await sbt.getBaseTokenURI(), "testURI");
+      assert.equal(await sbt.isWhitelisted(FIRST), false);
     });
   });
 
   describe("mint()", () => {
     it("should correctly mint if available", async () => {
-      await sbt.addToAvailable([FIRST]);
-
-      await sbt.mint();
+      await sbt.mint(FIRST, 0);
 
       assert.equal(await sbt.balanceOf(FIRST), 1);
       assert.equal(await sbt.ownerOf(0), FIRST);
@@ -99,37 +80,7 @@ describe("SBT", () => {
     });
 
     it("should not mint if not available", async () => {
-      await truffleAssert.reverts(sbt.mint(), "OwnableSBT: not available to claim");
-    });
-  });
-
-  describe("burn()", () => {
-    it("should correctly burn own token", async () => {
-      await sbt.addToAvailable([FIRST]);
-      await sbt.mint();
-
-      await sbt.burn(0);
-
-      assert.equal(await sbt.balanceOf(FIRST), 0);
-      assert.equal(await sbt.ownerOf(0), ZERO_ADDR);
-      assert.equal(await sbt.isTokenExist(0), false);
-    });
-
-    it("only owner of sbt can burn it", async () => {
-      await sbt.addToAvailable([FIRST]);
-      await sbt.mint();
-
-      await truffleAssert.reverts(sbt.burn(0, { from: SECOND }), "OwnableSBT: can't burn another user's nft");
-    });
-  });
-
-  describe("internal mint()", () => {
-    it("should correctly mint", async () => {
-      await sbt.mint(FIRST, 1);
-
-      assert.equal(await sbt.balanceOf(FIRST), 1);
-      assert.equal(await sbt.ownerOf(1), FIRST);
-      assert.equal(await sbt.isTokenExist(1), true);
+      await truffleAssert.reverts(sbt.mint(FIRST, 0, { from: SECOND }), "WhitelistedSBT: not available to claim");
     });
 
     it("should not mint to null address", async () => {
@@ -142,7 +93,17 @@ describe("SBT", () => {
     });
   });
 
-  describe("abstract burn()", () => {
+  describe("burn()", () => {
+    it("should correctly burn own token", async () => {
+      await sbt.mint(FIRST, 0);
+
+      await sbt.burnMock(0);
+
+      assert.equal(await sbt.balanceOf(FIRST), 0);
+      assert.equal(await sbt.ownerOf(0), ZERO_ADDR);
+      assert.equal(await sbt.isTokenExist(0), false);
+    });
+
     it("should not burn sbt that don't exist", async () => {
       await truffleAssert.reverts(sbt.burnMock(1), "SBT: sbt you want to burn don't exist");
     });
@@ -150,8 +111,7 @@ describe("SBT", () => {
 
   describe("setTokenURI()", () => {
     it("should correctly set uri for existent token", async () => {
-      await sbt.addToAvailable([FIRST]);
-      await sbt.mint();
+      await sbt.mint(FIRST, 0);
       await sbt.setTokenURI(0, "test");
       assert.equal(await sbt.tokenURI(0), "test");
     });
