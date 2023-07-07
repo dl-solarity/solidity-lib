@@ -89,12 +89,6 @@ abstract contract SBT is ISBT, Initializable {
         emit Burned(owner_, tokenId_);
     }
 
-    /**
-     * @notice Sets URI for particular token
-     * @dev Internal function without access restriction.
-     * @param tokenId_ number of a token to change URI
-     * @param tokenURI_ URI to set for sbt
-     */
     function _setTokenURI(uint256 tokenId_, string memory tokenURI_) internal virtual {
         require(isTokenExist(tokenId_), "SBT: nonexistent tokenId");
 
