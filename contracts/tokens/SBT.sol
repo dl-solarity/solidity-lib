@@ -13,9 +13,7 @@ abstract contract SBT is ISBT, Initializable {
     string private _symbol;
 
     mapping(uint256 => string) private _tokenURIs;
-
     mapping(uint256 => address) private _tokenOwners;
-
     mapping(address => uint256) private _balances;
 
     function __SBT_init(
@@ -44,12 +42,19 @@ abstract contract SBT is ISBT, Initializable {
         return _symbol;
     }
 
+    function baseURI() public view virtual returns (string memory) {
+        return _baseTokenURI;
+    }
+
     function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
-        if (bytes(_tokenURIs[tokenId_]).length != 0) return _tokenURIs[tokenId_];
-        string memory base = _baseURI();
-        if (bytes(base).length != 0)
-            return string(bytes.concat(bytes(base), bytes(tokenId_.toString())));
-        else return "";
+        if (bytes(_tokenURIs[tokenId_]).length != 0) {
+            return _tokenURIs[tokenId_];
+        }
+
+        string memory base_ = baseURI();
+
+        return
+            bytes(base_).length != 0 ? string(abi.encodePacked(base_, tokenId_.toString())) : "";
     }
 
     function isTokenExist(uint256 tokenId_) public view override returns (bool) {
@@ -59,7 +64,7 @@ abstract contract SBT is ISBT, Initializable {
     function _mint(address to_, uint256 tokenId_) internal virtual {
         require(to_ != address(0), "SBT: invalidReceiver(address(0)");
 
-        require(_ownerOf(tokenId_) == address(0), "SBT: already exist tokenId");
+        require(!isTokenExist(tokenId_), "SBT: already exist tokenId");
 
         unchecked {
             _balances[to_] += 1;
@@ -75,7 +80,9 @@ abstract contract SBT is ISBT, Initializable {
 
         require(owner_ != address(0), "SBT: sbt you want to burn don't exist");
 
-        _balances[owner_] -= 1;
+        unchecked {
+            _balances[owner_] -= 1;
+        }
 
         delete _tokenOwners[tokenId_];
 
@@ -89,16 +96,12 @@ abstract contract SBT is ISBT, Initializable {
      * @param tokenURI_ URI to set for sbt
      */
     function _setTokenURI(uint256 tokenId_, string memory tokenURI_) internal virtual {
-        require(_ownerOf(tokenId_) != address(0), "SBT: nonexistent tokenId");
+        require(isTokenExist(tokenId_), "SBT: nonexistent tokenId");
 
         _tokenURIs[tokenId_] = tokenURI_;
     }
 
     function _ownerOf(uint256 tokenId_) internal view virtual returns (address) {
         return _tokenOwners[tokenId_];
-    }
-
-    function _baseURI() internal view virtual returns (string memory) {
-        return _baseTokenURI;
     }
 }
