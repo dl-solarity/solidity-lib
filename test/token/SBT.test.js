@@ -10,7 +10,7 @@ const name = "testName";
 const symbol = "TS";
 const baseTokenURI = "https://ipfs.io/ipfs/QmUvdwBdr1CcfLJhxyWZiaMYM7kCciCuXx1V4EKSPWUGzu";
 
-describe.only("SBT", () => {
+describe("SBT", () => {
   let FIRST;
   let SECOND;
 
