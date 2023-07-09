@@ -42,7 +42,7 @@ abstract contract SBT is ISBT, Initializable {
         return _symbol;
     }
 
-    function baseURI() public view virtual returns (string memory) {
+    function baseURI() public view virtual override returns (string memory) {
         return _baseTokenURI;
     }
 
