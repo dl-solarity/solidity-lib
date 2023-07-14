@@ -73,4 +73,39 @@ contract ArrayHelperMock {
     function upperBound(uint256[] memory arr_, uint256 element_) external pure returns (uint256) {
         return arr_.upperBound(element_);
     }
+
+    function cropUint(
+        uint256[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (uint256[] memory) {
+        return arr_.crop(newLength_);
+    }
+
+    function cropAddress(
+        address[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (address[] memory) {
+        return arr_.crop(newLength_);
+    }
+
+    function cropBool(
+        bool[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (bool[] memory) {
+        return arr_.crop(newLength_);
+    }
+
+    function cropString(
+        string[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (string[] memory) {
+        return arr_.crop(newLength_);
+    }
+
+    function cropBytes(
+        bytes32[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (bytes32[] memory) {
+        return arr_.crop(newLength_);
+    }
 }
