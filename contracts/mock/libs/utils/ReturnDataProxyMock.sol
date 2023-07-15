@@ -41,7 +41,6 @@ contract ReturnDataProxyMock {
     using ReturnDataProxy for address;
 
     uint256 private _back;
-
     address private _target;
 
     constructor(address target_) {
@@ -56,16 +55,16 @@ contract ReturnDataProxyMock {
         _target.delegateYield(abi.encodeWithSelector(RawReturnMock.setMirror.selector, mirror_));
     }
 
-    function staticCallGetEntry() external view returns (Entry memory) {
-        _target.staticYield(abi.encodeWithSelector(RawReturnMock.getEntry.selector));
-    }
-
     function callRevertWithMessage() external {
         _target.yield(abi.encodeWithSelector(RawReturnMock.revertWithMessage.selector));
     }
 
     function delegateCallRevertWithMessage() external {
         _target.delegateYield(abi.encodeWithSelector(RawReturnMock.revertWithMessage.selector));
+    }
+
+    function staticCallGetEntry() external view returns (Entry memory) {
+        _target.staticYield(abi.encodeWithSelector(RawReturnMock.getEntry.selector));
     }
 
     function staticCallRevertWithMessage() external view {

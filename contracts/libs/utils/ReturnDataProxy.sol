@@ -7,8 +7,9 @@ pragma solidity ^0.8.4;
  */
 library ReturnDataProxy {
     /**
-     * @dev This function is used to call a function of another contract without storing the result.
+     * @notice This function is used to call a function of another contract without storing the result.
      * It uses inline assembly for efficiency and low-level control over the EVM execution.
+     * Should be used as the last call of the function as it terminates the current context.
      * @param target_ The address of the contract to call.
      * @param calldata_ The function signature and encoded arguments for the function to call.
      */
