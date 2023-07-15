@@ -54,26 +54,6 @@ contract ArrayHelperMock {
         return (to_.insert(index_, what_), to_);
     }
 
-    function countPrefixes(uint256[] memory arr_) external pure returns (uint256[] memory) {
-        return arr_.countPrefixes();
-    }
-
-    function getRangeSum(
-        uint256[] memory arr_,
-        uint256 beginIndex_,
-        uint256 endIndex_
-    ) external pure returns (uint256) {
-        return arr_.countPrefixes().getRangeSum(beginIndex_, endIndex_);
-    }
-
-    function lowerBound(uint256[] memory arr_, uint256 element_) external pure returns (uint256) {
-        return arr_.lowerBound(element_);
-    }
-
-    function upperBound(uint256[] memory arr_, uint256 element_) external pure returns (uint256) {
-        return arr_.upperBound(element_);
-    }
-
     function cropUint(
         uint256[] memory arr_,
         uint256 newLength_
@@ -107,5 +87,25 @@ contract ArrayHelperMock {
         uint256 newLength_
     ) external pure returns (bytes32[] memory) {
         return arr_.crop(newLength_);
+    }
+
+    function countPrefixes(uint256[] memory arr_) external pure returns (uint256[] memory) {
+        return arr_.countPrefixes();
+    }
+
+    function getRangeSum(
+        uint256[] memory arr_,
+        uint256 beginIndex_,
+        uint256 endIndex_
+    ) external pure returns (uint256) {
+        return arr_.countPrefixes().getRangeSum(beginIndex_, endIndex_);
+    }
+
+    function lowerBound(uint256[] memory arr_, uint256 element_) external pure returns (uint256) {
+        return arr_.lowerBound(element_);
+    }
+
+    function upperBound(uint256[] memory arr_, uint256 element_) external pure returns (uint256) {
+        return arr_.upperBound(element_);
     }
 }

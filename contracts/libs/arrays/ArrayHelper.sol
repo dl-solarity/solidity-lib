@@ -108,6 +108,74 @@ library ArrayHelper {
     }
 
     /**
+     *  @notice The function that free memory that was allocated for array
+     *  @param array_ the array to crop
+     *  @param newLength_ the new length of the array
+     *  @return ref to cropped array
+     */
+    function crop(
+        uint256[] memory array_,
+        uint256 newLength_
+    ) internal pure returns (uint256[] memory) {
+        if (newLength_ < array_.length) {
+            assembly {
+                mstore(array_, newLength_)
+            }
+        }
+
+        return array_;
+    }
+
+    function crop(
+        address[] memory array_,
+        uint256 newLength_
+    ) internal pure returns (address[] memory) {
+        if (newLength_ < array_.length) {
+            assembly {
+                mstore(array_, newLength_)
+            }
+        }
+
+        return array_;
+    }
+
+    function crop(bool[] memory array_, uint256 newLength_) internal pure returns (bool[] memory) {
+        if (newLength_ < array_.length) {
+            assembly {
+                mstore(array_, newLength_)
+            }
+        }
+
+        return array_;
+    }
+
+    function crop(
+        string[] memory array_,
+        uint256 newLength_
+    ) internal pure returns (string[] memory) {
+        if (newLength_ < array_.length) {
+            assembly {
+                mstore(array_, newLength_)
+            }
+        }
+
+        return array_;
+    }
+
+    function crop(
+        bytes32[] memory array_,
+        uint256 newLength_
+    ) internal pure returns (bytes32[] memory) {
+        if (newLength_ < array_.length) {
+            assembly {
+                mstore(array_, newLength_)
+            }
+        }
+
+        return array_;
+    }
+
+    /**
      *  @notice The function to compute the prefix sum array
      *  @param arr_ the initial array to be turned into the prefix sum array
      *  @return prefixes_ the prefix sum array
@@ -198,68 +266,5 @@ library ArrayHelper {
         }
 
         return high_;
-    }
-
-    /**
-     *  @notice The function that free memory that was allocated for array
-     *  @param array_ the array to crop
-     *  @param newLength_ the new length of the array
-     *  @return ref to cropped array
-     */
-    function crop(
-        uint256[] memory array_,
-        uint256 newLength_
-    ) internal pure returns (uint256[] memory) {
-        if (newLength_ < array_.length) {
-            assembly {
-                mstore(array_, newLength_)
-            }
-        }
-        return array_;
-    }
-
-    function crop(
-        address[] memory array_,
-        uint256 newLength_
-    ) internal pure returns (address[] memory) {
-        if (newLength_ < array_.length) {
-            assembly {
-                mstore(array_, newLength_)
-            }
-        }
-        return array_;
-    }
-
-    function crop(bool[] memory array_, uint256 newLength_) internal pure returns (bool[] memory) {
-        if (newLength_ < array_.length) {
-            assembly {
-                mstore(array_, newLength_)
-            }
-        }
-        return array_;
-    }
-
-    function crop(
-        string[] memory array_,
-        uint256 newLength_
-    ) internal pure returns (string[] memory) {
-        if (newLength_ < array_.length) {
-            assembly {
-                mstore(array_, newLength_)
-            }
-        }
-        return array_;
-    }
-
-    function crop(
-        bytes32[] memory array_,
-        uint256 newLength_
-    ) internal pure returns (bytes32[] memory) {
-        if (newLength_ < array_.length) {
-            assembly {
-                mstore(array_, newLength_)
-            }
-        }
-        return array_;
     }
 }
