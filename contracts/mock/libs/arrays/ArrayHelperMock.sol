@@ -54,6 +54,41 @@ contract ArrayHelperMock {
         return (to_.insert(index_, what_), to_);
     }
 
+    function cropUint(
+        uint256[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (uint256[] memory) {
+        return arr_.crop(newLength_);
+    }
+
+    function cropAddress(
+        address[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (address[] memory) {
+        return arr_.crop(newLength_);
+    }
+
+    function cropBool(
+        bool[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (bool[] memory) {
+        return arr_.crop(newLength_);
+    }
+
+    function cropString(
+        string[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (string[] memory) {
+        return arr_.crop(newLength_);
+    }
+
+    function cropBytes(
+        bytes32[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (bytes32[] memory) {
+        return arr_.crop(newLength_);
+    }
+
     function countPrefixes(uint256[] memory arr_) external pure returns (uint256[] memory) {
         return arr_.countPrefixes();
     }

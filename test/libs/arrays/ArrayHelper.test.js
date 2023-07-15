@@ -255,4 +255,66 @@ describe("ArrayHelperMock", () => {
       });
     });
   });
+
+  describe("crop", () => {
+    it("should crop uint256 array properly", async () => {
+      let arr = await mock.cropUint([1, 2, 3, 0], 3);
+
+      assert.equal(await arr.length, 3);
+    });
+
+    it("should crop address array properly", async () => {
+      let arr = await mock.cropAddress([FIRST, SECOND, THIRD], 2);
+
+      assert.deepEqual(await arr, [FIRST, SECOND]);
+    });
+
+    it("should crop bool array properly", async () => {
+      let arr = await mock.cropBool([true, false, true], 2);
+
+      assert.deepEqual(await arr, [true, false]);
+    });
+
+    it("should crop string array properly", async () => {
+      let arr = await mock.cropString(["a", "b", "c"], 2);
+
+      assert.deepEqual(await arr, ["a", "b"]);
+    });
+
+    it("should crop bytes32 array properly", async () => {
+      let arr = await mock.cropBytes(["0x0", "0x0"], 1);
+
+      assert.deepEqual(await arr, ["0x0000000000000000000000000000000000000000000000000000000000000000"]);
+    });
+
+    it("should not crop uint256 array if new length more than initial length", async () => {
+      let arr = await mock.cropUint([1, 2, 3, 0], 5);
+
+      assert.equal(await arr.length, 4);
+    });
+
+    it("should not crop address array if new length more than initial length", async () => {
+      let arr = await mock.cropAddress([FIRST, SECOND, THIRD], 5);
+
+      assert.equal(await arr.length, 3);
+    });
+
+    it("should not crop bool if new length more than initial length", async () => {
+      let arr = await mock.cropBool([true, false], 2);
+
+      assert.equal(await arr.length, 2);
+    });
+
+    it("should not crop string array if new length more than initial length", async () => {
+      let arr = await mock.cropString(["a", "b", "c"], 6);
+
+      assert.equal(await arr.length, 3);
+    });
+
+    it("should not crop bytes32 array if new length more than initial length", async () => {
+      let arr = await mock.cropBytes(["0x0", "0x0"], 2);
+
+      assert.equal(await arr.length, 2);
+    });
+  });
 });
