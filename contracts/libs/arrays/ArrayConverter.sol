@@ -659,24 +659,4 @@ library ArrayConverter {
             }
         }
     }
-    /*
-    function _copy(uint256 dynamic_, uint256 static_, uint256 length_) internal pure {
-        uint256 locationD;
-        uint256 locationS;
-        uint256 length;
-
-        assembly {
-            locationD := dynamic_
-            locationS := static_
-            length := mload(dynamic_)           
-            
-            for {let i := 0} lt(i, length_) {i := add(i, 1)} {
-                locationD := add(locationD, 0x20)
-
-                mstore(locationD, mload(locationS))
-
-                locationS := add(locationS, 0x20)
-            }
-        }
-    }*/
 }
