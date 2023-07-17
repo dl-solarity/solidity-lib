@@ -2,8 +2,9 @@
 pragma solidity ^0.8.4;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {ISBT} from "../interfaces/tokens/ISBT.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+
+import {ISBT} from "../interfaces/tokens/ISBT.sol";
 
 abstract contract SBT is ISBT, Initializable {
     using Strings for uint256;
@@ -43,7 +44,7 @@ abstract contract SBT is ISBT, Initializable {
     }
 
     function baseURI() public view virtual override returns (string memory) {
-        return _baseTokenURI;
+        return _baseURI();
     }
 
     function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
@@ -97,5 +98,9 @@ abstract contract SBT is ISBT, Initializable {
 
     function _ownerOf(uint256 tokenId_) internal view virtual returns (address) {
         return _tokenOwners[tokenId_];
+    }
+
+    function _baseURI() internal view virtual returns (string memory) {
+        return _baseTokenURI;
     }
 }
