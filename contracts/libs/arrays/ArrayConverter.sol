@@ -13,447 +13,670 @@ library ArrayConverter {
     function toDynamic(
         uint256[1] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
-        dynamic_ = new uint256[](1);
-        dynamic_[0] = static_[0];
+        uint256 pointerS;
+
+        assembly {
+            pointerS := static_
+        }
+
+        return _copyUint(pointerS, static_.length);
     }
 
     function toDynamic(
         uint256[2] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
-        dynamic_ = new uint256[](2);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 2; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyUint(pointerS, static_.length);
     }
 
     function toDynamic(
         uint256[3] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
-        dynamic_ = new uint256[](3);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 3; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyUint(pointerS, static_.length);
     }
 
     function toDynamic(
         uint256[4] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
-        dynamic_ = new uint256[](4);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 4; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyUint(pointerS, static_.length);
     }
 
     function toDynamic(
         uint256[5] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
-        dynamic_ = new uint256[](5);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 5; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyUint(pointerS, static_.length);
     }
 
     function toDynamic(
         uint256[6] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
-        dynamic_ = new uint256[](6);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 6; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyUint(pointerS, static_.length);
     }
 
     function toDynamic(
         uint256[7] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
-        dynamic_ = new uint256[](7);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 7; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyUint(pointerS, static_.length);
     }
 
     function toDynamic(
         uint256[8] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
-        dynamic_ = new uint256[](8);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 8; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyUint(pointerS, static_.length);
     }
 
     function toDynamic(
         uint256[9] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
-        dynamic_ = new uint256[](9);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 9; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyUint(pointerS, static_.length);
     }
 
     function toDynamic(
         uint256[10] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
-        dynamic_ = new uint256[](10);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 10; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyUint(pointerS, static_.length);
     }
 
     function toDynamic(
         address[1] memory static_
     ) internal pure returns (address[] memory dynamic_) {
-        dynamic_ = new address[](1);
-        dynamic_[0] = static_[0];
+        uint256 pointerS;
+
+        assembly {
+            pointerS := static_
+        }
+
+        return _copyAddress(pointerS, static_.length);
     }
 
     function toDynamic(
         address[2] memory static_
     ) internal pure returns (address[] memory dynamic_) {
-        dynamic_ = new address[](2);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 2; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyAddress(pointerS, static_.length);
     }
 
     function toDynamic(
         address[3] memory static_
     ) internal pure returns (address[] memory dynamic_) {
-        dynamic_ = new address[](3);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 3; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyAddress(pointerS, static_.length);
     }
 
     function toDynamic(
         address[4] memory static_
     ) internal pure returns (address[] memory dynamic_) {
-        dynamic_ = new address[](4);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 4; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyAddress(pointerS, static_.length);
     }
 
     function toDynamic(
         address[5] memory static_
     ) internal pure returns (address[] memory dynamic_) {
-        dynamic_ = new address[](5);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 5; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyAddress(pointerS, static_.length);
     }
 
     function toDynamic(
         address[6] memory static_
     ) internal pure returns (address[] memory dynamic_) {
-        dynamic_ = new address[](6);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 6; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyAddress(pointerS, static_.length);
     }
 
     function toDynamic(
         address[7] memory static_
     ) internal pure returns (address[] memory dynamic_) {
-        dynamic_ = new address[](7);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 7; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyAddress(pointerS, static_.length);
     }
 
     function toDynamic(
         address[8] memory static_
     ) internal pure returns (address[] memory dynamic_) {
-        dynamic_ = new address[](8);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 8; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyAddress(pointerS, static_.length);
     }
 
     function toDynamic(
         address[9] memory static_
     ) internal pure returns (address[] memory dynamic_) {
-        dynamic_ = new address[](9);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 9; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyAddress(pointerS, static_.length);
     }
 
     function toDynamic(
         address[10] memory static_
     ) internal pure returns (address[] memory dynamic_) {
-        dynamic_ = new address[](10);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 10; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyAddress(pointerS, static_.length);
     }
 
     function toDynamic(bool[1] memory static_) internal pure returns (bool[] memory dynamic_) {
-        dynamic_ = new bool[](1);
-        dynamic_[0] = static_[0];
+        uint256 pointerS;
+
+        assembly {
+            pointerS := static_
+        }
+
+        return _copyBool(pointerS, static_.length);
     }
 
     function toDynamic(bool[2] memory static_) internal pure returns (bool[] memory dynamic_) {
-        dynamic_ = new bool[](2);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 2; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBool(pointerS, static_.length);
     }
 
     function toDynamic(bool[3] memory static_) internal pure returns (bool[] memory dynamic_) {
-        dynamic_ = new bool[](3);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 3; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBool(pointerS, static_.length);
     }
 
     function toDynamic(bool[4] memory static_) internal pure returns (bool[] memory dynamic_) {
-        dynamic_ = new bool[](4);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 4; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBool(pointerS, static_.length);
     }
 
     function toDynamic(bool[5] memory static_) internal pure returns (bool[] memory dynamic_) {
-        dynamic_ = new bool[](5);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 5; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBool(pointerS, static_.length);
     }
 
     function toDynamic(bool[6] memory static_) internal pure returns (bool[] memory dynamic_) {
-        dynamic_ = new bool[](6);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 6; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBool(pointerS, static_.length);
     }
 
     function toDynamic(bool[7] memory static_) internal pure returns (bool[] memory dynamic_) {
-        dynamic_ = new bool[](7);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 7; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBool(pointerS, static_.length);
     }
 
     function toDynamic(bool[8] memory static_) internal pure returns (bool[] memory dynamic_) {
-        dynamic_ = new bool[](8);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 8; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBool(pointerS, static_.length);
     }
 
     function toDynamic(bool[9] memory static_) internal pure returns (bool[] memory dynamic_) {
-        dynamic_ = new bool[](9);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 9; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBool(pointerS, static_.length);
     }
 
     function toDynamic(bool[10] memory static_) internal pure returns (bool[] memory dynamic_) {
-        dynamic_ = new bool[](10);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 10; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBool(pointerS, static_.length);
     }
 
     function toDynamic(string[1] memory static_) internal pure returns (string[] memory dynamic_) {
-        dynamic_ = new string[](1);
-        dynamic_[0] = static_[0];
+        uint256 pointerS;
+
+        assembly {
+            pointerS := static_
+        }
+
+        return _copyString(pointerS, static_.length);
     }
 
     function toDynamic(string[2] memory static_) internal pure returns (string[] memory dynamic_) {
-        dynamic_ = new string[](2);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 2; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyString(pointerS, static_.length);
     }
 
     function toDynamic(string[3] memory static_) internal pure returns (string[] memory dynamic_) {
-        dynamic_ = new string[](3);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 3; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyString(pointerS, static_.length);
     }
 
     function toDynamic(string[4] memory static_) internal pure returns (string[] memory dynamic_) {
-        dynamic_ = new string[](4);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 4; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyString(pointerS, static_.length);
     }
 
     function toDynamic(string[5] memory static_) internal pure returns (string[] memory dynamic_) {
-        dynamic_ = new string[](5);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 5; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyString(pointerS, static_.length);
     }
 
     function toDynamic(string[6] memory static_) internal pure returns (string[] memory dynamic_) {
-        dynamic_ = new string[](6);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 6; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyString(pointerS, static_.length);
     }
 
     function toDynamic(string[7] memory static_) internal pure returns (string[] memory dynamic_) {
-        dynamic_ = new string[](7);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 7; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyString(pointerS, static_.length);
     }
 
     function toDynamic(string[8] memory static_) internal pure returns (string[] memory dynamic_) {
-        dynamic_ = new string[](8);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 8; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyString(pointerS, static_.length);
     }
 
     function toDynamic(string[9] memory static_) internal pure returns (string[] memory dynamic_) {
-        dynamic_ = new string[](9);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 9; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyString(pointerS, static_.length);
     }
 
     function toDynamic(
         string[10] memory static_
     ) internal pure returns (string[] memory dynamic_) {
-        dynamic_ = new string[](10);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 10; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyString(pointerS, static_.length);
     }
 
     function toDynamic(
         bytes32[1] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
-        dynamic_ = new bytes32[](1);
-        dynamic_[0] = static_[0];
+        uint256 pointerS;
+
+        assembly {
+            pointerS := static_
+        }
+
+        return _copyBytes(pointerS, static_.length);
     }
 
     function toDynamic(
         bytes32[2] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
-        dynamic_ = new bytes32[](2);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 2; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBytes(pointerS, static_.length);
     }
 
     function toDynamic(
         bytes32[3] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
-        dynamic_ = new bytes32[](3);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 3; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBytes(pointerS, static_.length);
     }
 
     function toDynamic(
         bytes32[4] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
-        dynamic_ = new bytes32[](4);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 4; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBytes(pointerS, static_.length);
     }
 
     function toDynamic(
         bytes32[5] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
-        dynamic_ = new bytes32[](5);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 5; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBytes(pointerS, static_.length);
     }
 
     function toDynamic(
         bytes32[6] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
-        dynamic_ = new bytes32[](6);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 6; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBytes(pointerS, static_.length);
     }
 
     function toDynamic(
         bytes32[7] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
-        dynamic_ = new bytes32[](7);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 7; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBytes(pointerS, static_.length);
     }
 
     function toDynamic(
         bytes32[8] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
-        dynamic_ = new bytes32[](8);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 8; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBytes(pointerS, static_.length);
     }
 
     function toDynamic(
         bytes32[9] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
-        dynamic_ = new bytes32[](9);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 9; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
         }
+
+        return _copyBytes(pointerS, static_.length);
     }
 
     function toDynamic(
         bytes32[10] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
-        dynamic_ = new bytes32[](10);
+        uint256 pointerS;
 
-        for (uint256 i = 0; i < 10; i++) {
-            dynamic_[i] = static_[i];
+        assembly {
+            pointerS := static_
+        }
+
+        return _copyBytes(pointerS, static_.length);
+    }
+
+    function _copyUint(
+        uint256 pointerS_,
+        uint256 length_
+    ) internal pure returns (uint256[] memory) {
+        uint256[] memory dynamic_ = new uint256[](length_);
+        uint256 pointerD_;
+
+        assembly {
+            pointerD_ := dynamic_
+        }
+
+        _copy(pointerD_, pointerS_, length_);
+        return dynamic_;
+    }
+
+    function _copyAddress(
+        uint256 pointerS_,
+        uint256 length_
+    ) internal pure returns (address[] memory) {
+        address[] memory dynamic_ = new address[](length_);
+        uint256 pointerD_;
+
+        assembly {
+            pointerD_ := dynamic_
+        }
+
+        _copy(pointerD_, pointerS_, length_);
+        return dynamic_;
+    }
+
+    function _copyBool(uint256 pointerS_, uint256 length_) internal pure returns (bool[] memory) {
+        bool[] memory dynamic_ = new bool[](length_);
+        uint256 pointerD_;
+
+        assembly {
+            pointerD_ := dynamic_
+        }
+
+        _copy(pointerD_, pointerS_, length_);
+        return dynamic_;
+    }
+
+    function _copyString(
+        uint256 pointerS_,
+        uint256 length_
+    ) internal pure returns (string[] memory) {
+        string[] memory dynamic_ = new string[](length_);
+        uint256 pointerD_;
+
+        assembly {
+            pointerD_ := dynamic_
+        }
+
+        _copy(pointerD_, pointerS_, length_);
+        return dynamic_;
+    }
+
+    function _copyBytes(
+        uint256 pointerS_,
+        uint256 length_
+    ) internal pure returns (bytes32[] memory) {
+        bytes32[] memory dynamic_ = new bytes32[](length_);
+        uint256 pointerD_;
+
+        assembly {
+            pointerD_ := dynamic_
+        }
+
+        _copy(pointerD_, pointerS_, length_);
+        return dynamic_;
+    }
+
+    function _copy(uint256 locationD_, uint256 locationS_, uint256 length_) internal pure {
+        assembly {
+            for {
+                let i := 0
+            } lt(i, length_) {
+                i := add(i, 1)
+            } {
+                locationD_ := add(locationD_, 0x20)
+
+                mstore(locationD_, mload(locationS_))
+
+                locationS_ := add(locationS_, 0x20)
+            }
         }
     }
+    /*
+    function _copy(uint256 dynamic_, uint256 static_, uint256 length_) internal pure {
+        uint256 locationD;
+        uint256 locationS;
+        uint256 length;
+
+        assembly {
+            locationD := dynamic_
+            locationS := static_
+            length := mload(dynamic_)           
+            
+            for {let i := 0} lt(i, length_) {i := add(i, 1)} {
+                locationD := add(locationD, 0x20)
+
+                mstore(locationD, mload(locationS))
+
+                locationS := add(locationS, 0x20)
+            }
+        }
+    }*/
 }
