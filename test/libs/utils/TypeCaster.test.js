@@ -75,9 +75,33 @@ describe("TypeCaster", () => {
         (await mock.asSingletonArrayFromUint256(123)).map((e) => e.toNumber()),
         [123]
       );
+
       assert.deepEqual(await mock.asSingletonArrayFromAddress(ETHER_ADDR), [ETHER_ADDR]);
+      assert.deepEqual(await mock.asSingletonArrayFromBool(false), [false]);
       assert.deepEqual(await mock.asSingletonArrayFromString("1"), ["1"]);
       assert.deepEqual(await mock.asSingletonArrayFromBytes32(MOCKED_BYTES32), [MOCKED_BYTES32]);
+    });
+  });
+
+  describe("static2dynamic", () => {
+    it("should convert static uint array to dynamic", async () => {
+      assert.equal(await mock.testUint(), true);
+    });
+
+    it("should convert static address array to dynamic", async () => {
+      assert.equal(await mock.testAddress(), true);
+    });
+
+    it("should convert static bool array to dynamic", async () => {
+      assert.equal(await mock.testBool(), true);
+    });
+
+    it("should convert static string array to dynamic", async () => {
+      assert.equal(await mock.testString(), true);
+    });
+
+    it("should convert static bytes32 array to dynamic", async () => {
+      assert.equal(await mock.testBytes32(), true);
     });
   });
 });
