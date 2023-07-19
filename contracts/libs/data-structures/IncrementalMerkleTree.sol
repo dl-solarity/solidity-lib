@@ -49,7 +49,7 @@ pragma solidity ^0.8.4;
 library IncrementalMerkleTree {
     /**
      *********************
-     *     UintIMT      *
+     *      UintIMT      *
      *********************
      */
 
@@ -100,7 +100,7 @@ library IncrementalMerkleTree {
 
     /**
      **********************
-     *    Bytes32IMT     *
+     *     Bytes32IMT     *
      **********************
      */
 
@@ -126,7 +126,7 @@ library IncrementalMerkleTree {
 
     /**
      ************************
-     *     AddressIMT      *
+     *      AddressIMT      *
      ************************
      */
 
@@ -152,7 +152,7 @@ library IncrementalMerkleTree {
 
     /**
      ************************
-     *     InnerIMT        *
+     *       InnerIMT       *
      ************************
      */
 
@@ -248,7 +248,7 @@ library IncrementalMerkleTree {
         return tree.leavesCount;
     }
 
-    function _getZeroHashes(uint256 height_) private view returns (bytes32[] memory) {
+    function _getZeroHashes(uint256 height_) private pure returns (bytes32[] memory) {
         bytes32[] memory zeroHashes_ = new bytes32[](height_);
 
         zeroHashes_[0] = ZERO_HASH;

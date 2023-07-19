@@ -32,7 +32,7 @@ library PriorityQueue {
 
     /**
      ************************
-     *     UintQueue       *
+     *      UintQueue       *
      ************************
      */
 
@@ -112,7 +112,7 @@ library PriorityQueue {
 
     /**
      ************************
-     *    Bytes32Queue     *
+     *     Bytes32Queue     *
      ************************
      */
 
@@ -153,7 +153,7 @@ library PriorityQueue {
 
     /**
      ************************
-     *    AddressQueue     *
+     *     AddressQueue     *
      ************************
      */
 
@@ -195,7 +195,7 @@ library PriorityQueue {
 
     /**
      ************************
-     *   Internal Queue    *
+     *    Internal Queue    *
      ************************
      */
 

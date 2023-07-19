@@ -34,7 +34,7 @@ library Vector {
 
     /**
      ************************
-     *     UintVector      *
+     *      UintVector      *
      ************************
      */
 
@@ -129,7 +129,7 @@ library Vector {
 
     /**
      ************************
-     *    Bytes32Vector    *
+     *     Bytes32Vector    *
      ************************
      */
 
@@ -177,7 +177,7 @@ library Vector {
 
     /**
      ************************
-     *    AddressVector    *
+     *     AddressVector    *
      ************************
      */
 
@@ -225,7 +225,7 @@ library Vector {
 
     /**
      ************************
-     *     InnerVector     *
+     *      InnerVector     *
      ************************
      */
 
