@@ -9,10 +9,10 @@ import {SetHelper} from "../../libs/arrays/SetHelper.sol";
 import {RBAC} from "../RBAC.sol";
 
 /**
- *  @notice The Role Based Access Control (RBAC) module
+ * @notice The Role Based Access Control (RBAC) module
  *
- *  This contract is an extension for the RBAC contract to provide the ability to organize roles
- *  into groups and assign users to them.
+ * This contract is an extension for the RBAC contract to provide the ability to organize roles
+ * into groups and assign users to them.
  */
 abstract contract RBACGroupable is IRBACGroupable, RBAC {
     using StringSet for StringSet.Set;
@@ -24,16 +24,16 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     mapping(string => StringSet.Set) private _groupRoles;
 
     /**
-     *  @notice The init function
+     * @notice The init function
      */
     function __RBACGroupable_init() internal onlyInitializing {
         __RBAC_init();
     }
 
     /**
-     *  @notice The function to assign the user to groups
-     *  @param who_ the user to be assigned
-     *  @param groupsToAddTo_ the list of groups to assign the user to
+     * @notice The function to assign the user to groups
+     * @param who_ the user to be assigned
+     * @param groupsToAddTo_ the list of groups to assign the user to
      */
     function addUserToGroups(
         address who_,
@@ -45,9 +45,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
-     *  @notice The function to remove the user from groups
-     *  @param who_ the user to be removed from groups
-     *  @param groupsToRemoveFrom_ the list of groups to remove the user from
+     * @notice The function to remove the user from groups
+     * @param who_ the user to be removed from groups
+     * @param groupsToRemoveFrom_ the list of groups to remove the user from
      */
     function removeUserFromGroups(
         address who_,
@@ -59,9 +59,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
-     *  @notice The function to grant roles to the group
-     *  @param groupTo_ the group to grant roles to
-     *  @param rolesToGrant_ the list of roles to grant
+     * @notice The function to grant roles to the group
+     * @param groupTo_ the group to grant roles to
+     * @param rolesToGrant_ the list of roles to grant
      */
     function grantGroupRoles(
         string memory groupTo_,
@@ -73,9 +73,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
-     *  @notice The function to revoke roles from the group
-     *  @param groupFrom_ the group to revoke roles from
-     *  @param rolesToRevoke_ the list of roles to revoke
+     * @notice The function to revoke roles from the group
+     * @param groupFrom_ the group to revoke roles from
+     * @param rolesToRevoke_ the list of roles to revoke
      */
     function revokeGroupRoles(
         string memory groupFrom_,
@@ -102,9 +102,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
-     *  @notice The function to get the list of user groups
-     *  @param who_ the user
-     *  @return groups_ the list of user groups
+     * @notice The function to get the list of user groups
+     * @param who_ the user
+     * @return groups_ the list of user groups
      */
     function getUserGroups(address who_) public view override returns (string[] memory groups_) {
         StringSet.Set storage userGroups = _userGroups[who_];
@@ -119,9 +119,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
-     *  @notice The function to get the list of groups roles
-     *  @param group_ the group
-     *  @return roles_ the list of group roles
+     * @notice The function to get the list of groups roles
+     * @param group_ the group
+     * @return roles_ the list of group roles
      */
     function getGroupRoles(
         string memory group_
@@ -130,22 +130,22 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
-     *  @notice The function to get the current state of the default group
-     *  @return defaultGroupEnabled_ the boolean indicating whether the default group is enabled
+     * @notice The function to get the current state of the default group
+     * @return defaultGroupEnabled_ the boolean indicating whether the default group is enabled
      */
     function getDefaultGroupEnabled() public view returns (bool defaultGroupEnabled_) {
         return _defaultGroupEnabled > 0;
     }
 
     /**
-     *  @dev DO NOT call `super.hasPermission(...)` in derived contracts, because this method
-     *  handles not 2 but 3 states: NO PERMISSION, ALLOWED, DISALLOWED
-     *  @notice The function to check the user's possession of the role. Unlike the base method,
-     *  this method also looks up the required permission in the user's groups
-     *  @param who_ the user
-     *  @param resource_ the resource the user has to have the permission of
-     *  @param permission_ the permission the user has to have
-     *  @return isAllowed_ true if the user has the permission, false otherwise
+     * @dev DO NOT call `super.hasPermission(...)` in derived contracts, because this method
+     * handles not 2 but 3 states: NO PERMISSION, ALLOWED, DISALLOWED
+     * @notice The function to check the user's possession of the role. Unlike the base method,
+     * this method also looks up the required permission in the user's groups
+     * @param who_ the user
+     * @param resource_ the resource the user has to have the permission of
+     * @param permission_ the permission the user has to have
+     * @return isAllowed_ true if the user has the permission, false otherwise
      */
     function hasPermission(
         address who_,
@@ -182,9 +182,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
-     *  @notice The internal function to assign groups to the user
-     *  @param who_ the user to assign groups to
-     *  @param groupsToAddTo_ the list of groups to be assigned
+     * @notice The internal function to assign groups to the user
+     * @param who_ the user to assign groups to
+     * @param groupsToAddTo_ the list of groups to be assigned
      */
     function _addUserToGroups(address who_, string[] memory groupsToAddTo_) internal {
         _userGroups[who_].add(groupsToAddTo_);
@@ -193,9 +193,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
-     *  @notice The internal function to remove the user from groups
-     *  @param who_ the user to be removed from groups
-     *  @param groupsToRemoveFrom_ the list of groups to remove the user from
+     * @notice The internal function to remove the user from groups
+     * @param who_ the user to be removed from groups
+     * @param groupsToRemoveFrom_ the list of groups to remove the user from
      */
     function _removeUserFromGroups(address who_, string[] memory groupsToRemoveFrom_) internal {
         _userGroups[who_].remove(groupsToRemoveFrom_);
@@ -204,9 +204,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
-     *  @notice The internal function to grant roles to the group
-     *  @param groupTo_ the group to grant roles to
-     *  @param rolesToGrant_ the list of roles to grant
+     * @notice The internal function to grant roles to the group
+     * @param groupTo_ the group to grant roles to
+     * @param rolesToGrant_ the list of roles to grant
      */
     function _grantGroupRoles(string memory groupTo_, string[] memory rolesToGrant_) internal {
         _groupRoles[groupTo_].add(rolesToGrant_);
@@ -215,9 +215,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     }
 
     /**
-     *  @notice The internal function to revoke roles from the group
-     *  @param groupFrom_ the group to revoke roles from
-     *  @param rolesToRevoke_ the list of roles to revoke
+     * @notice The internal function to revoke roles from the group
+     * @param groupFrom_ the group to revoke roles from
+     * @param rolesToRevoke_ the list of roles to revoke
      */
     function _revokeGroupRoles(string memory groupFrom_, string[] memory rolesToRevoke_) internal {
         _groupRoles[groupFrom_].remove(rolesToRevoke_);

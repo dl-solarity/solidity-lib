@@ -10,17 +10,17 @@ import {SetHelper} from "../libs/arrays/SetHelper.sol";
 import {StringSet} from "../libs/data-structures/StringSet.sol";
 
 /**
- *  @notice The Role Based Access Control (RBAC) module
+ * @notice The Role Based Access Control (RBAC) module
  *
- *  This is advanced module that handles role management for huge systems. One can declare specific permissions
- *  for specific resources (contracts) and aggregate them into roles for further assignment to users.
+ * This is advanced module that handles role management for huge systems. One can declare specific permissions
+ * for specific resources (contracts) and aggregate them into roles for further assignment to users.
  *
- *  Each user can have multiple roles and each role can manage multiple resources. Each resource can posses a set of
- *  permissions (CREATE, DELETE) that are only valid for that specific resource.
+ * Each user can have multiple roles and each role can manage multiple resources. Each resource can posses a set of
+ * permissions (CREATE, DELETE) that are only valid for that specific resource.
  *
- *  The RBAC model supports antipermissions as well. One can grant antipermissions to users to restrict their access level.
- *  There also is a special wildcard symbol "*" that means "everything". This symbol can be applied either to the
- *  resources or permissions.
+ * The RBAC model supports antipermissions as well. One can grant antipermissions to users to restrict their access level.
+ * There also is a special wildcard symbol "*" that means "everything". This symbol can be applied either to the
+ * resources or permissions.
  */
 abstract contract RBAC is IRBAC, Initializable {
     using StringSet for StringSet.Set;
@@ -55,16 +55,16 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The init function
+     * @notice The init function
      */
     function __RBAC_init() internal onlyInitializing {
         _addPermissionsToRole(MASTER_ROLE, ALL_RESOURCE, ALL_PERMISSION.asSingletonArray(), true);
     }
 
     /**
-     *  @notice The function to grant roles to a user
-     *  @param to_ the user to grant roles to
-     *  @param rolesToGrant_ roles to grant
+     * @notice The function to grant roles to a user
+     * @param to_ the user to grant roles to
+     * @param rolesToGrant_ roles to grant
      */
     function grantRoles(
         address to_,
@@ -76,9 +76,9 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The function to revoke roles
-     *  @param from_ the user to revoke roles from
-     *  @param rolesToRevoke_ the roles to revoke
+     * @notice The function to revoke roles
+     * @param from_ the user to revoke roles from
+     * @param rolesToRevoke_ the roles to revoke
      */
     function revokeRoles(
         address from_,
@@ -90,10 +90,10 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The function to add resource permission to role
-     *  @param role_ the role to add permissions to
-     *  @param permissionsToAdd_ the array of resources and permissions to add to the role
-     *  @param allowed_ indicates whether to add permissions to an allowlist or disallowlist
+     * @notice The function to add resource permission to role
+     * @param role_ the role to add permissions to
+     * @param permissionsToAdd_ the array of resources and permissions to add to the role
+     * @param allowed_ indicates whether to add permissions to an allowlist or disallowlist
      */
     function addPermissionsToRole(
         string memory role_,
@@ -111,10 +111,10 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The function to remove permissions from role
-     *  @param role_ the role to remove permissions from
-     *  @param permissionsToRemove_ the array of resources and permissions to remove from the role
-     *  @param allowed_ indicates whether to remove permissions from the allowlist or disallowlist
+     * @notice The function to remove permissions from role
+     * @param role_ the role to remove permissions from
+     * @param permissionsToRemove_ the array of resources and permissions to remove from the role
+     * @param allowed_ indicates whether to remove permissions from the allowlist or disallowlist
      */
     function removePermissionsFromRole(
         string memory role_,
@@ -132,19 +132,19 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The function to get the list of user roles
-     *  @param who_ the user
-     *  @return roles_ the roles of the user
+     * @notice The function to get the list of user roles
+     * @param who_ the user
+     * @return roles_ the roles of the user
      */
     function getUserRoles(address who_) public view override returns (string[] memory roles_) {
         return _userRoles[who_].values();
     }
 
     /**
-     *  @notice The function to get the permissions of the role
-     *  @param role_ the role
-     *  @return allowed_ the list of allowed permissions of the role
-     *  @return disallowed_ the list of disallowed permissions of the role
+     * @notice The function to get the permissions of the role
+     * @param role_ the role
+     * @return allowed_ the list of allowed permissions of the role
+     * @return disallowed_ the list of disallowed permissions of the role
      */
     function getRolePermissions(
         string memory role_
@@ -182,13 +182,13 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @dev DO NOT call `super.hasPermission(...)` in derived contracts, because this method
-     *  handles not 2 but 3 states: NO PERMISSION, ALLOWED, DISALLOWED
-     *  @notice The function to check the user's possession of the role
-     *  @param who_ the user
-     *  @param resource_ the resource the user has to have the permission of
-     *  @param permission_ the permission the user has to have
-     *  @return isAllowed_ true if the user has the permission, false otherwise
+     * @dev DO NOT call `super.hasPermission(...)` in derived contracts, because this method
+     * handles not 2 but 3 states: NO PERMISSION, ALLOWED, DISALLOWED
+     * @notice The function to check the user's possession of the role
+     * @param who_ the user
+     * @param resource_ the resource the user has to have the permission of
+     * @param permission_ the permission the user has to have
+     * @return isAllowed_ true if the user has the permission, false otherwise
      */
     function hasPermission(
         address who_,
@@ -209,9 +209,9 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The internal function to grant roles
-     *  @param to_ the user to grant roles to
-     *  @param rolesToGrant_ the roles to grant
+     * @notice The internal function to grant roles
+     * @param to_ the user to grant roles to
+     * @param rolesToGrant_ the roles to grant
      */
     function _grantRoles(address to_, string[] memory rolesToGrant_) internal {
         _userRoles[to_].add(rolesToGrant_);
@@ -220,9 +220,9 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The internal function to revoke roles
-     *  @param from_ the user to revoke roles from
-     *  @param rolesToRevoke_ the roles to revoke
+     * @notice The internal function to revoke roles
+     * @param from_ the user to revoke roles from
+     * @param rolesToRevoke_ the roles to revoke
      */
     function _revokeRoles(address from_, string[] memory rolesToRevoke_) internal {
         _userRoles[from_].remove(rolesToRevoke_);
@@ -231,11 +231,11 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The internal function to add permission to the role
-     *  @param role_ the role to add permissions to
-     *  @param resourceToAdd_ the resource to which the permissions belong
-     *  @param permissionsToAdd_ the permissions of the resource
-     *  @param allowed_ whether to add permissions to the allowlist or the disallowlist
+     * @notice The internal function to add permission to the role
+     * @param role_ the role to add permissions to
+     * @param resourceToAdd_ the resource to which the permissions belong
+     * @param permissionsToAdd_ the permissions of the resource
+     * @param allowed_ whether to add permissions to the allowlist or the disallowlist
      */
     function _addPermissionsToRole(
         string memory role_,
@@ -253,11 +253,11 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The internal function to remove permissions from the role
-     *  @param role_ the role to remove permissions from
-     *  @param resourceToRemove_ the resource to which the permissions belong
-     *  @param permissionsToRemove_ the permissions of the resource
-     *  @param allowed_ whether to remove permissions from the allowlist or the disallowlist
+     * @notice The internal function to remove permissions from the role
+     * @param role_ the role to remove permissions from
+     * @param resourceToRemove_ the resource to which the permissions belong
+     * @param permissionsToRemove_ the permissions of the resource
+     * @param allowed_ whether to remove permissions from the allowlist or the disallowlist
      */
     function _removePermissionsFromRole(
         string memory role_,
@@ -278,11 +278,11 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The function to check if the role has the permission
-     *  @param role_ the role to search the permission in
-     *  @param resource_ the role resource to search the permission in
-     *  @param permission_ the permission to search
-     *  @return true_ if the role has the permission, false otherwise
+     * @notice The function to check if the role has the permission
+     * @param role_ the role to search the permission in
+     * @param resource_ the role resource to search the permission in
+     * @param permission_ the permission to search
+     * @return true_ if the role has the permission, false otherwise
      */
     function _isAllowed(
         string memory role_,
@@ -301,11 +301,11 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     *  @notice The function to check if the role has the antipermission
-     *  @param role_ the role to search the antipermission in
-     *  @param resource_ the role resource to search the antipermission in
-     *  @param permission_ the antipermission to search
-     *  @return true_ if the role has the antipermission, false otherwise
+     * @notice The function to check if the role has the antipermission
+     * @param role_ the role to search the antipermission in
+     * @param resource_ the role resource to search the antipermission in
+     * @param permission_ the antipermission to search
+     * @return true_ if the role has the antipermission, false otherwise
      */
     function _isDisallowed(
         string memory role_,

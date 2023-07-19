@@ -5,7 +5,7 @@ import {Diamond} from "../../Diamond.sol";
 import {OwnableDiamondStorage} from "./OwnableDiamondStorage.sol";
 
 /**
- *  @notice The Ownable preset of Diamond proxy
+ * @notice The Ownable preset of Diamond proxy
  */
 contract OwnableDiamond is Diamond, OwnableDiamondStorage {
     constructor() {

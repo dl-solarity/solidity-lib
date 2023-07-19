@@ -2,13 +2,13 @@
 pragma solidity ^0.8.4;
 
 /**
- *  @notice This library simplifies non-obvious type castings
+ * @notice This library simplifies non-obvious type castings
  */
 library TypeCaster {
     /**
-     *  @notice The function that casts the list of `X`-type elements to the list of uint256
-     *  @param from_ the list of `X`-type elements
-     *  @return array_ the list of uint256
+     * @notice The function that casts the list of `X`-type elements to the list of uint256
+     * @param from_ the list of `X`-type elements
+     * @return array_ the list of uint256
      */
     function asUint256Array(
         bytes32[] memory from_
@@ -27,9 +27,9 @@ library TypeCaster {
     }
 
     /**
-     *  @notice The function that casts the list of `X`-type elements to the list of addresses
-     *  @param from_ the list of `X`-type elements
-     *  @return array_ the list of addresses
+     * @notice The function that casts the list of `X`-type elements to the list of addresses
+     * @param from_ the list of `X`-type elements
+     * @return array_ the list of addresses
      */
     function asAddressArray(
         bytes32[] memory from_
@@ -48,9 +48,9 @@ library TypeCaster {
     }
 
     /**
-     *  @notice The function that casts the list of `X`-type elements to the list of bytes32
-     *  @param from_ the list of `X`-type elements
-     *  @return array_ the list of bytes32
+     * @notice The function that casts the list of `X`-type elements to the list of bytes32
+     * @param from_ the list of `X`-type elements
+     * @return array_ the list of bytes32
      */
     function asBytes32Array(
         uint256[] memory from_
@@ -69,9 +69,9 @@ library TypeCaster {
     }
 
     /**
-     *  @notice The function to transform an element into an array
-     *  @param from_ the element
-     *  @return array_ the element as an array
+     * @notice The function to transform an element into an array
+     * @param from_ the element
+     * @return array_ the element as an array
      */
     function asSingletonArray(uint256 from_) internal pure returns (uint256[] memory array_) {
         array_ = new uint256[](1);
@@ -99,9 +99,9 @@ library TypeCaster {
     }
 
     /**
-     *  @notice The function to convert static array to dynamic
-     *  @param static_ the static array to convert
-     *  @return dynamic_ the converted dynamic array
+     * @notice The function to convert static array to dynamic
+     * @param static_ the static array to convert
+     * @return dynamic_ the converted dynamic array
      */
     function asDynamic(
         uint256[1] memory static_

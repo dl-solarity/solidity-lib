@@ -18,16 +18,16 @@ contract RawReturnMock {
         _mirror = mirror_;
     }
 
-    function revertWithMessage() external pure {
-        revert("test");
-    }
-
     function getMirror() external view returns (uint256) {
         return _mirror;
     }
 
     function getBalance() external view returns (uint256) {
         return address(this).balance;
+    }
+
+    function revertWithMessage() external pure {
+        revert("test");
     }
 
     function getEntry() external pure returns (Entry memory) {
@@ -54,7 +54,7 @@ contract ReturnDataProxyMock {
     }
 
     function callWithValue() external payable {
-        _target.yield(hex"", msg.value);
+        _target.yield(msg.value, hex"");
     }
 
     function callSetMirror(uint256 mirror_) external {

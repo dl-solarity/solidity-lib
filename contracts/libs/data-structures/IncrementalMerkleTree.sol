@@ -2,54 +2,54 @@
 pragma solidity ^0.8.4;
 
 /**
- *  @notice Incremental Merkle Tree module
+ * @notice Incremental Merkle Tree module
  *
- *  This implementation is a modification of the Incremental Merkle Tree data structure described
- *  in [Deposit Contract Verification](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf).
+ * This implementation is a modification of the Incremental Merkle Tree data structure described
+ * in [Deposit Contract Verification](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf).
  *
- *  This implementation aims to optimize and improve the original data structure.
+ * This implementation aims to optimize and improve the original data structure.
  *
- *  The main differences are:
- *  - No explicit constructor; the tree is initialized when the first element is added
- *  - Growth is not constrained; the height of the tree automatically increases as elements are added
+ * The main differences are:
+ * - No explicit constructor; the tree is initialized when the first element is added
+ * - Growth is not constrained; the height of the tree automatically increases as elements are added
  *
- *  Zero hashes are computed each time the getRoot function is called.
+ * Zero hashes are computed each time the getRoot function is called.
  *
- *  Gas usage for _add and _root functions (where count is the number of elements added to the tree):
+ * Gas usage for _add and _root functions (where count is the number of elements added to the tree):
  *
- *  | Statistic | _add         | _root            |
- *  | --------- | ------------ | ---------------- |
- *  | count     | 106000       | 106000           |
- *  | mean      | 36619 gas    | 71941 gas        |
- *  | std       | 3617 gas     | 4324 gas         |
- *  | min       | 34053 gas    | 28670 gas        |
- *  | 25%       | 34077 gas    | 69715 gas        |
- *  | 50%       | 36598 gas    | 72641 gas        |
- *  | 75%       | 39143 gas    | 75557 gas        |
- *  | max       | 94661 gas    | 75637 gas        |
+ * | Statistic | _add         | _root            |
+ * | --------- | ------------ | ---------------- |
+ * | count     | 106000       | 106000           |
+ * | mean      | 36619 gas    | 71941 gas        |
+ * | std       | 3617 gas     | 4324 gas         |
+ * | min       | 34053 gas    | 28670 gas        |
+ * | 25%       | 34077 gas    | 69715 gas        |
+ * | 50%       | 36598 gas    | 72641 gas        |
+ * | 75%       | 39143 gas    | 75557 gas        |
+ * | max       | 94661 gas    | 75637 gas        |
  *
- *  ## Usage example:
+ * ## Usage example:
  *
- *  ```
- *  using IncrementalMerkleTree for IncrementalMerkleTree.UintIMT;
+ * ```
+ * using IncrementalMerkleTree for IncrementalMerkleTree.UintIMT;
  *
- *  IncrementalMerkleTree.UintIMT internal uintTree;
+ * IncrementalMerkleTree.UintIMT internal uintTree;
  *
- *  ................................................
+ * ................................................
  *
- *  uintTree.add(1234);
+ * uintTree.add(1234);
  *
- *  uintTree.root();
+ * uintTree.root();
  *
- *  uintTree.height();
+ * uintTree.height();
  *
- *  uintTree.length();
- *  ```
+ * uintTree.length();
+ * ```
  */
 library IncrementalMerkleTree {
     /**
      *********************
-     *      UintIMT      *
+     *     UintIMT      *
      *********************
      */
 
@@ -58,41 +58,41 @@ library IncrementalMerkleTree {
     }
 
     /**
-     *  @notice The function to add a new element to the tree.
-     *  Complexity is O(log(n)), where n is the number of elements in the tree.
+     * @notice The function to add a new element to the tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
      *
-     *  @param tree self.
-     *  @param element_ The new element to add.
+     * @param tree self.
+     * @param element_ The new element to add.
      */
     function add(UintIMT storage tree, uint256 element_) internal {
         _add(tree._tree, bytes32(element_));
     }
 
     /**
-     *  @notice The function to return the root hash of the tree.
-     *  Complexity is O(log(n) + h), where n is the number of elements in the tree and
-     *  h is the height of the tree.
+     * @notice The function to return the root hash of the tree.
+     * Complexity is O(log(n) + h), where n is the number of elements in the tree and
+     * h is the height of the tree.
      *
-     *  @param tree self.
-     *  @return The root hash of the Merkle tree.
+     * @param tree self.
+     * @return The root hash of the Merkle tree.
      */
     function root(UintIMT storage tree) internal view returns (bytes32) {
         return _root(tree._tree);
     }
 
     /**
-     *  @notice The function to return the height of the tree. Complexity is O(1).
-     *  @param tree self.
-     *  @return The height of the Merkle tree.
+     * @notice The function to return the height of the tree. Complexity is O(1).
+     * @param tree self.
+     * @return The height of the Merkle tree.
      */
     function height(UintIMT storage tree) internal view returns (uint256) {
         return _height(tree._tree);
     }
 
     /**
-     *  @notice The function to return the number of elements in the tree. Complexity is O(1).
-     *  @param tree self.
-     *  @return The number of elements in the Merkle tree.
+     * @notice The function to return the number of elements in the tree. Complexity is O(1).
+     * @param tree self.
+     * @return The number of elements in the Merkle tree.
      */
     function length(UintIMT storage tree) internal view returns (uint256) {
         return _length(tree._tree);
@@ -100,7 +100,7 @@ library IncrementalMerkleTree {
 
     /**
      **********************
-     *     Bytes32IMT     *
+     *    Bytes32IMT     *
      **********************
      */
 
@@ -126,7 +126,7 @@ library IncrementalMerkleTree {
 
     /**
      ************************
-     *      AddressIMT      *
+     *     AddressIMT      *
      ************************
      */
 
@@ -152,7 +152,7 @@ library IncrementalMerkleTree {
 
     /**
      ************************
-     *      InnerIMT        *
+     *     InnerIMT        *
      ************************
      */
 

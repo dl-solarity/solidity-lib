@@ -4,37 +4,37 @@ pragma solidity ^0.8.4;
 import {TypeCaster} from "../../utils/TypeCaster.sol";
 
 /**
- *  @notice The memory data structures module
+ * @notice The memory data structures module
  *
- *  This library is inspired by C++ STD vector to enable push() and pop() operations for memory arrays.
+ * This library is inspired by C++ STD vector to enable push() and pop() operations for memory arrays.
  *
- *  Currently Solidity allows resizing storage arrays only, which may be a roadblock if you need to
- *  filter the elements by a specific property or add new ones without writing bulky code. The Vector library
- *  is ment to help with that.
+ * Currently Solidity allows resizing storage arrays only, which may be a roadblock if you need to
+ * filter the elements by a specific property or add new ones without writing bulky code. The Vector library
+ * is ment to help with that.
  *
- *  It is very important to create Vectors via constructors (newUint, newBytes32, newAddress) as they allocate and clean
- *  the memory for the data structure.
+ * It is very important to create Vectors via constructors (newUint, newBytes32, newAddress) as they allocate and clean
+ * the memory for the data structure.
  *
- *  The Vector works by knowing how much memory it uses (allocation) and keeping the reference to the underlying
- *  low-level Solidity array. When a new element gets pushed, the Vector tries to store it in the underlying array. If the
- *  number of elements exceed the allocation, the Vector will reallocate the array to a bigger memory chunk and store the
- *  new element there.
+ * The Vector works by knowing how much memory it uses (allocation) and keeping the reference to the underlying
+ * low-level Solidity array. When a new element gets pushed, the Vector tries to store it in the underlying array. If the
+ * number of elements exceed the allocation, the Vector will reallocate the array to a bigger memory chunk and store the
+ * new element there.
  *
- *  ## Usage example:
- *  ```
- *  using Vector for Vector.UintVector;
+ * ## Usage example:
+ * ```
+ * using Vector for Vector.UintVector;
  *
- *  Vector.UintVector memory vector = Vector.newUint();
+ * Vector.UintVector memory vector = Vector.newUint();
  *
- *  vector.push(123);
- *  ```
+ * vector.push(123);
+ * ```
  */
 library Vector {
     using TypeCaster for *;
 
     /**
      ************************
-     *      UintVector      *
+     *     UintVector      *
      ************************
      */
 
@@ -43,85 +43,85 @@ library Vector {
     }
 
     /**
-     *  @notice The UintVector constructor, creates an empty vector instance, O(1) complex
-     *  @return vector the newly created instance
+     * @notice The UintVector constructor, creates an empty vector instance, O(1) complex
+     * @return vector the newly created instance
      */
     function newUint() internal pure returns (UintVector memory vector) {
         vector._vector = _new();
     }
 
     /**
-     *  @notice The UintVector constructor, creates a vector instance with defined length, O(n) complex
-     *  @dev The length_ number of default value elements will be added to the vector
-     *  @param length_ the initial number of elements
-     *  @return vector the newly created instance
+     * @notice The UintVector constructor, creates a vector instance with defined length, O(n) complex
+     * @dev The length_ number of default value elements will be added to the vector
+     * @param length_ the initial number of elements
+     * @return vector the newly created instance
      */
     function newUint(uint256 length_) internal pure returns (UintVector memory vector) {
         vector._vector = _new(length_);
     }
 
     /**
-     *  @notice The UintVector constructor, creates a vector instance from the array, O(1) complex
-     *  @param array_ the initial array
-     *  @return vector the newly created instance
+     * @notice The UintVector constructor, creates a vector instance from the array, O(1) complex
+     * @param array_ the initial array
+     * @return vector the newly created instance
      */
     function newUint(uint256[] memory array_) internal pure returns (UintVector memory vector) {
         vector._vector = _new(array_.asBytes32Array());
     }
 
     /**
-     *  @notice The function to push new elements to the vector, amortized O(1)
-     *  @param vector self
-     *  @param value_ the new elements to add
+     * @notice The function to push new elements to the vector, amortized O(1)
+     * @param vector self
+     * @param value_ the new elements to add
      */
     function push(UintVector memory vector, uint256 value_) internal pure {
         _push(vector._vector, bytes32(value_));
     }
 
     /**
-     *  @notice The function to pop the last element from the vector, O(1)
-     *  @param vector self
+     * @notice The function to pop the last element from the vector, O(1)
+     * @param vector self
      */
     function pop(UintVector memory vector) internal pure {
         _pop(vector._vector);
     }
 
     /**
-     *  @notice The function to assign the value to a vector element
-     *  @param vector self
-     *  @param index_ the index of the element to be assigned
-     *  @param value_ the value to assign
+     * @notice The function to assign the value to a vector element
+     * @param vector self
+     * @param index_ the index of the element to be assigned
+     * @param value_ the value to assign
      */
     function set(UintVector memory vector, uint256 index_, uint256 value_) internal pure {
         _set(vector._vector, index_, bytes32(value_));
     }
 
     /**
-     *  @notice The function to read the element of the vector
-     *  @param vector self
-     *  @param index_ the index of the element to read
-     *  @return the vector element
+     * @notice The function to read the element of the vector
+     * @param vector self
+     * @param index_ the index of the element to read
+     * @return the vector element
      */
     function at(UintVector memory vector, uint256 index_) internal pure returns (uint256) {
         return uint256(_at(vector._vector, index_));
     }
 
     /**
-     *  @notice The function to get the number of vector elements
-     *  @param vector self
-     *  @return the number of vector elements
+     * @notice The function to get the number of vector elements
+     * @param vector self
+     * @return the number of vector elements
      */
     function length(UintVector memory vector) internal pure returns (uint256) {
         return _length(vector._vector);
     }
 
     /**
-     *  @notice The function to cast the vector to an array
-     *  @dev The function returns the *reference* to the underlying array. Modifying the reference
-     *  will also modify the vector itself. However, this might not always be the case as the vector
-     *  resizes
-     *  @param vector self
-     *  @return the reference to the solidity array of elements
+     * @notice The function to cast the vector to an array
+     * @dev The function returns the *reference* to the underlying array. Modifying the reference
+     * will also modify the vector itself. However, this might not always be the case as the vector
+     * resizes
+     * @param vector self
+     * @return the reference to the solidity array of elements
      */
     function toArray(UintVector memory vector) internal pure returns (uint256[] memory) {
         return _toArray(vector._vector).asUint256Array();
@@ -129,7 +129,7 @@ library Vector {
 
     /**
      ************************
-     *     Bytes32Vector    *
+     *    Bytes32Vector    *
      ************************
      */
 
@@ -177,7 +177,7 @@ library Vector {
 
     /**
      ************************
-     *     AddressVector    *
+     *    AddressVector    *
      ************************
      */
 
@@ -225,7 +225,7 @@ library Vector {
 
     /**
      ************************
-     *      InnerVector     *
+     *     InnerVector     *
      ************************
      */
 

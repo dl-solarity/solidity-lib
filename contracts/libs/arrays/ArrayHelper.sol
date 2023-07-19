@@ -4,13 +4,13 @@ pragma solidity ^0.8.4;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
- *  @notice A simple library to work with arrays
+ * @notice A simple library to work with arrays
  */
 library ArrayHelper {
     /**
-     *  @notice The function to reverse an array
-     *  @param arr_ the array to reverse
-     *  @return reversed_ the reversed array
+     * @notice The function to reverse an array
+     * @param arr_ the array to reverse
+     * @return reversed_ the reversed array
      */
     function reverse(uint256[] memory arr_) internal pure returns (uint256[] memory reversed_) {
         reversed_ = new uint256[](arr_.length);
@@ -53,11 +53,11 @@ library ArrayHelper {
     }
 
     /**
-     *  @notice The function to insert an array into the other array
-     *  @param to_ the array to insert into
-     *  @param index_ the insertion starting index
-     *  @param what_ the array to be inserted
-     *  @return the index to start the next insertion from
+     * @notice The function to insert an array into the other array
+     * @param to_ the array to insert into
+     * @param index_ the insertion starting index
+     * @param what_ the array to be inserted
+     * @return the index to start the next insertion from
      */
     function insert(
         uint256[] memory to_,
@@ -108,10 +108,10 @@ library ArrayHelper {
     }
 
     /**
-     *  @notice The function that free memory that was allocated for array
-     *  @param array_ the array to crop
-     *  @param newLength_ the new length of the array
-     *  @return ref to cropped array
+     * @notice The function that free memory that was allocated for array
+     * @param array_ the array to crop
+     * @param newLength_ the new length of the array
+     * @return ref to cropped array
      */
     function crop(
         uint256[] memory array_,
@@ -176,9 +176,9 @@ library ArrayHelper {
     }
 
     /**
-     *  @notice The function to compute the prefix sum array
-     *  @param arr_ the initial array to be turned into the prefix sum array
-     *  @return prefixes_ the prefix sum array
+     * @notice The function to compute the prefix sum array
+     * @param arr_ the initial array to be turned into the prefix sum array
+     * @return prefixes_ the prefix sum array
      */
     function countPrefixes(
         uint256[] memory arr_
@@ -196,11 +196,11 @@ library ArrayHelper {
     }
 
     /**
-     *  @notice The function that calculates the sum of all array elements from `beginIndex_` to
-     *  `endIndex_` inclusive using its prefix sum array
-     *  @param beginIndex_ the index of the first range element
-     *  @param endIndex_ the index of the last range element
-     *  @return the sum of all elements of the range
+     * @notice The function that calculates the sum of all array elements from `beginIndex_` to
+     * `endIndex_` inclusive using its prefix sum array
+     * @param beginIndex_ the index of the first range element
+     * @param endIndex_ the index of the last range element
+     * @return the sum of all elements of the range
      */
     function getRangeSum(
         uint256[] memory prefixes_,
@@ -217,11 +217,11 @@ library ArrayHelper {
     }
 
     /**
-     *  @notice The function that searches for the index of the first occurring element, which is
-     *  greater than or equal to the `element_`. The time complexity is O(log n)
-     *  @param array_ the array to search in
-     *  @param element_ the element
-     *  @return index_ the index of the found element or the length of the `array_` if no such element
+     * @notice The function that searches for the index of the first occurring element, which is
+     * greater than or equal to the `element_`. The time complexity is O(log n)
+     * @param array_ the array to search in
+     * @param element_ the element
+     * @return index_ the index of the found element or the length of the `array_` if no such element
      */
     function lowerBound(
         uint256[] memory array_,
@@ -243,11 +243,11 @@ library ArrayHelper {
     }
 
     /**
-     *  @notice The function that searches for the index of the first occurring element, which is
-     *  greater than the `element_`. The time complexity is O(log n)
-     *  @param array_ the array to search in
-     *  @param element_ the element
-     *  @return index_ the index of the found element or the length of the `array_` if no such element
+     * @notice The function that searches for the index of the first occurring element, which is
+     * greater than the `element_`. The time complexity is O(log n)
+     * @param array_ the array to search in
+     * @param element_ the element
+     * @return index_ the index of the found element or the length of the `array_` if no such element
      */
     function upperBound(
         uint256[] memory array_,

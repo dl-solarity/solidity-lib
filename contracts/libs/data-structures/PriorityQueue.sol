@@ -4,35 +4,35 @@ pragma solidity ^0.8.4;
 import {TypeCaster} from "../utils/TypeCaster.sol";
 
 /**
- *  @notice The library that realizes a heap based priority queue.
+ * @notice The library that realizes a heap based priority queue.
  *
- *  Courtesy of heap property,
- *  add() and removeTop() operations are O(log(n)) complex
- *  top(), topValue() operations are O(1)
+ * Courtesy of heap property,
+ * add() and removeTop() operations are O(log(n)) complex
+ * top(), topValue() operations are O(1)
  *
- *  The library might be useful to implement priority withdrawals/purchases, reputation based systems, and similar logic.
+ * The library might be useful to implement priority withdrawals/purchases, reputation based systems, and similar logic.
  *
- *  The library is a maximal priority queue. The element with the highest priority is the topmost element.
- *  If you wish a minimal queue, change the priority of the elements to type(uint256).max - priority.
+ * The library is a maximal priority queue. The element with the highest priority is the topmost element.
+ * If you wish a minimal queue, change the priority of the elements to type(uint256).max - priority.
  *
- *  IMPORTANT
- *  The queue order of the elements is NOT guaranteed.
- *  The interaction with the data structure must be made via the topmost element only.
+ * IMPORTANT
+ * The queue order of the elements is NOT guaranteed.
+ * The interaction with the data structure must be made via the topmost element only.
  *
- *  ## Usage example:
+ * ## Usage example:
  *
- *  ```
- *  using PriorityQueue for PriorityQueue.UintQueue;
- *  using PriorityQueue for PriorityQueue.AddressQueue;
- *  using PriorityQueue for PriorityQueue.Bytes32Queue;
- *  ```
+ * ```
+ * using PriorityQueue for PriorityQueue.UintQueue;
+ * using PriorityQueue for PriorityQueue.AddressQueue;
+ * using PriorityQueue for PriorityQueue.Bytes32Queue;
+ * ```
  */
 library PriorityQueue {
     using TypeCaster for *;
 
     /**
      ************************
-     *      UintQueue       *
+     *     UintQueue       *
      ************************
      */
 
@@ -41,36 +41,36 @@ library PriorityQueue {
     }
 
     /**
-     *  @notice The function to add an element to the queue. O(log(n)) complex
-     *  @param queue self
-     *  @param value_ the element value
-     *  @param priority_ the element priority
+     * @notice The function to add an element to the queue. O(log(n)) complex
+     * @param queue self
+     * @param value_ the element value
+     * @param priority_ the element priority
      */
     function add(UintQueue storage queue, uint256 value_, uint256 priority_) internal {
         _add(queue._queue, bytes32(value_), priority_);
     }
 
     /**
-     *  @notice The function to remove the element with the highest priority. O(log(n)) complex
-     *  @param queue self
+     * @notice The function to remove the element with the highest priority. O(log(n)) complex
+     * @param queue self
      */
     function removeTop(UintQueue storage queue) internal {
         _removeTop(queue._queue);
     }
 
     /**
-     *  @notice The function to read the value of the element with the highest priority. O(1) complex
-     *  @param queue self
-     *  @return the value of the element with the highest priority
+     * @notice The function to read the value of the element with the highest priority. O(1) complex
+     * @param queue self
+     * @return the value of the element with the highest priority
      */
     function topValue(UintQueue storage queue) internal view returns (uint256) {
         return uint256(_topValue(queue._queue));
     }
 
     /**
-     *  @notice The function to read the element with the highest priority. O(1) complex
-     *  @param queue self
-     *  @return the element with the highest priority
+     * @notice The function to read the element with the highest priority. O(1) complex
+     * @param queue self
+     * @return the element with the highest priority
      */
     function top(UintQueue storage queue) internal view returns (uint256, uint256) {
         (bytes32 value_, uint256 priority_) = _top(queue._queue);
@@ -79,30 +79,30 @@ library PriorityQueue {
     }
 
     /**
-     *  @notice The function to read the size of the queue. O(1) complex
-     *  @param queue self
-     *  @return the size of the queue
+     * @notice The function to read the size of the queue. O(1) complex
+     * @param queue self
+     * @return the size of the queue
      */
     function length(UintQueue storage queue) internal view returns (uint256) {
         return _length(queue._queue);
     }
 
     /**
-     *  @notice The function to get the values stored in the queue. O(n) complex
-     *  It is very expensive to call this function as it reads all the queue elements. Use cautiously
-     *  @param queue self
-     *  @return values_ the values of the elements stored
+     * @notice The function to get the values stored in the queue. O(n) complex
+     * It is very expensive to call this function as it reads all the queue elements. Use cautiously
+     * @param queue self
+     * @return values_ the values of the elements stored
      */
     function values(UintQueue storage queue) internal view returns (uint256[] memory values_) {
         return _values(queue._queue).asUint256Array();
     }
 
     /**
-     *  @notice The function to get the values and priorities stored in the queue. O(n) complex
-     *  It is very expensive to call this function as it reads all the queue elements. Use cautiously
-     *  @param queue self
-     *  @return values_ the values of the elements stored
-     *  @return priorities_ the priorities of the elements stored
+     * @notice The function to get the values and priorities stored in the queue. O(n) complex
+     * It is very expensive to call this function as it reads all the queue elements. Use cautiously
+     * @param queue self
+     * @return values_ the values of the elements stored
+     * @return priorities_ the priorities of the elements stored
      */
     function elements(
         UintQueue storage queue
@@ -112,7 +112,7 @@ library PriorityQueue {
 
     /**
      ************************
-     *     Bytes32Queue     *
+     *    Bytes32Queue     *
      ************************
      */
 
@@ -153,7 +153,7 @@ library PriorityQueue {
 
     /**
      ************************
-     *     AddressQueue     *
+     *    AddressQueue     *
      ************************
      */
 
@@ -195,7 +195,7 @@ library PriorityQueue {
 
     /**
      ************************
-     *    Internal Queue    *
+     *   Internal Queue    *
      ************************
      */
 

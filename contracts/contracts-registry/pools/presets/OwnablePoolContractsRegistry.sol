@@ -6,7 +6,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {AbstractPoolContractsRegistry} from "../AbstractPoolContractsRegistry.sol";
 
 /**
- *  @notice The Ownable preset of PoolContractsRegistry
+ * @notice The Ownable preset of PoolContractsRegistry
  */
 abstract contract OwnablePoolContractsRegistry is
     AbstractPoolContractsRegistry,

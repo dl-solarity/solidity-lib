@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 /**
- *  @notice The Compound Rate Keeper module
+ * @notice The Compound Rate Keeper module
  */
 interface ICompoundRateKeeper {
     event CapitalizationPeriodChanged(uint256 newCapitalizationPeriod);

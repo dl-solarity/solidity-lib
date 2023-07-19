@@ -7,17 +7,17 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {DiamondStorage} from "./DiamondStorage.sol";
 
 /**
- *  @notice The Diamond standard module
+ * @notice The Diamond standard module
  *
- *  This is a custom implementation of a Diamond Proxy standard (https://eips.ethereum.org/EIPS/eip-2535).
- *  This contract acts as a highest level contract of that standard. What is different from the EIP2535,
- *  in order to use the DiamondStorage, storage is defined in a separate contract that the facets have to inherit from,
- *  not an internal library.
+ * This is a custom implementation of a Diamond Proxy standard (https://eips.ethereum.org/EIPS/eip-2535).
+ * This contract acts as a highest level contract of that standard. What is different from the EIP2535,
+ * in order to use the DiamondStorage, storage is defined in a separate contract that the facets have to inherit from,
+ * not an internal library.
  *
- *  As a convention, view and pure function should be defined in the storage contract while function that modify state, in
- *  the facet itself.
+ * As a convention, view and pure function should be defined in the storage contract while function that modify state, in
+ * the facet itself.
  *
- *  If you wish to add a receive() function, you can attach a "0x00000000" selector to a facet that has such function.
+ * If you wish to add a receive() function, you can attach a "0x00000000" selector to a facet that has such function.
  */
 contract Diamond is DiamondStorage {
     using Address for address;
@@ -25,7 +25,7 @@ contract Diamond is DiamondStorage {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     /**
-     *  @notice The payable fallback function that delegatecall's the facet with associated selector
+     * @notice The payable fallback function that delegatecall's the facet with associated selector
      */
     // solhint-disable-next-line
     fallback() external payable virtual {
@@ -51,9 +51,9 @@ contract Diamond is DiamondStorage {
     }
 
     /**
-     *  @notice The internal function to add facets to a diamond (aka diamondCut())
-     *  @param facet_ the implementation address
-     *  @param selectors_ the function selectors the implementation has
+     * @notice The internal function to add facets to a diamond (aka diamondCut())
+     * @param facet_ the implementation address
+     * @param selectors_ the function selectors the implementation has
      */
     function _addFacet(address facet_, bytes4[] memory selectors_) internal {
         require(facet_.isContract(), "Diamond: facet is not a contract");
@@ -75,9 +75,9 @@ contract Diamond is DiamondStorage {
     }
 
     /**
-     *  @notice The internal function to remove facets from the diamond
-     *  @param facet_ the implementation to be removed. The facet itself will be removed only if there are no selectors left
-     *  @param selectors_ the selectors of that implementation to be removed
+     * @notice The internal function to remove facets from the diamond
+     * @param facet_ the implementation to be removed. The facet itself will be removed only if there are no selectors left
+     * @param selectors_ the selectors of that implementation to be removed
      */
     function _removeFacet(address facet_, bytes4[] memory selectors_) internal {
         require(selectors_.length > 0, "Diamond: no selectors provided");
@@ -100,10 +100,10 @@ contract Diamond is DiamondStorage {
     }
 
     /**
-     *  @notice The internal function to update the facets of the diamond
-     *  @param facet_ the facet to update
-     *  @param fromSelectors_ the selectors to remove from the facet
-     *  @param toSelectors_ the selectors to add to the facet
+     * @notice The internal function to update the facets of the diamond
+     * @param facet_ the facet to update
+     * @param fromSelectors_ the selectors to remove from the facet
+     * @param toSelectors_ the selectors to add to the facet
      */
     function _updateFacet(
         address facet_,

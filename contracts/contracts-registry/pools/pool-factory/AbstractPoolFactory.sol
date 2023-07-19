@@ -9,20 +9,20 @@ import {AbstractPoolContractsRegistry} from "../AbstractPoolContractsRegistry.so
 import {PublicBeaconProxy} from "./proxy/PublicBeaconProxy.sol";
 
 /**
- *  @notice The PoolContractsRegistry module
+ * @notice The PoolContractsRegistry module
  *
- *  This is an abstract factory contract that is used in pair with the PoolContractsRegistry contract to
- *  deploy, register and inject pools.
+ * This is an abstract factory contract that is used in pair with the PoolContractsRegistry contract to
+ * deploy, register and inject pools.
  *
- *  The actual `deploy()` function has to be implemented in the descendants of this contract. The deployment
- *  is made via the BeaconProxy pattern.
+ * The actual `deploy()` function has to be implemented in the descendants of this contract. The deployment
+ * is made via the BeaconProxy pattern.
  */
 abstract contract AbstractPoolFactory is AbstractDependant {
     address internal _contractsRegistry;
 
     /**
-     *  @notice The function that accepts dependencies from the ContractsRegistry, can be overridden
-     *  @param contractsRegistry_ the dependency registry
+     * @notice The function that accepts dependencies from the ContractsRegistry, can be overridden
+     * @param contractsRegistry_ the dependency registry
      */
     function setDependencies(
         address contractsRegistry_,
@@ -32,8 +32,8 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     }
 
     /**
-     *  @notice The internal deploy function that deploys BeaconProxy pointing to the
-     *  pool implementation taken from the PoolContractRegistry
+     * @notice The internal deploy function that deploys BeaconProxy pointing to the
+     * pool implementation taken from the PoolContractRegistry
      */
     function _deploy(address poolRegistry_, string memory poolType_) internal returns (address) {
         return
@@ -46,8 +46,8 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     }
 
     /**
-     *  @notice The internal deploy function that deploys BeaconProxy pointing to the
-     *  pool implementation taken from the PoolContractRegistry using the create2 mechanism
+     * @notice The internal deploy function that deploys BeaconProxy pointing to the
+     * pool implementation taken from the PoolContractRegistry using the create2 mechanism
      */
     function _deploy2(
         address poolRegistry_,
@@ -64,7 +64,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     }
 
     /**
-     *  @notice The internal function that registers newly deployed pool in the provided PoolContractRegistry
+     * @notice The internal function that registers newly deployed pool in the provided PoolContractRegistry
      */
     function _register(
         address poolRegistry_,
@@ -79,8 +79,8 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     }
 
     /**
-     *  @notice The function that injects dependencies to the newly deployed pool and sets
-     *  provided PoolContractsRegistry as an injector
+     * @notice The function that injects dependencies to the newly deployed pool and sets
+     * provided PoolContractsRegistry as an injector
      */
     function _injectDependencies(address poolRegistry_, address proxy_) internal {
         AbstractDependant(proxy_).setDependencies(_contractsRegistry, bytes(""));
@@ -88,7 +88,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     }
 
     /**
-     *  @notice The view function that computes the address of the pool if deployed via _deploy2
+     * @notice The view function that computes the address of the pool if deployed via _deploy2
      */
     function _predictPoolAddress(
         address poolRegistry_,
