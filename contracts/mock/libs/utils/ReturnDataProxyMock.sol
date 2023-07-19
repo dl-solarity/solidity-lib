@@ -44,7 +44,7 @@ contract RawReturnMock {
 }
 
 contract ReturnDataProxyMock {
-    using ReturnDataProxy for *;
+    using ReturnDataProxy for address;
 
     uint256 private _back;
     address private _target;
@@ -54,7 +54,7 @@ contract ReturnDataProxyMock {
     }
 
     function callWithValue() external payable {
-        payable(_target).yield(hex"", msg.value);
+        _target.yield(hex"", msg.value);
     }
 
     function callSetMirror(uint256 mirror_) external {
