@@ -12,6 +12,8 @@ struct Entry {
 contract RawReturnMock {
     uint256 private _mirror;
 
+    receive() external payable {}
+
     function setMirror(uint256 mirror_) external {
         _mirror = mirror_;
     }
@@ -22,6 +24,10 @@ contract RawReturnMock {
 
     function getMirror() external view returns (uint256) {
         return _mirror;
+    }
+
+    function getBalance() external view returns (uint256) {
+        return address(this).balance;
     }
 
     function getEntry() external pure returns (Entry memory) {
@@ -38,13 +44,17 @@ contract RawReturnMock {
 }
 
 contract ReturnDataProxyMock {
-    using ReturnDataProxy for address;
+    using ReturnDataProxy for *;
 
     uint256 private _back;
     address private _target;
 
     constructor(address target_) {
         _target = target_;
+    }
+
+    function callWithValue() external payable {
+        payable(_target).yield(hex"", msg.value);
     }
 
     function callSetMirror(uint256 mirror_) external {
