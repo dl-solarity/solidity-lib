@@ -17,15 +17,28 @@ library ReturnDataProxy {
         assembly {
             let len := mload(calldata_)
 
-            let result := call(
-                gas(),
-                target_,
-                callvalue(),
-                add(calldata_, 0x20),
-                add(add(calldata_, 0x20), len),
-                0x00,
-                0x00
-            )
+            let result := call(gas(), target_, 0, add(calldata_, 0x20), len, 0x00, 0x00)
+
+            returndatacopy(0, 0, returndatasize())
+
+            switch result
+            case 0 {
+                revert(0, returndatasize())
+            }
+            default {
+                return(0, returndatasize())
+            }
+        }
+    }
+
+    /**
+     * @notice The same purpose as `yield` but with a value transfer.
+     */
+    function yield(address target_, bytes memory calldata_, uint256 value_) internal {
+        assembly {
+            let len := mload(calldata_)
+
+            let result := call(gas(), target_, value_, add(calldata_, 0x20), len, 0x00, 0x00)
 
             returndatacopy(0, 0, returndatasize())
 
@@ -46,14 +59,7 @@ library ReturnDataProxy {
         assembly {
             let len := mload(calldata_)
 
-            let result := delegatecall(
-                gas(),
-                target_,
-                add(calldata_, 0x20),
-                add(add(calldata_, 0x20), len),
-                0x00,
-                0x00
-            )
+            let result := delegatecall(gas(), target_, add(calldata_, 0x20), len, 0x00, 0x00)
 
             returndatacopy(0, 0, returndatasize())
 
@@ -74,14 +80,7 @@ library ReturnDataProxy {
         assembly {
             let len := mload(calldata_)
 
-            let result := staticcall(
-                gas(),
-                target_,
-                add(calldata_, 0x20),
-                add(add(calldata_, 0x20), len),
-                0x00,
-                0x00
-            )
+            let result := staticcall(gas(), target_, add(calldata_, 0x20), len, 0x00, 0x00)
 
             returndatacopy(0, 0, returndatasize())
 
