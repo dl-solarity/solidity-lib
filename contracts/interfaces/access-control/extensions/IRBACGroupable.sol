@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 /**
- *  @notice The RBAC module
+ * @notice The RBAC module
  */
 interface IRBACGroupable {
     event AddedToGroups(address who, string[] groupsToAddTo);

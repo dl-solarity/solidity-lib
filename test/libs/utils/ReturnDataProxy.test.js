@@ -26,6 +26,14 @@ describe("ReturnDataProxy", () => {
       assert.equal(await rawMock.getMirror(), value);
     });
 
+    it("should transfer value properly", async () => {
+      const value = web3.utils.toWei("1", "ether");
+
+      await proxyMock.callWithValue({ value });
+
+      assert.equal(await rawMock.getBalance(), value);
+    });
+
     it("should revert with message", async () => {
       await truffleAssert.reverts(proxyMock.callRevertWithMessage(), "test");
     });

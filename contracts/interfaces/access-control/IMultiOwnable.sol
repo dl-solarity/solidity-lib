@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 /**
- *  @notice The MultiOwnable module
+ * @notice The MultiOwnable module
  */
 interface IMultiOwnable {
     event OwnersAdded(address[] newOwners);

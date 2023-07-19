@@ -5,10 +5,10 @@ import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transp
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
- *  @notice The ContractsRegistry module
+ * @notice The ContractsRegistry module
  *
- *  This is the helper contract that is used by an AbstractContractsRegistry as a proxy admin.
- *  It is essential to distinguish between the admin and the registry due to the Transparent proxies nature
+ * This is the helper contract that is used by an AbstractContractsRegistry as a proxy admin.
+ * It is essential to distinguish between the admin and the registry due to the Transparent proxies nature
  */
 contract ProxyUpgrader {
     using Address for address;

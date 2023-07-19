@@ -2,13 +2,13 @@
 pragma solidity ^0.8.4;
 
 /**
- *  @notice ## Usage example:
+ * @notice ## Usage example:
  *
- *  ```
- *  using StringSet for StringSet.Set;
+ * ```
+ * using StringSet for StringSet.Set;
  *
- *  StringSet.Set internal set;
- *  ```
+ * StringSet.Set internal set;
+ * ```
  */
 library StringSet {
     struct Set {
@@ -17,9 +17,9 @@ library StringSet {
     }
 
     /**
-     *  @notice The function add value to set
-     *  @param set the set object
-     *  @param value_ the value to add
+     * @notice The function add value to set
+     * @param set the set object
+     * @param value_ the value to add
      */
     function add(Set storage set, string memory value_) internal returns (bool) {
         if (!contains(set, value_)) {
@@ -33,9 +33,9 @@ library StringSet {
     }
 
     /**
-     *  @notice The function remove value to set
-     *  @param set the set object
-     *  @param value_ the value to remove
+     * @notice The function remove value to set
+     * @param set the set object
+     * @param value_ the value to remove
      */
     function remove(Set storage set, string memory value_) internal returns (bool) {
         uint256 valueIndex_ = set._indexes[value_];
@@ -62,38 +62,38 @@ library StringSet {
     }
 
     /**
-     *  @notice The function returns true if value in the set
-     *  @param set the set object
-     *  @param value_ the value to search in set
-     *  @return true if value is in the set, false otherwise
+     * @notice The function returns true if value in the set
+     * @param set the set object
+     * @param value_ the value to search in set
+     * @return true if value is in the set, false otherwise
      */
     function contains(Set storage set, string memory value_) internal view returns (bool) {
         return set._indexes[value_] != 0;
     }
 
     /**
-     *  @notice The function returns length of set
-     *  @param set the set object
-     *  @return the the number of elements in the set
+     * @notice The function returns length of set
+     * @param set the set object
+     * @return the the number of elements in the set
      */
     function length(Set storage set) internal view returns (uint256) {
         return set._values.length;
     }
 
     /**
-     *  @notice The function returns value from set by index
-     *  @param set the set object
-     *  @param index_ the index of slot in set
-     *  @return the value at index
+     * @notice The function returns value from set by index
+     * @param set the set object
+     * @param index_ the index of slot in set
+     * @return the value at index
      */
     function at(Set storage set, uint256 index_) internal view returns (string memory) {
         return set._values[index_];
     }
 
     /**
-     *  @notice The function that returns values the set stores, can be very expensive to call
-     *  @param set the set object
-     *  @return the memory array of values
+     * @notice The function that returns values the set stores, can be very expensive to call
+     * @param set the set object
+     * @return the memory array of values
      */
     function values(Set storage set) internal view returns (string[] memory) {
         return set._values;
