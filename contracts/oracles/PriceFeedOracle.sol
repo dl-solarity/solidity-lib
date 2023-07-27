@@ -28,7 +28,7 @@ abstract contract PriceFeedOracle is Initializable {
         uint256[] blockTimestamps;
     }
 
-    IUniswapV2Factory public uniswapV2Factory; //was immutable, now mutable so it is possible to call in init func
+    IUniswapV2Factory public uniswapV2Factory; 
 
     uint256 public timeWindow;
 
@@ -67,15 +67,13 @@ abstract contract PriceFeedOracle is Initializable {
         }
     }
 
-    //why is usd here in naming. price in tokenOut
-    //add tokenOut_ as param in future?
     /**
-     * @dev Retrieves the USD price of a token based on the provided token and amount.
+     * @dev Retrieves the price of a token based on the provided token and amount.
      * @param tokenIn_ The input token address.
      * @param amount_ The amount of the input token.
-     * @return The USD price and the output token address.
+     * @return The price in last token of the path and the output token address.
      */
-    function getPriceUSD(
+    function getPrice(
         address tokenIn_,
         uint256 amount_
     ) external view returns (uint256, address) {
@@ -114,7 +112,6 @@ abstract contract PriceFeedOracle is Initializable {
         timeWindow = newTimeWindow_;
     }
 
-    //in child contracts check if pair exist on Uniswap V2 may be added
     /**
      * @dev Adds multiple Uniswap V2 pairs to the oracle.
      * @param pairs_ The array of pair addresses to add.
@@ -142,13 +139,10 @@ abstract contract PriceFeedOracle is Initializable {
                 }
             }
             if (isPathValid_) _paths[paths_[i][0]] = paths_[i];
-
-            //now only one path is possible from one particaular token. Is it meant to be?
         }
         updatePrices();
     }
 
-    //hard to check does it affect the path
     /**
      * @dev Removes multiple Uniswap V2 pairs from the oracle.
      * @param pairs_ The array of pair addresses to remove.
@@ -172,7 +166,6 @@ abstract contract PriceFeedOracle is Initializable {
     function _isPairExist(address token1_, address token2_) internal view returns (bool) {
         address pair_ = uniswapV2Factory.getPair(token1_, token2_);
 
-        //is it needed? maybe in child contracts
         if (pair_ == address(0)) return false;
 
         return _pairs.contains(pair_);
