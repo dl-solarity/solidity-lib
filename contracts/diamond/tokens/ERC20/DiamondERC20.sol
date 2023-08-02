@@ -29,9 +29,7 @@ contract DiamondERC20 is DiamondERC20Storage {
      * @inheritdoc IERC20
      */
     function transfer(address to_, uint256 amount_) public virtual override returns (bool) {
-        address owner_ = _msgSender();
-
-        _transfer(owner_, to_, amount_);
+        _transfer(msg.sender, to_, amount_);
 
         return true;
     }
@@ -40,9 +38,7 @@ contract DiamondERC20 is DiamondERC20Storage {
      * @inheritdoc IERC20
      */
     function approve(address spender_, uint256 amount_) public virtual override returns (bool) {
-        address owner_ = _msgSender();
-
-        _approve(owner_, spender_, amount_);
+        _approve(msg.sender, spender_, amount_);
 
         return true;
     }
@@ -55,9 +51,7 @@ contract DiamondERC20 is DiamondERC20Storage {
         address to_,
         uint256 amount_
     ) public virtual override returns (bool) {
-        address spender_ = _msgSender();
-
-        _spendAllowance(from_, spender_, amount_);
+        _spendAllowance(from_, msg.sender, amount_);
         _transfer(from_, to_, amount_);
 
         return true;
@@ -70,7 +64,7 @@ contract DiamondERC20 is DiamondERC20Storage {
         address spender_,
         uint256 addedValue_
     ) public virtual returns (bool) {
-        address owner_ = _msgSender();
+        address owner_ = msg.sender;
 
         _approve(owner_, spender_, allowance(owner_, spender_) + addedValue_);
 
@@ -84,7 +78,7 @@ contract DiamondERC20 is DiamondERC20Storage {
         address spender_,
         uint256 subtractedValue_
     ) public virtual returns (bool) {
-        address owner_ = _msgSender();
+        address owner_ = msg.sender;
         uint256 currentAllowance_ = allowance(owner_, spender_);
 
         require(currentAllowance_ >= subtractedValue_, "ERC20: decreased allowance below zero");
