@@ -26,7 +26,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
      */
     function setDependencies(
         address contractsRegistry_,
-        bytes calldata
+        bytes memory
     ) public virtual override dependant {
         _contractsRegistry = contractsRegistry_;
     }
@@ -35,7 +35,10 @@ abstract contract AbstractPoolFactory is AbstractDependant {
      * @notice The internal deploy function that deploys BeaconProxy pointing to the
      * pool implementation taken from the PoolContractRegistry
      */
-    function _deploy(address poolRegistry_, string memory poolType_) internal returns (address) {
+    function _deploy(
+        address poolRegistry_,
+        string memory poolType_
+    ) internal virtual returns (address) {
         return
             address(
                 new PublicBeaconProxy(
@@ -53,7 +56,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         address poolRegistry_,
         string memory poolType_,
         bytes32 salt_
-    ) internal returns (address) {
+    ) internal virtual returns (address) {
         return
             address(
                 new PublicBeaconProxy{salt: salt_}(
@@ -82,7 +85,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
      * @notice The function that injects dependencies to the newly deployed pool and sets
      * provided PoolContractsRegistry as an injector
      */
-    function _injectDependencies(address poolRegistry_, address proxy_) internal {
+    function _injectDependencies(address poolRegistry_, address proxy_) internal virtual {
         AbstractDependant(proxy_).setDependencies(_contractsRegistry, bytes(""));
         AbstractDependant(proxy_).setInjector(poolRegistry_);
     }
@@ -94,7 +97,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         address poolRegistry_,
         string memory poolType_,
         bytes32 salt_
-    ) internal view returns (address) {
+    ) internal view virtual returns (address) {
         bytes32 bytecodeHash = keccak256(
             abi.encodePacked(
                 type(PublicBeaconProxy).creationCode,

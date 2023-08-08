@@ -48,6 +48,14 @@ contract OwnableContractsRegistry is AbstractContractsRegistry, OwnableUpgradeab
         _addProxyContract(name_, contractAddress_);
     }
 
+    function addProxyContractAndCall(
+        string calldata name_,
+        address contractAddress_,
+        bytes calldata data_
+    ) external onlyOwner {
+        _addProxyContractAndCall(name_, contractAddress_, data_);
+    }
+
     function justAddProxyContract(
         string calldata name_,
         address contractAddress_

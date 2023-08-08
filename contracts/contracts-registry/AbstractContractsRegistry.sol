@@ -13,12 +13,12 @@ import {AbstractDependant} from "./AbstractDependant.sol";
  * The purpose of this module is to provide an organized registry of the project's smartcontracts
  * together with the upgradeability and dependency injection mechanisms.
  *
- * The ContractsRegistry should be used as the highest level smartcontract that is aware of any other
+ * The ContractsRegistry should be used as the highest level smart contract that is aware of any other
  * contract present in the system. The contracts that demand other system's contracts would then inherit
  * special `AbstractDependant` contract and override `setDependencies()` function to enable ContractsRegistry
  * to inject dependencies into them.
  *
- * The ContractsRegistry will help with the following usecases:
+ * The ContractsRegistry will help with the following use cases:
  *
  * 1) Making the system upgradeable
  * 2) Making the system contracts-interchangeable
@@ -174,10 +174,25 @@ abstract contract AbstractContractsRegistry is Initializable {
      * @param contractAddress_ the address of the implementation
      */
     function _addProxyContract(string memory name_, address contractAddress_) internal {
+        _addProxyContractAndCall(name_, contractAddress_, bytes(""));
+    }
+
+    /**
+     * @notice The function to add the contracts and deploy the proxy above them. It should be used to add
+     * contract that the ContractsRegistry should be able to upgrade
+     * @param name_ the name to associate the contract with
+     * @param contractAddress_ the address of the implementation
+     * @param data_ the additional proxy initialization data
+     */
+    function _addProxyContractAndCall(
+        string memory name_,
+        address contractAddress_,
+        bytes memory data_
+    ) internal {
         require(contractAddress_ != address(0), "ContractsRegistry: zero address is forbidden");
 
         address proxyAddr_ = address(
-            new TransparentUpgradeableProxy(contractAddress_, address(_proxyUpgrader), bytes(""))
+            new TransparentUpgradeableProxy(contractAddress_, address(_proxyUpgrader), data_)
         );
 
         _contracts[name_] = proxyAddr_;

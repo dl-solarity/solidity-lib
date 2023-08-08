@@ -8,10 +8,7 @@ import {ContractsRegistry1} from "./ContractsRegistry1.sol";
 contract CRDependant is AbstractDependant {
     address public token;
 
-    function setDependencies(
-        address contractsRegistry_,
-        bytes calldata
-    ) external override dependant {
+    function setDependencies(address contractsRegistry_, bytes memory) public override dependant {
         token = ContractsRegistry1(contractsRegistry_).getTokenContract();
     }
 }

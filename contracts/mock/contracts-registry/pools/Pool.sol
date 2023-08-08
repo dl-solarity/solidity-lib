@@ -8,10 +8,7 @@ import {ContractsRegistry2} from "./ContractsRegistry2.sol";
 contract Pool is AbstractDependant {
     address public token;
 
-    function setDependencies(
-        address contractsRegistry_,
-        bytes calldata
-    ) external override dependant {
+    function setDependencies(address contractsRegistry_, bytes memory) public override dependant {
         token = ContractsRegistry2(contractsRegistry_).getTokenContract();
     }
 }

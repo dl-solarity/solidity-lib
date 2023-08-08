@@ -33,7 +33,7 @@ abstract contract AbstractDependant {
      * @param contractsRegistry_ the registry to pull dependencies from
      * @param data_ the extra data that might provide additional context
      */
-    function setDependencies(address contractsRegistry_, bytes calldata data_) external virtual;
+    function setDependencies(address contractsRegistry_, bytes memory data_) public virtual;
 
     /**
      * @notice The function is made external to allow for the factories to set the injector to the ContractsRegistry
