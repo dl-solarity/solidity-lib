@@ -39,7 +39,7 @@ library DecimalsConverter {
      * @param token_ the ERC20 token
      * @return the decimals of provided token
      */
-    function decimals(address token_) internal view returns (uint256) {
+    function decimals(address token_) internal view returns (uint8) {
         return ERC20(token_).decimals();
     }
 
