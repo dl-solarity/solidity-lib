@@ -10,7 +10,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: "DLSL version"
+      label: "Solarity version"
       placeholder: "1.2.3"
     validations:
       required: true

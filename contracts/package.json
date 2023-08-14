@@ -1,19 +1,20 @@
 {
-  "name": "@dlsl/dev-modules",
+  "name": "@solarity/solidity-lib",
   "version": "2.5.5",
   "license": "MIT",
   "author": "Distributed Lab",
   "readme": "README.md",
-  "description": "Solidity Development Modules by Distributed Lab",
+  "description": "Solidity Library by Distributed Lab",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dl-solidity-library/dev-modules"
+    "url": "https://github.com/dl-solarity/solidity-lib"
   },
   "keywords": [
     "solidity",
     "ethereum",
     "smart-contracts",
-    "distributedlab"
+    "distributedlab",
+    "solarity"
   ],
   "files": [
     "**/*.sol",
