@@ -6,7 +6,7 @@ import {DecimalsConverter} from "../../../libs/decimals/DecimalsConverter.sol";
 contract DecimalsConverterMock {
     using DecimalsConverter for *;
 
-    function decimals(address token_) external view returns (uint256) {
+    function decimals(address token_) external view returns (uint8) {
         return token_.decimals();
     }
 

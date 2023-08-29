@@ -23,7 +23,7 @@ import {ProxyBeacon} from "./proxy/ProxyBeacon.sol";
  * The users of this module have to override `_onlyPoolFactory()` method and revert in case a wrong msg.sender is
  * trying to add pools into the registry.
  *
- * The contract is ment to be used behind a proxy itself.
+ * The contract is meant to be used behind a proxy itself.
  */
 abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDependant {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -46,7 +46,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
      */
     function setDependencies(
         address contractsRegistry_,
-        bytes calldata
+        bytes memory
     ) public virtual override dependant {
         _contractsRegistry = contractsRegistry_;
     }
@@ -76,6 +76,16 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
         require(beacon_ != address(0), "PoolContractsRegistry: bad ProxyBeacon");
 
         return beacon_;
+    }
+
+    /**
+     * @notice The function to check if the address is a pool
+     * @param name_ the associated pools name
+     * @param pool_ the address to check
+     * @return true if pool_ is whithing the registry
+     */
+    function isPool(string memory name_, address pool_) public view returns (bool) {
+        return _pools[name_].contains(pool_);
     }
 
     /**

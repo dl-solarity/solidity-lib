@@ -8,6 +8,99 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
  */
 library ArrayHelper {
     /**
+     * @notice The function that searches for the index of the first occurring element, which is
+     * greater than or equal to the `element_`. The time complexity is O(log n)
+     * @param array the array to search in
+     * @param element_ the element
+     * @return index_ the index of the found element or the length of the `array` if no such element
+     */
+    function lowerBound(
+        uint256[] storage array,
+        uint256 element_
+    ) internal view returns (uint256 index_) {
+        (uint256 low_, uint256 high_) = (0, array.length);
+
+        while (low_ < high_) {
+            uint256 mid_ = Math.average(low_, high_);
+
+            if (array[mid_] >= element_) {
+                high_ = mid_;
+            } else {
+                low_ = mid_ + 1;
+            }
+        }
+
+        return high_;
+    }
+
+    /**
+     * @notice The function that searches for the index of the first occurring element, which is
+     * greater than the `element_`. The time complexity is O(log n)
+     * @param array the array to search in
+     * @param element_ the element
+     * @return index_ the index of the found element or the length of the `array` if no such element
+     */
+    function upperBound(
+        uint256[] storage array,
+        uint256 element_
+    ) internal view returns (uint256 index_) {
+        (uint256 low_, uint256 high_) = (0, array.length);
+
+        while (low_ < high_) {
+            uint256 mid_ = Math.average(low_, high_);
+
+            if (array[mid_] > element_) {
+                high_ = mid_;
+            } else {
+                low_ = mid_ + 1;
+            }
+        }
+
+        return high_;
+    }
+
+    /**
+     * @notice The function that calculates the sum of all array elements from `beginIndex_` to
+     * `endIndex_` inclusive using its prefix sum array
+     * @param beginIndex_ the index of the first range element
+     * @param endIndex_ the index of the last range element
+     * @return the sum of all elements of the range
+     */
+    function getRangeSum(
+        uint256[] storage prefixes,
+        uint256 beginIndex_,
+        uint256 endIndex_
+    ) internal view returns (uint256) {
+        require(beginIndex_ <= endIndex_, "ArrayHelper: wrong range");
+
+        if (beginIndex_ == 0) {
+            return prefixes[endIndex_];
+        }
+
+        return prefixes[endIndex_] - prefixes[beginIndex_ - 1];
+    }
+
+    /**
+     * @notice The function to compute the prefix sum array
+     * @param arr_ the initial array to be turned into the prefix sum array
+     * @return prefixes_ the prefix sum array
+     */
+    function countPrefixes(
+        uint256[] memory arr_
+    ) internal pure returns (uint256[] memory prefixes_) {
+        if (arr_.length == 0) {
+            return prefixes_;
+        }
+
+        prefixes_ = new uint256[](arr_.length);
+        prefixes_[0] = arr_[0];
+
+        for (uint256 i = 1; i < prefixes_.length; i++) {
+            prefixes_[i] = prefixes_[i - 1] + arr_[i];
+        }
+    }
+
+    /**
      * @notice The function to reverse an array
      * @param arr_ the array to reverse
      * @return reversed_ the reversed array
@@ -173,98 +266,5 @@ library ArrayHelper {
         }
 
         return array_;
-    }
-
-    /**
-     * @notice The function to compute the prefix sum array
-     * @param arr_ the initial array to be turned into the prefix sum array
-     * @return prefixes_ the prefix sum array
-     */
-    function countPrefixes(
-        uint256[] memory arr_
-    ) internal pure returns (uint256[] memory prefixes_) {
-        if (arr_.length == 0) {
-            return prefixes_;
-        }
-
-        prefixes_ = new uint256[](arr_.length);
-        prefixes_[0] = arr_[0];
-
-        for (uint256 i = 1; i < prefixes_.length; i++) {
-            prefixes_[i] = prefixes_[i - 1] + arr_[i];
-        }
-    }
-
-    /**
-     * @notice The function that calculates the sum of all array elements from `beginIndex_` to
-     * `endIndex_` inclusive using its prefix sum array
-     * @param beginIndex_ the index of the first range element
-     * @param endIndex_ the index of the last range element
-     * @return the sum of all elements of the range
-     */
-    function getRangeSum(
-        uint256[] memory prefixes_,
-        uint256 beginIndex_,
-        uint256 endIndex_
-    ) internal pure returns (uint256) {
-        require(beginIndex_ <= endIndex_, "ArrayHelper: wrong range");
-
-        if (beginIndex_ == 0) {
-            return prefixes_[endIndex_];
-        }
-
-        return prefixes_[endIndex_] - prefixes_[beginIndex_ - 1];
-    }
-
-    /**
-     * @notice The function that searches for the index of the first occurring element, which is
-     * greater than or equal to the `element_`. The time complexity is O(log n)
-     * @param array_ the array to search in
-     * @param element_ the element
-     * @return index_ the index of the found element or the length of the `array_` if no such element
-     */
-    function lowerBound(
-        uint256[] memory array_,
-        uint256 element_
-    ) internal pure returns (uint256 index_) {
-        (uint256 low_, uint256 high_) = (0, array_.length);
-
-        while (low_ < high_) {
-            uint256 mid_ = Math.average(low_, high_);
-
-            if (array_[mid_] >= element_) {
-                high_ = mid_;
-            } else {
-                low_ = mid_ + 1;
-            }
-        }
-
-        return high_;
-    }
-
-    /**
-     * @notice The function that searches for the index of the first occurring element, which is
-     * greater than the `element_`. The time complexity is O(log n)
-     * @param array_ the array to search in
-     * @param element_ the element
-     * @return index_ the index of the found element or the length of the `array_` if no such element
-     */
-    function upperBound(
-        uint256[] memory array_,
-        uint256 element_
-    ) internal pure returns (uint256 index_) {
-        (uint256 low_, uint256 high_) = (0, array_.length);
-
-        while (low_ < high_) {
-            uint256 mid_ = Math.average(low_, high_);
-
-            if (array_[mid_] > element_) {
-                high_ = mid_;
-            } else {
-                low_ = mid_ + 1;
-            }
-        }
-
-        return high_;
     }
 }

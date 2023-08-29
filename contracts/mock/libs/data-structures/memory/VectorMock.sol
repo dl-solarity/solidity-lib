@@ -2,9 +2,11 @@
 pragma solidity ^0.8.4;
 
 import {Vector} from "../../../../libs/data-structures/memory/Vector.sol";
+import {TypeCaster} from "../../../../libs/utils/TypeCaster.sol";
 
 contract VectorMock {
     using Vector for *;
+    using TypeCaster for *;
 
     function testNew() external pure {
         assembly {
@@ -40,6 +42,17 @@ contract VectorMock {
         for (uint256 i = 0; i < vector2_.length(); i++) {
             require(vector2_.at(i) == 0);
         }
+    }
+
+    function testArrayPush() external pure {
+        Vector.UintVector memory vector_ = Vector.newUint();
+
+        require(vector_._vector._allocation == 5);
+        require(vector_.length() == 0);
+
+        vector_.push([uint256(1), 2, 3].asDynamic());
+
+        require(vector_.length() == 3);
     }
 
     function testPushAndPop() external pure {
@@ -171,6 +184,10 @@ contract VectorMock {
 
         require(vector_.length() == 5);
         require(vector_.at(vector_.length() - 1) == 1);
+
+        vector_.push([uint256(1), 2, 3].asDynamic());
+
+        require(vector_.length() == 8);
     }
 
     function testBytes32Functionality() external pure {
@@ -210,6 +227,10 @@ contract VectorMock {
 
         require(vector_.length() == 5);
         require(vector_.at(vector_.length() - 1) == bytes32(uint256(1)));
+
+        vector_.push([bytes32(uint256(5)), bytes32(uint256(4)), bytes32(uint256(3))].asDynamic());
+
+        require(vector_.length() == 8);
     }
 
     function testAddressFunctionality() external pure {
@@ -249,5 +270,9 @@ contract VectorMock {
 
         require(vector_.length() == 5);
         require(vector_.at(vector_.length() - 1) == address(1));
+
+        vector_.push([address(5), address(4), address(3)].asDynamic());
+
+        require(vector_.length() == 8);
     }
 }

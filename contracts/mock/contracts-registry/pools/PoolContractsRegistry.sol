@@ -20,7 +20,7 @@ contract PoolContractsRegistry is OwnablePoolContractsRegistry {
         __PoolContractsRegistry_init();
     }
 
-    function setDependencies(address contractsRegistry_, bytes calldata data_) public override {
+    function setDependencies(address contractsRegistry_, bytes memory data_) public override {
         super.setDependencies(contractsRegistry_, data_);
 
         _poolFactory = ContractsRegistry2(contractsRegistry_).getPoolFactoryContract();

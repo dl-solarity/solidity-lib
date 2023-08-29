@@ -71,6 +71,11 @@ describe("ContractsRegistry", () => {
       );
 
       await truffleAssert.reverts(
+        contractsRegistry.addProxyContractAndCall("", ZERO_ADDR, "0x", { from: SECOND }),
+        "Ownable: caller is not the owner"
+      );
+
+      await truffleAssert.reverts(
         contractsRegistry.justAddProxyContract("", ZERO_ADDR, { from: SECOND }),
         "Ownable: caller is not the owner"
       );
@@ -142,7 +147,7 @@ describe("ContractsRegistry", () => {
     it("should add and remove proxy without dependant", async () => {
       const _token = await ERC20Mock.new("Mock", "Mock", 18);
 
-      await contractsRegistry.addProxyContract(await contractsRegistry.TOKEN_NAME(), _token.address);
+      await contractsRegistry.addProxyContractAndCall(await contractsRegistry.TOKEN_NAME(), _token.address, "0x");
       await contractsRegistry.removeContract(await contractsRegistry.TOKEN_NAME());
     });
 

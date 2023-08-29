@@ -1,11 +1,12 @@
-[![npm](https://img.shields.io/npm/v/@dlsl/dev-modules.svg)](https://www.npmjs.com/package/@dlsl/dev-modules)
-[![Coverage Status](https://codecov.io/gh/dl-solidity-library/dev-modules/graph/badge.svg)](https://codecov.io/gh/dl-solidity-library/dev-modules)
+[![npm](https://img.shields.io/npm/v/@solarity/solidity-lib.svg)](https://www.npmjs.com/package/@solarity/solidity-lib)
+[![Coverage Status](https://codecov.io/gh/dl-solarity/solidity-lib/graph/badge.svg)](https://codecov.io/gh/dl-solarity/solidity-lib)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitPOAP Badge](https://public-api.gitpoap.io/v1/repo/dl-solidity-library/dev-modules/badge)](https://www.gitpoap.io/gh/dl-solidity-library/dev-modules)
+[![GitPOAP Badge](https://public-api.gitpoap.io/v1/repo/dl-solarity/solidity-lib/badge)](https://www.gitpoap.io/gh/dl-solarity/solidity-lib)
 
-# Solidity Development Modules by Distributed Lab
+# Solidity Library by Distributed Lab
 
-**Elaborate solidity development modules library by DL.**
+
+**Solidity Library for savvies by DL**
 
 The library consists of modules and utilities that are built with a help of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (4.9.2) and go far beyond mediocre solidity.
 
@@ -23,7 +24,7 @@ The library consists of modules and utilities that are built with a help of [Ope
 ### Installation
 
 ```console
-$ npm install @dlsl/dev-modules
+$ npm install @solarity/solidity-lib
 ```
 
 The latest stable version is always in the `master` branch.
@@ -32,12 +33,12 @@ The latest stable version is always in the `master` branch.
 
 You will find the smart contracts in the `/contracts` directory. Feel free to play around and check the source code, it is rather descriptive.
 
-Once the [npm package](https://www.npmjs.com/package/@dlsl/dev-modules) is installed, one can use the modules just like that:
+Once the [npm package](https://www.npmjs.com/package/@solarity/solidity-lib) is installed, one can use the library just like that:
 
 ```solidity
 pragma solidity ^0.8.4;
 
-import "@dlsl/dev-modules/contracts-registry/presets/OwnableContractsRegistry.sol";
+import "@solarity/solidity-lib/contracts-registry/presets/OwnableContractsRegistry.sol";
 
 contract ContractsRegistry is OwnableContractsRegistry {
     . . .
@@ -48,4 +49,4 @@ contract ContractsRegistry is OwnableContractsRegistry {
 
 ## License
 
-The development modules are released under the MIT License.
+The library is released under the MIT License.

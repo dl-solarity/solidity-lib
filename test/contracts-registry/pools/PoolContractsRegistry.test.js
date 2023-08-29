@@ -118,6 +118,7 @@ describe("PoolContractsRegistry", () => {
       await poolContractsRegistry.addProxyPool(NAME_1, POOL_1);
       await poolContractsRegistry.addProxyPool(NAME_1, POOL_2);
 
+      assert.isTrue(await poolContractsRegistry.isPool(NAME_1, POOL_1));
       assert.equal((await poolContractsRegistry.countPools(NAME_1)).toFixed(), "2");
       assert.equal((await poolContractsRegistry.countPools(NAME_2)).toFixed(), "0");
     });

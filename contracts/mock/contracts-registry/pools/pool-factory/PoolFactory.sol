@@ -9,7 +9,7 @@ import {AbstractPoolFactory} from "../../../../contracts-registry/pools/pool-fac
 contract PoolFactory is AbstractPoolFactory {
     address public poolContractsRegistry;
 
-    function setDependencies(address contractsRegistry_, bytes calldata data_) public override {
+    function setDependencies(address contractsRegistry_, bytes memory data_) public override {
         super.setDependencies(contractsRegistry_, data_);
 
         poolContractsRegistry = ContractsRegistry2(contractsRegistry_)

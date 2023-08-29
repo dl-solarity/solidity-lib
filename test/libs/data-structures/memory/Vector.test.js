@@ -16,6 +16,10 @@ describe("Vector", () => {
       await vector.testNew();
     });
 
+    it("should test array push", async () => {
+      await vector.testArrayPush();
+    });
+
     it("should test push and pop", async () => {
       await vector.testPushAndPop();
     });

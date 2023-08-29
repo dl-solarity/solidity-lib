@@ -70,9 +70,18 @@ library Vector {
     }
 
     /**
-     * @notice The function to push new elements to the vector, amortized O(1)
+     * @notice The function to push new elements (as an array) to the vector, amortized O(n)
      * @param vector self
-     * @param value_ the new elements to add
+     * @param values_ the new elements to add
+     */
+    function push(UintVector memory vector, uint256[] memory values_) internal pure {
+        _push(vector._vector, values_.asBytes32Array());
+    }
+
+    /**
+     * @notice The function to push a new element to the vector, amortized O(1)
+     * @param vector self
+     * @param value_ the new element to add
      */
     function push(UintVector memory vector, uint256 value_) internal pure {
         _push(vector._vector, bytes32(value_));
@@ -151,6 +160,10 @@ library Vector {
         vector._vector = _new(array_);
     }
 
+    function push(Bytes32Vector memory vector, bytes32[] memory values_) internal pure {
+        _push(vector._vector, values_);
+    }
+
     function push(Bytes32Vector memory vector, bytes32 value_) internal pure {
         _push(vector._vector, value_);
     }
@@ -197,6 +210,10 @@ library Vector {
         address[] memory array_
     ) internal pure returns (AddressVector memory vector) {
         vector._vector = _new(array_.asBytes32Array());
+    }
+
+    function push(AddressVector memory vector, address[] memory values_) internal pure {
+        _push(vector._vector, values_.asBytes32Array());
     }
 
     function push(AddressVector memory vector, address value_) internal pure {
@@ -261,6 +278,14 @@ library Vector {
         assembly {
             mstore(vector, add(mload(array_), 0x1))
             mstore(add(vector, 0x20), array_)
+        }
+    }
+
+    function _push(Vector memory vector, bytes32[] memory values_) private pure {
+        uint256 length_ = values_.length;
+
+        for (uint256 i = 0; i < length_; ++i) {
+            _push(vector, values_[i]);
         }
     }
 

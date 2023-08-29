@@ -1,18 +1,19 @@
 {
-  "name": "dlsl",
-  "version": "2.5.1",
+  "name": "@solarity/solidity-lib",
+  "version": "2.5.5",
   "license": "MIT",
   "author": "Distributed Lab",
-  "description": "Solidity Development Modules by Distributed Lab",
+  "description": "Solidity Library by Distributed Lab",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dl-solidity-library/dev-modules"
+    "url": "https://github.com/dl-solarity/solidity-lib"
   },
   "keywords": [
     "solidity",
     "ethereum",
     "smart-contracts",
-    "distributedlab"
+    "distributedlab",
+    "solarity"
   ],
   "scripts": {
     "install": "npx husky install",
@@ -35,7 +36,7 @@
     "hardhat": "^2.13.0"
   },
   "devDependencies": {
-    "@dlsl/hardhat-markup": "^1.0.0-rc.14",
+    "@solarity/hardhat-markup": "^1.0.0",
     "@metamask/eth-sig-util": "^4.0.0",
     "@nomiclabs/hardhat-truffle5": "^2.0.1",
     "@nomiclabs/hardhat-web3": "^2.0.0",
