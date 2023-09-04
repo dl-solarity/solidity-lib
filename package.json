@@ -30,17 +30,17 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.9.2",
-    "@openzeppelin/contracts-upgradeable": "4.9.2",
-    "hardhat": "^2.13.0"
+    "@openzeppelin/contracts-upgradeable": "4.9.2"
   },
   "devDependencies": {
-    "@solarity/hardhat-markup": "^1.0.0",
+    "@solarity/hardhat-markup": "^1.0.2",
     "@metamask/eth-sig-util": "^4.0.0",
     "@nomiclabs/hardhat-truffle5": "^2.0.1",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "bignumber.js": "^9.0.1",
     "chai": "^4.3.4",
     "dotenv": "^10.0.0",
+    "hardhat": "^2.13.0",
     "hardhat-contract-sizer": "^2.1.1",
     "hardhat-gas-reporter": "^1.0.4",
     "husky": "^7.0.2",
