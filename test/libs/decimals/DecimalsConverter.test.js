@@ -100,4 +100,31 @@ describe("DecimalsConverter", () => {
       await truffleAssert.reverts(mock.round18Safe(wei("1", 6), 6), reason);
     });
   });
+
+  describe("roundTokens", () => {
+    it("should round tokens decimals", async () => {
+      const token1 = await ERC20Mock.new("MK1", "MK1", 18);
+      const token2 = await ERC20Mock.new("MK2", "MK2", 3);
+
+      assert.equal((await mock.roundTokens(wei("1"), token1.address, token2.address)).toFixed(), wei("1", 3));
+      assert.equal((await mock.roundTokens(wei("1", 3), token2.address, token1.address)).toFixed(), wei("1"));
+    });
+  });
+  describe("roundTokensSafe", () => {
+    it("should round tokens decimals", async () => {
+      const token1 = await ERC20Mock.new("MK1", "MK1", 6);
+      const token2 = await ERC20Mock.new("MK2", "MK2", 9);
+
+      assert.equal((await mock.roundTokensSave(wei("1", 6), token1.address, token2.address)).toFixed(), wei("1", 9));
+      assert.equal((await mock.roundTokensSave(wei("1", 9), token2.address, token1.address)).toFixed(), wei("1", 6));
+    });
+    it("should get exception if the result of conversion is zero", async () => {
+      const token1 = await ERC20Mock.new("MK1", "MK1", 18);
+      const token2 = await ERC20Mock.new("MK2", "MK2", 3);
+
+      const reason = "DecimalsConverter: conversion failed";
+
+      await truffleAssert.reverts(mock.roundTokensSave(wei("1", 3), token1.address, token2.address), reason);
+    });
+  });
 });

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {DecimalsConverter} from "../../../libs/decimals/DecimalsConverter.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract DecimalsConverterMock {
     using DecimalsConverter for *;
@@ -32,6 +33,22 @@ contract DecimalsConverterMock {
 
     function round18Safe(uint256 amount_, uint256 decimals_) external pure returns (uint256) {
         return amount_.round18Safe(decimals_);
+    }
+
+    function roundTokens(
+        uint256 amount_,
+        address baseToken_,
+        address destToken_
+    ) public view returns (uint256) {
+        return amount_.roundTokens(baseToken_, destToken_);
+    }
+
+    function roundTokensSave(
+        uint256 amount_,
+        address baseToken_,
+        address destToken_
+    ) external view returns (uint256) {
+        return amount_.roundTokensSave(baseToken_, destToken_);
     }
 
     function convert(

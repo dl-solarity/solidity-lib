@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20, IERC20, IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /**
  * @notice This library is used to convert numbers that use token's N decimals to M decimals.
@@ -105,6 +105,41 @@ library DecimalsConverter {
     }
 
     /**
+     * @notice The function to do the token precision convertion
+     * @param amount_ the amount to convert
+     * @param baseToken_ current token
+     * @param destToken_ desired token
+     * @return the converted number
+     */
+    function roundTokens(
+        uint256 amount_,
+        address baseToken_,
+        address destToken_
+    ) internal view returns (uint256) {
+        return
+            convert(
+                amount_,
+                uint256(IERC20Metadata(baseToken_).decimals()),
+                uint256(IERC20Metadata(destToken_).decimals())
+            );
+    }
+
+    /**
+     * @notice The function to do the token precision convertion. Reverts if output is zero
+     * @param amount_ the amount to convert
+     * @param baseToken_ current token
+     * @param destToken_ desired token
+     * @return the converted number
+     */
+    function roundTokensSave(
+        uint256 amount_,
+        address baseToken_,
+        address destToken_
+    ) internal view returns (uint256) {
+        return convertTokensSafe(amount_, baseToken_, destToken_, roundTokens);
+    }
+
+    /**
      * @notice The function to do the precision convertion
      * @param amount_ the amount to covert
      * @param baseDecimals_ current number precision
@@ -138,6 +173,25 @@ library DecimalsConverter {
         function(uint256, uint256) internal pure returns (uint256) _convertFunc
     ) internal pure returns (uint256 conversionResult_) {
         conversionResult_ = _convertFunc(amount_, decimals_);
+
+        require(conversionResult_ > 0, "DecimalsConverter: conversion failed");
+    }
+
+    /**
+     * @notice The function wrapper to do the safe precision convertion for ERC20 tokens. Reverts if output is zero
+     * @param amount_ the amount to covert
+     * @param baseToken_ current token
+     * @param destToken_ desired token
+     * @param _convertFunc the internal function pointer to "from", "to", or "round" functions
+     * @return conversionResult_ the convertion result
+     */
+    function convertTokensSafe(
+        uint256 amount_,
+        address baseToken_,
+        address destToken_,
+        function(uint256, address, address) internal view returns (uint256) _convertFunc
+    ) internal view returns (uint256 conversionResult_) {
+        conversionResult_ = _convertFunc(amount_, baseToken_, destToken_);
 
         require(conversionResult_ > 0, "DecimalsConverter: conversion failed");
     }
