@@ -16,7 +16,7 @@ import {ArrayHelper} from "../libs/arrays/ArrayHelper.sol";
  * @title PriceFeedOracle
  * @dev A contract for retrieving price feeds from Uniswap V2 pairs.
  */
-abstract contract PriceFeedOracle is Initializable {
+abstract contract Oracle is Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using UniswapV2OracleLibrary for address;
     using ArrayHelper for uint256[];
@@ -28,15 +28,16 @@ abstract contract PriceFeedOracle is Initializable {
         uint256[] blockTimestamps;
     }
 
-    IUniswapV2Factory public uniswapV2Factory; 
+    IUniswapV2Factory public uniswapV2Factory;
 
     uint256 public timeWindow;
 
     EnumerableSet.AddressSet internal _pairs;
+    mapping(address => uint256) internal _pairCounters;
     mapping(address => address[]) internal _paths;
     mapping(address => PairInfo) internal _pairInfos;
 
-    function __PriceFeedOracle_init(
+    function __Oracle_init(
         address uniswapV2Factory_,
         uint256 timeWindow_
     ) internal onlyInitializing {
@@ -50,6 +51,7 @@ abstract contract PriceFeedOracle is Initializable {
     function updatePrices() public {
         for (uint256 i = 0; i < _pairs.length(); i++) {
             address pair = _pairs.at(i);
+
             PairInfo storage pairInfo = _pairInfos[pair];
             uint256[] storage pairTimestamps = pairInfo.blockTimestamps;
 
@@ -73,12 +75,10 @@ abstract contract PriceFeedOracle is Initializable {
      * @param amount_ The amount of the input token.
      * @return The price in last token of the path and the output token address.
      */
-    function getPrice(
-        address tokenIn_,
-        uint256 amount_
-    ) external view returns (uint256, address) {
+    function getPrice(address tokenIn_, uint256 amount_) external view returns (uint256, address) {
         address[] storage path = _paths[tokenIn_];
-        require(path.length > 0, "PriceFeedOracle: INVALID_PATH");
+
+        require(path.length > 0, "Oracle: invalid path");
 
         address tokenOut_ = path[path.length - 1];
 
@@ -87,10 +87,6 @@ abstract contract PriceFeedOracle is Initializable {
             address nextToken = path[i + 1];
 
             address pair = uniswapV2Factory.getPair(currentToken, nextToken);
-
-            if (pair == address(0)) {
-                return (0, tokenOut_);
-            }
 
             uint256 price = _getPrice(pair, currentToken);
 
@@ -113,44 +109,25 @@ abstract contract PriceFeedOracle is Initializable {
     }
 
     /**
-     * @dev Adds multiple Uniswap V2 pairs to the oracle.
-     * @param pairs_ The array of pair addresses to add.
-     */
-    function _addPairs(address[] calldata pairs_) internal {
-        for (uint256 i = 0; i < pairs_.length; i++) {
-            _pairs.add(pairs_[i]);
-        }
-    }
-
-    /**
      * @dev Adds multiple token paths to the oracle.
      * @param paths_ The array of token paths to add.
      */
     function _addPaths(address[][] calldata paths_) internal {
-        bool isPathValid_;
         for (uint256 i = 0; i < paths_.length; i++) {
-            require(paths_[i].length >= 2, "PriceFeedOracle: path must be longer than 2");
+            require(paths_[i].length >= 2, "Oracle: path must be longer than 2");
 
-            isPathValid_ = true;
             for (uint256 j = 0; j < paths_[i].length - 1; j++) {
-                if (!_isPairExist(paths_[i][j], paths_[i][j + 1])) {
-                    isPathValid_ = false;
-                    break;
-                }
+                (bool isExist, address pair) = _isPairExistAtUniswap(
+                    paths_[i][j],
+                    paths_[i][j + 1]
+                );
+                require(isExist, "Oracle: uniswap pair doesn't exist");
+                _pairs.add(pair);
+                _incrementCounter(pair);
             }
-            if (isPathValid_) _paths[paths_[i][0]] = paths_[i];
+            _paths[paths_[i][0]] = paths_[i];
         }
         updatePrices();
-    }
-
-    /**
-     * @dev Removes multiple Uniswap V2 pairs from the oracle.
-     * @param pairs_ The array of pair addresses to remove.
-     */
-    function _removePairs(address[] calldata pairs_) internal {
-        for (uint256 i = 0; i < pairs_.length; i++) {
-            _pairs.remove(pairs_[i]);
-        }
     }
 
     /**
@@ -159,16 +136,34 @@ abstract contract PriceFeedOracle is Initializable {
      */
     function _removePaths(address[] calldata tokenIns_) internal {
         for (uint256 i = 0; i < tokenIns_.length; i++) {
+            for (uint256 j = 0; j < _paths[tokenIns_[i]].length - 1; j++) {
+                address pair = uniswapV2Factory.getPair(
+                    _paths[tokenIns_[i]][j],
+                    _paths[tokenIns_[i]][j + 1]
+                );
+
+                if (_pairCounters[pair] == 1) _pairs.remove(pair);
+                _decrementCounter(pair);
+            }
             delete _paths[tokenIns_[i]];
         }
     }
 
-    function _isPairExist(address token1_, address token2_) internal view returns (bool) {
+    function _incrementCounter(address pair_) internal {
+        _pairCounters[pair_] = _pairCounters[pair_] + 1;
+    }
+
+    function _decrementCounter(address pair_) internal {
+        if (_pairCounters[pair_] > 0) _pairCounters[pair_] = _pairCounters[pair_] - 1;
+    }
+
+    function _isPairExistAtUniswap(
+        address token1_,
+        address token2_
+    ) internal view returns (bool, address) {
         address pair_ = uniswapV2Factory.getPair(token1_, token2_);
-
-        if (pair_ == address(0)) return false;
-
-        return _pairs.contains(pair_);
+        if (pair_ == address(0)) return (false, pair_);
+        return (true, pair_);
     }
 
     function _getPrice(address pair_, address expectedToken_) internal view returns (uint256) {
@@ -191,6 +186,11 @@ abstract contract PriceFeedOracle is Initializable {
         unchecked {
             (uint256 price0Cumulative, uint256 price1Cumulative, uint256 blockTimestamp) = pair_
                 .currentCumulativePrices();
+
+            require(
+                (blockTimestamp != blockTimestampOld),
+                "Oracle: blockTimestamp doesn't change"
+            );
 
             price0 =
                 (price0Cumulative - price0CumulativeOld) /
