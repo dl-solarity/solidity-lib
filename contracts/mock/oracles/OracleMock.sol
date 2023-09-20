@@ -48,14 +48,6 @@ contract OracleMock is Oracle {
         delete _pairInfos[pair_].blockTimestamps;
     }
 
-    function setPairReserves(address pair_, uint112 reserve0_, uint112 reserve1_) external {
-        UniswapV2PairMock(pair_).setReserves(reserve0_, reserve1_);
-    }
-
-    function setPairPriceCumulativLast(address pair_, uint256 price0_, uint256 price1_) external {
-        UniswapV2PairMock(pair_).setCumulativePrices(price0_, price1_);
-    }
-
     function setReservesTimestamp(address pair_, uint32 blockTimestampLast_) external {
         UniswapV2PairMock(pair_).setReservesTimestamp(blockTimestampLast_);
     }
@@ -71,10 +63,6 @@ contract OracleMock is Oracle {
 
     function getCounter(address pair_) external view returns (uint256) {
         return _pairCounters[pair_];
-    }
-
-    function getAllPairBlockTimestamps(address pair_) external view returns (uint256[] memory) {
-        return _pairInfos[pair_].blockTimestamps;
     }
 
     function getPairInfosLength(
@@ -97,10 +85,6 @@ contract OracleMock is Oracle {
     ) external view returns (uint256) {
         uint256 price = _getPrice(pair_, expectedToken_);
         return price / 2 ** 112;
-    }
-
-    function getLastTimestamp(address pair_) external view returns (uint256 stamp__) {
-        return _pairInfos[pair_].blockTimestamps[_pairInfos[pair_].blockTimestamps.length - 1];
     }
 
     function calculatePrice0Cumulative(

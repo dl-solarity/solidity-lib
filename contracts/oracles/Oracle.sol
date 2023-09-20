@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -173,15 +172,15 @@ abstract contract Oracle is Initializable {
             return 0;
         }
 
-        uint256 index = pairInfo.blockTimestamps.lowerBound(block.timestamp - timeWindow);
-        index = index == 0 ? index : index - 1;
+        uint256 index_ = pairInfo.blockTimestamps.lowerBound(block.timestamp - timeWindow);
+        index_ = index_ == 0 ? index_ : index_ - 1;
 
-        uint256 price0CumulativeOld = pairInfo.prices0Cumulative[index];
-        uint256 price1CumulativeOld = pairInfo.prices1Cumulative[index];
-        uint256 blockTimestampOld = pairInfo.blockTimestamps[index];
+        uint256 price0CumulativeOld = pairInfo.prices0Cumulative[index_];
+        uint256 price1CumulativeOld = pairInfo.prices1Cumulative[index_];
+        uint256 blockTimestampOld = pairInfo.blockTimestamps[index_];
 
-        uint256 price0;
-        uint256 price1;
+        uint256 price0_;
+        uint256 price1_;
 
         unchecked {
             (uint256 price0Cumulative, uint256 price1Cumulative, uint256 blockTimestamp) = pair_
@@ -192,14 +191,14 @@ abstract contract Oracle is Initializable {
                 "Oracle: blockTimestamp doesn't change"
             );
 
-            price0 =
+            price0_ =
                 (price0Cumulative - price0CumulativeOld) /
                 (blockTimestamp - blockTimestampOld);
-            price1 =
+            price1_ =
                 (price1Cumulative - price1CumulativeOld) /
                 (blockTimestamp - blockTimestampOld);
         }
 
-        return expectedToken_ == IUniswapV2Pair(pair_).token0() ? price0 : price1;
+        return expectedToken_ == IUniswapV2Pair(pair_).token0() ? price0_ : price1_;
     }
 }
