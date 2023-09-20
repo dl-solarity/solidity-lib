@@ -8,7 +8,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 
 import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import {IUniswapV2Pair} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import {UniswapV2OracleLibrary} from "@uniswap/v2-periphery/contracts/libraries/UniswapV2OracleLibrary.sol";
+import {UniswapV2OracleLibrary} from "./external-modules/uniswap-v2/v2-periphery/UniswapV2OracleLibrary.sol";
 
 import {ArrayHelper} from "../libs/arrays/ArrayHelper.sol";
 
@@ -198,10 +198,6 @@ abstract contract Oracle is Initializable {
             price1 =
                 (price1Cumulative - price1CumulativeOld) /
                 (blockTimestamp - blockTimestampOld);
-        }
-
-        if (price0 == 0) {
-            return 0;
         }
 
         return expectedToken_ == IUniswapV2Pair(pair_).token0() ? price0 : price1;

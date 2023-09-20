@@ -1,4 +1,4 @@
 module.exports = {
-  skipFiles: ["interfaces/", "mock/"],
+  skipFiles: ["interfaces/", "mock/", "oracles/external-modules/"],
   configureYulOptimizer: true,
 };

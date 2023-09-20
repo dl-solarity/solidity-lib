@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {FixedPoint} from "@uniswap/lib/contracts/libraries/FixedPoint.sol";
+import {FixedPoint} from "../../oracles/external-modules/uniswap-v2/lib/FixedPoint.sol";
 
 import {Oracle} from "../../oracles/Oracle.sol";
 import {UniswapV2PairMock} from "./UniswapV2PairMock.sol";

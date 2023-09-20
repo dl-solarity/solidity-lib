@@ -197,21 +197,6 @@ describe("Oracle", () => {
       assert.equal(Number(await oracle.getPriceInternal(WPLS_DAI, DAI)), 0);
     });
 
-    it("should correctly return 0 from _getPrice when price0 equal 0", async () => {
-      await createPairs();
-
-      await oracle.addPaths([WPLS_DAI_PATH]);
-      await oracle.setReservesTimestamp(WPLS_DAI, 0);
-      await oracle.setPairPriceCumulativLast(WPLS_DAI, 0, 1);
-      let latest = await time.latest();
-      latest = latest % 2 ** 32;
-      let newPriceCumulative = await oracle.calculatePrice0Cumulative(0, 1, 2, Number(latest) + 1, 0);
-
-      await oracle.setCumulativePairInfos(WPLS_DAI, newPriceCumulative, 1, 0);
-
-      assert.equal(Number(await oracle.getPriceInternal(WPLS_DAI, DAI)), 0);
-    });
-
     it("should not work when blockTimestamp doesn't change", async () => {
       await createPairs();
 
