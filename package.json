@@ -33,10 +33,11 @@
     "@openzeppelin/contracts-upgradeable": "4.9.2"
   },
   "devDependencies": {
-    "@solarity/hardhat-markup": "^1.0.2",
     "@metamask/eth-sig-util": "^4.0.0",
     "@nomiclabs/hardhat-truffle5": "^2.0.1",
     "@nomiclabs/hardhat-web3": "^2.0.0",
+    "@solarity/hardhat-markup": "^1.0.2",
+    "@solidstate/contracts": "^0.0.58",
     "bignumber.js": "^9.0.1",
     "chai": "^4.3.4",
     "dotenv": "^10.0.0",
