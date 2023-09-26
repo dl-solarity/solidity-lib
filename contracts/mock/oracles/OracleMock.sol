@@ -2,14 +2,12 @@
 pragma solidity ^0.8.4;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {FixedPoint} from "../../oracles/external-modules/uniswap-v2/lib/FixedPoint.sol";
 
 import {Oracle} from "../../oracles/Oracle.sol";
 import {UniswapV2PairMock} from "./UniswapV2PairMock.sol";
 
 contract OracleMock is Oracle {
     using EnumerableSet for EnumerableSet.AddressSet;
-    using FixedPoint for *;
 
     function __OracleMock_init(
         address uniswapV2Factory_,
@@ -62,7 +60,7 @@ contract OracleMock is Oracle {
     }
 
     function getCounter(address pair_) external view returns (uint256) {
-        return _pairCounters[pair_];
+        return _pairInfos[pair_].counter;
     }
 
     function getPairInfosLength(
@@ -85,19 +83,6 @@ contract OracleMock is Oracle {
     ) external view returns (uint256) {
         uint256 price = _getPrice(pair_, expectedToken_);
         return price / 2 ** 112;
-    }
-
-    function calculatePrice0Cumulative(
-        uint256 cumulativeLast_,
-        uint112 reserve0_,
-        uint112 reserve1_,
-        uint256 plannedCurrenBlock_,
-        uint256 blockTimestampLast_
-    ) external pure returns (uint256) {
-        return
-            cumulativeLast_ +
-            uint(FixedPoint.fraction(reserve1_, reserve0_)._x) *
-            (plannedCurrenBlock_ - blockTimestampLast_);
     }
 
     function ifPairRegistered(address pair_) external view returns (bool) {

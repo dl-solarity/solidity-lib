@@ -25,6 +25,7 @@ abstract contract Oracle is Initializable {
         uint256[] prices0Cumulative;
         uint256[] prices1Cumulative;
         uint256[] blockTimestamps;
+        uint256 counter;
     }
 
     IUniswapV2Factory public uniswapV2Factory;
@@ -32,7 +33,6 @@ abstract contract Oracle is Initializable {
     uint256 public timeWindow;
 
     EnumerableSet.AddressSet internal _pairs;
-    mapping(address => uint256) internal _pairCounters;
     mapping(address => address[]) internal _paths;
     mapping(address => PairInfo) internal _pairInfos;
 
@@ -49,21 +49,21 @@ abstract contract Oracle is Initializable {
      */
     function updatePrices() public {
         for (uint256 i = 0; i < _pairs.length(); i++) {
-            address pair = _pairs.at(i);
+            address pair_ = _pairs.at(i);
 
-            PairInfo storage pairInfo = _pairInfos[pair];
+            PairInfo storage pairInfo = _pairInfos[pair_];
             uint256[] storage pairTimestamps = pairInfo.blockTimestamps;
 
-            (uint256 price0Cumulative, uint256 price1Cumulative, uint256 blockTimestamp) = pair
+            (uint256 price0Cumulative_, uint256 price1Cumulative_, uint256 blockTimestamp_) = pair_
                 .currentCumulativePrices();
 
             if (
                 pairTimestamps.length == 0 ||
-                blockTimestamp > pairTimestamps[pairTimestamps.length - 1]
+                blockTimestamp_ > pairTimestamps[pairTimestamps.length - 1]
             ) {
-                pairInfo.prices0Cumulative.push(price0Cumulative);
-                pairInfo.prices1Cumulative.push(price1Cumulative);
-                pairInfo.blockTimestamps.push(blockTimestamp);
+                pairInfo.prices0Cumulative.push(price0Cumulative_);
+                pairInfo.prices1Cumulative.push(price1Cumulative_);
+                pairInfo.blockTimestamps.push(blockTimestamp_);
             }
         }
     }
@@ -82,18 +82,18 @@ abstract contract Oracle is Initializable {
         address tokenOut_ = path[path.length - 1];
 
         for (uint256 i = 0; i < path.length - 1; i++) {
-            address currentToken = path[i];
-            address nextToken = path[i + 1];
+            address currentToken_ = path[i];
+            address nextToken_ = path[i + 1];
 
-            address pair = uniswapV2Factory.getPair(currentToken, nextToken);
+            address pair_ = uniswapV2Factory.getPair(currentToken_, nextToken_);
 
-            uint256 price = _getPrice(pair, currentToken);
+            uint256 price_ = _getPrice(pair_, currentToken_);
 
-            if (price == 0) {
+            if (price_ == 0) {
                 return (0, tokenOut_);
             }
 
-            amount_ = price.mulDiv(amount_, 2 ** 112);
+            amount_ = price_.mulDiv(amount_, 2 ** 112);
         }
 
         return (amount_, tokenOut_);
@@ -134,14 +134,18 @@ abstract contract Oracle is Initializable {
      * @param tokenIns_ The array of token addresses to remove.
      */
     function _removePaths(address[] calldata tokenIns_) internal {
-        for (uint256 i = 0; i < tokenIns_.length; i++) {
-            for (uint256 j = 0; j < _paths[tokenIns_[i]].length - 1; j++) {
+        uint256 numberOfPaths_ = tokenIns_.length;
+        for (uint256 i = 0; i < numberOfPaths_; i++) {
+            uint256 pathLength_ = _paths[tokenIns_[i]].length;
+            for (uint256 j = 0; j < pathLength_ - 1; j++) {
                 address pair = uniswapV2Factory.getPair(
                     _paths[tokenIns_[i]][j],
                     _paths[tokenIns_[i]][j + 1]
                 );
 
-                if (_pairCounters[pair] == 1) _pairs.remove(pair);
+                if (_pairInfos[pair].counter == 1) {
+                    _pairs.remove(pair);
+                }
                 _decrementCounter(pair);
             }
             delete _paths[tokenIns_[i]];
@@ -149,11 +153,13 @@ abstract contract Oracle is Initializable {
     }
 
     function _incrementCounter(address pair_) internal {
-        _pairCounters[pair_] = _pairCounters[pair_] + 1;
+        _pairInfos[pair_].counter++;
     }
 
     function _decrementCounter(address pair_) internal {
-        if (_pairCounters[pair_] > 0) _pairCounters[pair_] = _pairCounters[pair_] - 1;
+        if (_pairInfos[pair_].counter > 0) {
+            _pairInfos[pair_].counter--;
+        }
     }
 
     function _isPairExistAtUniswap(
@@ -161,8 +167,7 @@ abstract contract Oracle is Initializable {
         address token2_
     ) internal view returns (bool, address) {
         address pair_ = uniswapV2Factory.getPair(token1_, token2_);
-        if (pair_ == address(0)) return (false, pair_);
-        return (true, pair_);
+        return (pair_ != address(0), pair_);
     }
 
     function _getPrice(address pair_, address expectedToken_) internal view returns (uint256) {
@@ -175,28 +180,28 @@ abstract contract Oracle is Initializable {
         uint256 index_ = pairInfo.blockTimestamps.lowerBound(block.timestamp - timeWindow);
         index_ = index_ == 0 ? index_ : index_ - 1;
 
-        uint256 price0CumulativeOld = pairInfo.prices0Cumulative[index_];
-        uint256 price1CumulativeOld = pairInfo.prices1Cumulative[index_];
-        uint256 blockTimestampOld = pairInfo.blockTimestamps[index_];
+        uint256 price0CumulativeOld_ = pairInfo.prices0Cumulative[index_];
+        uint256 price1CumulativeOld_ = pairInfo.prices1Cumulative[index_];
+        uint256 blockTimestampOld_ = pairInfo.blockTimestamps[index_];
 
         uint256 price0_;
         uint256 price1_;
 
         unchecked {
-            (uint256 price0Cumulative, uint256 price1Cumulative, uint256 blockTimestamp) = pair_
+            (uint256 price0Cumulative_, uint256 price1Cumulative_, uint256 blockTimestamp_) = pair_
                 .currentCumulativePrices();
 
-            require(
-                (blockTimestamp != blockTimestampOld),
-                "Oracle: blockTimestamp doesn't change"
-            );
-
-            price0_ =
-                (price0Cumulative - price0CumulativeOld) /
-                (blockTimestamp - blockTimestampOld);
-            price1_ =
-                (price1Cumulative - price1CumulativeOld) /
-                (blockTimestamp - blockTimestampOld);
+            if (blockTimestamp_ != blockTimestampOld_) {
+                price0_ =
+                    (price0Cumulative_ - price0CumulativeOld_) /
+                    (blockTimestamp_ - blockTimestampOld_);
+                price1_ =
+                    (price1Cumulative_ - price1CumulativeOld_) /
+                    (blockTimestamp_ - blockTimestampOld_);
+            } else {
+                price0_ = price0Cumulative_ / blockTimestamp_;
+                price1_ = price1Cumulative_ / blockTimestamp_;
+            }
         }
 
         return expectedToken_ == IUniswapV2Pair(pair_).token0() ? price0_ : price1_;

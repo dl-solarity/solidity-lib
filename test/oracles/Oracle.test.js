@@ -109,6 +109,8 @@ describe("Oracle", () => {
     it("should not decrement pair counter if counter is 0", async () => {
       await createPairs();
 
+      assert.equal(await oracle.getCounter(WPLS_DAI), 0);
+
       await oracle.decrementCounter(WPLS_DAI);
 
       assert.equal(await oracle.getCounter(WPLS_DAI), 0);
@@ -184,7 +186,6 @@ describe("Oracle", () => {
 
       await oracle.updatePrices();
 
-      await time.increase(time.duration.seconds(1));
       assert.equal(Number(await oracle.getPriceInternal(WPLS_DAI, WPLS)), 2);
     });
 
@@ -197,12 +198,12 @@ describe("Oracle", () => {
       assert.equal(Number(await oracle.getPriceInternal(WPLS_DAI, DAI)), 0);
     });
 
-    it("should not work when blockTimestamp doesn't change", async () => {
+    it("should work when blockTimestamp doesn't change", async () => {
       await createPairs();
 
       await oracle.addPaths([WPLS_DAI_PATH]);
 
-      await truffleAssert.reverts(oracle.getPriceInternal(WPLS_DAI, DAI), "Oracle: blockTimestamp doesn't change");
+      assert.equal(Number(await oracle.getPriceInternal(WPLS_DAI, DAI)), 0);
     });
 
     it("should correctly return 0 from _getPrice when blockTimestamps.length is 0", async () => {
