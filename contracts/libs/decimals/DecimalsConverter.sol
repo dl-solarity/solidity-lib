@@ -80,7 +80,7 @@ library DecimalsConverter {
      * @return the number brought to 18 decimals of precision
      */
     function to18Safe(uint256 amount_, uint256 baseDecimals_) internal pure returns (uint256) {
-        return convertSafe(amount_, baseDecimals_, precisionTo18);
+        return _convertSafe(amount_, baseDecimals_, _to18);
     }
 
     /**
@@ -122,7 +122,7 @@ library DecimalsConverter {
      * @return the number brought from 18 to desired decimals of precision
      */
     function from18Safe(uint256 amount_, uint256 destDecimals_) internal pure returns (uint256) {
-        return convertSafe(amount_, destDecimals_, precisionFrom18);
+        return _convertSafe(amount_, destDecimals_, _from18);
     }
 
     /**
@@ -142,7 +142,7 @@ library DecimalsConverter {
      * @return the rounded number. Comes with 18 precision decimals
      */
     function round18Safe(uint256 amount_, uint256 decimals_) internal pure returns (uint256) {
-        return convertSafe(amount_, decimals_, round18);
+        return _convertSafe(amount_, decimals_, round18);
     }
 
     /**
@@ -152,38 +152,12 @@ library DecimalsConverter {
      * @param destToken_ desired token
      * @return the converted number
      */
-    function roundTokens(
+    function convert(
         uint256 amount_,
         address baseToken_,
         address destToken_
     ) internal view returns (uint256) {
         return convert(amount_, uint256(decimals(baseToken_)), uint256(decimals(destToken_)));
-    }
-
-    /**
-     * @notice The function to do the token precision convertion. Reverts if output is zero
-     * @param amount_ the amount to convert
-     * @param baseToken_ current token
-     * @param destToken_ desired token
-     * @return the converted number
-     */
-    function roundTokensSave(
-        uint256 amount_,
-        address baseToken_,
-        address destToken_
-    ) internal view returns (uint256) {
-        return convertTokensSafe(amount_, baseToken_, destToken_, roundTokens);
-    }
-
-    function precisionTo18(uint256 amount_, uint256 baseDecimals_) private pure returns (uint256) {
-        return convert(amount_, baseDecimals_, 18);
-    }
-
-    function precisionFrom18(
-        uint256 amount_,
-        uint256 destDecimals_
-    ) private pure returns (uint256) {
-        return convert(amount_, 18, destDecimals_);
     }
 
     /**
@@ -197,7 +171,7 @@ library DecimalsConverter {
         uint256 amount_,
         uint256 baseDecimals_,
         uint256 destDecimals_
-    ) private pure returns (uint256) {
+    ) internal pure returns (uint256) {
         if (baseDecimals_ > destDecimals_) {
             amount_ = amount_ / 10 ** (baseDecimals_ - destDecimals_);
         } else if (baseDecimals_ < destDecimals_) {
@@ -208,13 +182,63 @@ library DecimalsConverter {
     }
 
     /**
+     * @notice The function to do the token precision convertion. Reverts if output is zero
+     * @param amount_ the amount to convert
+     * @param baseToken_ current token
+     * @param destToken_ desired token
+     * @return the converted number
+     */
+    function convertTokensSafe(
+        uint256 amount_,
+        address baseToken_,
+        address destToken_
+    ) internal view returns (uint256) {
+        return _convertTokensSafe(amount_, baseToken_, destToken_, _convertTokens);
+    }
+
+    /**
+     * @notice The function to bring the number to 18 decimals of precision
+     * @param amount_ the number to convert
+     * @param baseDecimals_ the current precision of the number
+     * @return the number brought to 18 decimals of precision
+     */
+    function _to18(uint256 amount_, uint256 baseDecimals_) private pure returns (uint256) {
+        return convert(amount_, baseDecimals_, 18);
+    }
+
+    /**
+     * @notice The function to bring the number from 18 decimals to the desired decimals of precision
+     * @param amount_ the number to covert
+     * @param destDecimals_ the desired precision decimals
+     * @return the number brought from 18 to desired decimals of precision
+     */
+    function _from18(uint256 amount_, uint256 destDecimals_) private pure returns (uint256) {
+        return convert(amount_, 18, destDecimals_);
+    }
+
+    /**
+     * @notice The function to do the token precision convertion
+     * @param amount_ the amount to convert
+     * @param baseToken_ current token
+     * @param destToken_ desired token
+     * @return the converted number
+     */
+    function _convertTokens(
+        uint256 amount_,
+        address baseToken_,
+        address destToken_
+    ) private view returns (uint256) {
+        return convert(amount_, uint256(decimals(baseToken_)), uint256(decimals(destToken_)));
+    }
+
+    /**
      * @notice The function wrapper to do the safe precision convertion. Reverts if output is zero
      * @param amount_ the amount to covert
      * @param decimals_ the precision decimals
      * @param _convertFunc the internal function pointer to "from", "to", or "round" functions
      * @return conversionResult_ the convertion result
      */
-    function convertSafe(
+    function _convertSafe(
         uint256 amount_,
         uint256 decimals_,
         function(uint256, uint256) internal pure returns (uint256) _convertFunc
@@ -232,7 +256,7 @@ library DecimalsConverter {
      * @param _convertFunc the internal function pointer to "from", "to", or "round" functions
      * @return conversionResult_ the convertion result
      */
-    function convertTokensSafe(
+    function _convertTokensSafe(
         uint256 amount_,
         address baseToken_,
         address destToken_,
