@@ -11,9 +11,11 @@ describe("BlockGuard", () => {
   let mock;
 
   let FIRST;
+  let SECOND;
 
   before("setup", async () => {
     FIRST = await accounts(0);
+    SECOND = await accounts(1);
   });
 
   beforeEach("setup", async () => {
@@ -25,13 +27,15 @@ describe("BlockGuard", () => {
       assert.equal((await mock.getLatestLockBlock(await mock.LOCK_LOCK_RESOURCE(), FIRST)).toFixed(), "0");
     });
 
-    it("should have current lock block if has been locked", async () => {
+    it("should return the current block if the resource key has been locked", async () => {
       await mock.deposit();
 
       assert.equal(
         (await mock.getLatestLockBlock(await mock.DEPOSIT_WITHDRAW_RESOURCE(), FIRST)).toNumber(),
         await getCurrentBlock()
       );
+
+      assert.equal((await mock.getLatestLockBlock(await mock.DEPOSIT_WITHDRAW_RESOURCE(), SECOND)).toNumber(), "0");
     });
   });
 
@@ -54,17 +58,13 @@ describe("BlockGuard", () => {
     it("should allow to call in different blocks", async () => {
       await mock.lock();
 
-      assert.equal(
-        (await mock.getLatestLockBlock(await mock.LOCK_LOCK_RESOURCE(), FIRST)).toNumber(),
-        await getCurrentBlock()
-      );
+      const blockNumber = await getCurrentBlock();
+
+      assert.equal((await mock.getLatestLockBlock(await mock.LOCK_LOCK_RESOURCE(), FIRST)).toNumber(), blockNumber);
 
       await mock.lock();
 
-      assert.equal(
-        (await mock.getLatestLockBlock(await mock.LOCK_LOCK_RESOURCE(), FIRST)).toNumber(),
-        await getCurrentBlock()
-      );
+      assert.equal((await mock.getLatestLockBlock(await mock.LOCK_LOCK_RESOURCE(), FIRST)).toNumber(), blockNumber + 1);
     });
 
     it("should disallow to call in the same block", async () => {
