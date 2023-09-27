@@ -12,10 +12,10 @@ import {UniswapV2OracleLibrary} from "./external-modules/uniswap-v2/v2-periphery
 import {ArrayHelper} from "../libs/arrays/ArrayHelper.sol";
 
 /**
- * @title PriceFeedOracle
+ * @title OracleV2
  * @dev A contract for retrieving price feeds from Uniswap V2 pairs.
  */
-abstract contract Oracle is Initializable {
+abstract contract OracleV2 is Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using UniswapV2OracleLibrary for address;
     using ArrayHelper for uint256[];
@@ -36,7 +36,7 @@ abstract contract Oracle is Initializable {
     mapping(address => address[]) internal _paths;
     mapping(address => PairInfo) internal _pairInfos;
 
-    function __Oracle_init(
+    function __OracleV2_init(
         address uniswapV2Factory_,
         uint256 timeWindow_
     ) internal onlyInitializing {
@@ -48,7 +48,9 @@ abstract contract Oracle is Initializable {
      * @dev Updates the price data for all registered Uniswap V2 pairs.
      */
     function updatePrices() public {
-        for (uint256 i = 0; i < _pairs.length(); i++) {
+        uint256 pairsLength = _pairs.length();
+
+        for (uint256 i = 0; i < pairsLength; i++) {
             address pair_ = _pairs.at(i);
 
             PairInfo storage pairInfo = _pairInfos[pair_];
@@ -76,17 +78,16 @@ abstract contract Oracle is Initializable {
      */
     function getPrice(address tokenIn_, uint256 amount_) external view returns (uint256, address) {
         address[] storage path = _paths[tokenIn_];
+        uint256 pathLength_ = path.length;
 
-        require(path.length > 0, "Oracle: invalid path");
+        require(pathLength_ > 0, "OracleV2: invalid path");
 
-        address tokenOut_ = path[path.length - 1];
+        address tokenOut_ = path[pathLength_ - 1];
 
-        for (uint256 i = 0; i < path.length - 1; i++) {
+        for (uint256 i = 0; i < pathLength_ - 1; i++) {
             address currentToken_ = path[i];
             address nextToken_ = path[i + 1];
-
             address pair_ = uniswapV2Factory.getPair(currentToken_, nextToken_);
-
             uint256 price_ = _getPrice(pair_, currentToken_);
 
             if (price_ == 0) {
@@ -112,15 +113,19 @@ abstract contract Oracle is Initializable {
      * @param paths_ The array of token paths to add.
      */
     function _addPaths(address[][] calldata paths_) internal {
-        for (uint256 i = 0; i < paths_.length; i++) {
-            require(paths_[i].length >= 2, "Oracle: path must be longer than 2");
+        uint256 numberOfPaths_ = paths_.length;
+
+        for (uint256 i = 0; i < numberOfPaths_; i++) {
+            uint256 pathLength_ = paths_[i].length;
+
+            require(pathLength_ >= 2, "OracleV2: path must be longer than 2");
 
             for (uint256 j = 0; j < paths_[i].length - 1; j++) {
                 (bool isExist, address pair) = _isPairExistAtUniswap(
                     paths_[i][j],
                     paths_[i][j + 1]
                 );
-                require(isExist, "Oracle: uniswap pair doesn't exist");
+                require(isExist, "OracleV2: uniswap pair doesn't exist");
                 _pairs.add(pair);
                 _incrementCounter(pair);
             }
@@ -135,8 +140,10 @@ abstract contract Oracle is Initializable {
      */
     function _removePaths(address[] calldata tokenIns_) internal {
         uint256 numberOfPaths_ = tokenIns_.length;
+
         for (uint256 i = 0; i < numberOfPaths_; i++) {
             uint256 pathLength_ = _paths[tokenIns_[i]].length;
+
             for (uint256 j = 0; j < pathLength_ - 1; j++) {
                 address pair = uniswapV2Factory.getPair(
                     _paths[tokenIns_[i]][j],

@@ -3,21 +3,21 @@ pragma solidity ^0.8.4;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {Oracle} from "../../oracles/Oracle.sol";
+import {OracleV2} from "../../oracles/OracleV2.sol";
 import {UniswapV2PairMock} from "./UniswapV2PairMock.sol";
 
-contract OracleMock is Oracle {
+contract OracleV2Mock is OracleV2 {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    function __OracleMock_init(
+    function __OracleV2Mock_init(
         address uniswapV2Factory_,
         uint256 timeWindow_
     ) external initializer {
-        __Oracle_init(uniswapV2Factory_, timeWindow_);
+        __OracleV2_init(uniswapV2Factory_, timeWindow_);
     }
 
     function mockInit(address uniswapV2Factory_, uint256 timeWindow_) external {
-        __Oracle_init(uniswapV2Factory_, timeWindow_);
+        __OracleV2_init(uniswapV2Factory_, timeWindow_);
     }
 
     function addPaths(address[][] calldata paths_) external {

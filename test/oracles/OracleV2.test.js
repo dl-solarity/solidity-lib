@@ -3,7 +3,7 @@ const truffleAssert = require("truffle-assertions");
 const { time } = require("@openzeppelin/test-helpers");
 const { ZERO_ADDR } = require("../../scripts/utils/constants");
 
-const Oracle = artifacts.require("OracleMock");
+const Oracle = artifacts.require("OracleV2Mock");
 const UniswapV2FactoryMock = artifacts.require("UniswapV2FactoryMock");
 
 const ORACLE_TIME_WINDOW = 1;
@@ -13,7 +13,7 @@ const DAI = "0xefD766cCb38EaF1dfd701853BFCe31359239F305";
 const WPLS_DAI_PATH = [WPLS, DAI];
 const PLSX_WPLS_DAI_PATH = [PLSX, WPLS, DAI];
 
-describe("Oracle", () => {
+describe("OracleV2", () => {
   let oracle;
   let factoryAddress;
   let uniswapV2Factory;
@@ -24,7 +24,7 @@ describe("Oracle", () => {
     uniswapV2Factory = await UniswapV2FactoryMock.new();
     factoryAddress = uniswapV2Factory.address;
     oracle = await Oracle.new();
-    await oracle.__OracleMock_init(factoryAddress, ORACLE_TIME_WINDOW);
+    await oracle.__OracleV2Mock_init(factoryAddress, ORACLE_TIME_WINDOW);
   });
 
   async function createPairs() {
@@ -47,7 +47,7 @@ describe("Oracle", () => {
         "Initializable: contract is not initializing"
       );
       await truffleAssert.reverts(
-        oracle.__OracleMock_init(factoryAddress, ORACLE_TIME_WINDOW),
+        oracle.__OracleV2Mock_init(factoryAddress, ORACLE_TIME_WINDOW),
         "Initializable: contract is already initialized"
       );
     });
@@ -81,11 +81,11 @@ describe("Oracle", () => {
     });
 
     it("should not allow to set path which length is < 2", async () => {
-      await truffleAssert.reverts(oracle.addPaths([[DAI]]), "Oracle: path must be longer than 2");
+      await truffleAssert.reverts(oracle.addPaths([[DAI]]), "OracleV2: path must be longer than 2");
     });
 
     it("should not allow to set path with non-existent pairs", async () => {
-      await truffleAssert.reverts(oracle.addPaths([WPLS_DAI_PATH]), "Oracle: uniswap pair doesn't exist");
+      await truffleAssert.reverts(oracle.addPaths([WPLS_DAI_PATH]), "OracleV2: uniswap pair doesn't exist");
     });
   });
 
@@ -163,7 +163,7 @@ describe("Oracle", () => {
     });
 
     it("should not get price if there is no path", async () => {
-      await truffleAssert.reverts(oracle.getPrice(WPLS, 10), "Oracle: invalid path");
+      await truffleAssert.reverts(oracle.getPrice(WPLS, 10), "OracleV2: invalid path");
     });
 
     it("should correctly return 0 from getPrice when blockTimestamps.length is 0", async () => {
