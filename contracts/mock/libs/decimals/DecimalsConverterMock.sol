@@ -15,7 +15,7 @@ contract DecimalsConverterMock {
         return amount_.to18(baseDecimals_);
     }
 
-    function to18(uint256 amount_, address token_) external view returns (uint256) {
+    function tokenTo18(uint256 amount_, address token_) external view returns (uint256) {
         return amount_.to18(token_);
     }
 
@@ -23,7 +23,7 @@ contract DecimalsConverterMock {
         return amount_.to18Safe(baseDecimals_);
     }
 
-    function to18Safe(uint256 amount_, address token_) external view returns (uint256) {
+    function tokenTo18Safe(uint256 amount_, address token_) external view returns (uint256) {
         return amount_.to18Safe(token_);
     }
 
@@ -31,7 +31,7 @@ contract DecimalsConverterMock {
         return amount_.from18(destDecimals_);
     }
 
-    function from18(uint256 amount_, address token_) external view returns (uint256) {
+    function tokenFrom18(uint256 amount_, address token_) external view returns (uint256) {
         return amount_.from18(token_);
     }
 
@@ -39,7 +39,7 @@ contract DecimalsConverterMock {
         return amount_.from18Safe(destDecimals_);
     }
 
-    function from18Safe(uint256 amount_, address token_) external view returns (uint256) {
+    function tokenFrom18Safe(uint256 amount_, address token_) external view returns (uint256) {
         return amount_.from18Safe(token_);
     }
 
@@ -59,7 +59,7 @@ contract DecimalsConverterMock {
         return amount_.convert(baseDecimals_, destDecimals_);
     }
 
-    function convert(
+    function convertTokens(
         uint256 amount_,
         address baseToken_,
         address destToken_
