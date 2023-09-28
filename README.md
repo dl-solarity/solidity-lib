@@ -5,7 +5,6 @@
 
 # Solidity Library by Distributed Lab
 
-
 **Solidity Library for savvies by DL**
 
 The library consists of modules and utilities that are built with a help of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (4.9.2) and go far beyond mediocre solidity.
@@ -38,7 +37,7 @@ Once the [npm package](https://www.npmjs.com/package/@solarity/solidity-lib) is 
 ```solidity
 pragma solidity ^0.8.4;
 
-import "@solarity/solidity-lib/contracts-registry/presets/OwnableContractsRegistry.sol";
+import {OwnableContractsRegistry} from "@solarity/solidity-lib/contracts-registry/presets/OwnableContractsRegistry.sol";
 
 contract ContractsRegistry is OwnableContractsRegistry {
     . . .

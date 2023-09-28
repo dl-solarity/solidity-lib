@@ -75,10 +75,10 @@ describe("DecimalsConverter", () => {
       const token2 = await ERC20Mock.new("MK2", "MK2", 6);
       assert.equal((await mock.tokenTo18(wei("1", 8), token2.address)).toFixed(), wei("1", 20));
 
-      const token3 = await ERC20Mock.new("MK2", "MK2", 18);
+      const token3 = await ERC20Mock.new("MK3", "MK3", 18);
       assert.equal((await mock.tokenTo18(wei("1", 6), token3.address)).toFixed(), wei("1", 6));
 
-      const token4 = await ERC20Mock.new("MK2", "MK2", 30);
+      const token4 = await ERC20Mock.new("MK4", "MK4", 30);
       assert.equal((await mock.tokenTo18(wei("1", 30), token4.address)).toFixed(), wei("1"));
     });
   });
@@ -120,10 +120,10 @@ describe("DecimalsConverter", () => {
       const token2 = await ERC20Mock.new("MK2", "MK2", 15);
       assert.equal((await mock.tokenFrom18(wei("1", 12), token2.address)).toFixed(), wei("1", 9));
 
-      const token3 = await ERC20Mock.new("MK2", "MK2", 18);
+      const token3 = await ERC20Mock.new("MK3", "MK3", 18);
       assert.equal((await mock.tokenFrom18(wei("1", 6), token3.address)).toFixed(), wei("1", 6));
 
-      const token4 = await ERC20Mock.new("MK2", "MK2", 25);
+      const token4 = await ERC20Mock.new("MK4", "MK4", 25);
       assert.equal((await mock.tokenFrom18(wei("1", 20), token4.address)).toFixed(), wei("1", 27));
     });
   });
