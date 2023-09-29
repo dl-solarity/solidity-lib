@@ -100,13 +100,17 @@ abstract contract RBAC is IRBAC, Initializable {
         ResourceWithPermissions[] memory permissionsToAdd_,
         bool allowed_
     ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
-        for (uint256 i = 0; i < permissionsToAdd_.length; i++) {
+        uint len = permissionsToAdd_.length;
+        for (uint256 i; i < len;) {
             _addPermissionsToRole(
                 role_,
                 permissionsToAdd_[i].resource,
                 permissionsToAdd_[i].permissions,
                 allowed_
             );
+           unchecked {
+              ++i;
+           }
         }
     }
 
