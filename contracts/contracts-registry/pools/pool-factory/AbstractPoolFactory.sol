@@ -9,33 +9,36 @@ import {AbstractPoolContractsRegistry} from "../AbstractPoolContractsRegistry.so
 import {PublicBeaconProxy} from "./proxy/PublicBeaconProxy.sol";
 
 /**
- *  @notice The PoolContractsRegistry module
+ * @notice The PoolContractsRegistry module
  *
- *  This is an abstract factory contract that is used in pair with the PoolContractsRegistry contract to
- *  deploy, register and inject pools.
+ * This is an abstract factory contract that is used in pair with the PoolContractsRegistry contract to
+ * deploy, register and inject pools.
  *
- *  The actual `deploy()` function has to be implemented in the descendants of this contract. The deployment
- *  is made via the BeaconProxy pattern.
+ * The actual `deploy()` function has to be implemented in the descendants of this contract. The deployment
+ * is made via the BeaconProxy pattern.
  */
 abstract contract AbstractPoolFactory is AbstractDependant {
     address internal _contractsRegistry;
 
     /**
-     *  @notice The function that accepts dependencies from the ContractsRegistry, can be overridden
-     *  @param contractsRegistry_ the dependency registry
+     * @notice The function that accepts dependencies from the ContractsRegistry, can be overridden
+     * @param contractsRegistry_ the dependency registry
      */
     function setDependencies(
         address contractsRegistry_,
-        bytes calldata
+        bytes memory
     ) public virtual override dependant {
         _contractsRegistry = contractsRegistry_;
     }
 
     /**
-     *  @notice The internal deploy function that deploys BeaconProxy pointing to the
-     *  pool implementation taken from the PoolContractRegistry
+     * @notice The internal deploy function that deploys BeaconProxy pointing to the
+     * pool implementation taken from the PoolContractRegistry
      */
-    function _deploy(address poolRegistry_, string memory poolType_) internal returns (address) {
+    function _deploy(
+        address poolRegistry_,
+        string memory poolType_
+    ) internal virtual returns (address) {
         return
             address(
                 new PublicBeaconProxy(
@@ -46,14 +49,14 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     }
 
     /**
-     *  @notice The internal deploy function that deploys BeaconProxy pointing to the
-     *  pool implementation taken from the PoolContractRegistry using the create2 mechanism
+     * @notice The internal deploy function that deploys BeaconProxy pointing to the
+     * pool implementation taken from the PoolContractRegistry using the create2 mechanism
      */
     function _deploy2(
         address poolRegistry_,
         string memory poolType_,
         bytes32 salt_
-    ) internal returns (address) {
+    ) internal virtual returns (address) {
         return
             address(
                 new PublicBeaconProxy{salt: salt_}(
@@ -64,7 +67,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     }
 
     /**
-     *  @notice The internal function that registers newly deployed pool in the provided PoolContractRegistry
+     * @notice The internal function that registers newly deployed pool in the provided PoolContractRegistry
      */
     function _register(
         address poolRegistry_,
@@ -79,22 +82,22 @@ abstract contract AbstractPoolFactory is AbstractDependant {
     }
 
     /**
-     *  @notice The function that injects dependencies to the newly deployed pool and sets
-     *  provided PoolContractsRegistry as an injector
+     * @notice The function that injects dependencies to the newly deployed pool and sets
+     * provided PoolContractsRegistry as an injector
      */
-    function _injectDependencies(address poolRegistry_, address proxy_) internal {
+    function _injectDependencies(address poolRegistry_, address proxy_) internal virtual {
         AbstractDependant(proxy_).setDependencies(_contractsRegistry, bytes(""));
         AbstractDependant(proxy_).setInjector(poolRegistry_);
     }
 
     /**
-     *  @notice The view function that computes the address of the pool if deployed via _deploy2
+     * @notice The view function that computes the address of the pool if deployed via _deploy2
      */
     function _predictPoolAddress(
         address poolRegistry_,
         string memory poolType_,
         bytes32 salt_
-    ) internal view returns (address) {
+    ) internal view virtual returns (address) {
         bytes32 bytecodeHash = keccak256(
             abi.encodePacked(
                 type(PublicBeaconProxy).creationCode,

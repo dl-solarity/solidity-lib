@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
- *  @notice The ContractsRegistry module
+ * @notice The ContractsRegistry module
  *
- *  This is the helper contract that is used by an AbstractContractsRegistry as a proxy admin.
- *  It is essential to distinguish between the admin and the registry due to the Transparent proxies nature
+ * This is the helper contract that is used by an AbstractContractsRegistry as a proxy admin.
+ * It is essential to distinguish between the admin and the registry due to the Transparent proxies nature
  */
 contract ProxyUpgrader {
     using Address for address;
@@ -26,9 +26,9 @@ contract ProxyUpgrader {
 
     function upgrade(address what_, address to_, bytes calldata data_) external onlyOwner {
         if (data_.length > 0) {
-            TransparentUpgradeableProxy(payable(what_)).upgradeToAndCall(to_, data_);
+            ITransparentUpgradeableProxy(payable(what_)).upgradeToAndCall(to_, data_);
         } else {
-            TransparentUpgradeableProxy(payable(what_)).upgradeTo(to_);
+            ITransparentUpgradeableProxy(payable(what_)).upgradeTo(to_);
         }
     }
 

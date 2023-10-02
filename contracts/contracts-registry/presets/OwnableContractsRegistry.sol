@@ -6,7 +6,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {AbstractContractsRegistry} from "../AbstractContractsRegistry.sol";
 
 /**
- *  @notice The Ownable preset of ContractsRegistry
+ * @notice The Ownable preset of ContractsRegistry
  */
 contract OwnableContractsRegistry is AbstractContractsRegistry, OwnableUpgradeable {
     function __OwnableContractsRegistry_init() public initializer {
@@ -46,6 +46,14 @@ contract OwnableContractsRegistry is AbstractContractsRegistry, OwnableUpgradeab
 
     function addProxyContract(string calldata name_, address contractAddress_) external onlyOwner {
         _addProxyContract(name_, contractAddress_);
+    }
+
+    function addProxyContractAndCall(
+        string calldata name_,
+        address contractAddress_,
+        bytes calldata data_
+    ) external onlyOwner {
+        _addProxyContractAndCall(name_, contractAddress_, data_);
     }
 
     function justAddProxyContract(

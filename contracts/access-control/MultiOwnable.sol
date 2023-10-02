@@ -9,16 +9,16 @@ import {TypeCaster} from "../libs/utils/TypeCaster.sol";
 import {IMultiOwnable} from "../interfaces/access-control/IMultiOwnable.sol";
 
 /**
- *  @notice The MultiOwnable module
+ * @notice The MultiOwnable module
  *
- *  Contract module which provides a basic access control mechanism, where there is a list of
- *  owner addresses those can be granted exclusive access to specific functions.
- *  All owners are equal in their access, they can add new owners, also remove each other and themself.
+ * Contract module which provides a basic access control mechanism, where there is a list of
+ * owner addresses those can be granted exclusive access to specific functions.
+ * All owners are equal in their access, they can add new owners, also remove each other and themself.
  *
- *  By default, the owner account will be the one that deploys the contract.
+ * By default, the owner account will be the one that deploys the contract.
  *
- *  This module will make available the modifier `onlyOwner`, which can be applied
- *  to your functions to restrict their use to the owners.
+ * This module will make available the modifier `onlyOwner`, which can be applied
+ * to your functions to restrict their use to the owners.
  */
 abstract contract MultiOwnable is IMultiOwnable, Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;

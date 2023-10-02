@@ -6,27 +6,27 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {StringSet} from "../data-structures/StringSet.sol";
 
 /**
- *  @notice Library for pagination.
+ * @notice Library for pagination.
  *
- *  Supports the following data types `uin256[]`, `address[]`, `bytes32[]`, `UintSet`,
- *  `AddressSet`, `BytesSet`, `StringSet`.
+ * Supports the following data types `uin256[]`, `address[]`, `bytes32[]`, `UintSet`,
+ * `AddressSet`, `BytesSet`, `StringSet`.
  */
 library Paginator {
     using EnumerableSet for *;
     using StringSet for StringSet.Set;
 
     /**
-     *  @notice Returns part of an array.
-     *  @dev All functions below have the same description.
+     * @notice Returns part of an array.
+     * @dev All functions below have the same description.
      *
-     *  Examples:
-     *  - part([4, 5, 6, 7], 0, 4) will return [4, 5, 6, 7]
-     *  - part([4, 5, 6, 7], 2, 4) will return [6, 7]
-     *  - part([4, 5, 6, 7], 2, 1) will return [6]
+     * Examples:
+     * - part([4, 5, 6, 7], 0, 4) will return [4, 5, 6, 7]
+     * - part([4, 5, 6, 7], 2, 4) will return [6, 7]
+     * - part([4, 5, 6, 7], 2, 1) will return [6]
      *
-     *  @param arr Storage array.
-     *  @param offset_ Offset, index in an array.
-     *  @param limit_ Number of elements after the `offset`.
+     * @param arr Storage array.
+     * @param offset_ Offset, index in an array.
+     * @param limit_ Number of elements after the `offset`.
      */
     function part(
         uint256[] storage arr,

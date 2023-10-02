@@ -6,7 +6,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {StringSet} from "../data-structures/StringSet.sol";
 
 /**
- *  @notice A simple library to work with sets
+ * @notice A simple library to work with sets
  */
 library SetHelper {
     using EnumerableSet for EnumerableSet.UintSet;
@@ -14,9 +14,9 @@ library SetHelper {
     using StringSet for StringSet.Set;
 
     /**
-     *  @notice The function to insert an array of elements into the set
-     *  @param set the set to insert the elements into
-     *  @param array_ the elements to be inserted
+     * @notice The function to insert an array of elements into the set
+     * @param set the set to insert the elements into
+     * @param array_ the elements to be inserted
      */
     function add(EnumerableSet.AddressSet storage set, address[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {
@@ -37,9 +37,9 @@ library SetHelper {
     }
 
     /**
-     *  @notice The function to remove an array of elements from the set
-     *  @param set the set to remove the elements from
-     *  @param array_ the elements to be removed
+     * @notice The function to remove an array of elements from the set
+     * @param set the set to remove the elements from
+     * @param array_ the elements to be removed
      */
     function remove(EnumerableSet.AddressSet storage set, address[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {

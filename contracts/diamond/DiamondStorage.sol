@@ -4,21 +4,21 @@ pragma solidity ^0.8.4;
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**
- *  @notice The Diamond standard module
+ * @notice The Diamond standard module
  *
- *  This is the storage contract for the diamond proxy
+ * This is the storage contract for the diamond proxy
  */
-contract DiamondStorage {
+abstract contract DiamondStorage {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableSet for EnumerableSet.AddressSet;
 
     /**
-     *  @notice The struct slot where the storage is
+     * @notice The struct slot where the storage is
      */
     bytes32 public constant DIAMOND_STORAGE_SLOT = keccak256("diamond.standard.diamond.storage");
 
     /**
-     *  @notice The storage of the Diamond proxy
+     * @notice The storage of the Diamond proxy
      */
     struct DStorage {
         mapping(bytes4 => address) selectorToFacet;
@@ -27,8 +27,8 @@ contract DiamondStorage {
     }
 
     /**
-     *  @notice The internal function to get the diamond proxy storage
-     *  @return _ds the struct from the DIAMOND_STORAGE_SLOT
+     * @notice The internal function to get the diamond proxy storage
+     * @return _ds the struct from the DIAMOND_STORAGE_SLOT
      */
     function _getDiamondStorage() internal pure returns (DStorage storage _ds) {
         bytes32 slot_ = DIAMOND_STORAGE_SLOT;
@@ -39,17 +39,17 @@ contract DiamondStorage {
     }
 
     /**
-     *  @notice The function to get all the facets of this diamond
-     *  @return facets_ the array of facets' addresses
+     * @notice The function to get all the facets of this diamond
+     * @return facets_ the array of facets' addresses
      */
     function getFacets() public view returns (address[] memory facets_) {
         return _getDiamondStorage().facets.values();
     }
 
     /**
-     *  @notice The function to get all the selectors assigned to the facet
-     *  @param facet_ the facet to get assigned selectors of
-     *  @return selectors_ the array of assigned selectors
+     * @notice The function to get all the selectors assigned to the facet
+     * @param facet_ the facet to get assigned selectors of
+     * @return selectors_ the array of assigned selectors
      */
     function getFacetSelectors(address facet_) public view returns (bytes4[] memory selectors_) {
         EnumerableSet.Bytes32Set storage _f2s = _getDiamondStorage().facetToSelectors[facet_];
@@ -62,9 +62,9 @@ contract DiamondStorage {
     }
 
     /**
-     *  @notice The function to get associated facet by the selector
-     *  @param selector_ the selector
-     *  @return facet_ the associated facet address
+     * @notice The function to get associated facet by the selector
+     * @param selector_ the selector
+     * @return facet_ the associated facet address
      */
     function getFacetBySelector(bytes4 selector_) public view returns (address facet_) {
         return _getDiamondStorage().selectorToFacet[selector_];

@@ -6,6 +6,28 @@ import {ArrayHelper} from "../../../libs/arrays/ArrayHelper.sol";
 contract ArrayHelperMock {
     using ArrayHelper for *;
 
+    uint256[] internal _tmpArr;
+
+    function setArray(uint256[] calldata arr_) external {
+        _tmpArr = arr_;
+    }
+
+    function lowerBound(uint256 element_) external view returns (uint256) {
+        return _tmpArr.lowerBound(element_);
+    }
+
+    function upperBound(uint256 element_) external view returns (uint256) {
+        return _tmpArr.upperBound(element_);
+    }
+
+    function getRangeSum(uint256 beginIndex_, uint256 endIndex_) external view returns (uint256) {
+        return _tmpArr.getRangeSum(beginIndex_, endIndex_);
+    }
+
+    function countPrefixes(uint256[] memory arr_) external pure returns (uint256[] memory) {
+        return arr_.countPrefixes();
+    }
+
     function reverseUint(uint256[] memory arr_) external pure returns (uint256[] memory) {
         return arr_.reverse();
     }
@@ -54,23 +76,38 @@ contract ArrayHelperMock {
         return (to_.insert(index_, what_), to_);
     }
 
-    function countPrefixes(uint256[] memory arr_) external pure returns (uint256[] memory) {
-        return arr_.countPrefixes();
-    }
-
-    function getRangeSum(
+    function cropUint(
         uint256[] memory arr_,
-        uint256 beginIndex_,
-        uint256 endIndex_
-    ) external pure returns (uint256) {
-        return arr_.countPrefixes().getRangeSum(beginIndex_, endIndex_);
+        uint256 newLength_
+    ) external pure returns (uint256[] memory) {
+        return arr_.crop(newLength_);
     }
 
-    function lowerBound(uint256[] memory arr_, uint256 element_) external pure returns (uint256) {
-        return arr_.lowerBound(element_);
+    function cropAddress(
+        address[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (address[] memory) {
+        return arr_.crop(newLength_);
     }
 
-    function upperBound(uint256[] memory arr_, uint256 element_) external pure returns (uint256) {
-        return arr_.upperBound(element_);
+    function cropBool(
+        bool[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (bool[] memory) {
+        return arr_.crop(newLength_);
+    }
+
+    function cropString(
+        string[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (string[] memory) {
+        return arr_.crop(newLength_);
+    }
+
+    function cropBytes(
+        bytes32[] memory arr_,
+        uint256 newLength_
+    ) external pure returns (bytes32[] memory) {
+        return arr_.crop(newLength_);
     }
 }

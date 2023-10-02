@@ -1,5 +1,5 @@
 <!-- 
-Thank you for contributing to DLSL! 
+Thank you for contributing to Solarity! 
 
 Please consider ticking the relevant statements.
 -->

@@ -6,7 +6,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {AbstractCompoundRateKeeper} from "../AbstractCompoundRateKeeper.sol";
 
 /**
- *  @notice The Ownable preset of CompoundRateKeeper
+ * @notice The Ownable preset of CompoundRateKeeper
  */
 contract OwnableCompoundRateKeeper is AbstractCompoundRateKeeper, OwnableUpgradeable {
     function __OwnableCompoundRateKeeper_init(
