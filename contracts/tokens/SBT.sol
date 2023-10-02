@@ -76,6 +76,7 @@ abstract contract SBT is ISBT, Initializable {
      * @notice The function to get a user's token by its ordinal id
      * @param owner_ the user to get the token of
      * @param index_ the id of the token in the user's array
+     * @return the token the user owns
      */
     function tokenOf(address owner_, uint256 index_) public view override returns (uint256) {
         return _balances[owner_].at(index_);
@@ -118,14 +119,19 @@ abstract contract SBT is ISBT, Initializable {
      * @return the URI of the token
      */
     function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
-        if (bytes(_tokenURIs[tokenId_]).length != 0) {
-            return _tokenURIs[tokenId_];
+        string memory tokenURI_ = _tokenURIs[tokenId_];
+
+        if (bytes(tokenURI_).length != 0) {
+            return tokenURI_;
         }
 
         string memory base_ = baseURI();
 
-        return
-            bytes(base_).length != 0 ? string(abi.encodePacked(base_, tokenId_.toString())) : "";
+        if (bytes(base_).length != 0) {
+            return string(abi.encodePacked(base_, tokenId_.toString()));
+        }
+
+        return "";
     }
 
     /**

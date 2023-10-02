@@ -11,13 +11,11 @@ describe("SBT", () => {
   const symbol = "TS";
 
   let FIRST;
-  let SECOND;
 
   let sbt;
 
   before("setup", async () => {
     FIRST = await accounts(0);
-    SECOND = await accounts(1);
   });
 
   beforeEach("setup", async () => {
