@@ -10,7 +10,7 @@ import {ISBT} from "../interfaces/tokens/ISBT.sol";
 /**
  * @notice The SBT module
  *
- * Am abstract lightweight implementation of a Soul Bound Token. Does not comply with ERC721 standard.
+ * An abstract lightweight implementation of a Soul Bound Token. Does not comply with ERC721 standard.
  * Approve and transfer functionality has been removed as it is not needed in SBTs.
  *
  * Has to be inherited in order to be useful in the project
