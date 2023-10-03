@@ -101,7 +101,7 @@ abstract contract AbstractContractsRegistry is Initializable {
      * @notice The function that injects the dependencies into the given contract
      * @param name_ the name of the contract
      */
-    function _injectDependencies(string memory name_) internal {
+    function _injectDependencies(string memory name_) internal virtual {
         _injectDependenciesWithData(name_, bytes(""));
     }
 
@@ -110,7 +110,10 @@ abstract contract AbstractContractsRegistry is Initializable {
      * @param name_ the name of the contract
      * @param data_ the extra context data
      */
-    function _injectDependenciesWithData(string memory name_, bytes memory data_) internal {
+    function _injectDependenciesWithData(
+        string memory name_,
+        bytes memory data_
+    ) internal virtual {
         address contractAddress_ = _contracts[name_];
 
         require(contractAddress_ != address(0), "ContractsRegistry: this mapping doesn't exist");
@@ -126,7 +129,7 @@ abstract contract AbstractContractsRegistry is Initializable {
      *
      * It is the Owner's responsibility to ensure the compatibility between implementations
      */
-    function _upgradeContract(string memory name_, address newImplementation_) internal {
+    function _upgradeContract(string memory name_, address newImplementation_) internal virtual {
         _upgradeContractAndCall(name_, newImplementation_, bytes(""));
     }
 
@@ -142,7 +145,7 @@ abstract contract AbstractContractsRegistry is Initializable {
         string memory name_,
         address newImplementation_,
         bytes memory data_
-    ) internal {
+    ) internal virtual {
         address contractToUpgrade_ = _contracts[name_];
 
         require(contractToUpgrade_ != address(0), "ContractsRegistry: this mapping doesn't exist");
@@ -159,7 +162,7 @@ abstract contract AbstractContractsRegistry is Initializable {
      * @param name_ the name to associate the contract with
      * @param contractAddress_ the address of the contract
      */
-    function _addContract(string memory name_, address contractAddress_) internal {
+    function _addContract(string memory name_, address contractAddress_) internal virtual {
         require(contractAddress_ != address(0), "ContractsRegistry: zero address is forbidden");
 
         _contracts[name_] = contractAddress_;
@@ -173,7 +176,7 @@ abstract contract AbstractContractsRegistry is Initializable {
      * @param name_ the name to associate the contract with
      * @param contractAddress_ the address of the implementation
      */
-    function _addProxyContract(string memory name_, address contractAddress_) internal {
+    function _addProxyContract(string memory name_, address contractAddress_) internal virtual {
         _addProxyContractAndCall(name_, contractAddress_, bytes(""));
     }
 
@@ -188,7 +191,7 @@ abstract contract AbstractContractsRegistry is Initializable {
         string memory name_,
         address contractAddress_,
         bytes memory data_
-    ) internal {
+    ) internal virtual {
         require(contractAddress_ != address(0), "ContractsRegistry: zero address is forbidden");
 
         address proxyAddr_ = address(
@@ -208,7 +211,10 @@ abstract contract AbstractContractsRegistry is Initializable {
      * @param name_ the name to associate the contract with
      * @param contractAddress_ the address of the proxy
      */
-    function _justAddProxyContract(string memory name_, address contractAddress_) internal {
+    function _justAddProxyContract(
+        string memory name_,
+        address contractAddress_
+    ) internal virtual {
         require(contractAddress_ != address(0), "ContractsRegistry: zero address is forbidden");
 
         _contracts[name_] = contractAddress_;
@@ -225,7 +231,7 @@ abstract contract AbstractContractsRegistry is Initializable {
      * @notice The function to remove the contract from the ContractsRegistry
      * @param name_ the associated name with the contract
      */
-    function _removeContract(string memory name_) internal {
+    function _removeContract(string memory name_) internal virtual {
         address contractAddress_ = _contracts[name_];
 
         require(contractAddress_ != address(0), "ContractsRegistry: this mapping doesn't exist");

@@ -73,7 +73,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         address poolRegistry_,
         string memory poolType_,
         address poolProxy_
-    ) internal {
+    ) internal virtual {
         (bool success, ) = poolRegistry_.call(
             abi.encodeWithSignature("addProxyPool(string,address)", poolType_, poolProxy_)
         );
