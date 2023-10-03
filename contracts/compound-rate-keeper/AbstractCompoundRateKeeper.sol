@@ -157,7 +157,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      * @notice The internal function to set the capitalization rate
      * @param capitalizationRate_ new capitalization rate
      */
-    function _setCapitalizationRate(uint256 capitalizationRate_) internal {
+    function _setCapitalizationRate(uint256 capitalizationRate_) internal virtual {
         _update();
         _changeCapitalizationRate(capitalizationRate_);
     }
@@ -166,7 +166,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      * @notice The internal function to set the capitalization period
      * @param capitalizationPeriod_ new capitalization period
      */
-    function _setCapitalizationPeriod(uint64 capitalizationPeriod_) internal {
+    function _setCapitalizationPeriod(uint64 capitalizationPeriod_) internal virtual {
         _update();
         _changeCapitalizationPeriod(capitalizationPeriod_);
     }
