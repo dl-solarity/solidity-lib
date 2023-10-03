@@ -1,7 +1,7 @@
 const { assert } = require("chai");
 const truffleAssert = require("truffle-assertions");
-const { time } = require("@openzeppelin/test-helpers");
 const { ZERO_ADDR } = require("../../scripts/utils/constants");
+const { setTime, getCurrentBlockTime } = require("../helpers/block-helper");
 
 const Oracle = artifacts.require("OracleV2Mock");
 const UniswapV2FactoryMock = artifacts.require("UniswapV2FactoryMock");
@@ -15,16 +15,15 @@ const PLSX_WPLS_DAI_PATH = [PLSX, WPLS, DAI];
 
 describe("OracleV2", () => {
   let oracle;
-  let factoryAddress;
   let uniswapV2Factory;
   let WPLS_DAI;
   let WPLS_PLSX;
 
   beforeEach("setup", async () => {
     uniswapV2Factory = await UniswapV2FactoryMock.new();
-    factoryAddress = uniswapV2Factory.address;
     oracle = await Oracle.new();
-    await oracle.__OracleV2Mock_init(factoryAddress, ORACLE_TIME_WINDOW);
+
+    await oracle.__OracleV2Mock_init(uniswapV2Factory.address, ORACLE_TIME_WINDOW);
   });
 
   async function createPairs() {
@@ -37,17 +36,17 @@ describe("OracleV2", () => {
 
   describe("#init", () => {
     it("should set oracle correctly", async () => {
-      assert.equal(await oracle.uniswapV2Factory(), factoryAddress);
+      assert.equal(await oracle.uniswapV2Factory(), uniswapV2Factory.address);
       assert.equal(await oracle.timeWindow(), ORACLE_TIME_WINDOW);
     });
 
     it("should not initialize twice", async () => {
       await truffleAssert.reverts(
-        oracle.mockInit(factoryAddress, ORACLE_TIME_WINDOW),
+        oracle.mockInit(uniswapV2Factory.address, ORACLE_TIME_WINDOW),
         "Initializable: contract is not initializing"
       );
       await truffleAssert.reverts(
-        oracle.__OracleV2Mock_init(factoryAddress, ORACLE_TIME_WINDOW),
+        oracle.__OracleV2Mock_init(uniswapV2Factory.address, ORACLE_TIME_WINDOW),
         "Initializable: contract is already initialized"
       );
     });
@@ -135,13 +134,14 @@ describe("OracleV2", () => {
     it("should not update if block is the same or later", async () => {
       await createPairs();
       await oracle.addPaths([WPLS_DAI_PATH]);
-      let latest = await time.latest();
-      await oracle.setTimestamp(WPLS_DAI, latest + 10);
 
-      await oracle.updatePrices(); //should not update
+      await oracle.setTimestamp(WPLS_DAI, (await getCurrentBlockTime()) + 10);
+      await oracle.updatePrices();
 
-      await time.increase(time.duration.seconds(1));
+      await setTime((await getCurrentBlockTime()) + 1);
+
       let lenghts = await oracle.getPairInfosLength(WPLS_DAI);
+
       assert.equal(Number(lenghts[0]), 1);
     });
   });
@@ -154,7 +154,7 @@ describe("OracleV2", () => {
 
       await oracle.updatePrices();
 
-      await time.increase(time.duration.seconds(1));
+      await setTime((await getCurrentBlockTime()) + 1);
 
       let response = await oracle.getPrice(WPLS, 10);
 
@@ -193,7 +193,7 @@ describe("OracleV2", () => {
       await createPairs();
       await oracle.addPaths([WPLS_DAI_PATH]);
 
-      await oracle.setTimeWindow(await time.latest());
+      await oracle.setTimeWindow(await getCurrentBlockTime());
 
       assert.equal(Number(await oracle.getPriceInternal(WPLS_DAI, DAI)), 0);
     });

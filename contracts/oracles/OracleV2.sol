@@ -7,7 +7,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 
 import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import {IUniswapV2Pair} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import {UniswapV2OracleLibrary} from "./external-modules/uniswap-v2/v2-periphery/UniswapV2OracleLibrary.sol";
+import {UniswapV2OracleLibrary} from "@uniswap/v2-periphery/contracts/libraries/UniswapV2OracleLibrary.sol";
 
 import {ArrayHelper} from "../libs/arrays/ArrayHelper.sol";
 
@@ -25,16 +25,16 @@ abstract contract OracleV2 is Initializable {
         uint256[] prices0Cumulative;
         uint256[] prices1Cumulative;
         uint256[] blockTimestamps;
-        uint256 counter;
+        uint256 refs;
     }
 
     IUniswapV2Factory public uniswapV2Factory;
 
     uint256 public timeWindow;
 
-    EnumerableSet.AddressSet internal _pairs;
-    mapping(address => address[]) internal _paths;
-    mapping(address => PairInfo) internal _pairInfos;
+    EnumerableSet.AddressSet private _pairs;
+    mapping(address => address[]) private _paths;
+    mapping(address => PairInfo) private _pairInfos;
 
     function __OracleV2_init(
         address uniswapV2Factory_,
@@ -76,7 +76,7 @@ abstract contract OracleV2 is Initializable {
      * @param amount_ The amount of the input token.
      * @return The price in last token of the path and the output token address.
      */
-    function getPrice(address tokenIn_, uint256 amount_) external view returns (uint256, address) {
+    function getPrice(address tokenIn_, uint256 amount_) public view returns (uint256, address) {
         address[] storage path = _paths[tokenIn_];
         uint256 pathLength_ = path.length;
 
@@ -100,6 +100,31 @@ abstract contract OracleV2 is Initializable {
         return (amount_, tokenOut_);
     }
 
+    function getPath(address tokenIn_) public view returns (address[] memory) {
+        return _paths[tokenIn_];
+    }
+
+    function getPairs() public view returns (address[] memory) {
+        return _pairs.values();
+    }
+
+    function getPairRounds(address pair_) public view returns (uint256) {
+        return _pairInfos[pair_].blockTimestamps.length;
+    }
+
+    function getPairInfo(
+        address pair_,
+        uint256 round_
+    ) public view returns (uint256, uint256, uint256) {
+        PairInfo storage _pairInfo = _pairInfos[pair_];
+
+        return (
+            _pairInfo.prices0Cumulative[round_],
+            _pairInfo.prices1Cumulative[round_],
+            _pairInfos[pair_].blockTimestamps[round_]
+        );
+    }
+
     /**
      * @dev Sets the time window for fetching price data.
      * @param newTimeWindow_ The new time window value in seconds.
@@ -112,7 +137,7 @@ abstract contract OracleV2 is Initializable {
      * @dev Adds multiple token paths to the oracle.
      * @param paths_ The array of token paths to add.
      */
-    function _addPaths(address[][] calldata paths_) internal {
+    function _addPaths(address[][] memory paths_) internal {
         uint256 numberOfPaths_ = paths_.length;
 
         for (uint256 i = 0; i < numberOfPaths_; i++) {
@@ -121,16 +146,16 @@ abstract contract OracleV2 is Initializable {
             require(pathLength_ >= 2, "OracleV2: path must be longer than 2");
 
             for (uint256 j = 0; j < paths_[i].length - 1; j++) {
-                (bool isExist, address pair) = _isPairExistAtUniswap(
-                    paths_[i][j],
-                    paths_[i][j + 1]
-                );
-                require(isExist, "OracleV2: uniswap pair doesn't exist");
-                _pairs.add(pair);
-                _incrementCounter(pair);
+                (bool exists_, address pair_) = _pairExists(paths_[i][j], paths_[i][j + 1]);
+                require(exists_, "OracleV2: uniswap pair doesn't exist");
+
+                _pairs.add(pair_);
+                _pairInfos[pair_].refs++;
             }
+
             _paths[paths_[i][0]] = paths_[i];
         }
+
         updatePrices();
     }
 
@@ -138,46 +163,40 @@ abstract contract OracleV2 is Initializable {
      * @dev Removes multiple token paths from the oracle.
      * @param tokenIns_ The array of token addresses to remove.
      */
-    function _removePaths(address[] calldata tokenIns_) internal {
+    function _removePaths(address[] memory tokenIns_) internal {
         uint256 numberOfPaths_ = tokenIns_.length;
 
         for (uint256 i = 0; i < numberOfPaths_; i++) {
             uint256 pathLength_ = _paths[tokenIns_[i]].length;
 
             for (uint256 j = 0; j < pathLength_ - 1; j++) {
-                address pair = uniswapV2Factory.getPair(
+                address pair_ = uniswapV2Factory.getPair(
                     _paths[tokenIns_[i]][j],
                     _paths[tokenIns_[i]][j + 1]
                 );
 
-                if (_pairInfos[pair].counter == 1) {
-                    _pairs.remove(pair);
+                PairInfo storage _pairInfo = _pairInfos[pair_];
+
+                if (_pairInfo.refs >= 1) {
+                    _pairInfo.refs--;
                 }
-                _decrementCounter(pair);
+
+                if (_pairInfo.refs == 0) {
+                    _pairs.remove(pair_);
+                }
             }
+
             delete _paths[tokenIns_[i]];
         }
     }
 
-    function _incrementCounter(address pair_) internal {
-        _pairInfos[pair_].counter++;
-    }
-
-    function _decrementCounter(address pair_) internal {
-        if (_pairInfos[pair_].counter > 0) {
-            _pairInfos[pair_].counter--;
-        }
-    }
-
-    function _isPairExistAtUniswap(
-        address token1_,
-        address token2_
-    ) internal view returns (bool, address) {
+    function _pairExists(address token1_, address token2_) private view returns (bool, address) {
         address pair_ = uniswapV2Factory.getPair(token1_, token2_);
+
         return (pair_ != address(0), pair_);
     }
 
-    function _getPrice(address pair_, address expectedToken_) internal view returns (uint256) {
+    function _getPrice(address pair_, address expectedToken_) private view returns (uint256) {
         PairInfo storage pairInfo = _pairInfos[pair_];
 
         if (pairInfo.blockTimestamps.length == 0) {
