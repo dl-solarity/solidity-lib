@@ -24,12 +24,27 @@ contract Diamond is DiamondStorage {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    enum FacetAction {
+        Add,
+        Replace,
+        Remove
+    }
+    // Add=0, Replace=1, Remove=2
+
+    struct Facet {
+        address facetAddress;
+        FacetAction action;
+        bytes4[] functionSelectors;
+    }
+
+    event DiamondCut(Facet[] facets_, address init_, bytes calldata_);
+
     /**
      * @notice The payable fallback function that delegatecall's the facet with associated selector
      */
     // solhint-disable-next-line
     fallback() external payable virtual {
-        address facet_ = getFacetBySelector(msg.sig);
+        address facet_ = facetAddress(msg.sig);
 
         require(facet_ != address(0), "Diamond: selector is not registered");
 
@@ -48,6 +63,53 @@ contract Diamond is DiamondStorage {
                 return(0, returndatasize())
             }
         }
+    }
+
+    receive() external payable virtual {}
+
+    /**
+     * @notice Add/replace/remove any number of functions and optionally execute a function with delegatecall
+     * @param facets_ Contains the facet addresses and function selectors
+     */
+    function _diamondCut(Facet[] calldata facets_) internal {
+        _diamondCut(facets_, address(0), "");
+    }
+
+    /**
+     * @notice Add/replace/remove any number of functions and optionally execute a function with delegatecall
+     * @param facets_ Contains the facet addresses and function selectors
+     * @param init_ The address of the contract or facet to execute calldata_
+     * @param calldata_ A function call, including function selector and arguments calldata_ is executed with delegatecall on init_
+     */
+    function _diamondCut(
+        Facet[] calldata facets_,
+        address init_,
+        bytes memory calldata_
+    ) internal {
+        for (uint256 i; i < facets_.length; i++) {
+            bytes4[] memory _functionSelectors = facets_[i].functionSelectors;
+            address _facetAddress = facets_[i].facetAddress;
+
+            require(
+                _functionSelectors.length != 0,
+                "Diamond: no selectors provided for facet for cut"
+            );
+
+            FacetAction _action = facets_[i].action;
+            if (_action == FacetAction.Add) {
+                _addFacet(_facetAddress, _functionSelectors);
+            } else if (_action == FacetAction.Remove) {
+                _removeFacet(_facetAddress, _functionSelectors);
+            } else if (_action == FacetAction.Replace) {
+                _updateFacet(_facetAddress, _functionSelectors);
+            } else {
+                revert("Diamond: incorrect facet action");
+            }
+        }
+
+        emit DiamondCut(facets_, init_, calldata_);
+
+        _initializeDiamondCut(init_, calldata_);
     }
 
     /**
@@ -100,18 +162,56 @@ contract Diamond is DiamondStorage {
     }
 
     /**
-     * @notice The internal function to update the facets of the diamond
+     * @notice The internal function to update the facet selectors of the diamond
      * @param facet_ the facet to update
-     * @param fromSelectors_ the selectors to remove from the facet
-     * @param toSelectors_ the selectors to add to the facet
+     * @param selectors_ the selectors of the facet
      */
-    function _updateFacet(
-        address facet_,
-        bytes4[] memory fromSelectors_,
-        bytes4[] memory toSelectors_
-    ) internal {
-        _addFacet(facet_, toSelectors_);
-        _removeFacet(facet_, fromSelectors_);
+    function _updateFacet(address facet_, bytes4[] memory selectors_) internal {
+        require(facet_ != address(0), "Diamond:  facet cannot be zero address");
+        require(facet_.isContract(), "Diamond: replace facet has no code");
+
+        DStorage storage _ds = _getDiamondStorage();
+
+        for (uint256 i; i < selectors_.length; i++) {
+            bytes4 _selector = selectors_[i];
+            address _oldFacet = facetAddress(_selector);
+
+            // can't replace immutable functions -- functions defined directly in the diamond in this case
+            require(_oldFacet == address(this), "Diamond: cannot replace function of this");
+            require(_oldFacet != facet_, "Diamond: cannot replace to the same facet");
+            require(_oldFacet == address(0), "Diamond: no facet found for selector");
+
+            // replace old facet address
+            _ds.selectorToFacet[_selector] = facet_;
+            _ds.facetToSelectors[facet_].add(bytes32(_selector));
+
+            // remove old facet address
+            _ds.facetToSelectors[_oldFacet].remove(bytes32(_selector));
+
+            if (_ds.facetToSelectors[_oldFacet].length() == 0) {
+                _ds.facets.remove(_oldFacet);
+            }
+        }
+    }
+
+    function _initializeDiamondCut(address init_, bytes memory calldata_) internal {
+        if (init_ == address(0)) {
+            return;
+        }
+
+        require(init_.isContract(), "Diamond: init_ address has no code");
+
+        (bool success, bytes memory err) = init_.delegatecall(calldata_);
+
+        if (!success) {
+            require(err.length > 0, "Diamond: initialization function reverted");
+            // bubble up error
+            /// @solidity memory-safe-assembly
+            assembly {
+                let returndata_size := mload(err)
+                revert(add(32, err), returndata_size)
+            }
+        }
     }
 
     function _beforeFallback(address facet_, bytes4 selector_) internal virtual {}
