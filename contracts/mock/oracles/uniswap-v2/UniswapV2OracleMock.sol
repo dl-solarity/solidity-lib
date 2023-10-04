@@ -3,10 +3,10 @@ pragma solidity ^0.8.4;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {OracleV2} from "../../oracles/OracleV2.sol";
+import {UniswapV2Oracle} from "../../../oracles/UniswapV2Oracle.sol";
 import {UniswapV2PairMock} from "./UniswapV2PairMock.sol";
 
-contract OracleV2Mock is OracleV2 {
+contract UniswapV2OracleMock is UniswapV2Oracle {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     function __OracleV2Mock_init(
@@ -32,7 +32,8 @@ contract OracleV2Mock is OracleV2 {
         _setTimeWindow(newTimeWindow_);
     }
 
-    function setReservesTimestamp(address pair_, uint32 blockTimestampLast_) external {
-        UniswapV2PairMock(pair_).setReservesTimestamp(blockTimestampLast_);
+    function doubleUpdatePrice() external {
+        updatePrices();
+        updatePrices();
     }
 }
