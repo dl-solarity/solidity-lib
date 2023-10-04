@@ -19,7 +19,6 @@ import {DiamondStorage} from "./DiamondStorage.sol";
  *
  * If you wish to add a receive() function, you can attach a "0x00000000" selector to a facet that has such function.
  */
-
 contract Diamond is DiamondStorage {
     using Address for address;
     using EnumerableSet for EnumerableSet.Bytes32Set;
@@ -37,7 +36,7 @@ contract Diamond is DiamondStorage {
         bytes4[] functionSelectors;
     }
 
-    event DiamondCut(Facet[] facets_, address initFacet_, bytes initData_);
+    event DiamondCut(Facet[] facets, address initFacet, bytes initData);
 
     /**
      * @notice The payable fallback function that delegatecall's the facet with associated selector
