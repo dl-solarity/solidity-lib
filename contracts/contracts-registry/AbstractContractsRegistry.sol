@@ -245,6 +245,7 @@ abstract contract AbstractContractsRegistry is Initializable {
      * @param contractAddress_ the implementation address
      * @param admin_ the proxy admin to be set
      * @param data_ the proxy initialization data
+     * @return the address of a Transparent Proxy
      */
     function _deployProxy(
         address contractAddress_,
