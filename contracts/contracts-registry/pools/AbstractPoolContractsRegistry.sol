@@ -121,7 +121,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
     function _setNewImplementations(
         string[] memory names_,
         address[] memory newImplementations_
-    ) internal {
+    ) internal virtual {
         for (uint256 i = 0; i < names_.length; i++) {
             if (address(_beacons[names_[i]]) == address(0)) {
                 _beacons[names_[i]] = new ProxyBeacon();
@@ -143,7 +143,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
         string memory name_,
         uint256 offset_,
         uint256 limit_
-    ) internal {
+    ) internal virtual {
         _injectDependenciesToExistingPoolsWithData(name_, bytes(""), offset_, limit_);
     }
 
@@ -159,7 +159,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
         bytes memory data_,
         uint256 offset_,
         uint256 limit_
-    ) internal {
+    ) internal virtual {
         EnumerableSet.AddressSet storage _namedPools = _pools[name_];
 
         uint256 to_ = (offset_ + limit_).min(_namedPools.length()).max(offset_);
@@ -178,7 +178,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
      * @param name_ the pool's associated name
      * @param poolAddress_ the proxy address of the pool
      */
-    function _addProxyPool(string memory name_, address poolAddress_) internal {
+    function _addProxyPool(string memory name_, address poolAddress_) internal virtual {
         _pools[name_].add(poolAddress_);
     }
 }

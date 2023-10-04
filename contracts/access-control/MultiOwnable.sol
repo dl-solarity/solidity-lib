@@ -39,23 +39,23 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
         _addOwners(msg.sender.asSingletonArray());
     }
 
-    function addOwners(address[] memory newOwners_) public virtual override onlyOwner {
+    function addOwners(address[] memory newOwners_) public override onlyOwner {
         _addOwners(newOwners_);
     }
 
-    function removeOwners(address[] memory oldOwners_) public virtual override onlyOwner {
+    function removeOwners(address[] memory oldOwners_) public override onlyOwner {
         _removeOwners(oldOwners_);
     }
 
-    function renounceOwnership() public virtual override onlyOwner {
+    function renounceOwnership() public override onlyOwner {
         _removeOwners(msg.sender.asSingletonArray());
     }
 
-    function getOwners() public view virtual override returns (address[] memory) {
+    function getOwners() public view override returns (address[] memory) {
         return _owners.values();
     }
 
-    function isOwner(address address_) public view virtual override returns (bool) {
+    function isOwner(address address_) public view override returns (bool) {
         return _owners.contains(address_);
     }
 
