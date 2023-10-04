@@ -194,9 +194,7 @@ abstract contract AbstractContractsRegistry is Initializable {
     ) internal virtual {
         require(contractAddress_ != address(0), "ContractsRegistry: zero address is forbidden");
 
-        address proxyAddr_ = address(
-            new TransparentUpgradeableProxy(contractAddress_, address(_proxyUpgrader), data_)
-        );
+        address proxyAddr_ = _deployProxy(contractAddress_, address(_proxyUpgrader), data_);
 
         _contracts[name_] = proxyAddr_;
         _isProxy[proxyAddr_] = true;
@@ -240,5 +238,20 @@ abstract contract AbstractContractsRegistry is Initializable {
         delete _contracts[name_];
 
         emit ContractRemoved(name_);
+    }
+
+    /**
+     * @notice The utility function to deploy a Transparent Proxy contract to be used within the registry
+     * @param contractAddress_ the implementation address
+     * @param admin_ the proxy admin to be set
+     * @param data_ the proxy initialization data
+     * @return the address of a Transparent Proxy
+     */
+    function _deployProxy(
+        address contractAddress_,
+        address admin_,
+        bytes memory data_
+    ) internal virtual returns (address) {
+        return address(new TransparentUpgradeableProxy(contractAddress_, admin_, data_));
     }
 }
