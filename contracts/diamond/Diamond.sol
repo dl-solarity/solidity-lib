@@ -65,8 +65,6 @@ contract Diamond is DiamondStorage {
         }
     }
 
-    receive() external payable virtual {}
-
     /**
      * @notice Add/replace/remove any number of functions and optionally execute a function with delegatecall
      * @param facets_ Contains the facet addresses and function selectors
