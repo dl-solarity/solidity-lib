@@ -19,6 +19,7 @@ import {DiamondStorage} from "./DiamondStorage.sol";
  *
  * If you wish to add a receive() function, you can attach a "0x00000000" selector to a facet that has such function.
  */
+
 contract Diamond is DiamondStorage {
     using Address for address;
     using EnumerableSet for EnumerableSet.Bytes32Set;
@@ -29,7 +30,6 @@ contract Diamond is DiamondStorage {
         Replace,
         Remove
     }
-    // Add=0, Replace=1, Remove=2
 
     struct Facet {
         address facetAddress;
@@ -37,7 +37,7 @@ contract Diamond is DiamondStorage {
         bytes4[] functionSelectors;
     }
 
-    event DiamondCut(Facet[] facets_, address init_, bytes calldata_);
+    event DiamondCut(Facet[] facets_, address initFacet_, bytes initData_);
 
     /**
      * @notice The payable fallback function that delegatecall's the facet with associated selector
@@ -71,20 +71,20 @@ contract Diamond is DiamondStorage {
      * @notice Add/replace/remove any number of functions and optionally execute a function with delegatecall
      * @param facets_ Contains the facet addresses and function selectors
      */
-    function _diamondCut(Facet[] calldata facets_) internal {
+    function _diamondCut(Facet[] memory facets_) internal {
         _diamondCut(facets_, address(0), "");
     }
 
     /**
      * @notice Add/replace/remove any number of functions and optionally execute a function with delegatecall
      * @param facets_ Contains the facet addresses and function selectors
-     * @param init_ The address of the contract or facet to execute calldata_
-     * @param calldata_ A function call, including function selector and arguments calldata_ is executed with delegatecall on init_
+     * @param initFacet_ The address of the contract or facet to execute initData_
+     * @param initData_ A function call, including function selector and arguments initData_ is executed with delegatecall on initFacet_
      */
     function _diamondCut(
-        Facet[] calldata facets_,
-        address init_,
-        bytes memory calldata_
+        Facet[] memory facets_,
+        address initFacet_,
+        bytes memory initData_
     ) internal {
         for (uint256 i; i < facets_.length; i++) {
             bytes4[] memory _functionSelectors = facets_[i].functionSelectors;
@@ -96,6 +96,7 @@ contract Diamond is DiamondStorage {
             );
 
             FacetAction _action = facets_[i].action;
+
             if (_action == FacetAction.Add) {
                 _addFacet(_facetAddress, _functionSelectors);
             } else if (_action == FacetAction.Remove) {
@@ -103,13 +104,13 @@ contract Diamond is DiamondStorage {
             } else if (_action == FacetAction.Replace) {
                 _updateFacet(_facetAddress, _functionSelectors);
             } else {
-                revert("Diamond: incorrect facet action");
+                revert("Diamond: unsupported facet action");
             }
         }
 
-        emit DiamondCut(facets_, init_, calldata_);
+        emit DiamondCut(facets_, initFacet_, initData_);
 
-        _initializeDiamondCut(init_, calldata_);
+        _initializeDiamondCut(initFacet_, initData_);
     }
 
     /**
@@ -167,49 +168,51 @@ contract Diamond is DiamondStorage {
      * @param selectors_ the selectors of the facet
      */
     function _updateFacet(address facet_, bytes4[] memory selectors_) internal {
-        require(facet_ != address(0), "Diamond:  facet cannot be zero address");
-        require(facet_.isContract(), "Diamond: replace facet has no code");
+        require(facet_ != address(0), "Diamond: facet cannot be zero address");
+        require(facet_.isContract(), "Diamond: replacement facet has no code");
 
         DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i; i < selectors_.length; i++) {
-            bytes4 _selector = selectors_[i];
-            address _oldFacet = facetAddress(_selector);
+            bytes4 selector_ = selectors_[i];
+            address oldFacet_ = facetAddress(selector_);
 
-            // can't replace immutable functions -- functions defined directly in the diamond in this case
-            require(_oldFacet == address(this), "Diamond: cannot replace function of this");
-            require(_oldFacet != facet_, "Diamond: cannot replace to the same facet");
-            require(_oldFacet == address(0), "Diamond: no facet found for selector");
+            require(oldFacet_ != facet_, "Diamond: cannot replace to the same facet");
+            require(oldFacet_ != address(0), "Diamond: no facet found for selector");
 
             // replace old facet address
-            _ds.selectorToFacet[_selector] = facet_;
-            _ds.facetToSelectors[facet_].add(bytes32(_selector));
+            _ds.selectorToFacet[selector_] = facet_;
+            _ds.facetToSelectors[facet_].add(bytes32(selector_));
 
             // remove old facet address
-            _ds.facetToSelectors[_oldFacet].remove(bytes32(_selector));
+            _ds.facetToSelectors[oldFacet_].remove(bytes32(selector_));
 
-            if (_ds.facetToSelectors[_oldFacet].length() == 0) {
-                _ds.facets.remove(_oldFacet);
+            if (_ds.facetToSelectors[oldFacet_].length() == 0) {
+                _ds.facets.remove(oldFacet_);
             }
         }
     }
 
-    function _initializeDiamondCut(address init_, bytes memory calldata_) internal {
-        if (init_ == address(0)) {
+    /**
+     * @notice The internal function to initialize the diamond cut.
+     * @param initFacet_ the address of the contract or facet to execute initData_
+     * @param initData_ a function call, including function selector and arguments, to be executed with delegatecall on initFacet_
+     */
+    function _initializeDiamondCut(address initFacet_, bytes memory initData_) internal {
+        if (initFacet_ == address(0)) {
             return;
         }
 
-        require(init_.isContract(), "Diamond: init_ address has no code");
+        require(initFacet_.isContract(), "Diamond: init_ address has no code");
 
-        (bool success, bytes memory err) = init_.delegatecall(calldata_);
+        (bool success_, bytes memory err_) = initFacet_.delegatecall(initData_);
 
-        if (!success) {
-            require(err.length > 0, "Diamond: initialization function reverted");
+        if (!success_) {
+            require(err_.length > 0, "Diamond: initialization function reverted");
             // bubble up error
-            /// @solidity memory-safe-assembly
+            // @solidity memory-safe-assembly
             assembly {
-                let returndata_size := mload(err)
-                revert(add(32, err), returndata_size)
+                revert(add(32, err_), mload(err_))
             }
         }
     }
