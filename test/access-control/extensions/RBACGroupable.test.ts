@@ -1,31 +1,34 @@
-const { assert } = require("chai");
-const { accounts } = require("../../../scripts/utils/utils");
-const truffleAssert = require("truffle-assertions");
+import { ethers } from "hardhat";
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { expect } from "chai";
+import { Reverter } from "@/test/helpers/reverter";
 
-const RBACMock = artifacts.require("RBACGroupableMock");
-
-RBACMock.numberFormat = "BigNumber";
+import { RBACGroupableMock } from "@ethers-v6";
 
 describe("RBAC", () => {
-  let OWNER;
-  let SECOND;
+  const reverter = new Reverter();
 
-  let rbac;
+  let OWNER: SignerWithAddress;
+  let SECOND: SignerWithAddress;
+
+  let rbac: RBACGroupableMock;
 
   before("setup", async () => {
-    OWNER = await accounts(0);
-    SECOND = await accounts(1);
-  });
+    [OWNER, SECOND] = await ethers.getSigners();
 
-  beforeEach("setup", async () => {
-    rbac = await RBACMock.new();
+    const RBACGroupableMock = await ethers.getContractFactory("RBACGroupableMock");
+    rbac = await RBACGroupableMock.deploy();
 
     await rbac.__RBACGroupableMock_init();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("__RBACGroupable_init", () => {
     it("should not initialize twice", async () => {
-      await truffleAssert.reverts(rbac.mockInit(), "Initializable: contract is not initializing");
+      await expect(rbac.mockInit()).to.be.revertedWith("Initializable: contract is not initializing");
     });
   });
 
@@ -87,22 +90,21 @@ describe("RBAC", () => {
 
     describe("grantGroupRoles", () => {
       it("should revert if no permission", async () => {
-        await truffleAssert.reverts(
-          rbac.grantGroupRoles(GROUP_ALL_ROLES, ALL_ROLES, { from: SECOND }),
+        await expect(rbac.grantGroupRoles(GROUP_ALL_ROLES, ALL_ROLES, { from: SECOND })).to.be.revertedWith(
           "RBAC: no CREATE permission for resource RBAC_RESOURCE"
         );
       });
 
       it("should revert if no roles provided", async () => {
-        await truffleAssert.reverts(rbac.grantGroupRoles(GROUP_ALL_ROLES, []), "RBACGroupable: empty roles");
+        await expect(rbac.grantGroupRoles(GROUP_ALL_ROLES, [])).to.be.revertedWith("RBACGroupable: empty roles");
       });
 
       it("should grant group roles if all conditions are met", async () => {
         const tx = await rbac.grantGroupRoles(GROUP_ALL_ROLES, ALL_ROLES);
 
-        truffleAssert.eventEmitted(tx.receipt, "GrantedGroupRoles");
+        expect(tx).to.emit(rbac, "GrantedGroupRoles");
 
-        assert.deepEqual(await rbac.getGroupRoles(GROUP_ALL_ROLES), ALL_ROLES);
+        expect(await rbac.getGroupRoles(GROUP_ALL_ROLES)).to.equal(ALL_ROLES);
       });
     });
 
@@ -116,76 +118,69 @@ describe("RBAC", () => {
 
       describe("revokeGroupRoles", () => {
         it("should revert if no permission", async () => {
-          await truffleAssert.reverts(
-            rbac.revokeGroupRoles(GROUP_ALL_ROLES, ROLES_01, { from: SECOND }),
+          await expect(rbac.connect(SECOND).revokeGroupRoles(GROUP_ALL_ROLES, ROLES_01)).to.be.rejectedWith(
             "RBAC: no DELETE permission for resource RBAC_RESOURCE"
           );
         });
 
         it("should revert if no roles provided", async () => {
-          await truffleAssert.reverts(rbac.revokeGroupRoles(GROUP_ALL_ROLES, []), "RBACGroupable: empty roles");
+          await expect(rbac.revokeGroupRoles(GROUP_ALL_ROLES, [])).to.be.revertedWith("RBACGroupable: empty roles");
         });
 
         it("should revoke group roles if all conditions are met", async () => {
           const tx = await rbac.revokeGroupRoles(GROUP_ALL_ROLES, ROLES_01);
 
-          truffleAssert.eventEmitted(tx.receipt, "RevokedGroupRoles");
+          expect(tx).to.emit(rbac, "RevokedGroupRoles");
 
-          assert.deepEqual(await rbac.getGroupRoles(GROUP_ALL_ROLES), [roles[2].name]);
+          expect(await rbac.getGroupRoles(GROUP_ALL_ROLES)).to.equal([roles[2].name]);
         });
       });
 
       describe("addUserToGroups", () => {
         it("should revert if no permission", async () => {
-          await truffleAssert.reverts(
-            rbac.addUserToGroups(SECOND, [GROUP_ROLES01, GROUP_ROLES12], { from: SECOND }),
+          await expect(rbac.connect(SECOND).addUserToGroups(SECOND, [GROUP_ROLES01, GROUP_ROLES12])).to.be.rejectedWith(
             "RBAC: no CREATE permission for resource RBAC_RESOURCE"
           );
         });
 
         it("should revert if no groups provided", async () => {
-          await truffleAssert.reverts(rbac.addUserToGroups(SECOND, []), "RBACGroupable: empty groups");
+          await expect(rbac.addUserToGroups(SECOND, [])).to.be.revertedWith("RBACGroupable: empty groups");
         });
 
         it("should add the user to groups if all conditions are met", async () => {
           const tx = await rbac.addUserToGroups(SECOND, [GROUP_ROLES01, GROUP_ROLES12]);
 
-          truffleAssert.eventEmitted(tx.receipt, "AddedToGroups");
+          expect(tx).to.emit(rbac, "AddedToGroups");
 
-          assert.deepEqual(await rbac.getUserGroups(SECOND), [GROUP_ROLES01, GROUP_ROLES12]);
+          expect(await rbac.getUserGroups(SECOND)).to.equal([GROUP_ROLES01, GROUP_ROLES12]);
         });
       });
 
       describe("toggleDefaultGroup", () => {
         it("should revert if no permission", async () => {
-          await truffleAssert.reverts(
-            rbac.toggleDefaultGroup({ from: SECOND }),
+          await expect(rbac.toggleDefaultGroup({ from: SECOND })).to.be.rejectedWith(
             "RBAC: no UPDATE permission for resource RBAC_RESOURCE"
           );
         });
 
         it("should add the user to the default group automatically", async () => {
-          assert.deepEqual(await rbac.getUserGroups(SECOND), []);
+          expect(await rbac.getUserGroups(SECOND)).to.equal([]);
 
-          truffleAssert.eventEmitted(
-            await rbac.toggleDefaultGroup(),
-            "ToggledDefaultGroup",
-            (e) => e.defaultGroupEnabled
-          );
+          expect(await rbac.toggleDefaultGroup())
+            .to.emit(rbac, "ToggledDefaultGroup")
+            .withArgs(true);
 
-          assert.deepEqual(await rbac.getUserGroups(SECOND), [""]);
+          expect(await rbac.getUserGroups(SECOND)).to.equal([""]);
 
           await rbac.addUserToGroups(SECOND, [GROUP_ROLES01, GROUP_ROLES12]);
 
-          assert.deepEqual(await rbac.getUserGroups(SECOND), [GROUP_ROLES01, GROUP_ROLES12, ""]);
+          expect(await rbac.getUserGroups(SECOND)).to.equal([GROUP_ROLES01, GROUP_ROLES12, ""]);
 
-          truffleAssert.eventEmitted(
-            await rbac.toggleDefaultGroup(),
-            "ToggledDefaultGroup",
-            (e) => !e.defaultGroupEnabled
-          );
+          expect(await rbac.toggleDefaultGroup())
+            .to.emit(rbac, "ToggledDefaultGroup")
+            .withArgs(false);
 
-          assert.deepEqual(await rbac.getUserGroups(SECOND), [GROUP_ROLES01, GROUP_ROLES12]);
+          expect(await rbac.getUserGroups(SECOND)).to.equal([GROUP_ROLES01, GROUP_ROLES12]);
         });
       });
 
@@ -196,38 +191,37 @@ describe("RBAC", () => {
 
         describe("removeUserFromGroups", () => {
           it("should revert if no permission", async () => {
-            await truffleAssert.reverts(
-              rbac.removeUserFromGroups(SECOND, [GROUP_ROLES01], { from: SECOND }),
+            await expect(rbac.connect(SECOND).removeUserFromGroups(SECOND, [GROUP_ROLES01])).to.be.revertedWith(
               "RBAC: no DELETE permission for resource RBAC_RESOURCE"
             );
           });
 
           it("should revert if no groups provided", async () => {
-            await truffleAssert.reverts(rbac.removeUserFromGroups(SECOND, []), "RBACGroupable: empty groups");
+            await expect(rbac.removeUserFromGroups(SECOND, [])).to.be.revertedWith("RBACGroupable: empty groups");
           });
 
           it("should remove the user from groups if all conditions are met", async () => {
             const tx = await rbac.removeUserFromGroups(SECOND, [GROUP_ROLES01]);
 
-            truffleAssert.eventEmitted(tx.receipt, "RemovedFromGroups");
+            expect(tx).to.emit(rbac, "RemovedFromGroups");
 
-            assert.deepEqual(await rbac.getUserGroups(SECOND), [GROUP_ROLES12]);
+            expect(await rbac.getUserGroups(SECOND)).to.equal([GROUP_ROLES12]);
           });
         });
 
         describe("hasPermission", () => {
           it("should have the permission if only the group role", async () => {
-            assert.isTrue(
+            expect(
               await rbac.hasPermission(
                 SECOND,
                 roles[0].resourcesWithPermissions[0].resource,
                 roles[0].resourcesWithPermissions[0].permissions[0]
               )
-            );
+            ).to.be.true;
           });
 
           it("should have the permission if only own role", async () => {
-            assert.isTrue(await rbac.hasPermission(OWNER, "*", "*"));
+            expect(await rbac.hasPermission(OWNER, "*", "*")).to.be.true;
           });
 
           it("should not have the permission if the user has an antipermission", async () => {
@@ -236,13 +230,13 @@ describe("RBAC", () => {
             await rbac.addPermissionsToRole(BANNED_ZERO_ROLE, roles[0].resourcesWithPermissions, false);
             await rbac.grantRoles(SECOND, [BANNED_ZERO_ROLE]);
 
-            assert.isFalse(
+            expect(
               await rbac.hasPermission(
                 SECOND,
                 roles[0].resourcesWithPermissions[0].resource,
                 roles[0].resourcesWithPermissions[0].permissions[0]
               )
-            );
+            ).to.be.false;
           });
 
           it("should not have the permission if the group has an antipermission", async () => {
@@ -251,50 +245,50 @@ describe("RBAC", () => {
             await rbac.addPermissionsToRole(BANNED_ZERO_ROLE, roles[0].resourcesWithPermissions, false);
             await rbac.grantGroupRoles(GROUP_ROLES12, [BANNED_ZERO_ROLE]);
 
-            assert.isFalse(
+            expect(
               await rbac.hasPermission(
                 SECOND,
                 roles[0].resourcesWithPermissions[0].resource,
                 roles[0].resourcesWithPermissions[0].permissions[0]
               )
-            );
+            ).to.be.false;
           });
 
           it("should not have the permission if it is not assigned", async () => {
-            assert.isFalse(await rbac.hasPermission(SECOND, "*", "*"));
+            expect(await rbac.hasPermission(SECOND, "*", "*")).to.be.false;
           });
 
           it("should have permissions of the default group if it's enabled", async () => {
             await rbac.toggleDefaultGroup();
 
-            assert.isTrue(
+            expect(
               await rbac.hasPermission(
                 SECOND,
                 roles[3].resourcesWithPermissions[0].resource,
                 roles[3].resourcesWithPermissions[0].permissions[0]
               )
-            );
+            ).to.be.true;
           });
 
           it("should not have permissions of the default group if it's disabled", async () => {
-            assert.isFalse(
+            expect(
               await rbac.hasPermission(
                 SECOND,
                 roles[3].resourcesWithPermissions[0].resource,
                 roles[3].resourcesWithPermissions[0].permissions[0]
               )
-            );
+            ).to.be.false;
 
             await rbac.toggleDefaultGroup();
             await rbac.toggleDefaultGroup();
 
-            assert.isFalse(
+            expect(
               await rbac.hasPermission(
                 SECOND,
                 roles[3].resourcesWithPermissions[0].resource,
                 roles[3].resourcesWithPermissions[0].permissions[0]
               )
-            );
+            ).to.be.false;
           });
         });
       });

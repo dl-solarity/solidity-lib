@@ -1,31 +1,32 @@
-const { assert } = require("chai");
-const { accounts } = require("../../scripts/utils/utils");
-const truffleAssert = require("truffle-assertions");
+import { ethers } from "hardhat";
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { expect } from "chai";
+import { Reverter } from "@/test/helpers/reverter";
 
-const RBACMock = artifacts.require("RBACMock");
-
-RBACMock.numberFormat = "BigNumber";
+import { RBACMock } from "@ethers-v6";
 
 describe("RBAC", () => {
-  let OWNER;
-  let SECOND;
+  const reverter = new Reverter();
 
-  let rbac;
+  let OWNER: SignerWithAddress;
+  let SECOND: SignerWithAddress;
+
+  let rbac: RBACMock;
 
   before("setup", async () => {
-    OWNER = await accounts(0);
-    SECOND = await accounts(1);
-  });
+    [OWNER, SECOND] = await ethers.getSigners();
 
-  beforeEach("setup", async () => {
-    rbac = await RBACMock.new();
+    const RBACMock = await ethers.getContractFactory("RBACMock");
+    rbac = await RBACMock.deploy();
 
     await rbac.__RBACMock_init();
   });
 
+  afterEach(reverter.revert);
+
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await truffleAssert.reverts(rbac.mockInit(), "Initializable: contract is not initializing");
+      await expect(rbac.mockInit()).to.be.revertedWith("Initializable: contract is not initializing");
     });
   });
 
@@ -33,7 +34,7 @@ describe("RBAC", () => {
     it("should add allowed permissions to role", async () => {
       let allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
 
-      assert.deepEqual(allowedPerms, []);
+      expect(allowedPerms).to.equal([]);
 
       await rbac.addPermissionsToRole(
         "ROLE",
@@ -43,13 +44,13 @@ describe("RBAC", () => {
 
       allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
 
-      assert.deepEqual(allowedPerms, [["resource", ["permission1", "permission2"]]]);
+      expect(allowedPerms).to.equal([["resource", ["permission1", "permission2"]]]);
     });
 
     it("should add disallowed permissions to role", async () => {
       let disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
 
-      assert.deepEqual(disallowedPerms, []);
+      expect(disallowedPerms).to.equal([]);
 
       await rbac.addPermissionsToRole(
         "ROLE",
@@ -59,7 +60,7 @@ describe("RBAC", () => {
 
       disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
 
-      assert.deepEqual(disallowedPerms, [["resource", ["permission1", "permission2"]]]);
+      expect(disallowedPerms).to.equal([["resource", ["permission1", "permission2"]]]);
     });
 
     it("should remove allowed permissions from role", async () => {
@@ -72,7 +73,7 @@ describe("RBAC", () => {
 
       let allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
 
-      assert.deepEqual(allowedPerms, [["resource", ["permission2"]]]);
+      expect(allowedPerms).to.equal([["resource", ["permission2"]]]);
     });
 
     it("should remove disallowed permissions from role", async () => {
@@ -85,7 +86,7 @@ describe("RBAC", () => {
 
       let disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
 
-      assert.deepEqual(disallowedPerms, [["resource", ["permission1"]]]);
+      expect(disallowedPerms).to.equal([["resource", ["permission1"]]]);
     });
 
     it("should remove all permissions from role", async () => {
@@ -114,19 +115,19 @@ describe("RBAC", () => {
       let allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
       let disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
 
-      assert.deepEqual(allowedPerms, []);
-      assert.deepEqual(disallowedPerms, []);
+      expect(allowedPerms).to.equal([]);
+      expect(disallowedPerms).to.equal([]);
     });
   });
 
   describe("user roles", () => {
     describe("empty roles", () => {
       it("should not grant empty roles", async () => {
-        await truffleAssert.reverts(rbac.grantRoles(SECOND, []), "RBAC: empty roles");
+        await expect(rbac.grantRoles(SECOND, [])).to.be.revertedWith("RBAC: empty roles");
       });
 
       it("should not revoke empty roles", async () => {
-        await truffleAssert.reverts(rbac.revokeRoles(SECOND, []), "RBAC: empty roles");
+        await expect(rbac.revokeRoles(SECOND, [])).to.be.revertedWith("RBAC: empty roles");
       });
     });
 
@@ -138,88 +139,88 @@ describe("RBAC", () => {
           true
         );
 
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission2"));
+        expect(await rbac.hasPermission(SECOND, "resource", "permission2")).to.be.false;
 
         await rbac.grantRoles(SECOND, ["ROLE"]);
 
-        assert.deepEqual(await rbac.getUserRoles(SECOND), ["ROLE"]);
-        assert.isTrue(await rbac.hasPermission(SECOND, "resource", "permission2"));
+        expect(await rbac.getUserRoles(SECOND)).to.equal(["ROLE"]);
+        expect(await rbac.hasPermission(SECOND, "resource", "permission2")).to.be.true;
       });
 
       it("should grant roles and check permissions (2)", async () => {
         await rbac.addPermissionsToRole("ROLE1", [{ resource: "resource1", permissions: ["permission1"] }], true);
         await rbac.addPermissionsToRole("ROLE2", [{ resource: "resource2", permissions: ["permission2"] }], true);
 
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource1", "permission1"));
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource2", "permission2"));
+        expect(await rbac.hasPermission(SECOND, "resource1", "permission1")).to.be.false;
+        expect(await rbac.hasPermission(SECOND, "resource2", "permission2")).to.be.false;
 
         await rbac.grantRoles(SECOND, ["ROLE1", "ROLE2"]);
 
-        assert.deepEqual(await rbac.getUserRoles(SECOND), ["ROLE1", "ROLE2"]);
-        assert.isTrue(await rbac.hasPermission(SECOND, "resource1", "permission1"));
-        assert.isTrue(await rbac.hasPermission(SECOND, "resource2", "permission2"));
+        expect(await rbac.getUserRoles(SECOND)).to.equal(["ROLE1", "ROLE2"]);
+        expect(await rbac.hasPermission(SECOND, "resource1", "permission1")).to.be.true;
+        expect(await rbac.hasPermission(SECOND, "resource2", "permission2")).to.be.true;
       });
 
       it("should grant roles and check permissions (3)", async () => {
         await rbac.addPermissionsToRole("ROLE", [], true);
 
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission"));
+        expect(await rbac.hasPermission(SECOND, "resource", "permission")).to.be.false;
 
         await rbac.grantRoles(SECOND, ["ROLE"]);
 
-        assert.deepEqual(await rbac.getUserRoles(SECOND), ["ROLE"]);
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission"));
+        expect(await rbac.getUserRoles(SECOND)).to.equal(["ROLE"]);
+        expect(await rbac.hasPermission(SECOND, "resource", "permission")).to.be.false;
       });
 
       it("should grant roles and check permissions (4)", async () => {
         await rbac.addPermissionsToRole("ROLE", [{ resource: "resource", permissions: [] }], true);
 
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission"));
+        expect(await rbac.hasPermission(SECOND, "resource", "permission")).to.be.false;
 
         await rbac.grantRoles(SECOND, ["ROLE"]);
 
-        assert.deepEqual(await rbac.getUserRoles(SECOND), ["ROLE"]);
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission"));
+        expect(await rbac.getUserRoles(SECOND)).to.equal(["ROLE"]);
+        expect(await rbac.hasPermission(SECOND, "resource", "permission")).to.be.false;
       });
 
       it("should add roles with proper permission", async () => {
         await rbac.addPermissionsToRole("RBAC_MASTER", [{ resource: "RBAC_RESOURCE", permissions: ["CREATE"] }], true);
         await rbac.grantRoles(SECOND, ["RBAC_MASTER"]);
 
-        await truffleAssert.passes(rbac.grantRoles(OWNER, ["RBAC_MASTER"], { from: SECOND }), "pass");
+        await rbac.grantRoles(OWNER, ["RBAC_MASTER"], { from: SECOND });
       });
 
       it("should grant and revoke roles", async () => {
         await rbac.addPermissionsToRole("ROLE1", [{ resource: "resource", permissions: ["permission1"] }], true);
         await rbac.addPermissionsToRole("ROLE2", [{ resource: "resource", permissions: ["permission2"] }], true);
 
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission1"));
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission2"));
+        expect(await rbac.hasPermission(SECOND, "resource", "permission1")).to.be.false;
+        expect(await rbac.hasPermission(SECOND, "resource", "permission2")).to.be.false;
 
         await rbac.grantRoles(SECOND, ["ROLE1", "ROLE2"]);
 
-        assert.deepEqual(await rbac.getUserRoles(SECOND), ["ROLE1", "ROLE2"]);
-        assert.isTrue(await rbac.hasPermission(SECOND, "resource", "permission1"));
-        assert.isTrue(await rbac.hasPermission(SECOND, "resource", "permission2"));
+        expect(await rbac.getUserRoles(SECOND)).to.equal(["ROLE1", "ROLE2"]);
+        expect(await rbac.hasPermission(SECOND, "resource", "permission1")).to.be.true;
+        expect(await rbac.hasPermission(SECOND, "resource", "permission2")).to.be.true;
 
         await rbac.revokeRoles(SECOND, ["ROLE2"]);
 
-        assert.deepEqual(await rbac.getUserRoles(SECOND), ["ROLE1"]);
-        assert.isTrue(await rbac.hasPermission(SECOND, "resource", "permission1"));
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission2"));
+        expect(await rbac.getUserRoles(SECOND)).to.equal(["ROLE1"]);
+        expect(await rbac.hasPermission(SECOND, "resource", "permission1")).to.be.true;
+        expect(await rbac.hasPermission(SECOND, "resource", "permission2")).to.be.false;
       });
 
       it("should check that MASTER has all permissions", async () => {
-        assert.isTrue(await rbac.hasPermission(OWNER, "resource", "permission"));
-        assert.isTrue(await rbac.hasPermission(OWNER, "", ""));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.true;
+        expect(await rbac.hasPermission(OWNER, "", "")).to.be.true;
       });
 
       it("should revoke master role", async () => {
         await rbac.revokeRoles(OWNER, ["MASTER"]);
 
-        assert.deepEqual(await rbac.getUserRoles(OWNER), []);
-        assert.isFalse(await rbac.hasPermission(OWNER, "resource", "permission"));
-        assert.isFalse(await rbac.hasPermission(OWNER, "", ""));
+        expect(await rbac.getUserRoles(OWNER)).to.equal([]);
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.false;
+        expect(await rbac.hasPermission(OWNER, "", "")).to.be.false;
       });
     });
 
@@ -232,76 +233,76 @@ describe("RBAC", () => {
         );
         await rbac.grantRoles(SECOND, ["ROLE"]);
 
-        assert.isTrue(await rbac.hasPermission(SECOND, "resource", "permission2"));
-        assert.isTrue(await rbac.hasPermission(SECOND, "resource", "permission1"));
+        expect(await rbac.hasPermission(SECOND, "resource", "permission2")).to.be.true;
+        expect(await rbac.hasPermission(SECOND, "resource", "permission1")).to.be.true;
 
         await rbac.addPermissionsToRole("ROLE", [{ resource: "resource", permissions: ["permission2"] }], false);
 
-        assert.deepEqual(await rbac.getUserRoles(SECOND), ["ROLE"]);
+        expect(await rbac.getUserRoles(SECOND)).to.equal(["ROLE"]);
 
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission2"));
-        assert.isTrue(await rbac.hasPermission(SECOND, "resource", "permission1"));
+        expect(await rbac.hasPermission(SECOND, "resource", "permission2")).to.be.false;
+        expect(await rbac.hasPermission(SECOND, "resource", "permission1")).to.be.true;
       });
 
       it("should grant roles with disallowed permissions (2)", async () => {
         await rbac.addPermissionsToRole("ROLE1", [{ resource: "resource", permissions: ["permission"] }], true);
         await rbac.grantRoles(SECOND, ["ROLE1"]);
 
-        assert.isTrue(await rbac.hasPermission(SECOND, "resource", "permission"));
+        expect(await rbac.hasPermission(SECOND, "resource", "permission")).to.be.true;
 
         await rbac.addPermissionsToRole("ROLE2", [{ resource: "resource", permissions: ["permission"] }], false);
         await rbac.grantRoles(SECOND, ["ROLE2"]);
 
-        assert.deepEqual(await rbac.getUserRoles(SECOND), ["ROLE1", "ROLE2"]);
-        assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission"));
+        expect(await rbac.getUserRoles(SECOND)).to.equal(["ROLE1", "ROLE2"]);
+        expect(await rbac.hasPermission(SECOND, "resource", "permission")).to.be.false;
       });
 
       it("should disallow specific permission", async () => {
-        assert.isTrue(await rbac.hasPermission(OWNER, "resource", "permission"));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.true;
 
         await rbac.addPermissionsToRole("MASTER", [{ resource: "resource", permissions: ["permission"] }], false);
 
-        assert.isFalse(await rbac.hasPermission(OWNER, "resource", "permission"));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.false;
       });
 
       it("should disallow resource", async () => {
-        assert.isTrue(await rbac.hasPermission(OWNER, "resource", "permission"));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.true;
 
         await rbac.addPermissionsToRole("MASTER", [{ resource: "resource", permissions: ["*"] }], false);
 
-        assert.isFalse(await rbac.hasPermission(OWNER, "resource", "permission"));
-        assert.isFalse(await rbac.hasPermission(OWNER, "resource", "permission2"));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.false;
+        expect(await rbac.hasPermission(OWNER, "resource", "permission2")).to.be.false;
       });
 
       it("should disallow specific permission on all resources", async () => {
-        assert.isTrue(await rbac.hasPermission(OWNER, "resource", "permission"));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.true;
 
         await rbac.addPermissionsToRole("MASTER", [{ resource: "*", permissions: ["permission"] }], false);
 
-        assert.isFalse(await rbac.hasPermission(OWNER, "resource", "permission"));
-        assert.isFalse(await rbac.hasPermission(OWNER, "resource2", "permission"));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.false;
+        expect(await rbac.hasPermission(OWNER, "resource2", "permission")).to.be.false;
       });
 
       it("should disallow all permissions", async () => {
-        assert.isTrue(await rbac.hasPermission(OWNER, "resource", "permission"));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.true;
 
         await rbac.addPermissionsToRole("MASTER", [{ resource: "*", permissions: ["*"] }], false);
 
-        assert.isFalse(await rbac.hasPermission(OWNER, "resource", "permission"));
-        assert.isFalse(await rbac.hasPermission(OWNER, "resource2", "permission2"));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.false;
+        expect(await rbac.hasPermission(OWNER, "resource2", "permission2")).to.be.false;
       });
 
       it("should revoke disallowing role", async () => {
-        assert.isTrue(await rbac.hasPermission(OWNER, "resource", "permission"));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.true;
 
         await rbac.addPermissionsToRole("ANTI_ROLE", [{ resource: "resource", permissions: ["permission"] }], false);
         await rbac.grantRoles(OWNER, ["ANTI_ROLE"]);
 
-        assert.isFalse(await rbac.hasPermission(OWNER, "resource", "permission"));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.false;
 
         await rbac.revokeRoles(OWNER, ["ANTI_ROLE"]);
 
-        assert.isTrue(await rbac.hasPermission(OWNER, "resource", "permission"));
+        expect(await rbac.hasPermission(OWNER, "resource", "permission")).to.be.true;
       });
     });
   });
@@ -313,7 +314,7 @@ describe("RBAC", () => {
 
       await rbac.grantRoles(SECOND, ["ROLE1", "ROLE2"]);
 
-      assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission"));
+      expect(await rbac.hasPermission(SECOND, "resource", "permission")).to.be.false;
     });
 
     it("should work correctly (2)", async () => {
@@ -322,7 +323,7 @@ describe("RBAC", () => {
 
       await rbac.grantRoles(SECOND, ["ROLE1", "ROLE2"]);
 
-      assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission"));
+      expect(await rbac.hasPermission(SECOND, "resource", "permission")).to.be.false;
     });
 
     it("should work correctly (3)", async () => {
@@ -331,32 +332,26 @@ describe("RBAC", () => {
 
       await rbac.grantRoles(SECOND, ["ROLE1", "ROLE2"]);
 
-      assert.isFalse(await rbac.hasPermission(SECOND, "resource", "permission"));
+      expect(await rbac.hasPermission(SECOND, "resource", "permission")).to.be.false;
     });
   });
 
   describe("access", () => {
     it("should not call these functions without permission", async () => {
-      await truffleAssert.reverts(
-        rbac.grantRoles(OWNER, ["ROLE"], { from: SECOND }),
+      await expect(rbac.connect(SECOND).grantRoles(OWNER, ["ROLE"])).to.be.revertedWith(
         "RBAC: no CREATE permission for resource RBAC"
       );
-      await truffleAssert.reverts(
-        rbac.revokeRoles(OWNER, ["MASTER"], { from: SECOND }),
+      await expect(rbac.connect(SECOND).revokeRoles(OWNER, ["MASTER"])).to.be.revertedWith(
         "RBAC: no DELETE permission for resource RBAC"
       );
-      await truffleAssert.reverts(
-        rbac.addPermissionsToRole("ROLE", [{ resource: "resource", permissions: ["permission"] }], true, {
-          from: SECOND,
-        }),
-        "RBAC: no CREATE permission for resource RBAC"
-      );
-      await truffleAssert.reverts(
-        rbac.removePermissionsFromRole("ROLE", [{ resource: "resource", permissions: ["permission"] }], false, {
-          from: SECOND,
-        }),
-        "RBAC: no DELETE permission for resource RBAC"
-      );
+      await expect(
+        rbac.connect(SECOND).addPermissionsToRole("ROLE", [{ resource: "resource", permissions: ["permission"] }], true)
+      ).to.be.revertedWith("RBAC: no CREATE permission for resource RBAC");
+      await expect(
+        rbac
+          .connect(SECOND)
+          .removePermissionsFromRole("ROLE", [{ resource: "resource", permissions: ["permission"] }], false)
+      ).to.be.revertedWith("RBAC: no DELETE permission for resource RBAC");
     });
   });
 });
