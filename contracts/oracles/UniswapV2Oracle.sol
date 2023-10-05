@@ -52,7 +52,8 @@ abstract contract UniswapV2Oracle is Initializable {
         uint256 timeWindow_
     ) internal onlyInitializing {
         uniswapV2Factory = IUniswapV2Factory(uniswapV2Factory_);
-        timeWindow = timeWindow_;
+
+        _setTimeWindow(timeWindow_);
     }
 
     /**
@@ -60,7 +61,7 @@ abstract contract UniswapV2Oracle is Initializable {
      *
      * May be called at any time. The time window automatically adjusts
      */
-    function updatePrices() public {
+    function updatePrices() public virtual {
         uint256 pairsLength_ = _pairs.length();
 
         for (uint256 i = 0; i < pairsLength_; i++) {
@@ -161,6 +162,8 @@ abstract contract UniswapV2Oracle is Initializable {
      * @param newTimeWindow_ the new time window value in seconds
      */
     function _setTimeWindow(uint256 newTimeWindow_) internal {
+        require(newTimeWindow_ > 0, "UniswapV2Oracle: time window can't be 0");
+
         timeWindow = newTimeWindow_;
     }
 

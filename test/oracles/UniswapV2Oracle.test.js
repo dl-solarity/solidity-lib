@@ -66,6 +66,10 @@ describe("UniswapV2Oracle", () => {
       assert.equal(await oracle.timeWindow(), 20);
     });
 
+    it("shouldn't set 0 timewindow", async () => {
+      await truffleAssert.reverts(oracle.setTimeWindow(0), "UniswapV2Oracle: time window can't be 0");
+    });
+
     it("should add paths correctly", async () => {
       await createPairs();
 
