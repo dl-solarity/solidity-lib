@@ -11,7 +11,7 @@
       }
     },
     {
-      "files": "*.js",
+      "files": "*.ts",
       "options": {
         "printWidth": 120,
         "tabWidth": 2
