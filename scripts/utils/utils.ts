@@ -1,4 +1,5 @@
 import { ethers } from "hardhat";
+import { PRECISION } from "./constants";
 
 export function wei(value: string | number | bigint, decimal: number = 18): bigint {
   if (typeof value == "number" || typeof value == "bigint") {
@@ -8,6 +9,14 @@ export function wei(value: string | number | bigint, decimal: number = 18): bigi
   return ethers.parseUnits(value as string, decimal);
 }
 
-export function fromWei(value: string | number | bigint, decimal: number = 18): string {
-  return (BigInt(value) / 10n ** BigInt(decimal)).toString();
+export function fromWei(value: string | number | bigint, decimal: number = 18): bigint {
+  return BigInt(value) / 10n ** BigInt(decimal);
+}
+
+export function precision(value: string | number | bigint): bigint {
+  return BigInt(value) * PRECISION;
+}
+
+export function fromPrecision(value: bigint): bigint {
+  return BigInt(value) / PRECISION;
 }
