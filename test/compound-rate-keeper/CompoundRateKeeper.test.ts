@@ -3,7 +3,7 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
-import { precision, fromPrecision } from "@/scripts/utils/utils";
+import { precision } from "@/scripts/utils/utils";
 
 import { CompoundRateKeeperMock } from "@ethers-v6";
 
