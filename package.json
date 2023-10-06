@@ -33,7 +33,7 @@
     "@openzeppelin/contracts-upgradeable": "4.9.2"
   },
   "devDependencies": {
-    "@solarity/hardhat-markup": "^1.0.2",
+    "@solarity/hardhat-markup": "^1.0.3",
     "@metamask/eth-sig-util": "^7.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.4",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
