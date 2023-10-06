@@ -230,8 +230,7 @@ describe("ContractsRegistry", () => {
     it("should upgrade and call the contract", async () => {
       await expect(dependant.addedFunction()).to.be.reverted;
 
-      let inter = new ethers.Interface(["doUpgrade(uint256)"]);
-      let data = inter.encodeFunctionData("doUpgrade", [42]);
+      let data = _dependantUpgrade.interface.encodeFunctionData("doUpgrade", [42]);
 
       await contractsRegistry.upgradeContractAndCall(
         await contractsRegistry.CRDEPENDANT_NAME(),

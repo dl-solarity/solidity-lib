@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../diamond/tokens/ERC20/DiamondERC20.sol";
+import "../../../diamond/tokens/ERC20/DiamondERC20.sol";
 
 contract DiamondERC20Mock is DiamondERC20 {
     constructor() {
@@ -27,11 +27,11 @@ contract DiamondERC20Mock is DiamondERC20 {
         _burn(from_, amount_);
     }
 
-    function transfer(address from_, address to_, uint256 amount_) external {
+    function transferMock(address from_, address to_, uint256 amount_) external {
         _transfer(from_, to_, amount_);
     }
 
-    function approve(address owner_, address spender_, uint256 amount_) external {
+    function approveMock(address owner_, address spender_, uint256 amount_) external {
         _approve(owner_, spender_, amount_);
     }
 
