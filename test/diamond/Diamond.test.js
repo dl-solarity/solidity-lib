@@ -21,7 +21,7 @@ function getSelectors(contract) {
   return Object.keys(contract.methods).map((el) => web3.eth.abi.encodeFunctionSignature(el));
 }
 
-describe.only("Diamond", () => {
+describe("Diamond", () => {
   let OWNER;
   let SECOND;
 
