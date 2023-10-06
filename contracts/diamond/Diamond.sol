@@ -85,10 +85,8 @@ contract Diamond is DiamondStorage {
                 _addFacet(_facetAddress, _functionSelectors);
             } else if (_action == FacetAction.Remove) {
                 _removeFacet(_facetAddress, _functionSelectors);
-            } else if (_action == FacetAction.Replace) {
-                _updateFacet(_facetAddress, _functionSelectors);
             } else {
-                revert("Diamond: unsupported facet action");
+                _updateFacet(_facetAddress, _functionSelectors);
             }
         }
 

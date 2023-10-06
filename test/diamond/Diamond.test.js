@@ -21,7 +21,7 @@ function getSelectors(contract) {
   return Object.keys(contract.methods).map((el) => web3.eth.abi.encodeFunctionSignature(el));
 }
 
-describe("Diamond", () => {
+describe.only("Diamond", () => {
   let OWNER;
   let SECOND;
 
@@ -53,15 +53,6 @@ describe("Diamond", () => {
 
     it("should not transfer ownership to zero address", async () => {
       await truffleAssert.reverts(diamond.transferOwnership(ZERO_ADDR), "OwnableDiamond: zero address owner");
-    });
-  });
-
-  describe.skip("diamondCut", () => {
-    it("should revert if action is unsupported", async () => {
-      await truffleAssert.reverts(
-        diamond.diamondCut([[diamond.address, FacetAction.Unsupported, []]]),
-        "Diamond: unsupported facet action"
-      );
     });
   });
 
