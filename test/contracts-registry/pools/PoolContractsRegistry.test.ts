@@ -43,7 +43,7 @@ describe("PoolContractsRegistry", () => {
     await contractsRegistry.addContract(await contractsRegistry.POOL_FACTORY_NAME(), OWNER);
 
     poolContractsRegistry = <PoolContractsRegistry>(
-      await PoolContractsRegistry.attach(await contractsRegistry.getPoolContractsRegistryContract())
+      PoolContractsRegistry.attach(await contractsRegistry.getPoolContractsRegistryContract())
     );
 
     await poolContractsRegistry.__OwnablePoolContractsRegistry_init();
@@ -68,7 +68,9 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("should not set dependencies from non dependant", async () => {
-      await expect(poolContractsRegistry.setDependencies(OWNER, "0x")).to.be.rejectedWith("Dependant: not an injector");
+      await expect(poolContractsRegistry.setDependencies(OWNER.address, "0x")).to.be.rejectedWith(
+        "Dependant: not an injector"
+      );
     });
 
     it("only owner should call these functions", async () => {
@@ -106,27 +108,27 @@ describe("PoolContractsRegistry", () => {
 
   describe("addProxyPool()", () => {
     it("should add pool", async () => {
-      await poolContractsRegistry.addProxyPool(NAME_1, POOL_1);
-      await poolContractsRegistry.addProxyPool(NAME_1, POOL_2);
+      await poolContractsRegistry.addProxyPool(NAME_1, POOL_1.address);
+      await poolContractsRegistry.addProxyPool(NAME_1, POOL_2.address);
 
-      expect(await poolContractsRegistry.isPool(NAME_1, POOL_1)).to.be.true;
-      expect(await poolContractsRegistry.countPools(NAME_1)).to.be.equal(2n);
-      expect(await poolContractsRegistry.countPools(NAME_2)).to.be.equal(0n);
+      expect(await poolContractsRegistry.isPool(NAME_1, POOL_1.address)).to.be.true;
+      expect(await poolContractsRegistry.countPools(NAME_1)).to.equal(2n);
+      expect(await poolContractsRegistry.countPools(NAME_2)).to.equal(0n);
     });
 
     it("should list added pools", async () => {
-      await poolContractsRegistry.addProxyPool(NAME_1, POOL_1);
-      await poolContractsRegistry.addProxyPool(NAME_1, POOL_2);
+      await poolContractsRegistry.addProxyPool(NAME_1, POOL_1.address);
+      await poolContractsRegistry.addProxyPool(NAME_1, POOL_2.address);
 
-      expect(await poolContractsRegistry.listPools(NAME_1, 0, 2)).to.equal([POOL_1, POOL_2]);
-      expect(await poolContractsRegistry.listPools(NAME_1, 0, 10)).to.equal([POOL_1, POOL_2]);
-      expect(await poolContractsRegistry.listPools(NAME_1, 1, 1)).to.equal([POOL_2]);
-      expect(await poolContractsRegistry.listPools(NAME_1, 2, 0)).to.equal([]);
-      expect(await poolContractsRegistry.listPools(NAME_2, 0, 2)).to.equal([]);
+      expect(await poolContractsRegistry.listPools(NAME_1, 0, 2)).to.deep.equal([POOL_1.address, POOL_2.address]);
+      expect(await poolContractsRegistry.listPools(NAME_1, 0, 10)).to.deep.equal([POOL_1.address, POOL_2.address]);
+      expect(await poolContractsRegistry.listPools(NAME_1, 1, 1)).to.deep.equal([POOL_2.address]);
+      expect(await poolContractsRegistry.listPools(NAME_1, 2, 0)).to.deep.equal([]);
+      expect(await poolContractsRegistry.listPools(NAME_2, 0, 2)).to.deep.equal([]);
     });
 
     it("only owner should be able to add pools", async () => {
-      await expect(poolContractsRegistry.connect(POOL_1).addProxyPool(NAME_1, POOL_1)).to.be.revertedWith(
+      await expect(poolContractsRegistry.connect(POOL_1).addProxyPool(NAME_1, POOL_1.address)).to.be.revertedWith(
         "PoolContractsRegistry: not a factory"
       );
     });

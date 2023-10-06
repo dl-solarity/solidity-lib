@@ -3,7 +3,13 @@ import { MerkleTree } from "merkletreejs";
 import { ZERO_BYTES32 } from "@/scripts/utils/constants";
 
 export function getRoot(tree: MerkleTree): string {
-  return "0x" + tree.getRoot().toString("hex");
+  const root = tree.getRoot();
+
+  if (root.length == 0) {
+    return ZERO_BYTES32;
+  }
+
+  return "0x" + root.toString("hex");
 }
 
 export function getProof(tree: MerkleTree, leaf: any): string[] {

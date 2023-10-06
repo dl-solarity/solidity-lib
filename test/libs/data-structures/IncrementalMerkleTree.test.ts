@@ -18,15 +18,17 @@ describe("IncrementalMerkleTree", () => {
 
   let localMerkleTree: MerkleTree;
 
-  before(async () => {
+  before("setup", async () => {
     [OWNER, USER1] = await ethers.getSigners();
 
     const IncrementalMerkleTreeMock = await ethers.getContractFactory("IncrementalMerkleTreeMock");
     merkleTree = await IncrementalMerkleTreeMock.deploy();
 
-    localMerkleTree = buildSparseMerkleTree([], 0);
-
     await reverter.snapshot();
+  });
+
+  beforeEach("setup", async () => {
+    localMerkleTree = buildSparseMerkleTree([], 0);
   });
 
   afterEach(reverter.revert);
@@ -54,7 +56,6 @@ describe("IncrementalMerkleTree", () => {
       localMerkleTree = buildSparseMerkleTree([elementHash], 1);
 
       expect(await merkleTree.getUintRoot()).to.equal(getRoot(localMerkleTree));
-
       expect(await merkleTree.getUintTreeLength()).to.equal(1n);
     });
 
@@ -67,13 +68,11 @@ describe("IncrementalMerkleTree", () => {
         await merkleTree.addUint(element);
 
         const elementHash = getUintElementHash(element);
-
         elements.push(elementHash);
 
         localMerkleTree = buildSparseMerkleTree(elements, Number(await merkleTree.getUintTreeHeight()));
 
         expect(await merkleTree.getUintRoot()).to.equal(getRoot(localMerkleTree));
-
         expect(await merkleTree.getUintTreeLength()).to.equal(BigInt(i));
       }
     });
@@ -85,16 +84,15 @@ describe("IncrementalMerkleTree", () => {
 
   describe("Bytes32 IMT", () => {
     it("should add element to tree", async () => {
-      const element = "0x1234";
+      const element = ethers.encodeBytes32String(`0x1234`);
 
       await merkleTree.addBytes32(element);
 
-      const elementHash = getBytes32ElementHash("0x1234");
+      const elementHash = getBytes32ElementHash(element);
 
       localMerkleTree = buildSparseMerkleTree([elementHash], 1);
 
       expect(await merkleTree.getBytes32Root()).to.equal(getRoot(localMerkleTree));
-
       expect(await merkleTree.getBytes32TreeLength()).to.equal(1n);
     });
 
@@ -102,18 +100,16 @@ describe("IncrementalMerkleTree", () => {
       const elements = [];
 
       for (let i = 1; i < 33; i++) {
-        const element = `0x${i}234`;
+        const element = ethers.encodeBytes32String(`0x${i}234`);
 
         await merkleTree.addBytes32(element);
 
         const elementHash = getBytes32ElementHash(element);
-
         elements.push(elementHash);
 
         localMerkleTree = buildSparseMerkleTree(elements, Number(await merkleTree.getBytes32TreeHeight()));
 
         expect(await merkleTree.getBytes32Root()).to.equal(getRoot(localMerkleTree));
-
         expect(await merkleTree.getBytes32TreeLength()).to.equal(BigInt(i));
       }
     });
@@ -125,7 +121,7 @@ describe("IncrementalMerkleTree", () => {
 
   describe("Address IMT", () => {
     it("should add element to tree", async () => {
-      const element = USER1;
+      const element = USER1.address;
 
       await merkleTree.addAddress(element);
 
@@ -134,7 +130,6 @@ describe("IncrementalMerkleTree", () => {
       localMerkleTree = buildSparseMerkleTree([elementHash], 1);
 
       expect(await merkleTree.getAddressRoot()).to.equal(getRoot(localMerkleTree));
-
       expect(await merkleTree.getAddressTreeLength()).to.equal(1n);
     });
 
@@ -142,18 +137,16 @@ describe("IncrementalMerkleTree", () => {
       const elements = [];
 
       for (let i = 1; i < 10; i++) {
-        const element = (await ethers.getSigners())[i];
+        const element = (await ethers.getSigners())[i].address;
 
         await merkleTree.addAddress(element);
 
         const elementHash = getAddressElementHash(element);
-
         elements.push(elementHash);
 
         localMerkleTree = buildSparseMerkleTree(elements, Number(await merkleTree.getAddressTreeHeight()));
 
         expect(await merkleTree.getAddressRoot()).to.equal(getRoot(localMerkleTree));
-
         expect(await merkleTree.getAddressTreeLength()).to.equal(BigInt(i));
       }
     });

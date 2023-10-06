@@ -37,13 +37,13 @@ describe("MultiOwnable", () => {
     });
 
     it("only owner should call these functions", async () => {
-      await expect(multiOwnable.connect(SECOND).addOwners([THIRD])).to.be.revertedWith(
+      await expect(multiOwnable.connect(SECOND).addOwners([THIRD.address])).to.be.revertedWith(
         "MultiOwnable: caller is not the owner"
       );
 
-      await multiOwnable.addOwners([THIRD]);
+      await multiOwnable.addOwners([THIRD.address]);
 
-      await expect(multiOwnable.connect(SECOND).removeOwners([THIRD])).to.be.revertedWith(
+      await expect(multiOwnable.connect(SECOND).removeOwners([THIRD.address])).to.be.revertedWith(
         "MultiOwnable: caller is not the owner"
       );
       await expect(multiOwnable.connect(SECOND).renounceOwnership()).to.be.revertedWith(
@@ -54,10 +54,10 @@ describe("MultiOwnable", () => {
 
   describe("addOwners()", () => {
     it("should correctly add owners", async () => {
-      await multiOwnable.addOwners([SECOND, THIRD]);
+      await multiOwnable.addOwners([SECOND.address, THIRD.address]);
 
-      expect(await multiOwnable.isOwner(SECOND)).to.be.true;
-      expect(await multiOwnable.isOwner(THIRD)).to.be.true;
+      expect(await multiOwnable.isOwner(SECOND.address)).to.be.true;
+      expect(await multiOwnable.isOwner(THIRD.address)).to.be.true;
     });
 
     it("should not add null address", async () => {
@@ -69,37 +69,37 @@ describe("MultiOwnable", () => {
 
   describe("removeOwners()", () => {
     it("should correctly remove the owner", async () => {
-      await multiOwnable.addOwners([SECOND]);
-      await multiOwnable.removeOwners([SECOND, THIRD]);
+      await multiOwnable.addOwners([SECOND.address]);
+      await multiOwnable.removeOwners([SECOND.address, THIRD.address]);
 
-      expect(await multiOwnable.isOwner(SECOND)).to.be.false;
-      expect(await multiOwnable.isOwner(FIRST)).to.be.true;
+      expect(await multiOwnable.isOwner(SECOND.address)).to.be.false;
+      expect(await multiOwnable.isOwner(FIRST.address)).to.be.true;
     });
   });
 
   describe("renounceOwnership()", () => {
     it("should correctly remove the owner", async () => {
-      await multiOwnable.addOwners([THIRD]);
-      expect(await multiOwnable.isOwner(THIRD)).to.be.true;
+      await multiOwnable.addOwners([THIRD.address]);
+      expect(await multiOwnable.isOwner(THIRD.address)).to.be.true;
 
-      await multiOwnable.renounceOwnership({ from: THIRD });
-      expect(await multiOwnable.isOwner(THIRD)).to.be.false;
+      await multiOwnable.connect(THIRD).renounceOwnership();
+      expect(await multiOwnable.isOwner(THIRD.address)).to.be.false;
     });
   });
 
   describe("getOwners()", () => {
-    it("should correctly set the owner after inizialization", async () => {
-      expect(await multiOwnable.getOwners()).to.equal(FIRST);
+    it("should correctly set the owner after initialization", async () => {
+      expect(await multiOwnable.getOwners()).to.deep.equal([FIRST.address]);
     });
   });
 
   describe("isOwner()", () => {
     it("should correctly check the initial owner", async () => {
-      expect(await multiOwnable.isOwner(FIRST)).to.be.true;
+      expect(await multiOwnable.isOwner(FIRST.address)).to.be.true;
     });
 
     it("should return false for not owner", async () => {
-      expect(await multiOwnable.isOwner(SECOND)).to.be.false;
+      expect(await multiOwnable.isOwner(SECOND.address)).to.be.false;
     });
   });
 });

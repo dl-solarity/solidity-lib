@@ -30,7 +30,7 @@ describe("DiamondERC20 and InitializableStorage", () => {
 
     await diamond.addFacet(await erc20.getAddress(), selectors);
 
-    erc20 = <DiamondERC20Mock>await DiamondERC20Mock.attach(await diamond.getAddress());
+    erc20 = <DiamondERC20Mock>DiamondERC20Mock.attach(await diamond.getAddress());
 
     await erc20.__DiamondERC20Mock_init("Mock Token", "MT");
 
@@ -68,30 +68,32 @@ describe("DiamondERC20 and InitializableStorage", () => {
 
   describe("DiamondERC20 functions", () => {
     it("should transfer tokens", async () => {
-      await erc20.mint(OWNER, wei("100"));
-      await erc20.transfer(SECOND, wei("50"));
+      await erc20.mint(OWNER.address, wei("100"));
+      await erc20.transfer(SECOND.address, wei("50"));
 
-      expect(await erc20.balanceOf(OWNER)).to.equal(wei("50"));
-      expect(await erc20.balanceOf(SECOND)).to.equal(wei("50"));
+      expect(await erc20.balanceOf(OWNER.address)).to.equal(wei("50"));
+      expect(await erc20.balanceOf(SECOND.address)).to.equal(wei("50"));
     });
 
     it("should not transfer tokens to/from zero address", async () => {
-      await expect(erc20.transferMock(SECOND, ZERO_ADDR, wei("100"))).to.be.revertedWith(
+      await expect(erc20.transferMock(SECOND.address, ZERO_ADDR, wei("100"))).to.be.revertedWith(
         "ERC20: transfer to the zero address"
       );
-      await expect(erc20.transferMock(ZERO_ADDR, SECOND, wei("100"))).to.be.revertedWith(
+      await expect(erc20.transferMock(ZERO_ADDR, SECOND.address, wei("100"))).to.be.revertedWith(
         "ERC20: transfer from the zero address"
       );
     });
 
     it("should not transfer tokens if balance is insufficient", async () => {
-      await expect(erc20.transfer(SECOND, wei("100"))).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+      await expect(erc20.transfer(SECOND.address, wei("100"))).to.be.revertedWith(
+        "ERC20: transfer amount exceeds balance"
+      );
     });
 
     it("should mint tokens", async () => {
-      await erc20.mint(OWNER, wei("100"));
+      await erc20.mint(OWNER.address, wei("100"));
 
-      expect(await erc20.balanceOf(OWNER)).to.equal(wei("100"));
+      expect(await erc20.balanceOf(OWNER.address)).to.equal(wei("100"));
     });
 
     it("should not mint tokens to zero address", async () => {
@@ -99,10 +101,10 @@ describe("DiamondERC20 and InitializableStorage", () => {
     });
 
     it("should burn tokens", async () => {
-      await erc20.mint(OWNER, wei("100"));
-      await erc20.burn(OWNER, wei("50"));
+      await erc20.mint(OWNER.address, wei("100"));
+      await erc20.burn(OWNER.address, wei("50"));
 
-      expect(await erc20.balanceOf(OWNER)).to.equal(wei("50"));
+      expect(await erc20.balanceOf(OWNER.address)).to.equal(wei("50"));
     });
 
     it("should not burn tokens from zero address", async () => {
@@ -110,48 +112,48 @@ describe("DiamondERC20 and InitializableStorage", () => {
     });
 
     it("should not burn tokens if balance is insufficient", async () => {
-      await expect(erc20.burn(OWNER, wei("100"))).to.be.revertedWith("ERC20: burn amount exceeds balance");
+      await expect(erc20.burn(OWNER.address, wei("100"))).to.be.revertedWith("ERC20: burn amount exceeds balance");
     });
 
     it("should approve tokens", async () => {
-      await erc20.approve(SECOND, wei("100"));
+      await erc20.approve(SECOND.address, wei("100"));
 
-      expect(await erc20.allowance(OWNER, SECOND)).to.equal(wei("100"));
+      expect(await erc20.allowance(OWNER.address, SECOND.address)).to.equal(wei("100"));
     });
 
     it("should not approve tokens to/from zero address", async () => {
-      await expect(erc20.approveMock(OWNER, ZERO_ADDR, wei("100"))).to.be.revertedWith(
+      await expect(erc20.approveMock(OWNER.address, ZERO_ADDR, wei("100"))).to.be.revertedWith(
         "ERC20: approve to the zero address"
       );
-      await expect(erc20.approveMock(ZERO_ADDR, OWNER, wei("100"))).to.be.revertedWith(
+      await expect(erc20.approveMock(ZERO_ADDR, OWNER.address, wei("100"))).to.be.revertedWith(
         "ERC20: approve from the zero address"
       );
     });
 
     it("should transfer tokens from address", async () => {
-      await erc20.mint(OWNER, wei("100"));
-      await erc20.approve(SECOND, wei("100"));
-      await erc20.transferFrom(OWNER, SECOND, wei("50"), { from: SECOND });
+      await erc20.mint(OWNER.address, wei("100"));
+      await erc20.approve(SECOND.address, wei("100"));
+      await erc20.connect(SECOND).transferFrom(OWNER.address, SECOND.address, wei("50"));
 
-      expect(await erc20.balanceOf(OWNER)).to.equal(wei("50"));
-      expect(await erc20.balanceOf(SECOND)).to.equal(wei("50"));
+      expect(await erc20.balanceOf(OWNER.address)).to.equal(wei("50"));
+      expect(await erc20.balanceOf(SECOND.address)).to.equal(wei("50"));
     });
 
     it("should not transfer tokens from address if balance is insufficient", async () => {
-      await erc20.mint(OWNER, wei("100"));
-      await erc20.approve(SECOND, wei("100"));
+      await erc20.mint(OWNER.address, wei("100"));
+      await erc20.approve(SECOND.address, wei("100"));
 
-      await expect(erc20.connect(SECOND).transferFrom(OWNER, SECOND, wei("110"))).to.be.revertedWith(
+      await expect(erc20.connect(SECOND).transferFrom(OWNER.address, SECOND.address, wei("110"))).to.be.revertedWith(
         "ERC20: insufficient allowance"
       );
     });
 
     it("should not spend allowance if allowance is infinite type(uint256).max", async () => {
-      await erc20.mint(OWNER, wei("100"));
+      await erc20.mint(OWNER.address, wei("100"));
       await erc20.approve(SECOND, MAX_UINT256);
-      await erc20.transferFrom(OWNER, SECOND, wei("100"), { from: SECOND });
+      await erc20.connect(SECOND).transferFrom(OWNER.address, SECOND.address, wei("100"));
 
-      expect(await erc20.allowance(OWNER, SECOND)).to.equal(MAX_UINT256);
+      expect(await erc20.allowance(OWNER.address, SECOND.address)).to.equal(MAX_UINT256);
     });
   });
 
@@ -161,9 +163,9 @@ describe("DiamondERC20 and InitializableStorage", () => {
       expect(await erc20.symbol()).to.equal("MT");
       expect(await erc20.decimals()).to.equal(18);
 
-      await erc20.mint(OWNER, wei("100"));
+      await erc20.mint(OWNER.address, wei("100"));
 
-      expect(await erc20.balanceOf(OWNER)).to.equal(wei("100"));
+      expect(await erc20.balanceOf(OWNER.address)).to.equal(wei("100"));
       expect(await erc20.totalSupply()).to.equal(wei("100"));
     });
   });

@@ -31,10 +31,10 @@ describe("PriorityQueue", () => {
 
         expect(await mock.lengthUint()).to.equal(5n);
         expect(await mock.topValueUint()).to.equal(5n);
-        expect(await mock.topUint()).to.equal([5n, 5n]);
+        expect(await mock.topUint()).to.deep.equal([5n, 5n]);
 
-        expect(await mock.valuesUint()).to.equal([5n, 4n, 2n, 1n, 3n]);
-        expect(await mock.elementsUint()).to.equal([
+        expect(await mock.valuesUint()).to.deep.equal([5n, 4n, 2n, 1n, 3n]);
+        expect(await mock.elementsUint()).to.deep.equal([
           [5n, 4n, 2n, 1n, 3n],
           [5n, 4n, 2n, 1n, 3n],
         ]);
@@ -54,22 +54,22 @@ describe("PriorityQueue", () => {
         await mock.addUint(1, 1);
 
         expect(await mock.topValueUint()).to.equal(1n);
-        expect(await mock.topUint()).to.equal([1n, 3n]);
+        expect(await mock.topUint()).to.deep.equal([1n, 3n]);
       });
     });
 
     describe("bytes32", () => {
       it("should add several elements", async () => {
-        await mock.addBytes32(ethers.keccak256("0"), 1);
-        await mock.addBytes32(ethers.keccak256("1"), 2);
+        await mock.addBytes32(ethers.keccak256("0x"), 1);
+        await mock.addBytes32(ethers.keccak256("0x01"), 2);
 
         expect(await mock.lengthBytes32()).to.equal(2n);
-        expect(await mock.topValueBytes32()).to.equal(ethers.keccak256("1"));
-        expect(await mock.topBytes32()).to.equal([ethers.keccak256("1"), 2n]);
+        expect(await mock.topValueBytes32()).to.equal(ethers.keccak256("0x01"));
+        expect(await mock.topBytes32()).to.deep.equal([ethers.keccak256("0x01"), 2n]);
 
-        expect(await mock.valuesBytes32()).to.equal([ethers.keccak256("1"), ethers.keccak256("0")]);
-        expect(await mock.elementsBytes32()).to.equal([
-          [ethers.keccak256("1"), ethers.keccak256("0")],
+        expect(await mock.valuesBytes32()).to.deep.equal([ethers.keccak256("0x01"), ethers.keccak256("0x")]);
+        expect(await mock.elementsBytes32()).to.deep.equal([
+          [ethers.keccak256("0x01"), ethers.keccak256("0x")],
           [2n, 1n],
         ]);
       });
@@ -79,16 +79,16 @@ describe("PriorityQueue", () => {
       it("should add several elements", async () => {
         const [FIRST, SECOND] = await ethers.getSigners();
 
-        await mock.addAddress(FIRST, 1);
-        await mock.addAddress(SECOND, 2);
+        await mock.addAddress(FIRST.address, 1);
+        await mock.addAddress(SECOND.address, 2);
 
         expect(await mock.lengthAddress()).to.equal(2n);
-        expect(await mock.topValueAddress()).to.equal(SECOND);
-        expect(await mock.topAddress()).to.equal([SECOND, 2n]);
+        expect(await mock.topValueAddress()).to.equal(SECOND.address);
+        expect(await mock.topAddress()).to.deep.equal([SECOND.address, 2n]);
 
-        expect(await mock.valuesAddress()).to.equal([SECOND, FIRST]);
-        expect(await mock.elementsAddress()).to.equal([
-          [SECOND, FIRST],
+        expect(await mock.valuesAddress()).to.deep.equal([SECOND.address, FIRST.address]);
+        expect(await mock.elementsAddress()).to.deep.equal([
+          [SECOND.address, FIRST.address],
           [2n, 1n],
         ]);
       });
@@ -161,15 +161,15 @@ describe("PriorityQueue", () => {
 
     describe("bytes32", () => {
       it("should add and remove elements", async () => {
-        await mock.addBytes32(ethers.keccak256("0"), 1);
-        await mock.addBytes32(ethers.keccak256("1"), 2);
-        await mock.addBytes32(ethers.keccak256("2"), 3);
+        await mock.addBytes32(ethers.keccak256("0x"), 1);
+        await mock.addBytes32(ethers.keccak256("0x01"), 2);
+        await mock.addBytes32(ethers.keccak256("0x02"), 3);
 
         await mock.removeTopBytes32();
         await mock.removeTopBytes32();
 
         expect(await mock.lengthBytes32()).to.equal(1n);
-        expect(await mock.topValueBytes32()).to.equal(ethers.keccak256("0"));
+        expect(await mock.topValueBytes32()).to.equal(ethers.keccak256("0x"));
       });
     });
 
@@ -177,15 +177,15 @@ describe("PriorityQueue", () => {
       it("should add and remove elements", async () => {
         const [FIRST, SECOND, THIRD] = await ethers.getSigners();
 
-        await mock.addAddress(FIRST, 1);
-        await mock.addAddress(SECOND, 2);
-        await mock.addAddress(THIRD, 3);
+        await mock.addAddress(FIRST.address, 1);
+        await mock.addAddress(SECOND.address, 2);
+        await mock.addAddress(THIRD.address, 3);
 
         await mock.removeTopAddress();
         await mock.removeTopAddress();
 
         expect(await mock.lengthAddress()).to.equal(1n);
-        expect(await mock.topValueAddress()).to.equal(FIRST);
+        expect(await mock.topValueAddress()).to.equal(FIRST.address);
       });
     });
   });

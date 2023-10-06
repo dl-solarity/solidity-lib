@@ -35,6 +35,10 @@ describe("ContractsRegistry", () => {
       );
     });
 
+    it("should get proxy upgrader", async () => {
+      await contractsRegistry.getProxyUpgrader();
+    });
+
     it("only owner should call these functions", async () => {
       await expect(contractsRegistry.connect(SECOND).injectDependencies("")).to.be.revertedWith(
         "Ownable: caller is not the owner"
@@ -154,7 +158,6 @@ describe("ContractsRegistry", () => {
       const crdProxyAddr = await contractsRegistry.getCRDependantContract();
 
       await contractsRegistry.removeContract(await contractsRegistry.CRDEPENDANT_NAME());
-
       await contractsRegistry.justAddProxyContract(await contractsRegistry.CRDEPENDANT_NAME(), crdProxyAddr);
 
       expect(await contractsRegistry.hasContract(await contractsRegistry.CRDEPENDANT_NAME())).to.be.true;
@@ -183,7 +186,7 @@ describe("ContractsRegistry", () => {
         await _dependant.getAddress()
       );
 
-      dependant = <CRDependantUpgrade>await CRDependantUpgrade.attach(await contractsRegistry.getCRDependantContract());
+      dependant = <CRDependantUpgrade>CRDependantUpgrade.attach(await contractsRegistry.getCRDependantContract());
     });
 
     it("should not upgrade non-proxy contract", async () => {
@@ -263,7 +266,7 @@ describe("ContractsRegistry", () => {
 
       await contractsRegistry.addContract(await contractsRegistry.TOKEN_NAME(), await token.getAddress());
 
-      dependant = <CRDependantUpgrade>await CRDependantUpgrade.attach(await contractsRegistry.getCRDependantContract());
+      dependant = <CRDependantUpgrade>CRDependantUpgrade.attach(await contractsRegistry.getCRDependantContract());
     });
 
     it("should inject dependencies", async () => {

@@ -14,7 +14,11 @@ export function fromWei(value: string | number | bigint, decimal: number = 18): 
 }
 
 export function precision(value: string | number | bigint): bigint {
-  return BigInt(value) * PRECISION;
+  if (typeof value == "number" || typeof value == "bigint") {
+    value = value.toString();
+  }
+
+  return ethers.parseUnits(value as string, 25);
 }
 
 export function fromPrecision(value: bigint): bigint {

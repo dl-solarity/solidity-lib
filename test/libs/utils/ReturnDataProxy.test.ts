@@ -47,7 +47,7 @@ describe("ReturnDataProxy", () => {
       const proxyValue = await proxyMock.staticCallGetEntry();
       const rawValue = await rawMock.getEntry();
 
-      expect(proxyValue).to.equal(rawValue);
+      expect(proxyValue).to.deep.equal(rawValue);
     });
 
     it("should return revert message", async () => {
@@ -60,7 +60,7 @@ describe("ReturnDataProxy", () => {
       const proxyValue = await proxyMock.staticCallWithArgs(args, "test", 123);
       const rawValue = await rawMock.getEntryWithArgs(args, "test", 123);
 
-      expect(proxyValue).to.equal(rawValue);
+      expect(proxyValue).to.deep.equal(rawValue);
     });
   });
 

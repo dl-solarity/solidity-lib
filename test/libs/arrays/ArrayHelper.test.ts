@@ -84,17 +84,17 @@ describe("ArrayHelper", () => {
         it("should find the correct indices in the arbitrary array", async () => {
           await mock.setArray(arbitraryArray);
 
-          expect(await mock.lowerBound(1)).to.equal(0n);
-          expect(await mock.lowerBound(10)).to.equal(1n);
-          expect(await mock.lowerBound(15)).to.equal(1n);
-          expect(await mock.lowerBound(20)).to.equal(2n);
-          expect(await mock.lowerBound(25)).to.equal(2n);
-          expect(await mock.lowerBound(30)).to.equal(5n);
-          expect(await mock.lowerBound(35)).to.equal(5n);
-          expect(await mock.lowerBound(40)).to.equal(6n);
-          expect(await mock.lowerBound(45)).to.equal(6n);
-          expect(await mock.lowerBound(50)).to.equal(7n);
-          expect(await mock.lowerBound(100)).to.equal(7n);
+          expect(await mock.upperBound(1)).to.equal(0n);
+          expect(await mock.upperBound(10)).to.equal(1n);
+          expect(await mock.upperBound(15)).to.equal(1n);
+          expect(await mock.upperBound(20)).to.equal(2n);
+          expect(await mock.upperBound(25)).to.equal(2n);
+          expect(await mock.upperBound(30)).to.equal(5n);
+          expect(await mock.upperBound(35)).to.equal(5n);
+          expect(await mock.upperBound(40)).to.equal(6n);
+          expect(await mock.upperBound(45)).to.equal(6n);
+          expect(await mock.upperBound(50)).to.equal(7n);
+          expect(await mock.upperBound(100)).to.equal(7n);
         });
 
         it("should find the correct indices in the singleton array", async () => {
@@ -121,7 +121,7 @@ describe("ArrayHelper", () => {
 
     describe("getRangeSum", () => {
       it("should get the range sum properly if all conditions are met", async () => {
-        await mock.setArray(await mock.countPrefixes(array));
+        await mock.setArray((await mock.countPrefixes(array)).map((e) => Number(e)));
 
         for (let l = 0; l < array.length; l++) {
           for (let r = l; r < array.length; r++) {
@@ -131,7 +131,7 @@ describe("ArrayHelper", () => {
       });
 
       it("should revert if the first index is greater than the last one", async () => {
-        await mock.setArray(await mock.countPrefixes(array));
+        await mock.setArray((await mock.countPrefixes(array)).map((e) => Number(e)));
 
         await expect(mock.getRangeSum(array.length - 1, 0)).to.be.revertedWith("ArrayHelper: wrong range");
         await expect(mock.getRangeSum(1, 0)).to.be.revertedWith("ArrayHelper: wrong range");
@@ -141,7 +141,7 @@ describe("ArrayHelper", () => {
       it("should revert if one of the indexes is out of range", async () => {
         await expect(mock.getRangeSum(0, 0)).to.be.reverted;
 
-        await mock.setArray(await mock.countPrefixes(array));
+        await mock.setArray((await mock.countPrefixes(array)).map((e) => Number(e)));
 
         await expect(mock.getRangeSum(0, array.length)).to.be.reverted;
       });
@@ -149,8 +149,8 @@ describe("ArrayHelper", () => {
 
     describe("countPrefixes", () => {
       it("should compute prefix array properly", async () => {
-        expect(await mock.countPrefixes([])).to.equal([]);
-        expect(await mock.countPrefixes(array)).to.equal(countPrefixes(array).map((e) => BigInt(e)));
+        expect(await mock.countPrefixes([])).to.deep.equal([]);
+        expect(await mock.countPrefixes(array)).to.deep.equal(countPrefixes(array).map((e) => BigInt(e)));
       });
     });
   });
@@ -166,12 +166,12 @@ describe("ArrayHelper", () => {
     });
 
     it("should reverse address array", async () => {
-      const arr = await mock.reverseAddress([FIRST, SECOND, THIRD]);
+      const arr = await mock.reverseAddress([FIRST.address, SECOND.address, THIRD.address]);
 
       expect(arr.length).to.equal(3);
-      expect(arr[0]).to.equal(THIRD);
-      expect(arr[1]).to.equal(SECOND);
-      expect(arr[2]).to.equal(FIRST);
+      expect(arr[0]).to.equal(THIRD.address);
+      expect(arr[1]).to.equal(SECOND.address);
+      expect(arr[2]).to.equal(FIRST.address);
     });
 
     it("should reverse string array", async () => {
@@ -222,18 +222,18 @@ describe("ArrayHelper", () => {
       const res = await mock.insertUint(base, index, what);
 
       expect(res[0]).to.equal(6n);
-      expect(res[1]).to.equal([1n, 2n, 3n, 4n, 5n, 6n]);
+      expect(res[1]).to.deep.equal([1n, 2n, 3n, 4n, 5n, 6n]);
     });
 
     it("should insert address array", async () => {
-      const base = [FIRST, SECOND];
+      const base = [FIRST.address, SECOND.address];
       const index = 1;
-      const what = [THIRD];
+      const what = [THIRD.address];
 
       const res = await mock.insertAddress(base, index, what);
 
       expect(res[0]).to.equal(2n);
-      expect(res[1]).to.equal([FIRST, THIRD]);
+      expect(res[1]).to.deep.equal([FIRST.address, THIRD.address]);
     });
 
     it("should insert string array", async () => {
@@ -244,7 +244,7 @@ describe("ArrayHelper", () => {
       const res = await mock.insertString(base, index, what);
 
       expect(res[0]).to.equal(2n);
-      expect(res[1]).to.equal(["1", "3"]);
+      expect(res[1]).to.deep.equal(["1", "3"]);
     });
 
     it("should insert bytes32 array", async () => {
@@ -261,12 +261,12 @@ describe("ArrayHelper", () => {
       const res = await mock.insertBytes32(base, index, what);
 
       expect(res[0]).to.equal(2n);
-      expect(res[1]).to.equal([bytes32Arrays[0], bytes32Arrays[2]]);
+      expect(res[1]).to.deep.equal([bytes32Arrays[0], bytes32Arrays[2]]);
     });
 
     it("should revert in case of out of bound insertion", async () => {
       await expect(mock.insertUint([1], 1, [2])).to.be.reverted;
-      await expect(mock.insertAddress([], 0, [FIRST])).to.be.reverted;
+      await expect(mock.insertAddress([], 0, [FIRST.address])).to.be.reverted;
       await expect(mock.insertString(["1", "2"], 2, ["1"])).to.be.reverted;
     });
   });
@@ -279,27 +279,27 @@ describe("ArrayHelper", () => {
     });
 
     it("should crop address array properly", async () => {
-      let arr = await mock.cropAddress([FIRST, SECOND, THIRD], 2);
+      let arr = await mock.cropAddress([FIRST.address, SECOND.address, THIRD.address], 2);
 
-      expect(arr).to.equal([FIRST, SECOND]);
+      expect(arr).to.deep.equal([FIRST.address, SECOND.address]);
     });
 
     it("should crop bool array properly", async () => {
       let arr = await mock.cropBool([true, false, true], 2);
 
-      expect(arr).to.equal([true, false]);
+      expect(arr).to.deep.equal([true, false]);
     });
 
     it("should crop string array properly", async () => {
       let arr = await mock.cropString(["a", "b", "c"], 2);
 
-      expect(arr).to.equal(["a", "b"]);
+      expect(arr).to.deep.equal(["a", "b"]);
     });
 
     it("should crop bytes32 array properly", async () => {
-      let arr = await mock.cropBytes(["0x0", "0x0"], 1);
+      let arr = await mock.cropBytes([ZERO_BYTES32, ZERO_BYTES32], 1);
 
-      expect(arr).to.equal([ZERO_BYTES32]);
+      expect(arr).to.deep.equal([ZERO_BYTES32]);
     });
 
     it("should not crop uint256 array if new length more than initial length", async () => {
@@ -309,7 +309,7 @@ describe("ArrayHelper", () => {
     });
 
     it("should not crop address array if new length more than initial length", async () => {
-      let arr = await mock.cropAddress([FIRST, SECOND, THIRD], 5);
+      let arr = await mock.cropAddress([FIRST.address, SECOND.address, THIRD.address], 5);
 
       expect(arr.length).to.equal(3);
     });
@@ -327,7 +327,7 @@ describe("ArrayHelper", () => {
     });
 
     it("should not crop bytes32 array if new length more than initial length", async () => {
-      let arr = await mock.cropBytes(["0x0", "0x0"], 2);
+      let arr = await mock.cropBytes([ZERO_BYTES32, ZERO_BYTES32], 2);
 
       expect(arr.length).to.equal(2);
     });

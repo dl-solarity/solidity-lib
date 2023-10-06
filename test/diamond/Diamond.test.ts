@@ -29,17 +29,19 @@ describe("Diamond", () => {
 
   describe("ownable diamond functions", () => {
     it("should set owner correctly", async () => {
-      expect(await diamond.owner()).to.equal(OWNER);
+      expect(await diamond.owner()).to.equal(OWNER.address);
     });
 
     it("should transfer ownership", async () => {
-      await diamond.transferOwnership(SECOND);
+      await diamond.transferOwnership(SECOND.address);
 
-      expect(await diamond.owner()).to.equal(SECOND);
+      expect(await diamond.owner()).to.equal(SECOND.address);
     });
 
     it("should not transfer ownership from non-owner", async () => {
-      await expect(diamond.connect(SECOND).transferOwnership(SECOND)).to.be.revertedWith("ODStorage: not an owner");
+      await expect(diamond.connect(SECOND).transferOwnership(SECOND.address)).to.be.revertedWith(
+        "ODStorage: not an owner"
+      );
     });
 
     it("should not transfer ownership to zero address", async () => {
@@ -57,8 +59,8 @@ describe("Diamond", () => {
 
     describe("getters", () => {
       it("should return empty data", async () => {
-        expect(await diamond.getFacets()).to.equal([]);
-        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.equal([]);
+        expect(await diamond.getFacets()).to.deep.equal([]);
+        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
         expect(await diamond.getFacetBySelector("0x11223344")).to.equal(ZERO_ADDR);
       });
     });
@@ -69,13 +71,13 @@ describe("Diamond", () => {
 
         await diamond.addFacet(await dummyFacet.getAddress(), selectors);
 
-        expect(await diamond.getFacets()).to.equal([await dummyFacet.getAddress()]);
-        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.equal(selectors);
+        expect(await diamond.getFacets()).to.deep.equal([await dummyFacet.getAddress()]);
+        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.deep.equal(selectors);
         expect(await diamond.getFacetBySelector(selectors[0])).to.equal(await dummyFacet.getAddress());
       });
 
       it("should not add non-contract as a facet", async () => {
-        await expect(diamond.addFacet(SECOND, [])).to.be.revertedWith("Diamond: facet is not a contract");
+        await expect(diamond.addFacet(SECOND.address, [])).to.be.revertedWith("Diamond: facet is not a contract");
       });
 
       it("should not add facet when no selectors provided", async () => {
@@ -107,7 +109,7 @@ describe("Diamond", () => {
         await diamond.addFacet(await dummyFacet.getAddress(), selectors);
 
         const DummyFacet = await ethers.getContractFactory("DummyFacet");
-        const facet = <DummyFacet>await DummyFacet.attach(await diamond.getAddress());
+        const facet = <DummyFacet>DummyFacet.attach(await diamond.getAddress());
 
         await facet.setDummyString("hello, diamond");
 
@@ -118,26 +120,26 @@ describe("Diamond", () => {
       it("should receive ether via receive", async () => {
         await diamond.addFacet(await dummyFacet.getAddress(), ["0x00000000"]);
 
-        let tx = new ethers.Transaction();
-
-        tx.to = await diamond.getAddress();
-        tx.value = wei("1");
+        let tx = {
+          to: await diamond.getAddress(),
+          value: wei("1"),
+        };
 
         await OWNER.sendTransaction(tx);
       });
 
       it("should not call facet if selector is not added", async () => {
         const DummyFacet = await ethers.getContractFactory("DummyFacet");
-        const facet = <DummyFacet>await DummyFacet.attach(await diamond.getAddress());
+        const facet = <DummyFacet>DummyFacet.attach(await diamond.getAddress());
 
         await expect(facet.getDummyString()).to.be.revertedWith("Diamond: selector is not registered");
       });
 
       it("should not receive ether if receive is not added", async () => {
-        let tx = new ethers.Transaction();
-
-        tx.to = await diamond.getAddress();
-        tx.value = wei("1");
+        let tx = {
+          to: await diamond.getAddress(),
+          value: wei("1"),
+        };
 
         await expect(OWNER.sendTransaction(tx)).to.be.revertedWith("Diamond: selector is not registered");
       });
@@ -150,8 +152,8 @@ describe("Diamond", () => {
         await diamond.addFacet(await dummyFacet.getAddress(), selectors);
         await diamond.removeFacet(await dummyFacet.getAddress(), selectors.slice(1));
 
-        expect(await diamond.getFacets()).to.equal([await dummyFacet.getAddress()]);
-        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.equal([selectors[0]]);
+        expect(await diamond.getFacets()).to.deep.equal([await dummyFacet.getAddress()]);
+        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.deep.equal([selectors[0]]);
         expect(await diamond.getFacetBySelector(selectors[0])).to.equal(await dummyFacet.getAddress());
         expect(await diamond.getFacetBySelector(selectors[1])).to.equal(ZERO_ADDR);
       });
@@ -168,8 +170,8 @@ describe("Diamond", () => {
         await diamond.addFacet(await dummyFacet.getAddress(), selectors);
         await diamond.removeFacet(await dummyFacet.getAddress(), selectors);
 
-        expect(await diamond.getFacets()).to.equal([]);
-        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.equal([]);
+        expect(await diamond.getFacets()).to.deep.equal([]);
+        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
         expect(await diamond.getFacetBySelector(selectors[0])).to.equal(ZERO_ADDR);
       });
 
@@ -201,7 +203,7 @@ describe("Diamond", () => {
         await diamond.addFacet(await dummyFacet.getAddress(), [selectors[0]]);
         await diamond.updateFacet(await dummyFacet.getAddress(), [selectors[0]], [selectors[1]]);
 
-        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.equal([selectors[1]]);
+        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.deep.equal([selectors[1]]);
         expect(await diamond.getFacetBySelector(selectors[0])).to.equal(ZERO_ADDR);
         expect(await diamond.getFacetBySelector(selectors[1])).to.equal(await dummyFacet.getAddress());
       });

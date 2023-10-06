@@ -73,7 +73,7 @@ describe("CompoundRateKeeper", () => {
     });
 
     it("should revert if rate is less than zero", async () => {
-      await expect(keeper.setCapitalizationRate(precision(0.99999))).to.be.revertedWith("keeper: rate is less than 1");
+      await expect(keeper.setCapitalizationRate(precision(0.99999))).to.be.revertedWith("CRK: rate is less than 1");
     });
 
     it("should revert if compound rate reaches max limit", async () => {
@@ -83,7 +83,7 @@ describe("CompoundRateKeeper", () => {
       await time.setNextBlockTimestamp((await time.latest()) + 100 * 31536000);
       await keeper.emergencyUpdateCompoundRate();
 
-      await expect(keeper.setCapitalizationRate(precision(1.1))).to.be.revertedWith("keeper: max rate is reached");
+      await expect(keeper.setCapitalizationRate(precision(1.1))).to.be.revertedWith("CRK: max rate is reached");
     });
   });
 
@@ -99,7 +99,7 @@ describe("CompoundRateKeeper", () => {
     });
 
     it("should revert if capitalization period is zero", async () => {
-      await expect(keeper.setCapitalizationPeriod(0)).to.be.revertedWith("keeper: invalid period");
+      await expect(keeper.setCapitalizationPeriod(0)).to.be.revertedWith("CRK: invalid period");
     });
 
     it("should revert if compound rate reaches max limit", async () => {
@@ -109,7 +109,7 @@ describe("CompoundRateKeeper", () => {
       await time.setNextBlockTimestamp((await time.latest()) + 100 * 31536000);
       await keeper.emergencyUpdateCompoundRate();
 
-      await expect(keeper.setCapitalizationPeriod(1)).to.be.revertedWith("keeper: max rate is reached");
+      await expect(keeper.setCapitalizationPeriod(1)).to.be.revertedWith("CRK: max rate is reached");
     });
   });
 
@@ -169,10 +169,10 @@ describe("CompoundRateKeeper", () => {
       await keeper.setCapitalizationRate(precision(1.5));
 
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 2628000)).to.equal(
-        precision("1.04166666666666666667")
+        precision("1.0416666666666666666666666")
       );
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 8 * 2628000)).to.equal(
-        precision("1.33333333333333333333")
+        precision("1.3333333333333333333333333")
       );
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 31536000)).to.equal(precision("1.5"));
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000)).to.equal(precision("2.25"));
@@ -190,7 +190,7 @@ describe("CompoundRateKeeper", () => {
         precision("57.6650390625")
       );
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 50 * 31536000)).to.equal(
-        precision("637621500.21404958690340780691")
+        precision("637621500.2140495869034078069148136")
       );
     });
 

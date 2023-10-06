@@ -53,9 +53,9 @@ describe("PoolFactory", () => {
     await contractsRegistry.addContract(await contractsRegistry.TOKEN_NAME(), await token.getAddress());
 
     poolContractsRegistry = <PoolContractsRegistry>(
-      await PoolContractsRegistry.attach(await contractsRegistry.getPoolContractsRegistryContract())
+      PoolContractsRegistry.attach(await contractsRegistry.getPoolContractsRegistryContract())
     );
-    poolFactory = <PoolFactory>await PoolFactory.attach(await contractsRegistry.getPoolFactoryContract());
+    poolFactory = <PoolFactory>PoolFactory.attach(await contractsRegistry.getPoolFactoryContract());
 
     await poolContractsRegistry.__OwnablePoolContractsRegistry_init();
 
@@ -96,8 +96,8 @@ describe("PoolFactory", () => {
         const Pool = await ethers.getContractFactory("Pool");
         const PublicBeaconProxy = await ethers.getContractFactory("PublicBeaconProxy");
 
-        const pool = <Pool>await Pool.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
-        const beaconProxy = <PublicBeaconProxy>await PublicBeaconProxy.attach(await pool.getAddress());
+        const pool = <Pool>Pool.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
+        const beaconProxy = <PublicBeaconProxy>PublicBeaconProxy.attach(await pool.getAddress());
 
         expect(await beaconProxy.implementation()).to.equal(await poolImpl.getAddress());
         expect(await pool.token()).not.to.equal(ZERO_ADDR);
@@ -115,14 +115,14 @@ describe("PoolFactory", () => {
         await poolFactory.deployPool();
         await poolFactory.deployPool();
 
-        expect(await poolContractsRegistry.countPools(NAME_1)).to.be.equal(3n);
+        expect(await poolContractsRegistry.countPools(NAME_1)).to.equal(3n);
       });
 
       it("should set access correctly", async () => {
         await poolFactory.deployPool();
 
         const Pool = await ethers.getContractFactory("Pool");
-        const pool = <Pool>await Pool.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
+        const pool = <Pool>Pool.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
 
         await expect(poolContractsRegistry.addProxyPool(NAME_1, await poolFactory.getAddress())).to.be.revertedWith(
           "PoolContractsRegistry: not a factory"
@@ -136,7 +136,7 @@ describe("PoolFactory", () => {
         await poolFactory.deployPool();
 
         const PoolUpgrade = await ethers.getContractFactory("PoolUpgrade");
-        const pool1 = <PoolUpgrade>await PoolUpgrade.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
+        const pool1 = <PoolUpgrade>PoolUpgrade.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
 
         await expect(pool1.addedFunction()).to.be.reverted;
 
@@ -147,7 +147,7 @@ describe("PoolFactory", () => {
 
         await poolFactory.deployPool();
 
-        const pool2 = <PoolUpgrade>await PoolUpgrade.attach((await poolContractsRegistry.listPools(NAME_1, 1, 1))[0]);
+        const pool2 = <PoolUpgrade>PoolUpgrade.attach((await poolContractsRegistry.listPools(NAME_1, 1, 1))[0]);
         expect(await pool2.addedFunction()).to.equal(42n);
       });
     });
@@ -168,14 +168,14 @@ describe("PoolFactory", () => {
 
         const pools = await poolContractsRegistry.listPools(NAME_1, 0, 2);
 
-        expect(pools).to.equal([predictedAddress1, predictedAddress2]);
+        expect(pools).to.deep.equal([predictedAddress1, predictedAddress2]);
 
         const Pool = await ethers.getContractFactory("Pool");
         const PublicBeaconProxy = await ethers.getContractFactory("PublicBeaconProxy");
 
-        const poolProxies = await Promise.all(pools.map(async (pool) => <Pool>await Pool.attach(pool)));
+        const poolProxies = await Promise.all(pools.map(async (pool) => <Pool>Pool.attach(pool)));
         const beaconProxies = await Promise.all(
-          pools.map(async (pool) => <PublicBeaconProxy>await PublicBeaconProxy.attach(pool))
+          pools.map(async (pool) => <PublicBeaconProxy>PublicBeaconProxy.attach(pool))
         );
 
         const tokens = await Promise.all(poolProxies.map(async (poolProxy) => await poolProxy.token()));
@@ -183,14 +183,14 @@ describe("PoolFactory", () => {
           beaconProxies.map(async (beaconProxy) => await beaconProxy.implementation())
         );
 
-        expect(tokens).to.equal([await token.getAddress(), await token.getAddress()]);
-        expect(implementations).to.equal([await poolImpl.getAddress(), await poolImpl.getAddress()]);
+        expect(tokens).to.deep.equal([await token.getAddress(), await token.getAddress()]);
+        expect(implementations).to.deep.equal([await poolImpl.getAddress(), await poolImpl.getAddress()]);
       });
 
       it("should revert when deploying the pool with the same salt", async () => {
         await poolFactory.deploy2Pool(SALT1);
 
-        await expect(poolFactory.deploy2Pool(SALT1)).to.be.revertedWith("VM Exception while processing transaction");
+        await expect(poolFactory.deploy2Pool(SALT1)).to.be.reverted;
       });
     });
   });

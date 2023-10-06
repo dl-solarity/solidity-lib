@@ -12,6 +12,7 @@ describe("MerkleWhitelisted", () => {
   const reverter = new Reverter();
 
   let OWNER: SignerWithAddress;
+
   let merkle: MerkleWhitelistedMock;
   let leaves: any;
   let tree: MerkleTree;
@@ -52,22 +53,22 @@ describe("MerkleWhitelisted", () => {
     });
 
     it("should be zero if root is not set yet", async () => {
-      expect(await merkle.getMerkleRoot()).to.be.equal(ZERO_BYTES32);
+      expect(await merkle.getMerkleRoot()).to.equal(ZERO_BYTES32);
     });
 
     it("should change merkle tree root properly", async () => {
-      await addToWhitelist(users[0]);
+      await addToWhitelist(users[0].address);
 
       const root1 = getRoot(tree);
 
-      expect(await merkle.getMerkleRoot()).to.be.equal(root1);
+      expect(await merkle.getMerkleRoot()).to.equal(root1);
 
-      await addToWhitelist(users[1]);
+      await addToWhitelist(users[1].address);
 
       const root2 = getRoot(tree);
 
       expect(await merkle.getMerkleRoot()).to.equal(root2);
-      expect(root1).to.not.be.same(root2);
+      expect(root1).to.not.equal(root2);
     });
   });
 
@@ -75,7 +76,7 @@ describe("MerkleWhitelisted", () => {
     const amounts = [100, 500, 200, 1, 3000];
 
     beforeEach(async () => {
-      leaves = users.map((e, index) => buildAmountLeaf(e, amounts[index]));
+      leaves = amounts.map((e, index) => buildAmountLeaf(users[index].address, e));
 
       await buildMerkleTree();
     });
@@ -110,7 +111,7 @@ describe("MerkleWhitelisted", () => {
 
   describe("onlyWhitelistedUser", () => {
     beforeEach(async () => {
-      leaves = users;
+      leaves = users.map((e) => e.address);
 
       await buildMerkleTree();
     });
@@ -129,7 +130,7 @@ describe("MerkleWhitelisted", () => {
 
     it("should not revert if all conditions are met", async () => {
       for (let i = 0; i < 5; i++) {
-        expect(await merkle.onlyWhitelistedUserMethod(getProof(tree, leaves[i]), { from: users[i] })).to.emit(
+        expect(await merkle.connect(users[i]).onlyWhitelistedUserMethod(getProof(tree, leaves[i]))).to.emit(
           merkle,
           "WhitelistedUser"
         );

@@ -47,15 +47,15 @@ describe("SBT", () => {
 
   describe("mint()", () => {
     it("should correctly mint", async () => {
-      await sbt.mint(FIRST, 1337);
+      await sbt.mint(FIRST.address, 1337);
 
       expect(await sbt.tokenExists(1337)).to.be.true;
 
-      expect(await sbt.balanceOf(FIRST)).to.equal(1n);
-      expect(await sbt.ownerOf(1337)).to.equal(FIRST);
+      expect(await sbt.balanceOf(FIRST.address)).to.equal(1n);
+      expect(await sbt.ownerOf(1337)).to.equal(FIRST.address);
 
-      expect(await sbt.tokenOf(FIRST, 0)).to.equal(1337n);
-      expect(await sbt.tokensOf(FIRST)).to.equal([1337n]);
+      expect(await sbt.tokenOf(FIRST.address, 0)).to.equal(1337n);
+      expect(await sbt.tokensOf(FIRST.address)).to.deep.equal([1337n]);
 
       expect(await sbt.tokenURI(1337)).to.equal("");
     });
@@ -65,24 +65,24 @@ describe("SBT", () => {
     });
 
     it("should not mint token twice", async () => {
-      await sbt.mint(FIRST, 1);
+      await sbt.mint(FIRST.address, 1);
 
-      await expect(sbt.mint(FIRST, 1)).to.be.revertedWith("SBT: token already exists");
+      await expect(sbt.mint(FIRST.address, 1)).to.be.revertedWith("SBT: token already exists");
     });
   });
 
   describe("burn()", () => {
     it("should correctly burn", async () => {
-      await sbt.mint(FIRST, 1337);
+      await sbt.mint(FIRST.address, 1337);
 
       await sbt.burn(1337);
 
       expect(await sbt.tokenExists(0)).to.be.false;
 
-      expect(await sbt.balanceOf(FIRST)).to.equal(0n);
+      expect(await sbt.balanceOf(FIRST.address)).to.equal(0n);
       expect(await sbt.ownerOf(0)).to.equal(ZERO_ADDR);
 
-      expect(await sbt.tokensOf(FIRST)).to.equal([]);
+      expect(await sbt.tokensOf(FIRST.address)).to.deep.equal([]);
     });
 
     it("should not burn SBT that doesn't exist", async () => {
@@ -92,7 +92,7 @@ describe("SBT", () => {
 
   describe("setTokenURI()", () => {
     it("should correctly set token URI", async () => {
-      await sbt.mint(FIRST, 1337);
+      await sbt.mint(FIRST.address, 1337);
       await sbt.setTokenURI(1337, "test");
 
       expect(await sbt.tokenURI(1337)).to.equal("test");
@@ -103,7 +103,7 @@ describe("SBT", () => {
     });
 
     it("should reset token URI if token is burnder", async () => {
-      await sbt.mint(FIRST, 1337);
+      await sbt.mint(FIRST.address, 1337);
       await sbt.setTokenURI(1337, "test");
 
       await sbt.burn(1337);
@@ -123,7 +123,7 @@ describe("SBT", () => {
     it("should override base URI", async () => {
       await sbt.setBaseURI("test");
 
-      await sbt.mint(FIRST, 1337);
+      await sbt.mint(FIRST.address, 1337);
       await sbt.setTokenURI(1337, "test");
 
       expect(await sbt.tokenURI(1337)).to.equal("test");
