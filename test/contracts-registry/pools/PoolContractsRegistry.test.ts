@@ -52,6 +52,8 @@ describe("PoolContractsRegistry", () => {
 
     NAME_1 = await poolContractsRegistry.POOL_1_NAME();
     NAME_2 = await poolContractsRegistry.POOL_2_NAME();
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

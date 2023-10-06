@@ -23,6 +23,8 @@ describe("CompoundRateKeeper", () => {
     keeper = await CompoundRateKeeperMock.deploy();
 
     await keeper.__OwnableCompoundRateKeeper_init(precision(1), 31536000);
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

@@ -1,15 +1,22 @@
-const { assert } = require("chai");
+import { ethers } from "hardhat";
+import { expect } from "chai";
+import { Reverter } from "@/test/helpers/reverter";
 
-const StringSetMock = artifacts.require("StringSetMock");
+import { StringSetMock } from "@ethers-v6";
 
-StringSetMock.numberFormat = "BigNumber";
+describe("StringSet", () => {
+  const reverter = new Reverter();
 
-describe("StringSetMock", () => {
-  let mock;
+  let mock: StringSetMock;
 
-  beforeEach("setup", async () => {
-    mock = await StringSetMock.new();
+  before("setup", async () => {
+    const StringSetMock = await ethers.getContractFactory("StringSetMock");
+    mock = await StringSetMock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("add()", () => {
     it("should add different strings twice", async () => {
@@ -21,9 +28,9 @@ describe("StringSetMock", () => {
 
       let set = await mock.getSet();
 
-      assert.equal(set.length, 2);
-      assert.equal(set[0], expected1);
-      assert.equal(set[1], expected2);
+      expect(set.length).to.equal(2n);
+      expect(set[0]).to.equal(expected1);
+      expect(set[1]).to.equal(expected2);
     });
 
     it("should add empty string", async () => {
@@ -33,8 +40,8 @@ describe("StringSetMock", () => {
 
       let set = await mock.getSet();
 
-      assert.equal(set.length, 1);
-      assert.equal(set[0], expected);
+      expect(set.length).to.equal(1n);
+      expect(set[0]).to.equal(expected);
     });
 
     it("should add same string twice", async () => {
@@ -45,8 +52,8 @@ describe("StringSetMock", () => {
 
       let set = await mock.getSet();
 
-      assert.equal(set.length, 1);
-      assert.equal(set[0], expected);
+      expect(set.length).to.equal(1n);
+      expect(set[0]).to.equal(expected);
     });
   });
 
@@ -55,11 +62,11 @@ describe("StringSetMock", () => {
       let expected = "test";
 
       await mock.add(expected);
-
       await mock.remove(expected);
 
       let set = await mock.getSet();
-      assert.equal(set.length, 0);
+
+      expect(set.length).to.equal(0n);
     });
 
     it("should call remove at empty set", async () => {
@@ -70,12 +77,12 @@ describe("StringSetMock", () => {
       let expected = "test";
 
       await mock.add(expected);
-
       await mock.remove(expected + "1");
 
       let set = await mock.getSet();
-      assert.equal(set.length, 1);
-      assert.equal(set[0], expected);
+
+      expect(set.length).to.equal(1n);
+      expect(set[0]).to.equal(expected);
     });
 
     it("should remove from middle", async () => {
@@ -86,13 +93,13 @@ describe("StringSetMock", () => {
       await mock.add(expected1);
       await mock.add(expected2);
       await mock.add(expected3);
-
       await mock.remove(expected2);
 
       let set = await mock.getSet();
-      assert.equal(set.length, 2);
-      assert.equal(set[0], expected1);
-      assert.equal(set[1], expected3);
+
+      expect(set.length).to.equal(2n);
+      expect(set[0]).to.equal(expected1);
+      expect(set[1]).to.equal(expected3);
     });
   });
 
@@ -102,7 +109,7 @@ describe("StringSetMock", () => {
 
       await mock.add(expected);
 
-      assert.isTrue(await mock.contains(expected));
+      expect(await mock.contains(expected)).to.be.true;
     });
 
     it("should return false", async () => {
@@ -110,7 +117,7 @@ describe("StringSetMock", () => {
 
       await mock.add(expected);
 
-      assert.isFalse(await mock.contains(expected + "1"));
+      expect(await mock.contains(expected + "1")).to.be.false;
     });
   });
 
@@ -118,13 +125,15 @@ describe("StringSetMock", () => {
     it("should return correct length", async () => {
       let expected = "test";
 
-      assert.equal(await mock.length(), 0);
+      expect(await mock.length()).to.equal(0n);
 
       await mock.add(expected);
-      assert.equal(await mock.length(), 1);
+
+      expect(await mock.length()).to.equal(1n);
 
       await mock.add(expected);
-      assert.equal(await mock.length(), 1);
+
+      expect(await mock.length()).to.equal(1n);
     });
   });
 
@@ -137,12 +146,12 @@ describe("StringSetMock", () => {
       }
 
       for (let i = 0; i < 10; i++) {
-        assert.equal(await mock.at(i), expected + i);
+        expect(await mock.at(i)).to.equal(expected + i);
       }
     });
   });
 
-  describe("values", () => {
+  describe("values()", () => {
     it("should return all values", async () => {
       let expected = "test";
 
@@ -153,7 +162,7 @@ describe("StringSetMock", () => {
       let values = await mock.values();
 
       for (let i = 0; i < 10; i++) {
-        assert.equal(expected + i, values[i]);
+        expect(expected + i).to.equal(values[i]);
       }
     });
   });

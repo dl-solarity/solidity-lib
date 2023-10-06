@@ -1,15 +1,22 @@
-const truffleAssert = require("truffle-assertions");
+import { ethers } from "hardhat";
+import { expect } from "chai";
+import { Reverter } from "@/test/helpers/reverter";
 
-const VectorMock = artifacts.require("VectorMock");
-
-VectorMock.numberFormat = "BigNumber";
+import { VectorMock } from "@ethers-v6";
 
 describe("Vector", () => {
-  let vector;
+  const reverter = new Reverter();
 
-  beforeEach("setup", async () => {
-    vector = await VectorMock.new();
+  let vector: VectorMock;
+
+  before("setup", async () => {
+    const VectorMock = await ethers.getContractFactory("VectorMock");
+    vector = await VectorMock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("raw vector", () => {
     it("should test new", async () => {
@@ -33,9 +40,9 @@ describe("Vector", () => {
     });
 
     it("should test empty vector", async () => {
-      await truffleAssert.reverts(vector.testEmptyPop(), "Vector: empty vector");
-      await truffleAssert.reverts(vector.testEmptySet(), "Vector: out of bounds");
-      await truffleAssert.reverts(vector.testEmptyAt(), "Vector: out of bounds");
+      await expect(vector.testEmptyPop()).to.be.revertedWith("Vector: empty vector");
+      await expect(vector.testEmptySet()).to.be.revertedWith("Vector: out of bounds");
+      await expect(vector.testEmptyAt()).to.be.revertedWith("Vector: out of bounds");
     });
   });
 

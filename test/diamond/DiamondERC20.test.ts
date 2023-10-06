@@ -33,6 +33,8 @@ describe("DiamondERC20 and InitializableStorage", () => {
     erc20 = <DiamondERC20Mock>await DiamondERC20Mock.attach(await diamond.getAddress());
 
     await erc20.__DiamondERC20Mock_init("Mock Token", "MT");
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

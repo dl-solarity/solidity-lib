@@ -12,6 +12,8 @@ describe("Paginator", () => {
   before("setup", async () => {
     const PaginatorMock = await ethers.getContractFactory("PaginatorMock");
     mock = await PaginatorMock.deploy();
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

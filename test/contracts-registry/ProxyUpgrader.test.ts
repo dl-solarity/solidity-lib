@@ -25,6 +25,8 @@ describe("ProxyUpgrader", () => {
     token = await ERC20Mock.deploy("mock", "mock", 18);
     proxyUpgrader = await ProxyUpgrader.deploy();
     proxy = await TransparentUpgradeableProxy.deploy(await token.getAddress(), await proxyUpgrader.getAddress(), "0x");
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

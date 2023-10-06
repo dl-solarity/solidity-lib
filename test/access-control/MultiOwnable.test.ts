@@ -22,6 +22,8 @@ describe("MultiOwnable", () => {
     multiOwnable = await MultiOwnableMock.deploy();
 
     await multiOwnable.__MultiOwnableMock_init();
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

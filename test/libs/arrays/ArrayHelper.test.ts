@@ -20,6 +20,8 @@ describe("ArrayHelper", () => {
 
     const ArrayHelperMock = await ethers.getContractFactory("ArrayHelperMock");
     mock = await ArrayHelperMock.deploy();
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

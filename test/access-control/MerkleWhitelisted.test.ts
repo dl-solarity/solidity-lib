@@ -38,6 +38,8 @@ describe("MerkleWhitelisted", () => {
 
     const MerkleWhitelistedMock = await ethers.getContractFactory("MerkleWhitelistedMock");
     merkle = await MerkleWhitelistedMock.deploy();
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

@@ -19,6 +19,8 @@ describe("SetHelper", () => {
 
     const SetHelperMock = await ethers.getContractFactory("SetHelperMock");
     mock = await SetHelperMock.deploy();
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

@@ -21,6 +21,8 @@ describe("Diamond", () => {
 
     const OwnableDiamond = await ethers.getContractFactory("OwnableDiamond");
     diamond = await OwnableDiamond.deploy();
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

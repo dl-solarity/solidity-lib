@@ -23,6 +23,8 @@ describe("ProxyBeacon", () => {
 
     proxyBeacon = await ProxyBeacon.deploy();
     token = await ERC20Mock.deploy("mock", "mock", 18);
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

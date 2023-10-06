@@ -20,6 +20,8 @@ describe("RBAC", () => {
     rbac = await RBACMock.deploy();
 
     await rbac.__RBACMock_init();
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

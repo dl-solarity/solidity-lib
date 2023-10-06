@@ -21,6 +21,8 @@ describe("ContractsRegistry", () => {
     contractsRegistry = await ContractsRegistry1.deploy();
 
     await contractsRegistry.__OwnableContractsRegistry_init();
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);
