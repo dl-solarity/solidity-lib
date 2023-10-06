@@ -1,0 +1,132 @@
+import { ethers } from "hardhat";
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { expect } from "chai";
+import { Reverter } from "@/test/helpers/reverter";
+import { ZERO_ADDR } from "@/scripts/utils/constants";
+
+import { SBTMock } from "@ethers-v6";
+
+const name = "testName";
+const symbol = "TS";
+
+describe("SBT", () => {
+  const reverter = new Reverter();
+
+  let FIRST: SignerWithAddress;
+
+  let sbt: SBTMock;
+
+  before("setup", async () => {
+    [FIRST] = await ethers.getSigners();
+
+    const SBTMock = await ethers.getContractFactory("SBTMock");
+    sbt = await SBTMock.deploy();
+
+    await sbt.__SBTMock_init(name, symbol);
+
+    await reverter.snapshot();
+  });
+
+  afterEach(reverter.revert);
+
+  describe("access", () => {
+    it("should not initialize twice", async () => {
+      await expect(sbt.__SBTMock_init(name, symbol)).to.be.revertedWith(
+        "Initializable: contract is already initialized"
+      );
+      await expect(sbt.mockInit(name, symbol)).to.be.revertedWith("Initializable: contract is not initializing");
+    });
+  });
+
+  describe("init parameters", () => {
+    it("should correctly init", async () => {
+      expect(await sbt.name()).to.equal(name);
+      expect(await sbt.symbol()).to.equal(symbol);
+    });
+  });
+
+  describe("mint()", () => {
+    it("should correctly mint", async () => {
+      await sbt.mint(FIRST.address, 1337);
+
+      expect(await sbt.tokenExists(1337)).to.be.true;
+
+      expect(await sbt.balanceOf(FIRST.address)).to.equal(1n);
+      expect(await sbt.ownerOf(1337)).to.equal(FIRST.address);
+
+      expect(await sbt.tokenOf(FIRST.address, 0)).to.equal(1337n);
+      expect(await sbt.tokensOf(FIRST.address)).to.deep.equal([1337n]);
+
+      expect(await sbt.tokenURI(1337)).to.equal("");
+    });
+
+    it("should not mint to null address", async () => {
+      await expect(sbt.mint(ZERO_ADDR, 1)).to.be.revertedWith("SBT: address(0) receiver");
+    });
+
+    it("should not mint token twice", async () => {
+      await sbt.mint(FIRST.address, 1);
+
+      await expect(sbt.mint(FIRST.address, 1)).to.be.revertedWith("SBT: token already exists");
+    });
+  });
+
+  describe("burn()", () => {
+    it("should correctly burn", async () => {
+      await sbt.mint(FIRST.address, 1337);
+
+      await sbt.burn(1337);
+
+      expect(await sbt.tokenExists(0)).to.be.false;
+
+      expect(await sbt.balanceOf(FIRST.address)).to.equal(0n);
+      expect(await sbt.ownerOf(0)).to.equal(ZERO_ADDR);
+
+      expect(await sbt.tokensOf(FIRST.address)).to.deep.equal([]);
+    });
+
+    it("should not burn SBT that doesn't exist", async () => {
+      await expect(sbt.burn(1337)).to.be.revertedWith("SBT: token doesn't exist");
+    });
+  });
+
+  describe("setTokenURI()", () => {
+    it("should correctly set token URI", async () => {
+      await sbt.mint(FIRST.address, 1337);
+      await sbt.setTokenURI(1337, "test");
+
+      expect(await sbt.tokenURI(1337)).to.equal("test");
+    });
+
+    it("should not set uri for non-existent token", async () => {
+      await expect(sbt.setTokenURI(1337, "")).to.be.revertedWith("SBT: token doesn't exist");
+    });
+
+    it("should reset token URI if token is burnder", async () => {
+      await sbt.mint(FIRST.address, 1337);
+      await sbt.setTokenURI(1337, "test");
+
+      await sbt.burn(1337);
+
+      expect(await sbt.tokenURI(1337)).to.equal("");
+    });
+  });
+
+  describe("setBaseURI()", () => {
+    it("should correctly set base URI", async () => {
+      await sbt.setBaseURI("test");
+
+      expect(await sbt.baseURI()).to.equal("test");
+      expect(await sbt.tokenURI(1337)).to.equal("test1337");
+    });
+
+    it("should override base URI", async () => {
+      await sbt.setBaseURI("test");
+
+      await sbt.mint(FIRST.address, 1337);
+      await sbt.setTokenURI(1337, "test");
+
+      expect(await sbt.tokenURI(1337)).to.equal("test");
+    });
+  });
+});
