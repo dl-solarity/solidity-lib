@@ -67,14 +67,6 @@ contract Diamond is DiamondStorage {
     /**
      * @notice Add/replace/remove any number of functions and optionally execute a function with delegatecall
      * @param facets_ Contains the facet addresses and function selectors
-     */
-    function _diamondCut(Facet[] memory facets_) internal virtual {
-        _diamondCut(facets_, address(0), "");
-    }
-
-    /**
-     * @notice Add/replace/remove any number of functions and optionally execute a function with delegatecall
-     * @param facets_ Contains the facet addresses and function selectors
      * @param initFacet_ The address of the contract or facet to execute initData_
      * @param initData_ A function call, including function selector and arguments initData_ is executed with delegatecall on initFacet_
      */
@@ -82,18 +74,10 @@ contract Diamond is DiamondStorage {
         Facet[] memory facets_,
         address initFacet_,
         bytes memory initData_
-    ) internal virtual {
+    ) internal {
         for (uint256 i; i < facets_.length; i++) {
             bytes4[] memory _functionSelectors = facets_[i].functionSelectors;
             address _facetAddress = facets_[i].facetAddress;
-
-            require(_facetAddress != address(0), "Diamond: facet cannot be zero address");
-            require(_facetAddress.isContract(), "Diamond: facet has no code");
-
-            require(
-                _functionSelectors.length != 0,
-                "Diamond: no selectors provided for facet for cut"
-            );
 
             FacetAction _action = facets_[i].action;
 
@@ -118,7 +102,11 @@ contract Diamond is DiamondStorage {
      * @param facet_ the implementation address
      * @param selectors_ the function selectors the implementation has
      */
-    function _addFacet(address facet_, bytes4[] memory selectors_) internal virtual {
+    function _addFacet(address facet_, bytes4[] memory selectors_) internal {
+        require(facet_ != address(0), "Diamond: facet cannot be zero address");
+        require(facet_.isContract(), "Diamond: facet is not a contract");
+        require(selectors_.length != 0, "Diamond: no selectors provided");
+
         DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i = 0; i < selectors_.length; i++) {
@@ -139,7 +127,10 @@ contract Diamond is DiamondStorage {
      * @param facet_ the implementation to be removed. The facet itself will be removed only if there are no selectors left
      * @param selectors_ the selectors of that implementation to be removed
      */
-    function _removeFacet(address facet_, bytes4[] memory selectors_) internal virtual {
+    function _removeFacet(address facet_, bytes4[] memory selectors_) internal {
+        require(facet_ != address(0), "Diamond: facet cannot be zero address");
+        require(selectors_.length != 0, "Diamond: no selectors provided");
+
         DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i = 0; i < selectors_.length; i++) {
@@ -162,7 +153,11 @@ contract Diamond is DiamondStorage {
      * @param facet_ the facet to update
      * @param selectors_ the selectors of the facet
      */
-    function _updateFacet(address facet_, bytes4[] memory selectors_) internal virtual {
+    function _updateFacet(address facet_, bytes4[] memory selectors_) internal {
+        require(facet_ != address(0), "Diamond: facet cannot be zero address");
+        require(facet_.isContract(), "Diamond: facet is not a contract");
+        require(selectors_.length != 0, "Diamond: no selectors provided");
+
         DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i; i < selectors_.length; i++) {
@@ -183,6 +178,8 @@ contract Diamond is DiamondStorage {
                 _ds.facets.remove(oldFacet_);
             }
         }
+
+        _ds.facets.add(facet_);
     }
 
     /**
@@ -190,7 +187,7 @@ contract Diamond is DiamondStorage {
      * @param initFacet_ the address of the contract or facet to execute initData_
      * @param initData_ a function call, including function selector and arguments, to be executed with delegatecall on initFacet_
      */
-    function _initializeDiamondCut(address initFacet_, bytes memory initData_) internal virtual {
+    function _initializeDiamondCut(address initFacet_, bytes memory initData_) internal {
         if (initFacet_ == address(0)) {
             return;
         }

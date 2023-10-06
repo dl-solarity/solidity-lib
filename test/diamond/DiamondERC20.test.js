@@ -9,6 +9,12 @@ const DiamondERC20Mock = artifacts.require("DiamondERC20Mock");
 OwnableDiamond.numberFormat = "BigNumber";
 DiamondERC20Mock.numberFormat = "BigNumber";
 
+const FacetAction = {
+  Add: 0,
+  Replace: 1,
+  Remove: 2,
+};
+
 function getSelectors(contract) {
   return Object.keys(contract.methods).map((el) => web3.eth.abi.encodeFunctionSignature(el));
 }
@@ -30,8 +36,9 @@ describe("DiamondERC20 and InitializableStorage", () => {
     erc20 = await DiamondERC20Mock.new();
 
     const selectors = getSelectors(erc20);
+    const facets = [[erc20.address, FacetAction.Add, selectors]];
 
-    await diamond.addFacet(erc20.address, selectors);
+    await diamond.diamondCut(facets);
 
     erc20 = await DiamondERC20Mock.at(diamond.address);
 
