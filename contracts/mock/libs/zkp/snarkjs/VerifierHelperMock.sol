@@ -6,7 +6,7 @@ import {VerifierHelper} from "../../../../libs/zkp/snarkjs/VerifierHelper.sol";
 contract VerifierHelperMock {
     using VerifierHelper for address;
 
-    function verifyProof(
+    function verifyProofStruct(
         address verifier_,
         uint256[] memory pubSignals_,
         VerifierHelper.ProofPoints memory proofPoints_
@@ -24,7 +24,7 @@ contract VerifierHelperMock {
         return verifier_.verifyProof(pubSignals_, a_, b_, c_);
     }
 
-    function verifyProofSafe(
+    function verifyProofStructSafe(
         address verifier_,
         uint256[] memory pubSignals_,
         VerifierHelper.ProofPoints memory proofPoints_,
