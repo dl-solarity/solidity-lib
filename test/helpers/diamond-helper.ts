@@ -7,3 +7,9 @@ export function getSelectors(contract: Interface): string[] {
 
   return selectors;
 }
+
+export enum FacetAction {
+  Add,
+  Replace,
+  Remove,
+}

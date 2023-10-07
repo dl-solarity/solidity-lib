@@ -2,11 +2,11 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
-import { getSelectors } from "@/test/helpers/diamond-helper";
+import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
 import { ZERO_ADDR, MAX_UINT256 } from "@/scripts/utils/constants";
 import { wei } from "@/scripts/utils/utils";
 
-import { OwnableDiamond, DiamondERC20Mock } from "@ethers-v6";
+import { OwnableDiamondMock, DiamondERC20Mock, Diamond } from "@ethers-v6";
 
 describe("DiamondERC20 and InitializableStorage", () => {
   const reverter = new Reverter();
@@ -15,20 +15,26 @@ describe("DiamondERC20 and InitializableStorage", () => {
   let SECOND: SignerWithAddress;
 
   let erc20: DiamondERC20Mock;
-  let diamond: OwnableDiamond;
+  let diamond: OwnableDiamondMock;
 
   before("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
-    const OwnableDiamond = await ethers.getContractFactory("OwnableDiamond");
+    const OwnableDiamond = await ethers.getContractFactory("OwnableDiamondMock");
     const DiamondERC20Mock = await ethers.getContractFactory("DiamondERC20Mock");
 
     diamond = await OwnableDiamond.deploy();
     erc20 = await DiamondERC20Mock.deploy();
 
-    const selectors = getSelectors(erc20.interface);
+    const facets: Diamond.FacetStruct[] = [
+      {
+        facetAddress: await erc20.getAddress(),
+        action: FacetAction.Add,
+        functionSelectors: getSelectors(erc20.interface),
+      },
+    ];
 
-    await diamond.addFacet(await erc20.getAddress(), selectors);
+    await diamond.diamondCutShort(facets);
 
     erc20 = <DiamondERC20Mock>DiamondERC20Mock.attach(await diamond.getAddress());
 
