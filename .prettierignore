@@ -1,16 +1,13 @@
 node_modules
 .env
 .DS_Store
+package-lock.json
 
 # Hardhat files
 cache
 artifacts
 coverage.json
 coverage
-generated-markups
-
-# IDE files
-.idea
 
 # Typechain generated files
 generated-types

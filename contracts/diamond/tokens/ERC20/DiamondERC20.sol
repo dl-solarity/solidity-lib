@@ -58,39 +58,6 @@ contract DiamondERC20 is DiamondERC20Storage {
     }
 
     /**
-     * @notice Atomically increases the allowance granted to `spender` by the caller.
-     */
-    function increaseAllowance(
-        address spender_,
-        uint256 addedValue_
-    ) public virtual returns (bool) {
-        address owner_ = msg.sender;
-
-        _approve(owner_, spender_, allowance(owner_, spender_) + addedValue_);
-
-        return true;
-    }
-
-    /**
-     * @notice Atomically decreases the allowance granted to `spender` by the caller.
-     */
-    function decreaseAllowance(
-        address spender_,
-        uint256 subtractedValue_
-    ) public virtual returns (bool) {
-        address owner_ = msg.sender;
-        uint256 currentAllowance_ = allowance(owner_, spender_);
-
-        require(currentAllowance_ >= subtractedValue_, "ERC20: decreased allowance below zero");
-
-        unchecked {
-            _approve(owner_, spender_, currentAllowance_ - subtractedValue_);
-        }
-
-        return true;
-    }
-
-    /**
      * @notice Moves `amount` of tokens from `from` to `to`.
      */
     function _transfer(address from_, address to_, uint256 amount_) internal virtual {
