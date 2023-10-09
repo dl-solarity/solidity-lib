@@ -42,7 +42,7 @@ describe("DiamondERC165", () => {
       expect(await erc165.supportsInterface(erc165.supportsInterface.fragment.selector)).to.be.true;
     });
 
-    it.only("should support DiamondLoupe interface - 0x48e2b093", async () => {
+    it("should support DiamondLoupe interface - 0x48e2b093", async () => {
       expect(
         await erc165.supportsInterface(
           ethers.toBeHex(
