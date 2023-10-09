@@ -18,12 +18,12 @@ contract UniswapV2PairMock {
 
         _reserve0 = 1 ether;
         _reserve1 = 1 ether;
-        _blockTimestampLast = uint32(block.timestamp % 2 ** 32);
+        _blockTimestampLast = uint32(block.timestamp);
     }
 
     function swap(uint256 amount0Out_, uint256 amount1Out_) external {
         unchecked {
-            uint32 blockTimestamp_ = uint32(block.timestamp % 2 ** 32);
+            uint32 blockTimestamp_ = uint32(block.timestamp);
             uint32 timeElapsed_ = blockTimestamp_ - _blockTimestampLast; // overflow is desired
 
             if (timeElapsed_ > 0 && _reserve0 != 0 && _reserve1 != 0) {
