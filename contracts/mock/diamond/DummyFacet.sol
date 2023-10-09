@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import {DummyStorage} from "./DummyStorage.sol";
 
 contract DummyFacet is DummyStorage {
-    function setDummyString(string calldata dummyString_) external {
+    function setDummyString(string memory dummyString_) public {
         getDummyFacetStorage().dummyString = dummyString_;
     }
 

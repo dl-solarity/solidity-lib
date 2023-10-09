@@ -2,11 +2,11 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
-import { getSelectors } from "@/test/helpers/diamond-helper";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
+import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
+import { ZERO_ADDR, ZERO_BYTES32 } from "@/scripts/utils/constants";
 import { wei } from "@/scripts/utils/utils";
 
-import { OwnableDiamond, DummyFacet } from "@ethers-v6";
+import { OwnableDiamondMock, DummyFacet, DummyInit, Diamond } from "@ethers-v6";
 
 describe("Diamond", () => {
   const reverter = new Reverter();
@@ -14,12 +14,12 @@ describe("Diamond", () => {
   let OWNER: SignerWithAddress;
   let SECOND: SignerWithAddress;
 
-  let diamond: OwnableDiamond;
+  let diamond: OwnableDiamondMock;
 
   before("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
-    const OwnableDiamond = await ethers.getContractFactory("OwnableDiamond");
+    const OwnableDiamond = await ethers.getContractFactory("OwnableDiamondMock");
     diamond = await OwnableDiamond.deploy();
 
     await reverter.snapshot();
@@ -51,62 +51,312 @@ describe("Diamond", () => {
 
   describe("facets", () => {
     let dummyFacet: DummyFacet;
+    let facets: Diamond.FacetStruct[] = [];
+    let selectors: string[];
 
     beforeEach("setup", async () => {
       const DummyFacet = await ethers.getContractFactory("DummyFacet");
       dummyFacet = await DummyFacet.deploy();
+
+      selectors = getSelectors(dummyFacet.interface);
     });
 
     describe("getters", () => {
       it("should return empty data", async () => {
-        expect(await diamond.getFacets()).to.deep.equal([]);
-        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
-        expect(await diamond.getFacetBySelector("0x11223344")).to.equal(ZERO_ADDR);
+        expect(await diamond.facets()).to.deep.equal([]);
+        expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
+        expect(await diamond.facetAddresses()).to.deep.equal([]);
+        expect(await diamond.facetAddress("0x11223344")).to.equal(ZERO_ADDR);
+      });
+    });
+
+    describe("init", () => {
+      let dummyInit: DummyInit;
+
+      beforeEach("setup", async () => {
+        dummyInit = await ethers.getContractFactory("DummyInit").then((f) => f.deploy());
+
+        facets = [
+          {
+            facetAddress: await dummyFacet.getAddress(),
+            action: FacetAction.Add,
+            functionSelectors: selectors,
+          },
+        ];
+      });
+
+      it("should init correctly", async () => {
+        const init = dummyInit.init.fragment.selector;
+        const addr = await dummyInit.getAddress();
+
+        const tx = await diamond.diamondCutLong(facets, dummyInit.getAddress(), init);
+
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, addr, init);
+
+        const dimondInitMock = <DummyInit>dummyInit.attach(await diamond.getAddress());
+        await expect(tx).to.emit(dimondInitMock, "Initialized");
+
+        dummyFacet = <DummyFacet>dummyFacet.attach(await diamond.getAddress());
+        expect(await dummyFacet.getDummyString()).to.be.equal("dummy facet initialized");
+      });
+
+      it("should revert if init address is not contract", async () => {
+        const init = dummyInit.init.fragment.selector;
+        await expect(diamond.diamondCutLong(facets, SECOND, init)).to.be.revertedWith(
+          "Diamond: init_ address has no code"
+        );
+      });
+
+      it("should revert if init function reverted", async () => {
+        const initWithError = dummyInit.initWithError.fragment.selector;
+        await expect(diamond.diamondCutLong(facets, await dummyInit.getAddress(), initWithError)).to.be.revertedWith(
+          "Diamond: initialization function reverted"
+        );
+      });
+
+      it("should revert if init function reverted with message", async () => {
+        const initWithErrorMsg = dummyInit.initWithErrorMsg.fragment.selector;
+        await expect(diamond.diamondCutLong(facets, await dummyInit.getAddress(), initWithErrorMsg)).to.be.revertedWith(
+          "DiamondInit: init error"
+        );
       });
     });
 
     describe("add", () => {
+      beforeEach("setup", async () => {
+        facets = [
+          {
+            facetAddress: await dummyFacet.getAddress(),
+            action: FacetAction.Add,
+            functionSelectors: selectors,
+          },
+        ];
+      });
+
       it("should add facet correctly", async () => {
-        let selectors = getSelectors(dummyFacet.interface);
+        const tx = diamond.diamondCutShort(facets);
 
-        await diamond.addFacet(await dummyFacet.getAddress(), selectors);
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
 
-        expect(await diamond.getFacets()).to.deep.equal([await dummyFacet.getAddress()]);
-        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.deep.equal(selectors);
-        expect(await diamond.getFacetBySelector(selectors[0])).to.equal(await dummyFacet.getAddress());
+        expect(await diamond.facets()).to.deep.equal([[await dummyFacet.getAddress(), selectors]]);
+        expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal(selectors);
+        expect(await diamond.facetAddresses()).to.deep.equal([await dummyFacet.getAddress()]);
+        expect(await diamond.facetAddress(selectors[0])).to.equal(await dummyFacet.getAddress());
+        expect(await diamond.facetAddress("0x11223344")).to.equal(ZERO_ADDR);
+      });
+
+      it("should not add facet with zero address", async () => {
+        facets[0].facetAddress = ZERO_ADDR;
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet cannot be zero address");
       });
 
       it("should not add non-contract as a facet", async () => {
-        await expect(diamond.addFacet(SECOND.address, [])).to.be.revertedWith("Diamond: facet is not a contract");
+        facets[0].facetAddress = SECOND.address;
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet is not a contract");
       });
 
       it("should not add facet when no selectors provided", async () => {
-        await expect(diamond.addFacet(await dummyFacet.getAddress(), [])).to.be.revertedWith(
-          "Diamond: no selectors provided"
-        );
+        facets[0].functionSelectors = [];
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: no selectors provided");
       });
 
       it("only owner should add facets", async () => {
-        await expect(diamond.connect(SECOND).addFacet(await dummyFacet.getAddress(), [])).to.be.revertedWith(
+        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
+
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
           "ODStorage: not an owner"
         );
       });
 
       it("should not add duplicate selectors", async () => {
-        let selectors = getSelectors(dummyFacet.interface);
+        await diamond.diamondCutShort(facets);
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: selector already added");
+      });
+    });
 
-        await diamond.addFacet(await dummyFacet.getAddress(), selectors);
-        await expect(diamond.addFacet(await dummyFacet.getAddress(), selectors)).to.be.revertedWith(
-          "Diamond: selector already added"
+    describe("remove", () => {
+      beforeEach("setup", async () => {
+        selectors = getSelectors(dummyFacet.interface);
+        facets = [
+          {
+            facetAddress: await dummyFacet.getAddress(),
+            action: FacetAction.Remove,
+            functionSelectors: selectors,
+          },
+        ];
+      });
+
+      it("should remove selectors", async () => {
+        facets[0].action = FacetAction.Add;
+        await diamond.diamondCutShort(facets);
+
+        facets[0].action = FacetAction.Remove;
+        facets[0].functionSelectors = selectors.slice(1);
+        const tx = diamond.diamondCutShort(facets);
+
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+
+        expect(await diamond.facets()).to.deep.equal([[await dummyFacet.getAddress(), [selectors[0]]]]);
+        expect(await diamond.facetAddresses()).to.deep.equal([await dummyFacet.getAddress()]);
+        expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal([selectors[0]]);
+        expect(await diamond.facetAddress(selectors[0])).to.equal(await dummyFacet.getAddress());
+        expect(await diamond.facetAddress(selectors[1])).to.equal(ZERO_ADDR);
+      });
+
+      it("should fully remove facets", async () => {
+        facets[0].action = FacetAction.Add;
+        await diamond.diamondCutShort(facets);
+
+        facets[0].action = FacetAction.Remove;
+        const tx = diamond.diamondCutShort(facets);
+
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+
+        expect(await diamond.facets()).to.deep.equal([]);
+        expect(await diamond.facetAddresses()).to.deep.equal([]);
+        expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
+        expect(await diamond.facetAddress(selectors[0])).to.equal(ZERO_ADDR);
+      });
+
+      it("should not remove facet when facet is zero address", async () => {
+        facets[0].facetAddress = ZERO_ADDR;
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet cannot be zero address");
+      });
+
+      it("should not remove facet when no selectors provided", async () => {
+        facets[0].functionSelectors = [];
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: no selectors provided");
+      });
+
+      it("should not remove selectors from another facet", async () => {
+        facets[0].action = FacetAction.Add;
+        await diamond.diamondCutShort(facets);
+
+        facets[0].action = FacetAction.Remove;
+        facets[0].facetAddress = await diamond.getAddress();
+
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: selector from another facet");
+      });
+
+      it("only owner should remove facets", async () => {
+        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
+
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
+          "ODStorage: not an owner"
+        );
+      });
+    });
+
+    describe("replace", () => {
+      beforeEach("setup", async () => {
+        selectors = getSelectors(dummyFacet.interface);
+        facets = [
+          {
+            facetAddress: await dummyFacet.getAddress(),
+            action: FacetAction.Replace,
+            functionSelectors: selectors,
+          },
+        ];
+      });
+
+      it("should replace facets and and part of its selectors", async () => {
+        const dummyFacet2 = await ethers.getContractFactory("DummyFacet").then((f) => f.deploy());
+
+        facets[0].action = FacetAction.Add;
+        await diamond.diamondCutShort(facets);
+
+        facets[0].action = FacetAction.Replace;
+        facets[0].facetAddress = await dummyFacet2.getAddress();
+        facets[0].functionSelectors = selectors.slice(1);
+
+        const tx = diamond.diamondCutShort(facets);
+
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+
+        expect(await diamond.facets()).to.deep.equal([
+          [await dummyFacet.getAddress(), [selectors[0]]],
+          [await dummyFacet2.getAddress(), selectors.slice(1)],
+        ]);
+        expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal([selectors[0]]);
+        expect(await diamond.facetFunctionSelectors(await dummyFacet2.getAddress())).to.deep.equal(selectors.slice(1));
+        expect(await diamond.facetAddress(selectors[0])).to.equal(await dummyFacet.getAddress());
+        expect(await diamond.facetAddress(selectors[1])).to.equal(await dummyFacet2.getAddress());
+      });
+
+      it("should replace facets and all its selectors", async () => {
+        const dummyFacet2 = await ethers.getContractFactory("DummyFacet").then((f) => f.deploy());
+
+        facets[0].action = FacetAction.Add;
+        await diamond.diamondCutShort(facets);
+
+        facets[0].action = FacetAction.Replace;
+        facets[0].facetAddress = await dummyFacet2.getAddress();
+
+        const tx = diamond.diamondCutShort(facets);
+
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+
+        expect(await diamond.facets()).to.deep.equal([[await dummyFacet2.getAddress(), selectors]]);
+        expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
+        expect(await diamond.facetFunctionSelectors(await dummyFacet2.getAddress())).to.deep.equal(selectors);
+        expect(await diamond.facetAddress(selectors[0])).to.equal(await dummyFacet2.getAddress());
+      });
+
+      it("should not replace facet when facet is zero address", async () => {
+        facets[0].facetAddress = ZERO_ADDR;
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet cannot be zero address");
+      });
+
+      it("should not replace non-contract as a facet", async () => {
+        facets[0].facetAddress = SECOND.address;
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet is not a contract");
+      });
+
+      it("should not replace facet when no selectors provided", async () => {
+        facets[0].functionSelectors = [];
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: no selectors provided");
+      });
+
+      it("should not replace facet with the same facet", async () => {
+        facets[0].action = FacetAction.Add;
+        await diamond.diamondCutShort(facets);
+
+        facets[0].action = FacetAction.Replace;
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: cannot replace to the same facet");
+      });
+
+      it("should not replace facet if selector is not registered", async () => {
+        facets[0].action = FacetAction.Add;
+        await diamond.diamondCutShort(facets);
+
+        facets[0].action = FacetAction.Replace;
+        // set random selector
+        facets[0].functionSelectors = ["0x00000000"];
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: no facet found for selector");
+      });
+
+      it("only owner should replace facets", async () => {
+        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
+
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
+          "ODStorage: not an owner"
         );
       });
     });
 
     describe("call", () => {
-      it("should be able to call facets", async () => {
-        let selectors = getSelectors(dummyFacet.interface);
+      beforeEach("setup", async () => {
+        facets = [
+          {
+            facetAddress: await dummyFacet.getAddress(),
+            action: FacetAction.Add,
+            functionSelectors: selectors,
+          },
+        ];
+      });
 
-        await diamond.addFacet(await dummyFacet.getAddress(), selectors);
+      it("should be able to call facets", async () => {
+        await diamond.diamondCutShort(facets);
 
         const DummyFacet = await ethers.getContractFactory("DummyFacet");
         const facet = <DummyFacet>DummyFacet.attach(await diamond.getAddress());
@@ -118,7 +368,8 @@ describe("Diamond", () => {
       });
 
       it("should receive ether via receive", async () => {
-        await diamond.addFacet(await dummyFacet.getAddress(), ["0x00000000"]);
+        facets[0].functionSelectors = ["0x00000000"];
+        await diamond.diamondCutShort(facets);
 
         let tx = {
           to: await diamond.getAddress(),
@@ -142,76 +393,6 @@ describe("Diamond", () => {
         };
 
         await expect(OWNER.sendTransaction(tx)).to.be.revertedWith("Diamond: selector is not registered");
-      });
-    });
-
-    describe("remove", () => {
-      it("should remove selectors", async () => {
-        let selectors = getSelectors(dummyFacet.interface);
-
-        await diamond.addFacet(await dummyFacet.getAddress(), selectors);
-        await diamond.removeFacet(await dummyFacet.getAddress(), selectors.slice(1));
-
-        expect(await diamond.getFacets()).to.deep.equal([await dummyFacet.getAddress()]);
-        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.deep.equal([selectors[0]]);
-        expect(await diamond.getFacetBySelector(selectors[0])).to.equal(await dummyFacet.getAddress());
-        expect(await diamond.getFacetBySelector(selectors[1])).to.equal(ZERO_ADDR);
-      });
-
-      it("should not remove facet when no selectors provided", async () => {
-        await expect(diamond.removeFacet(await dummyFacet.getAddress(), [])).to.be.revertedWith(
-          "Diamond: no selectors provided"
-        );
-      });
-
-      it("should fully remove facets", async () => {
-        let selectors = getSelectors(dummyFacet.interface);
-
-        await diamond.addFacet(await dummyFacet.getAddress(), selectors);
-        await diamond.removeFacet(await dummyFacet.getAddress(), selectors);
-
-        expect(await diamond.getFacets()).to.deep.equal([]);
-        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
-        expect(await diamond.getFacetBySelector(selectors[0])).to.equal(ZERO_ADDR);
-      });
-
-      it("should not remove selectors from another facet", async () => {
-        let selectors = getSelectors(dummyFacet.interface);
-
-        await diamond.addFacet(await dummyFacet.getAddress(), selectors);
-
-        await expect(diamond.removeFacet(await diamond.getAddress(), selectors)).to.be.revertedWith(
-          "Diamond: selector from another facet"
-        );
-      });
-
-      it("only owner should remove facets", async () => {
-        let selectors = getSelectors(dummyFacet.interface);
-
-        await diamond.addFacet(await dummyFacet.getAddress(), selectors);
-
-        await expect(diamond.connect(SECOND).removeFacet(await dummyFacet.getAddress(), selectors)).to.be.revertedWith(
-          "ODStorage: not an owner"
-        );
-      });
-    });
-
-    describe("update", () => {
-      it("should update facets", async () => {
-        let selectors = getSelectors(dummyFacet.interface);
-
-        await diamond.addFacet(await dummyFacet.getAddress(), [selectors[0]]);
-        await diamond.updateFacet(await dummyFacet.getAddress(), [selectors[0]], [selectors[1]]);
-
-        expect(await diamond.getFacetSelectors(await dummyFacet.getAddress())).to.deep.equal([selectors[1]]);
-        expect(await diamond.getFacetBySelector(selectors[0])).to.equal(ZERO_ADDR);
-        expect(await diamond.getFacetBySelector(selectors[1])).to.equal(await dummyFacet.getAddress());
-      });
-
-      it("only owner should update facets", async () => {
-        await expect(diamond.connect(SECOND).updateFacet(await dummyFacet.getAddress(), [], [])).to.be.revertedWith(
-          "ODStorage: not an owner"
-        );
       });
     });
   });
