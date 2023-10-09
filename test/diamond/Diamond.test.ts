@@ -6,7 +6,7 @@ import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
 import { ZERO_ADDR, ZERO_BYTES32 } from "@/scripts/utils/constants";
 import { wei } from "@/scripts/utils/utils";
 
-import { OwnableDiamondMock, DummyFacet, DummyInit, Diamond, DiamondStorage } from "@ethers-v6";
+import { OwnableDiamondMock, DummyFacet, DummyInit, Diamond } from "@ethers-v6";
 
 describe("Diamond", () => {
   const reverter = new Reverter();
@@ -90,11 +90,11 @@ describe("Diamond", () => {
         const addr = await dummyInit.getAddress();
 
         const tx = await diamond.diamondCutLong(facets, dummyInit.getAddress(), init);
-        const reciept = await tx.wait();
 
         await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, addr, init);
 
-        expect(reciept?.logs[1].topics[0]).to.eq(ethers.keccak256(ethers.toUtf8Bytes("Initialized()")));
+        const dimondInitMock = <DummyInit>dummyInit.attach(await diamond.getAddress());
+        await expect(tx).to.emit(dimondInitMock, "Initialized");
 
         dummyFacet = <DummyFacet>dummyFacet.attach(await diamond.getAddress());
         expect(await dummyFacet.getDummyString()).to.be.equal("dummy facet initialized");
