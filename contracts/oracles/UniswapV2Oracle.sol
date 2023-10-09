@@ -88,19 +88,19 @@ abstract contract UniswapV2Oracle is Initializable {
      * @notice The function to retrieve the price of a token following the configured route
      * @param tokenIn_ The input token address
      * @param amount_ The amount of the input token
-     * @return The price in the last token of the route and the output token address
+     * @return The price in the last token of the route
+     * @return The output token address
      */
     function getPrice(address tokenIn_, uint256 amount_) public view returns (uint256, address) {
         address[] storage path = _paths[tokenIn_];
         uint256 pathLength_ = path.length;
 
-        require(pathLength_ > 0, "UniswapV2Oracle: invalid path");
+        require(pathLength_ > 1, "UniswapV2Oracle: invalid path");
 
         address tokenOut_ = path[pathLength_ - 1];
 
         for (uint256 i = 0; i < pathLength_ - 1; i++) {
-            address currentToken_ = path[i];
-            address nextToken_ = path[i + 1];
+            (address currentToken_, address nextToken_) = (path[i], path[i + 1]);
             address pair_ = uniswapV2Factory.getPair(currentToken_, nextToken_);
             uint256 price_ = _getPrice(pair_, currentToken_);
 
@@ -153,7 +153,7 @@ abstract contract UniswapV2Oracle is Initializable {
         return (
             _pairInfo.prices0Cumulative[round_],
             _pairInfo.prices1Cumulative[round_],
-            _pairInfos[pair_].blockTimestamps[round_]
+            _pairInfo.blockTimestamps[round_]
         );
     }
 
@@ -205,16 +205,17 @@ abstract contract UniswapV2Oracle is Initializable {
         uint256 numberOfPaths_ = tokenIns_.length;
 
         for (uint256 i = 0; i < numberOfPaths_; i++) {
-            uint256 pathLength_ = _paths[tokenIns_[i]].length;
+            address tokenIn_ = tokenIns_[i];
+            uint256 pathLength_ = _paths[tokenIn_].length;
 
             if (pathLength_ == 0) {
-                return;
+                continue;
             }
 
             for (uint256 j = 0; j < pathLength_ - 1; j++) {
                 address pair_ = uniswapV2Factory.getPair(
-                    _paths[tokenIns_[i]][j],
-                    _paths[tokenIns_[i]][j + 1]
+                    _paths[tokenIn_][j],
+                    _paths[tokenIn_][j + 1]
                 );
 
                 PairInfo storage _pairInfo = _pairInfos[pair_];
@@ -227,7 +228,7 @@ abstract contract UniswapV2Oracle is Initializable {
                 }
             }
 
-            delete _paths[tokenIns_[i]];
+            delete _paths[tokenIn_];
         }
     }
 
@@ -240,7 +241,7 @@ abstract contract UniswapV2Oracle is Initializable {
         unchecked {
             /// @dev pairInfo.blockTimestamps can't be empty
             uint256 index_ = pairInfo.blockTimestamps.lowerBound(
-                (uint32(block.timestamp % 2 ** 32) - timeWindow) % 2 ** 32
+                (uint32(block.timestamp) - timeWindow) % 2 ** 32
             );
             index_ = index_ == 0 ? index_ : index_ - 1;
 
