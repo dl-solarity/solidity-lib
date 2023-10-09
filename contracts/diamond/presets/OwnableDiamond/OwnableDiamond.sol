@@ -25,8 +25,8 @@ contract OwnableDiamond is Diamond, OwnableDiamondStorage {
     function diamondCut(
         Facet[] memory facets_,
         address init_,
-        bytes memory calldata_
+        bytes memory initData_
     ) public onlyOwner {
-        _diamondCut(facets_, init_, calldata_);
+        _diamondCut(facets_, init_, initData_);
     }
 }

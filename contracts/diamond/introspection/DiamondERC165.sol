@@ -2,8 +2,6 @@
 pragma solidity ^0.8.4;
 
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {DiamondStorage} from "../DiamondStorage.sol";
-import {OwnableDiamond} from "../presets/OwnableDiamond/OwnableDiamond.sol";
 
 /**
  * @notice DiamondERC165 - Contract implementing ERC165 interface for Diamonds
