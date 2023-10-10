@@ -24,17 +24,15 @@ describe("UniswapV2Oracle", () => {
   let A_B_PAIR: string;
 
   before("setup", async () => {
-    await reverter.snapshot();
-  });
-
-  beforeEach(async () => {
     const UniswapV2FactoryMock = await ethers.getContractFactory("UniswapV2FactoryMock");
-    uniswapV2Factory = await UniswapV2FactoryMock.deploy();
-
     const Oracle = await ethers.getContractFactory("UniswapV2OracleMock");
+
+    uniswapV2Factory = await UniswapV2FactoryMock.deploy();
     oracle = await Oracle.deploy();
 
     await oracle.__OracleV2Mock_init(await uniswapV2Factory.getAddress(), ORACLE_TIME_WINDOW);
+
+    await reverter.snapshot();
   });
 
   async function createPairs() {
@@ -49,8 +47,8 @@ describe("UniswapV2Oracle", () => {
 
   describe("init", () => {
     it("should set oracle correctly", async () => {
-      expect(await oracle.uniswapV2Factory()).to.be.equal(await uniswapV2Factory.getAddress());
-      expect(await oracle.timeWindow()).to.be.equal(ORACLE_TIME_WINDOW);
+      expect(await oracle.uniswapV2Factory()).to.equal(await uniswapV2Factory.getAddress());
+      expect(await oracle.timeWindow()).to.equal(ORACLE_TIME_WINDOW);
     });
 
     it("should not initialize twice", async () => {
@@ -67,7 +65,7 @@ describe("UniswapV2Oracle", () => {
     it("should set timewindow correctly", async () => {
       await oracle.setTimeWindow(20);
 
-      expect(await oracle.timeWindow()).to.be.equal(20);
+      expect(await oracle.timeWindow()).to.equal(20);
     });
 
     it("shouldn't set 0 timewindow", async () => {
@@ -90,7 +88,7 @@ describe("UniswapV2Oracle", () => {
     });
 
     it("should not allow to set path with non-existent pairs", async () => {
-      await expect(oracle.addPaths([A_C_PATH])).revertedWith("UniswapV2Oracle: uniswap pair doesn't exist");
+      await expect(oracle.addPaths([A_C_PATH])).to.be.revertedWith("UniswapV2Oracle: uniswap pair doesn't exist");
     });
 
     it("should not add same path twice", async () => {
@@ -136,14 +134,14 @@ describe("UniswapV2Oracle", () => {
       let rounds = await oracle.getPairRounds(A_C_PAIR);
       let pairInfo = await oracle.getPairInfo(A_C_PAIR, 0);
 
-      expect(rounds).to.be.equal(1);
-      expect(pairInfo[2]).to.be.equal((await time.latest()) % 2 ** 32);
+      expect(rounds).to.equal(1);
+      expect(pairInfo[2]).to.equal((await time.latest()) % 2 ** 32);
 
       await oracle.updatePrices();
 
       rounds = await oracle.getPairRounds(A_C_PAIR);
 
-      expect(rounds).to.be.equal(2);
+      expect(rounds).to.equal(2);
     });
 
     it("should not update if block is the same or later", async () => {
@@ -155,7 +153,7 @@ describe("UniswapV2Oracle", () => {
 
       let rounds = await oracle.getPairRounds(A_C_PAIR);
 
-      expect(rounds).to.be.equal(2);
+      expect(rounds).to.equal(2);
     });
   });
 
@@ -169,8 +167,8 @@ describe("UniswapV2Oracle", () => {
 
       let response = await oracle.getPrice(A_TOKEN, 10);
 
-      expect(response[0]).to.be.equal(10);
-      expect(response[1]).to.be.equal(C_TOKEN);
+      expect(response[0]).to.equal(10);
+      expect(response[1]).to.equal(C_TOKEN);
     });
 
     it("should correctly get complex price", async () => {
@@ -190,8 +188,8 @@ describe("UniswapV2Oracle", () => {
 
       let response = await oracle.getPrice(A_TOKEN, 10);
 
-      expect(response[0]).to.be.equal("35");
-      expect(response[1]).to.be.equal(C_TOKEN);
+      expect(response[0]).to.equal("35");
+      expect(response[1]).to.equal(C_TOKEN);
     });
 
     it("should return 0 price", async () => {
@@ -205,8 +203,8 @@ describe("UniswapV2Oracle", () => {
 
       let response = await oracle.getPrice(B_TOKEN, 0);
 
-      expect(response[0]).to.be.equal("0");
-      expect(response[1]).to.be.equal(C_TOKEN);
+      expect(response[0]).to.equal("0");
+      expect(response[1]).to.equal(C_TOKEN);
     });
 
     it("should not get price if there is no path", async () => {
