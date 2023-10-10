@@ -3,7 +3,6 @@ import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { wei } from "@/scripts/utils/utils";
 import { Reverter } from "@/test/helpers/reverter";
-import BigNumber from "bignumber.js";
 
 import { UniswapV2FactoryMock, UniswapV2OracleMock, UniswapV2PairMock } from "@ethers-v6";
 
@@ -138,7 +137,7 @@ describe("UniswapV2Oracle", () => {
       let pairInfo = await oracle.getPairInfo(A_C_PAIR, 0);
 
       expect(rounds).to.be.equal(1);
-      expect(pairInfo[2]).to.be.equal(BigNumber(await time.latest()).mod(2 ** 32));
+      expect(pairInfo[2]).to.be.equal((await time.latest()) % 2 ** 32);
 
       await oracle.updatePrices();
 
