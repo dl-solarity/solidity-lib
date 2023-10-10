@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitPOAP Badge](https://public-api.gitpoap.io/v1/repo/dl-solarity/solidity-lib/badge)](https://www.gitpoap.io/gh/dl-solarity/solidity-lib)
 
-# Solidity Library for savvies by Distributed Lab
+# Solidity Library for Savvies by Distributed Lab
 
 The library consists of modules and utilities that are built with a help of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (4.9.2) and **go far beyond mediocre solidity**.
 
@@ -17,6 +17,7 @@ The library consists of modules and utilities that are built with a help of [Ope
 - Optimized [**Incremental Merkle Tree**](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf) data structure
 - Novel **ReturnDataProxy** contract
 - Lightweight **SBT** implementation
+- Flexible UniswapV2 oracle
 - Utilities to ease work with ERC20 decimals, arrays, sets and ZK proofs
 
 ## Overview
