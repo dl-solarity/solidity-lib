@@ -33,11 +33,11 @@ contract DiamondERC721 is DiamondERC721Storage {
      * @inheritdoc IERC721
      */
     function approve(address to_, uint256 tokenId_) public virtual override {
-        address owner = ownerOf(tokenId_);
-        require(to_ != owner, "ERC721: approval to current owner");
+        address owner_ = ownerOf(tokenId_);
+        require(to_ != owner_, "ERC721: approval to current owner");
 
         require(
-            _msgSender() == owner || isApprovedForAll(owner, _msgSender()),
+            msg.sender == owner_ || isApprovedForAll(owner_, msg.sender),
             "ERC721: approve caller is not token owner or approved for all"
         );
 
@@ -48,7 +48,7 @@ contract DiamondERC721 is DiamondERC721Storage {
      * @inheritdoc IERC721
      */
     function setApprovalForAll(address operator_, bool approved_) public virtual override {
-        _setApprovalForAll(_msgSender(), operator_, approved_);
+        _setApprovalForAll(msg.sender, operator_, approved_);
     }
 
     /**
@@ -57,7 +57,7 @@ contract DiamondERC721 is DiamondERC721Storage {
     function transferFrom(address from_, address to_, uint256 tokenId_) public virtual override {
         //solhint-disable-next-line max-line-length
         require(
-            _isApprovedOrOwner(_msgSender(), tokenId_),
+            _isApprovedOrOwner(msg.sender, tokenId_),
             "ERC721: caller is not token owner or approved"
         );
 
@@ -85,7 +85,7 @@ contract DiamondERC721 is DiamondERC721Storage {
         bytes memory data_
     ) public virtual override {
         require(
-            _isApprovedOrOwner(_msgSender(), tokenId_),
+            _isApprovedOrOwner(msg.sender, tokenId_),
             "ERC721: caller is not token owner or approved"
         );
         _safeTransfer(from_, to_, tokenId_, data_);
@@ -305,9 +305,9 @@ contract DiamondERC721 is DiamondERC721Storage {
         bytes memory data_
     ) private returns (bool) {
         if (to_.isContract()) {
-            try
-                IERC721Receiver(to_).onERC721Received(_msgSender(), from_, tokenId_, data_)
-            returns (bytes4 retval) {
+            try IERC721Receiver(to_).onERC721Received(msg.sender, from_, tokenId_, data_) returns (
+                bytes4 retval
+            ) {
                 return retval == IERC721Receiver.onERC721Received.selector;
             } catch (bytes memory reason) {
                 if (reason.length == 0) {
@@ -365,16 +365,4 @@ contract DiamondERC721 is DiamondERC721Storage {
         uint256 firstTokenId_,
         uint256 batchSize_
     ) internal virtual {}
-
-    /**
-     * @dev Unsafe write access to the balances, used by extensions that "mint" tokens using an {ownerOf} override.
-     *
-     * WARNING: Anyone calling this MUST ensure that the balances remain consistent with the ownership. The invariant
-     * being that for any address `a` the value returned by `balanceOf(a)` must be equal to the number of tokens such
-     * that `ownerOf(tokenId)` is `a`.
-     */
-    // solhint-disable-next-line func-name-mixedcase
-    function __unsafe_increaseBalance(address account_, uint256 amount_) internal {
-        _getErc721Storage().balances[account_] += amount_;
-    }
 }

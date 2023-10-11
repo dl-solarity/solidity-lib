@@ -5,7 +5,6 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Metadata} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 
 import {DiamondERC165} from "../../introspection/DiamondERC165.sol";
 import {InitializableStorage} from "../../utils/InitializableStorage.sol";
@@ -14,7 +13,6 @@ import {InitializableStorage} from "../../utils/InitializableStorage.sol";
  * @notice This is an ERC721 token Storage contract with Diamond Standard support
  */
 abstract contract DiamondERC721Storage is
-    Context,
     InitializableStorage,
     DiamondERC165,
     IERC721,
