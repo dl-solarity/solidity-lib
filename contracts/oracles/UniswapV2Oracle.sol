@@ -7,7 +7,6 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 
 import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import {IUniswapV2Pair} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import {UniswapV2OracleLibrary} from "@uniswap/v2-periphery/contracts/libraries/UniswapV2OracleLibrary.sol";
 
 import {ArrayHelper} from "../libs/arrays/ArrayHelper.sol";
 
@@ -23,7 +22,6 @@ import {ArrayHelper} from "../libs/arrays/ArrayHelper.sol";
  */
 abstract contract UniswapV2Oracle is Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
-    using UniswapV2OracleLibrary for address;
     using ArrayHelper for uint256[];
     using Math for uint256;
 
@@ -70,8 +68,11 @@ abstract contract UniswapV2Oracle is Initializable {
             PairInfo storage pairInfo = _pairInfos[pair_];
             uint256[] storage pairTimestamps = pairInfo.blockTimestamps;
 
-            (uint256 price0Cumulative_, uint256 price1Cumulative_, uint256 blockTimestamp_) = pair_
-                .currentCumulativePrices();
+            (
+                uint256 price0Cumulative_,
+                uint256 price1Cumulative_,
+                uint256 blockTimestamp_
+            ) = _currentCumulativePrices(pair_);
 
             if (
                 pairTimestamps.length == 0 ||
@@ -252,8 +253,11 @@ abstract contract UniswapV2Oracle is Initializable {
             uint256 price0_;
             uint256 price1_;
 
-            (uint256 price0Cumulative_, uint256 price1Cumulative_, uint256 blockTimestamp_) = pair_
-                .currentCumulativePrices();
+            (
+                uint256 price0Cumulative_,
+                uint256 price1Cumulative_,
+                uint256 blockTimestamp_
+            ) = _currentCumulativePrices(pair_);
 
             price0_ =
                 (price0Cumulative_ - price0CumulativeOld_) /
@@ -273,5 +277,36 @@ abstract contract UniswapV2Oracle is Initializable {
         address pair_ = uniswapV2Factory.getPair(token1_, token2_);
 
         return (pair_ != address(0), pair_);
+    }
+
+    /**
+     * @notice The private function to get the current cumulative prices of a pair. Adopted for Solidity 0.8.0
+     */
+    function _currentCumulativePrices(
+        address pair_
+    )
+        private
+        view
+        returns (uint256 price0Cumulative_, uint256 price1Cumulative_, uint32 blockTimestamp_)
+    {
+        unchecked {
+            blockTimestamp_ = uint32(block.timestamp);
+            price0Cumulative_ = IUniswapV2Pair(pair_).price0CumulativeLast();
+            price1Cumulative_ = IUniswapV2Pair(pair_).price1CumulativeLast();
+
+            (uint112 reserve0_, uint112 reserve1_, uint32 timestampLast_) = IUniswapV2Pair(pair_)
+                .getReserves();
+
+            if (timestampLast_ != blockTimestamp_) {
+                uint32 timeElapsed_ = blockTimestamp_ - timestampLast_;
+
+                price0Cumulative_ +=
+                    uint256((uint224(reserve1_) << 112) / reserve0_) *
+                    timeElapsed_;
+                price1Cumulative_ +=
+                    uint256((uint224(reserve0_) << 112) / reserve1_) *
+                    timeElapsed_;
+            }
+        }
     }
 }
