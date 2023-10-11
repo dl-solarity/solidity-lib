@@ -16,8 +16,6 @@ contract DiamondERC721 is DiamondERC721Storage {
 
     /**
      * @notice Sets the values for {name} and {symbol}.
-     *
-     * The default value of {decimals} is 18.
      */
     function __DiamondERC721_init(
         string memory name_,
@@ -88,26 +86,13 @@ contract DiamondERC721 is DiamondERC721Storage {
             _isApprovedOrOwner(msg.sender, tokenId_),
             "ERC721: caller is not token owner or approved"
         );
+
         _safeTransfer(from_, to_, tokenId_, data_);
     }
 
     /**
-     * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
+     * @notice Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
      * are aware of the ERC721 protocol to prevent tokens from being forever locked.
-     *
-     * `data` is additional data, it has no specified format and it is sent in call to `to`.
-     *
-     * This internal function is equivalent to {safeTransferFrom}, and can be used to e.g.
-     * implement alternative mechanisms to perform token transfer, such as signature-based.
-     *
-     * Requirements:
-     *
-     * - `from` cannot be the zero address.
-     * - `to` cannot be the zero address.
-     * - `tokenId` token must exist and be owned by `from`.
-     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-     *
-     * Emits a {Transfer} event.
      */
     function _safeTransfer(
         address from_,
@@ -116,6 +101,7 @@ contract DiamondERC721 is DiamondERC721Storage {
         bytes memory data_
     ) internal virtual {
         _transfer(from_, to_, tokenId_);
+
         require(
             _checkOnERC721Received(from_, to_, tokenId_, data_),
             "ERC721: transfer to non ERC721Receiver implementer"
@@ -123,25 +109,18 @@ contract DiamondERC721 is DiamondERC721Storage {
     }
 
     /**
-     * @dev Safely mints `tokenId` and transfers it to `to`.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must not exist.
-     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-     *
-     * Emits a {Transfer} event.
+     * @notice Safely mints `tokenId` and transfers it to `to`.
      */
     function _safeMint(address to_, uint256 tokenId_) internal virtual {
         _safeMint(to_, tokenId_, "");
     }
 
     /**
-     * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
-     * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
+     * @notice Same as _safeMint, with an additional `data` parameter.
      */
     function _safeMint(address to_, uint256 tokenId_, bytes memory data_) internal virtual {
         _mint(to_, tokenId_);
+
         require(
             _checkOnERC721Received(address(0), to_, tokenId_, data_),
             "ERC721: transfer to non ERC721Receiver implementer"
@@ -149,16 +128,7 @@ contract DiamondERC721 is DiamondERC721Storage {
     }
 
     /**
-     * @dev Mints `tokenId` and transfers it to `to`.
-     *
-     * WARNING: Usage of this method is discouraged, use {_safeMint} whenever possible
-     *
-     * Requirements:
-     *
-     * - `tokenId` must not exist.
-     * - `to` cannot be the zero address.
-     *
-     * Emits a {Transfer} event.
+     * @notice Mints `tokenId` and transfers it to `to`.
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
         require(to_ != address(0), "ERC721: mint to the zero address");
@@ -187,23 +157,15 @@ contract DiamondERC721 is DiamondERC721Storage {
     }
 
     /**
-     * @dev Destroys `tokenId`.
-     * The approval is cleared when the token is burned.
-     * This is an internal function that does not check if the sender is authorized to operate on the token.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must exist.
-     *
-     * Emits a {Transfer} event.
+     * @notice Destroys `tokenId`.
      */
     function _burn(uint256 tokenId_) internal virtual {
-        address owner = ownerOf(tokenId_);
+        address owner_ = ownerOf(tokenId_);
 
-        _beforeTokenTransfer(owner, address(0), tokenId_, 1);
+        _beforeTokenTransfer(owner_, address(0), tokenId_, 1);
 
         // Update ownership in case tokenId was transferred by `_beforeTokenTransfer` hook
-        owner = ownerOf(tokenId_);
+        owner_ = ownerOf(tokenId_);
 
         DERC721Storage storage _erc721Storage = _getErc721Storage();
 
@@ -213,25 +175,18 @@ contract DiamondERC721 is DiamondERC721Storage {
         unchecked {
             // Cannot overflow, as that would require more tokens to be burned/transferred
             // out than the owner initially received through minting and transferring in.
-            _erc721Storage.balances[owner] -= 1;
+            _erc721Storage.balances[owner_] -= 1;
         }
+
         delete _erc721Storage.owners[tokenId_];
 
-        emit Transfer(owner, address(0), tokenId_);
+        emit Transfer(owner_, address(0), tokenId_);
 
-        _afterTokenTransfer(owner, address(0), tokenId_, 1);
+        _afterTokenTransfer(owner_, address(0), tokenId_, 1);
     }
 
     /**
-     * @dev Transfers `tokenId` from `from` to `to`.
-     *  As opposed to {transferFrom}, this imposes no restrictions on msg.sender.
-     *
-     * Requirements:
-     *
-     * - `to` cannot be the zero address.
-     * - `tokenId` token must be owned by `from`.
-     *
-     * Emits a {Transfer} event.
+     * @notice Transfers `tokenId` from `from` to `to`.
      */
     function _transfer(address from_, address to_, uint256 tokenId_) internal virtual {
         require(ownerOf(tokenId_) == from_, "ERC721: transfer from incorrect owner");
@@ -256,6 +211,7 @@ contract DiamondERC721 is DiamondERC721Storage {
             _erc721Storage.balances[from_] -= 1;
             _erc721Storage.balances[to_] += 1;
         }
+
         _getErc721Storage().owners[tokenId_] = to_;
 
         emit Transfer(from_, to_, tokenId_);
@@ -264,19 +220,16 @@ contract DiamondERC721 is DiamondERC721Storage {
     }
 
     /**
-     * @dev Approve `to` to operate on `tokenId`
-     *
-     * Emits an {Approval} event.
+     * @notice Approve `to` to operate on `tokenId`.
      */
     function _approve(address to_, uint256 tokenId_) internal virtual {
         _getErc721Storage().tokenApprovals[tokenId_] = to_;
+
         emit Approval(ownerOf(tokenId_), to_, tokenId_);
     }
 
     /**
-     * @dev Approve `operator` to operate on all of `owner` tokens
-     *
-     * Emits an {ApprovalForAll} event.
+     * @notice Approve `operator` to operate on all of `owner` tokens.
      */
     function _setApprovalForAll(
         address owner_,
@@ -284,19 +237,15 @@ contract DiamondERC721 is DiamondERC721Storage {
         bool approved_
     ) internal virtual {
         require(owner_ != operator_, "ERC721: approve to caller");
+
         _getErc721Storage().operatorApprovals[owner_][operator_] = approved_;
+
         emit ApprovalForAll(owner_, operator_, approved_);
     }
 
     /**
-     * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
+     * @notice Function to check if the 'to' can receive token.
      * The call is not executed if the target address is not a contract.
-     *
-     * @param from_ address representing the previous owner of the given token ID
-     * @param to_ target address that will receive the tokens
-     * @param tokenId_ uint256 ID of the token to be transferred
-     * @param data_ bytes optional data to send along with the call
-     * @return bool whether the call correctly returned the expected magic value
      */
     function _checkOnERC721Received(
         address from_,
@@ -325,39 +274,36 @@ contract DiamondERC721 is DiamondERC721Storage {
     }
 
     /**
-     * @dev Hook that is called before any token transfer. This includes minting and burning. If {ERC721Consecutive} is
-     * used, the hook may be called as part of a consecutive (batch) mint, as indicated by `batchSize` greater than 1.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, ``from``'s tokens will be transferred to `to`.
-     * - When `from` is zero, the tokens will be minted for `to`.
-     * - When `to` is zero, ``from``'s tokens will be burned.
-     * - `from` and `to` are never both zero.
-     * - `batchSize` is non-zero.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     * @notice Hook that is called before any token transfer. This includes minting and burning.
      */
     function _beforeTokenTransfer(
         address from_,
         address to_,
         uint256 firstTokenId_,
         uint256 batchSize_
-    ) internal virtual {}
+    ) internal virtual {
+        if (batchSize_ > 1) {
+            // Will only trigger during construction. Batch transferring (minting) is not available afterwards.
+            revert("ERC721Enumerable: consecutive transfers not supported");
+        }
+
+        uint256 tokenId_ = firstTokenId_;
+
+        if (from_ == address(0)) {
+            _addTokenToAllTokensEnumeration(tokenId_);
+        } else if (from_ != to_) {
+            _removeTokenFromOwnerEnumeration(from_, tokenId_);
+        }
+
+        if (to_ == address(0)) {
+            _removeTokenFromAllTokensEnumeration(tokenId_);
+        } else if (to_ != from_) {
+            _addTokenToOwnerEnumeration(to_, tokenId_);
+        }
+    }
 
     /**
-     * @dev Hook that is called after any token transfer. This includes minting and burning. If {ERC721Consecutive} is
-     * used, the hook may be called as part of a consecutive (batch) mint, as indicated by `batchSize` greater than 1.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, ``from``'s tokens were transferred to `to`.
-     * - When `from` is zero, the tokens were minted for `to`.
-     * - When `to` is zero, ``from``'s tokens were burned.
-     * - `from` and `to` are never both zero.
-     * - `batchSize` is non-zero.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     * @notice Hook that is called after any token transfer. This includes minting and burning.
      */
     function _afterTokenTransfer(
         address from_,
@@ -365,4 +311,73 @@ contract DiamondERC721 is DiamondERC721Storage {
         uint256 firstTokenId_,
         uint256 batchSize_
     ) internal virtual {}
+
+    /**
+     * @notice Private function to add a token to ownership-tracking data structures.
+     */
+    function _addTokenToOwnerEnumeration(address to, uint256 tokenId) private {
+        DERC721Storage storage _erc721Storage = _getErc721Storage();
+
+        uint256 length_ = balanceOf(to);
+        _erc721Storage.ownedTokens[to][length_] = tokenId;
+        _erc721Storage.ownedTokensIndex[tokenId] = length_;
+    }
+
+    /**
+     * @notice Private function to add a token to token tracking data structures.
+     */
+    function _addTokenToAllTokensEnumeration(uint256 tokenId) private {
+        DERC721Storage storage _erc721Storage = _getErc721Storage();
+
+        _erc721Storage.allTokensIndex[tokenId] = _erc721Storage.allTokens.length;
+        _erc721Storage.allTokens.push(tokenId);
+    }
+
+    /**
+     * @dev Private function to remove a token from ownership-tracking data structures.
+     */
+    function _removeTokenFromOwnerEnumeration(address from, uint256 tokenId) private {
+        DERC721Storage storage _erc721Storage = _getErc721Storage();
+        // To prevent a gap in from's tokens array, we store the last token in the index of the token to delete, and
+        // then delete the last slot (swap and pop).
+
+        uint256 lastTokenIndex_ = balanceOf(from) - 1;
+        uint256 tokenIndex_ = _erc721Storage.ownedTokensIndex[tokenId];
+
+        // When the token to delete is the last token, the swap operation is unnecessary
+        if (tokenIndex_ != lastTokenIndex_) {
+            uint256 lastTokenId = _erc721Storage.ownedTokens[from][lastTokenIndex_];
+
+            _erc721Storage.ownedTokens[from][tokenIndex_] = lastTokenId; // Move the last token to the slot of the to-delete token
+            _erc721Storage.ownedTokensIndex[lastTokenId] = tokenIndex_; // Update the moved token's index
+        }
+
+        // This also deletes the contents at the last position of the array
+        delete _erc721Storage.ownedTokensIndex[tokenId];
+        delete _erc721Storage.ownedTokens[from][lastTokenIndex_];
+    }
+
+    /**
+     * @dev Private function to remove a token from token tracking data structures.
+     */
+    function _removeTokenFromAllTokensEnumeration(uint256 tokenId) private {
+        DERC721Storage storage _erc721Storage = _getErc721Storage();
+        // To prevent a gap in the tokens array, we store the last token in the index of the token to delete, and
+        // then delete the last slot (swap and pop).
+
+        uint256 lastTokenIndex_ = _erc721Storage.allTokens.length - 1;
+        uint256 tokenIndex_ = _erc721Storage.allTokensIndex[tokenId];
+
+        // When the token to delete is the last token, the swap operation is unnecessary. However, since this occurs so
+        // rarely (when the last minted token is burnt) that we still do the swap here to avoid the gas cost of adding
+        // an 'if' statement (like in _removeTokenFromOwnerEnumeration)
+        uint256 lastTokenId_ = _erc721Storage.allTokens[lastTokenIndex_];
+
+        _erc721Storage.allTokens[tokenIndex_] = lastTokenId_; // Move the last token to the slot of the to-delete token
+        _erc721Storage.allTokensIndex[lastTokenId_] = tokenIndex_; // Update the moved token's index
+
+        // This also deletes the contents at the last position of the array
+        delete _erc721Storage.allTokensIndex[tokenId];
+        _erc721Storage.allTokens.pop();
+    }
 }
