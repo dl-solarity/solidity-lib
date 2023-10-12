@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import {IERC721Metadata} from "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
@@ -15,7 +16,7 @@ import {ISBT} from "../interfaces/tokens/ISBT.sol";
  *
  * Has to be inherited in order to be useful in the project
  */
-abstract contract SBT is ISBT, Initializable {
+abstract contract SBT is ISBT, ERC165Upgradeable {
     using Strings for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -135,6 +136,18 @@ abstract contract SBT is ISBT, Initializable {
     }
 
     /**
+     * @notice Returns true if this contract implements the interface defined by `interfaceId`
+     * @param interfaceId_ the interface ID to check
+     * @return true if the passed interface ID is supported, otherwise false
+     */
+    function supportsInterface(bytes4 interfaceId_) public view virtual override returns (bool) {
+        return
+            interfaceId_ == type(IERC721Metadata).interfaceId ||
+            interfaceId_ == type(ISBT).interfaceId ||
+            super.supportsInterface(interfaceId_);
+    }
+
+    /**
      * @notice The function to mint the token
      * @param to_ the receiver of the token
      * @param tokenId_ the token to mint
@@ -148,7 +161,7 @@ abstract contract SBT is ISBT, Initializable {
         _balances[to_].add(tokenId_);
         _tokenOwners[tokenId_] = to_;
 
-        emit Minted(to_, tokenId_);
+        emit Transfer(address(0), to_, tokenId_);
     }
 
     /**
@@ -166,7 +179,7 @@ abstract contract SBT is ISBT, Initializable {
 
         delete _tokenURIs[tokenId_];
 
-        emit Burned(owner_, tokenId_);
+        emit Transfer(owner_, address(0), tokenId_);
     }
 
     /**
