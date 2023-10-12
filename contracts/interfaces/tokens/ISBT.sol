@@ -5,8 +5,7 @@ pragma solidity ^0.8.4;
  * @notice The SBT module
  */
 interface ISBT {
-    event Minted(address to, uint256 tokenId);
-    event Burned(address from, uint256 tokenId);
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
     function name() external view returns (string memory);
 
