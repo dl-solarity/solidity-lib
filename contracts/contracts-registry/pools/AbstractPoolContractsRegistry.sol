@@ -124,7 +124,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
     ) internal virtual {
         for (uint256 i = 0; i < names_.length; i++) {
             if (address(_beacons[names_[i]]) == address(0)) {
-                _beacons[names_[i]] = ProxyBeacon(_deployProxyBeacon());
+                _beacons[names_[i]] = ProxyBeacon(_deployProxyBeacon(newImplementations_[i]));
             }
 
             if (_beacons[names_[i]].implementation() != newImplementations_[i]) {
@@ -184,9 +184,10 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
 
     /**
      * @notice The utility function to deploy a Proxy Beacon contract to be used within the registry
+     * @param implementation_ the address of the implementation
      * @return the address of a Proxy Beacon
      */
-    function _deployProxyBeacon() internal virtual returns (address) {
+    function _deployProxyBeacon(address implementation_) internal virtual returns (address) {
         return address(new ProxyBeacon());
     }
 }
