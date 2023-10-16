@@ -53,7 +53,6 @@ contract DiamondERC721 is DiamondERC721Storage {
      * @inheritdoc IERC721
      */
     function transferFrom(address from_, address to_, uint256 tokenId_) public virtual override {
-        //solhint-disable-next-line max-line-length
         require(
             _isApprovedOrOwner(msg.sender, tokenId_),
             "ERC721: caller is not token owner or approved"
@@ -142,10 +141,6 @@ contract DiamondERC721 is DiamondERC721Storage {
         DERC721Storage storage _erc721Storage = _getErc721Storage();
 
         unchecked {
-            // Will not overflow unless all 2**256 token ids are minted to the same owner.
-            // Given that tokens are minted one by one, it is impossible in practice that
-            // this ever happens. Might change if we allow batch minting.
-            // The ERC fails to describe this case.
             _erc721Storage.balances[to_] += 1;
         }
 
@@ -173,8 +168,6 @@ contract DiamondERC721 is DiamondERC721Storage {
         delete _erc721Storage.tokenApprovals[tokenId_];
 
         unchecked {
-            // Cannot overflow, as that would require more tokens to be burned/transferred
-            // out than the owner initially received through minting and transferring in.
             _erc721Storage.balances[owner_] -= 1;
         }
 
@@ -203,11 +196,6 @@ contract DiamondERC721 is DiamondERC721Storage {
         delete _erc721Storage.tokenApprovals[tokenId_];
 
         unchecked {
-            // `_balances[from]` cannot overflow for the same reason as described in `_burn`:
-            // `from`'s balance is the number of token held, which is at least one before the current
-            // transfer.
-            // `_balances[to]` could overflow in the conditions described in `_mint`. That would require
-            // all 2**256 token ids to be minted, which in practice is impossible.
             _erc721Storage.balances[from_] -= 1;
             _erc721Storage.balances[to_] += 1;
         }
@@ -338,21 +326,17 @@ contract DiamondERC721 is DiamondERC721Storage {
      */
     function _removeTokenFromOwnerEnumeration(address from, uint256 tokenId) private {
         DERC721Storage storage _erc721Storage = _getErc721Storage();
-        // To prevent a gap in from's tokens array, we store the last token in the index of the token to delete, and
-        // then delete the last slot (swap and pop).
 
         uint256 lastTokenIndex_ = balanceOf(from) - 1;
         uint256 tokenIndex_ = _erc721Storage.ownedTokensIndex[tokenId];
 
-        // When the token to delete is the last token, the swap operation is unnecessary
         if (tokenIndex_ != lastTokenIndex_) {
             uint256 lastTokenId = _erc721Storage.ownedTokens[from][lastTokenIndex_];
 
-            _erc721Storage.ownedTokens[from][tokenIndex_] = lastTokenId; // Move the last token to the slot of the to-delete token
-            _erc721Storage.ownedTokensIndex[lastTokenId] = tokenIndex_; // Update the moved token's index
+            _erc721Storage.ownedTokens[from][tokenIndex_] = lastTokenId;
+            _erc721Storage.ownedTokensIndex[lastTokenId] = tokenIndex_;
         }
 
-        // This also deletes the contents at the last position of the array
         delete _erc721Storage.ownedTokensIndex[tokenId];
         delete _erc721Storage.ownedTokens[from][lastTokenIndex_];
     }
@@ -362,21 +346,15 @@ contract DiamondERC721 is DiamondERC721Storage {
      */
     function _removeTokenFromAllTokensEnumeration(uint256 tokenId) private {
         DERC721Storage storage _erc721Storage = _getErc721Storage();
-        // To prevent a gap in the tokens array, we store the last token in the index of the token to delete, and
-        // then delete the last slot (swap and pop).
 
+        // "swap and pop" pattern is used
         uint256 lastTokenIndex_ = _erc721Storage.allTokens.length - 1;
         uint256 tokenIndex_ = _erc721Storage.allTokensIndex[tokenId];
-
-        // When the token to delete is the last token, the swap operation is unnecessary. However, since this occurs so
-        // rarely (when the last minted token is burnt) that we still do the swap here to avoid the gas cost of adding
-        // an 'if' statement (like in _removeTokenFromOwnerEnumeration)
         uint256 lastTokenId_ = _erc721Storage.allTokens[lastTokenIndex_];
 
-        _erc721Storage.allTokens[tokenIndex_] = lastTokenId_; // Move the last token to the slot of the to-delete token
-        _erc721Storage.allTokensIndex[lastTokenId_] = tokenIndex_; // Update the moved token's index
+        _erc721Storage.allTokens[tokenIndex_] = lastTokenId_;
+        _erc721Storage.allTokensIndex[lastTokenId_] = tokenIndex_;
 
-        // This also deletes the contents at the last position of the array
         delete _erc721Storage.allTokensIndex[tokenId];
         _erc721Storage.allTokens.pop();
     }
