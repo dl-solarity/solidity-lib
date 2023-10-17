@@ -7,7 +7,7 @@ import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 import { OwnableDiamondMock, DiamondERC721Mock, Diamond } from "@ethers-v6";
 
-describe.only("DiamondERC721 and InitializableStorage", () => {
+describe("DiamondERC721 and InitializableStorage", () => {
   const reverter = new Reverter();
 
   let OWNER: SignerWithAddress;
