@@ -35,7 +35,7 @@ contract ProxyBeacon is IBeacon {
         emit Upgraded(newImplementation_);
     }
 
-    function implementation() external view override returns (address) {
+    function implementation() public view override returns (address) {
         return _implementation;
     }
 }

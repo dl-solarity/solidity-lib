@@ -47,7 +47,7 @@ describe("SBT", () => {
 
   describe("mint()", () => {
     it("should correctly mint", async () => {
-      await sbt.mint(FIRST.address, 1337);
+      const tx = await sbt.mint(FIRST.address, 1337);
 
       expect(await sbt.tokenExists(1337)).to.be.true;
 
@@ -58,6 +58,8 @@ describe("SBT", () => {
       expect(await sbt.tokensOf(FIRST.address)).to.deep.equal([1337n]);
 
       expect(await sbt.tokenURI(1337)).to.equal("");
+
+      expect(tx).to.emit(sbt, "Transfer").withArgs(ZERO_ADDR, FIRST.address, 1337);
     });
 
     it("should not mint to null address", async () => {
@@ -73,7 +75,7 @@ describe("SBT", () => {
 
   describe("burn()", () => {
     it("should correctly burn", async () => {
-      await sbt.mint(FIRST.address, 1337);
+      const tx = await sbt.mint(FIRST.address, 1337);
 
       await sbt.burn(1337);
 
@@ -83,6 +85,8 @@ describe("SBT", () => {
       expect(await sbt.ownerOf(0)).to.equal(ZERO_ADDR);
 
       expect(await sbt.tokensOf(FIRST.address)).to.deep.equal([]);
+
+      expect(tx).to.emit(sbt, "Transfer").withArgs(FIRST.address, ZERO_ADDR, 1337);
     });
 
     it("should not burn SBT that doesn't exist", async () => {
@@ -127,6 +131,22 @@ describe("SBT", () => {
       await sbt.setTokenURI(1337, "test");
 
       expect(await sbt.tokenURI(1337)).to.equal("test");
+    });
+  });
+
+  describe("supportsInterface()", () => {
+    it("should return correct values", async () => {
+      const IERC721MetadaInterfaceID = "0x5b5e139f";
+      const ISBTInterfaceID = "0xddd872b5";
+      const IERC165InterfaceID = "0x01ffc9a7";
+
+      expect(await sbt.supportsInterface(IERC721MetadaInterfaceID)).to.be.eq(true);
+      expect(await sbt.supportsInterface(ISBTInterfaceID)).to.be.eq(true);
+      expect(await sbt.supportsInterface(IERC165InterfaceID)).to.be.eq(true);
+
+      const randomInterfaceID = "0xaaa1234d";
+
+      expect(await sbt.supportsInterface(randomInterfaceID)).to.be.eq(false);
     });
   });
 });
