@@ -66,7 +66,7 @@ describe("DiamondERC20 and InitializableStorage", () => {
 
       expect(tx)
         .to.emit(contract, "Initialized")
-        .withArgs("0x53a65a27f49c2031551d6b34b2c7a820391e4944344eb7ed8a0fcb6ebb483840");
+        .withArgs(await erc20.DIAMOND_ERC20_STORAGE_SLOT());
 
       await expect(contract.disableInitializers()).to.be.revertedWith("Initializable: contract is initializing");
     });
