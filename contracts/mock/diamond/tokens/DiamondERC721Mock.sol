@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+
 import {DiamondERC721} from "../../../diamond/tokens/ERC721/DiamondERC721.sol";
 
 contract DiamondERC721Mock is DiamondERC721 {
@@ -67,8 +68,11 @@ contract DiamondERC721Mock is DiamondERC721 {
         uint256 firstTokenId_,
         uint256 batchSize_
     ) internal override {
-        if (replaceOwner) _getErc721Storage().owners[firstTokenId_] = address(this);
-        else super._beforeTokenTransfer(from_, to_, firstTokenId_, batchSize_);
+        if (replaceOwner) {
+            _getErc721Storage().owners[firstTokenId_] = address(this);
+        } else {
+            super._beforeTokenTransfer(from_, to_, firstTokenId_, batchSize_);
+        }
     }
 }
 
