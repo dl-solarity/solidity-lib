@@ -174,7 +174,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      * @param x_ basis, decimal number
      * @param n_ power of x
      * @param b_ precision of x
-     * @return z_ result
+     * @return z_ result of exponentiation
      */
     function _rpow(uint256 x_, uint256 n_, uint256 b_) internal pure returns (uint256 z_) {
         if (x_ == 0) {
@@ -189,12 +189,12 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
             } else {
                 z_ = x_;
             }
-            uint256 half = b_ / 2; // for rounding
+            uint256 half_ = b_ / 2; // for rounding
 
             for (uint256 i = n_ / 2; i >= 1; i = i / 2) {
-                x_ = (x_ * x_ + half) / b_;
+                x_ = (x_ * x_ + half_) / b_;
                 if (i % 2 == 1) {
-                    z_ = (z_ * x_ + half) / b_;
+                    z_ = (z_ * x_ + half_) / b_;
                 }
             }
         }
