@@ -6,8 +6,6 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {ICompoundRateKeeper} from "../interfaces/compound-rate-keeper/ICompoundRateKeeper.sol";
 
-import {DSMath} from "../libs/math/DSMath.sol";
-
 import {PRECISION} from "../utils/Globals.sol";
 
 /**
@@ -24,7 +22,6 @@ import {PRECISION} from "../utils/Globals.sol";
  */
 abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializable {
     using Math for uint256;
-    using DSMath for uint256;
 
     uint256 private _capitalizationRate;
     uint64 private _capitalizationPeriod;
@@ -96,7 +93,8 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
         uint256 rate_ = _currentRate;
 
         if (capitalizationPeriodsNum_ != 0) {
-            uint256 capitalizationPeriodRate_ = capitalizationRate_.rpow(
+            uint256 capitalizationPeriodRate_ = _rpow(
+                capitalizationRate_,
                 capitalizationPeriodsNum_,
                 PRECISION
             );
@@ -208,5 +206,29 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      */
     function _getMaxRate() private pure returns (uint256) {
         return type(uint128).max * PRECISION;
+    }
+
+    function _rpow(uint256 x_, uint256 n_, uint256 b_) private pure returns (uint256 z_) {
+        if (x_ == 0) {
+            if (n_ == 0) {
+                z_ = b_;
+            } else {
+                z_ = 0;
+            }
+        } else {
+            if (n_ % 2 == 0) {
+                z_ = b_;
+            } else {
+                z_ = x_;
+            }
+            uint256 half = b_ / 2; // for rounding
+
+            for (uint256 i = n_ / 2; i >= 1; i = i / 2) {
+                x_ = (x_ * x_ + half) / b_;
+                if (i % 2 == 1) {
+                    z_ = (z_ * x_ + half) / b_;
+                }
+            }
+        }
     }
 }
