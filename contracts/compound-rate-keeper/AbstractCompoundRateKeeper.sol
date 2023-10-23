@@ -170,6 +170,37 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     }
 
     /**
+     * @notice Implementation of exponentiation by squaring
+     * @param x_ basis, decimal number
+     * @param n_ power of x
+     * @param b_ precision of x
+     * @return z_ result
+     */
+    function _rpow(uint256 x_, uint256 n_, uint256 b_) internal pure returns (uint256 z_) {
+        if (x_ == 0) {
+            if (n_ == 0) {
+                z_ = b_;
+            } else {
+                z_ = 0;
+            }
+        } else {
+            if (n_ % 2 == 0) {
+                z_ = b_;
+            } else {
+                z_ = x_;
+            }
+            uint256 half = b_ / 2; // for rounding
+
+            for (uint256 i = n_ / 2; i >= 1; i = i / 2) {
+                x_ = (x_ * x_ + half) / b_;
+                if (i % 2 == 1) {
+                    z_ = (z_ * x_ + half) / b_;
+                }
+            }
+        }
+    }
+
+    /**
      * @notice The private function to update the compound rate
      */
     function _update() private {
@@ -206,29 +237,5 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      */
     function _getMaxRate() private pure returns (uint256) {
         return type(uint128).max * PRECISION;
-    }
-
-    function _rpow(uint256 x_, uint256 n_, uint256 b_) private pure returns (uint256 z_) {
-        if (x_ == 0) {
-            if (n_ == 0) {
-                z_ = b_;
-            } else {
-                z_ = 0;
-            }
-        } else {
-            if (n_ % 2 == 0) {
-                z_ = b_;
-            } else {
-                z_ = x_;
-            }
-            uint256 half = b_ / 2; // for rounding
-
-            for (uint256 i = n_ / 2; i >= 1; i = i / 2) {
-                x_ = (x_ * x_ + half) / b_;
-                if (i % 2 == 1) {
-                    z_ = (z_ * x_ + half) / b_;
-                }
-            }
-        }
     }
 }

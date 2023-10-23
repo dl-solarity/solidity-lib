@@ -261,5 +261,10 @@ describe("CompoundRateKeeper", () => {
     it("check max timestamp for 1000%", async () => {
       await checkByParams(11);
     });
+
+    it("check correct work of rpow function", async () => {
+      expect(await keeper.rpow(0, 0, 5)).to.equal(5);
+      expect(await keeper.rpow(0, 1, 5)).to.equal(0);
+    });
   });
 });
