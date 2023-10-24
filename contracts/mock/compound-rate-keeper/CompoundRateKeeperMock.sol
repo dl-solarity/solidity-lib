@@ -15,8 +15,4 @@ contract CompoundRateKeeperMock is OwnableCompoundRateKeeper {
         _setCapitalizationRate(capitalizationRate_);
         _setCapitalizationPeriod(capitalizationPeriod_);
     }
-
-    function rpow(uint256 x_, uint256 n_, uint256 b_) external pure returns (uint256 z_) {
-        return _rpow(x_, n_, b_);
-    }
 }

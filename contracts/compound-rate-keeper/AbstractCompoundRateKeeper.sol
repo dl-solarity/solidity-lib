@@ -167,38 +167,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     function _setCapitalizationPeriod(uint64 capitalizationPeriod_) internal virtual {
         _update();
         _changeCapitalizationPeriod(capitalizationPeriod_);
-    }
-
-    /**
-     * @notice Implementation of exponentiation by squaring
-     * @param x_ basis, decimal number
-     * @param n_ power of x
-     * @param b_ precision of x
-     * @return z_ result of exponentiation
-     */
-    function _rpow(uint256 x_, uint256 n_, uint256 b_) internal pure returns (uint256 z_) {
-        if (x_ == 0) {
-            if (n_ == 0) {
-                z_ = b_;
-            } else {
-                z_ = 0;
-            }
-        } else {
-            if (n_ % 2 == 0) {
-                z_ = b_;
-            } else {
-                z_ = x_;
-            }
-            uint256 half_ = b_ / 2; // for rounding
-
-            for (uint256 i = n_ / 2; i >= 1; i = i / 2) {
-                x_ = (x_ * x_ + half_) / b_;
-                if (i % 2 == 1) {
-                    z_ = (z_ * x_ + half_) / b_;
-                }
-            }
-        }
-    }
+    }    
 
     /**
      * @notice The private function to update the compound rate
@@ -237,5 +206,23 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      */
     function _getMaxRate() private pure returns (uint256) {
         return type(uint128).max * PRECISION;
+    }
+
+    /**
+     * @notice Implementation of exponentiation by squaring
+     * @param base_ base, decimal number
+     * @param exponent_ exponent of x
+     * @param precision_ precision of x
+     * @return result_ result of exponentiation
+     */
+    function _rpow(uint256 base_, uint256 exponent_, uint256 precision_) private pure returns (uint256 result_) {
+        result_ = exponent_ % 2 == 0 ? precision_ : base_;
+
+        for (uint256 i = exponent_ / 2; i >= 1; i = i / 2) {
+            base_ = (base_ * base_) / precision_;
+            if (i % 2 == 1) {
+                result_ = (result_ * base_) / precision_;
+            }
+        }        
     }
 }
