@@ -167,7 +167,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     function _setCapitalizationPeriod(uint64 capitalizationPeriod_) internal virtual {
         _update();
         _changeCapitalizationPeriod(capitalizationPeriod_);
-    }    
+    }
 
     /**
      * @notice The private function to update the compound rate
@@ -215,7 +215,11 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      * @param precision_ precision of x
      * @return result_ result of exponentiation
      */
-    function _rpow(uint256 base_, uint256 exponent_, uint256 precision_) private pure returns (uint256 result_) {
+    function _rpow(
+        uint256 base_,
+        uint256 exponent_,
+        uint256 precision_
+    ) private pure returns (uint256 result_) {
         result_ = exponent_ % 2 == 0 ? precision_ : base_;
 
         for (uint256 i = exponent_ / 2; i >= 1; i = i / 2) {
@@ -223,6 +227,6 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
             if (i % 2 == 1) {
                 result_ = (result_ * base_) / precision_;
             }
-        }        
+        }
     }
 }
