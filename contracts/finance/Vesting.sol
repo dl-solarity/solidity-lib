@@ -184,6 +184,25 @@ abstract contract VestingWallet is Initializable {
         return _vestingData[account_].assetsInfo[token_].isRevoked;
     }
 
+    function vestingData(
+        address account_
+    ) public view virtual returns (uint256 _shares, AssetInfo memory _assetInfo) {
+        VestingData storage _accountVesting = _vestingData[account_];
+
+        _shares = _accountVesting.shares;
+        _assetInfo = _accountVesting.assetsInfo[ETH];
+    }
+
+    function vestingData(
+        address account_,
+        address token_
+    ) public view virtual returns (uint256 _shares, AssetInfo memory _assetInfo) {
+        VestingData storage _accountVesting = _vestingData[account_];
+
+        _shares = _accountVesting.shares;
+        _assetInfo = _accountVesting.assetsInfo[token_];
+    }
+
     function _vestingSchedule(
         address account_,
         uint256 totalAllocation_,
