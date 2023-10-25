@@ -118,11 +118,13 @@ abstract contract VestingWallet is Initializable {
     }
 
     function totalAllocation() public view virtual returns (uint256) {
-        return address(this).balance + totalReleased();
+        return totalAllocation(ETH);
     }
 
     function totalAllocation(address token_) public view virtual returns (uint256) {
-        return IERC20(token_).balanceOf(address(this)) + totalReleased(token_);
+        return
+            (token_ == ETH ? address(this).balance : IERC20(token_).balanceOf(address(this))) +
+            totalReleased(token_);
     }
 
     function totalReleased() public view virtual returns (uint256) {
