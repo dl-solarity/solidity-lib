@@ -17,11 +17,8 @@ abstract contract VestingWallet is Initializable {
 
     event BeneficiaryAdded(address account, uint256 shares);
 
-    event EtherReleased(address indexed beneficiary, uint256 amount);
-    event ERC20Released(address indexed beneficiary, address indexed token, uint256 amount);
-
-    event EtherRevoked(address indexed beneficiary, uint256 amount);
-    event ERC20Revoked(address indexed beneficiary, address indexed token, uint256 amount);
+    event AssetReleased(address indexed beneficiary, address indexed token, uint256 amount);
+    event AssetRevoked(address indexed beneficiary, address indexed token, uint256 amount);
 
     address public constant ETH = address(0);
 
@@ -80,7 +77,7 @@ abstract contract VestingWallet is Initializable {
     receive() external payable virtual {}
 
     function releasable(address account_) public view virtual returns (uint256) {
-        return vestedAmount(account_, uint64(block.timestamp)) - released(account_);
+        return releasable(account_, ETH);
     }
 
     function releasable(address account_, address token_) public view virtual returns (uint256) {
@@ -92,7 +89,7 @@ abstract contract VestingWallet is Initializable {
         address account_,
         uint64 timestamp_
     ) public view virtual returns (uint256) {
-        return _vestingSchedule(account_, beneficiaryAllocation(account_), timestamp_);
+        return vestedAmount(account_, ETH, timestamp_);
     }
 
     function vestedAmount(
@@ -110,7 +107,7 @@ abstract contract VestingWallet is Initializable {
     }
 
     function beneficiaryAllocation(address account_) public view virtual returns (uint256) {
-        return (totalAllocation() * shares(account_)) / totalShares();
+        return beneficiaryAllocation(account_, ETH);
     }
 
     function beneficiaryAllocation(
@@ -129,7 +126,7 @@ abstract contract VestingWallet is Initializable {
     }
 
     function totalReleased() public view virtual returns (uint256) {
-        return _totalReleased[ETH];
+        return totalReleased(ETH);
     }
 
     function totalReleased(address token_) public view virtual returns (uint256) {
@@ -145,7 +142,7 @@ abstract contract VestingWallet is Initializable {
     }
 
     function released(address account_) public view virtual returns (uint256) {
-        return _vestingData[account_].assetsInfo[ETH].releasedAmount;
+        return released(account_, ETH);
     }
 
     function released(address account_, address token_) public view virtual returns (uint256) {
@@ -177,7 +174,7 @@ abstract contract VestingWallet is Initializable {
     }
 
     function revoked(address account_) public view virtual returns (bool) {
-        return _vestingData[account_].assetsInfo[ETH].isRevoked;
+        return revoked(account_, ETH);
     }
 
     function revoked(address account_, address token_) public view virtual returns (bool) {
@@ -187,10 +184,7 @@ abstract contract VestingWallet is Initializable {
     function vestingData(
         address account_
     ) public view virtual returns (uint256 _shares, AssetInfo memory _assetInfo) {
-        VestingData storage _accountVesting = _vestingData[account_];
-
-        _shares = _accountVesting.shares;
-        _assetInfo = _accountVesting.assetsInfo[ETH];
+        (_shares, _assetInfo) = vestingData(account_, ETH);
     }
 
     function vestingData(
@@ -219,9 +213,7 @@ abstract contract VestingWallet is Initializable {
     ) internal view virtual returns (uint256) {
         if (timestamp_ < cliff()) {
             return 0;
-        } else if (
-            timestamp_ >= end() || token_ == ETH ? revoked(account_) : revoked(account_, token_)
-        ) {
+        } else if (timestamp_ >= end() || revoked(account_, token_)) {
             return totalAllocation_;
         } else {
             return (totalAllocation_ * (timestamp_ - start())) / duration();
@@ -229,20 +221,7 @@ abstract contract VestingWallet is Initializable {
     }
 
     function _release(address account_) internal virtual {
-        require(_beneficiaries.contains(account_), "Vesting: not a beneficiary");
-
-        VestingData storage _accountVesting = _vestingData[account_];
-
-        require(_accountVesting.shares > 0, "Vesting: account has no shares");
-
-        uint256 _amount = releasable(account_);
-
-        _accountVesting.assetsInfo[ETH].releasedAmount += _amount;
-        _totalReleased[ETH] += _amount;
-
-        Address.sendValue(payable(account_), _amount);
-
-        emit EtherReleased(account_, _amount);
+        _release(account_, ETH);
     }
 
     function _release(address account_, address token_) internal virtual {
@@ -257,30 +236,15 @@ abstract contract VestingWallet is Initializable {
         _accountVesting.assetsInfo[token_].releasedAmount += _amount;
         _totalReleased[token_] += _amount;
 
-        SafeERC20.safeTransfer(IERC20(token_), account_, _amount);
+        token_ == ETH
+            ? Address.sendValue(payable(account_), _amount)
+            : SafeERC20.safeTransfer(IERC20(token_), account_, _amount);
 
-        emit ERC20Released(account_, token_, _amount);
+        emit AssetReleased(account_, token_, _amount);
     }
 
     function _revoke(address account_) internal virtual {
-        require(_beneficiaries.contains(account_), "Vesting: not a beneficiary");
-        require(revocable(), "Vesting: cannot revoke");
-
-        VestingData storage _accountVesting = _vestingData[account_];
-
-        require(_accountVesting.shares > 0, "Vesting: account has no shares");
-
-        AssetInfo storage _accountAssetInfo = _accountVesting.assetsInfo[ETH];
-
-        require(!_accountAssetInfo.isRevoked, "Vesting: already revoked");
-
-        uint256 _amount = beneficiaryAllocation(account_) - releasable(account_);
-
-        _accountAssetInfo.isRevoked = true;
-
-        Address.sendValue(payable(account_), _amount);
-
-        emit EtherRevoked(account_, _amount);
+        _revoke(account_, ETH);
     }
 
     function _revoke(address account_, address token_) internal virtual {
@@ -299,9 +263,11 @@ abstract contract VestingWallet is Initializable {
 
         _accountAssetInfo.isRevoked = true;
 
-        SafeERC20.safeTransfer(IERC20(token_), account_, _amount);
+        token_ == ETH
+            ? Address.sendValue(payable(account_), _amount)
+            : SafeERC20.safeTransfer(IERC20(token_), account_, _amount);
 
-        emit ERC20Revoked(account_, token_, _amount);
+        emit AssetRevoked(account_, token_, _amount);
     }
 
     function _addBeneficiary(address account_, uint256 shares_) private {
