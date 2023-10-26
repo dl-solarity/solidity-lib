@@ -6,8 +6,6 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {ICompoundRateKeeper} from "../interfaces/compound-rate-keeper/ICompoundRateKeeper.sol";
 
-import {DSMath} from "../libs/math/DSMath.sol";
-
 import {PRECISION} from "../utils/Globals.sol";
 
 /**
@@ -24,7 +22,6 @@ import {PRECISION} from "../utils/Globals.sol";
  */
 abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializable {
     using Math for uint256;
-    using DSMath for uint256;
 
     uint256 private _capitalizationRate;
     uint64 private _capitalizationPeriod;
@@ -96,9 +93,9 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
         uint256 rate_ = _currentRate;
 
         if (capitalizationPeriodsNum_ != 0) {
-            uint256 capitalizationPeriodRate_ = capitalizationRate_.rpow(
-                capitalizationPeriodsNum_,
-                PRECISION
+            uint256 capitalizationPeriodRate_ = _raiseToPower(
+                capitalizationRate_,
+                capitalizationPeriodsNum_
             );
             rate_ = (rate_ * capitalizationPeriodRate_) / PRECISION;
         }
@@ -201,6 +198,25 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
         _capitalizationPeriod = capitalizationPeriod_;
 
         emit CapitalizationPeriodChanged(capitalizationPeriod_);
+    }
+
+    /**
+     * @notice Implementation of exponentiation by squaring with fixed precision
+     * @dev Checks if base or exponent equal to 0 done before
+     */
+    function _raiseToPower(
+        uint256 base_,
+        uint256 exponent_
+    ) private pure returns (uint256 result_) {
+        result_ = exponent_ & 1 == 0 ? PRECISION : base_;
+
+        while ((exponent_ >>= 1) > 0) {
+            base_ = (base_ * base_) / PRECISION;
+
+            if (exponent_ & 1 == 1) {
+                result_ = (result_ * base_) / PRECISION;
+            }
+        }
     }
 
     /**
