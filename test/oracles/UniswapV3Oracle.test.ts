@@ -131,10 +131,10 @@ describe.only("UniswapV3Oracle", () => {
       );
     });
 
-    it("should not get price if there is no pool", async () => {
+    it("should not get price if there is 0 period", async () => {
       await createPools();
       await expect(oracle.getPriceOfTokenInToken(A_C_PATH, [FeeAmount.MEDIUM], 10, 0)).to.be.revertedWith(
-        "UniswapV3Oracle: time window can't be 0"
+        "UniswapV3Oracle: period can't be 0"
       );
     });
   });

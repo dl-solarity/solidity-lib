@@ -130,7 +130,7 @@ abstract contract UniswapV3Oracle is Initializable {
      * @return timeWeightedAverageTick_ The time-weighted average tick from (block.timestamp - period) to block.timestamp
      */
     function _consult(address pool_, uint32 period_) private view returns (int24) {
-        require(period_ > 0, "UniswapV3Oracle: time window can't be 0");
+        require(period_ > 0, "UniswapV3Oracle: period can't be 0");
 
         uint32[] memory secondAgos_ = new uint32[](2);
         secondAgos_[0] = period_;
