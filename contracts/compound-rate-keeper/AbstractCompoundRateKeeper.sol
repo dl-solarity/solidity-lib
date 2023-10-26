@@ -201,18 +201,8 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     }
 
     /**
-     * @notice The private function to get the maximal possible compound rate
-     */
-    function _getMaxRate() private pure returns (uint256) {
-        return type(uint128).max * PRECISION;
-    }
-
-    /**
      * @notice Implementation of exponentiation by squaring with fixed precision
      * @dev Checks if base or exponent equal to 0 done before
-     * @param base_ base, decimal number
-     * @param exponent_ exponent of x
-     * @return result_ result of exponentiation
      */
     function _raiseToPower(
         uint256 base_,
@@ -227,5 +217,12 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
                 result_ = (result_ * base_) / PRECISION;
             }
         }
+    }
+
+    /**
+     * @notice The private function to get the maximal possible compound rate
+     */
+    function _getMaxRate() private pure returns (uint256) {
+        return type(uint128).max * PRECISION;
     }
 }
