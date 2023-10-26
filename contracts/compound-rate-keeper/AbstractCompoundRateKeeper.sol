@@ -93,10 +93,9 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
         uint256 rate_ = _currentRate;
 
         if (capitalizationPeriodsNum_ != 0) {
-            uint256 capitalizationPeriodRate_ = _rpow(
+            uint256 capitalizationPeriodRate_ = _raiseToPower(
                 capitalizationRate_,
-                capitalizationPeriodsNum_,
-                PRECISION
+                capitalizationPeriodsNum_
             );
             rate_ = (rate_ * capitalizationPeriodRate_) / PRECISION;
         }
@@ -209,23 +208,23 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     }
 
     /**
-     * @notice Implementation of exponentiation by squaring
+     * @notice Implementation of exponentiation by squaring with fixed precision
+     * @dev Checks if base or exponent equal to 0 done before
      * @param base_ base, decimal number
      * @param exponent_ exponent of x
-     * @param precision_ precision of x
      * @return result_ result of exponentiation
      */
-    function _rpow(
+    function _raiseToPower(
         uint256 base_,
-        uint256 exponent_,
-        uint256 precision_
+        uint256 exponent_
     ) private pure returns (uint256 result_) {
-        result_ = exponent_ % 2 == 0 ? precision_ : base_;
+        result_ = exponent_ & 1 == 0 ? PRECISION : base_;
 
-        for (uint256 i = exponent_ / 2; i >= 1; i = i / 2) {
-            base_ = (base_ * base_) / precision_;
-            if (i % 2 == 1) {
-                result_ = (result_ * base_) / precision_;
+        while ((exponent_ >>= 1) > 0) {
+            base_ = (base_ * base_) / PRECISION;
+
+            if (exponent_ & 1 == 1) {
+                result_ = (result_ * base_) / PRECISION;
             }
         }
     }
