@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-//oracle lib from uniswap v4 without custom errors
-
+//comments?
 /// @title Oracle
-/// @notice Provides price and liquidity data useful for a wide variety of system designs
+/// @notice Provides price and liquidity data useful for a wide variety of system designs. Adopted for Solidity 0.8.0
 /// @dev Instances of stored oracle data, "observations", are collected in the oracle array
 /// Every pool is initialized with an oracle array length of 1. Anyone can pay the SSTOREs to increase the
 /// maximum length of the oracle array. New slots will be added when the array is fully populated.

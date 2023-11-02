@@ -6,12 +6,10 @@ import {UniswapV3PoolDeployerMock} from "./UniswapV3PoolDeployerMock.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 contract UniswapV3FactoryMock is IUniswapV3Factory, UniswapV3PoolDeployerMock {
-    // @inheritdoc IUniswapV3Factory
     address public override owner;
 
-    // @inheritdoc IUniswapV3Factory
     mapping(uint24 => int24) public override feeAmountTickSpacing;
-    // @inheritdoc IUniswapV3Factory
+
     mapping(address => mapping(address => mapping(uint24 => address))) public override getPool;
 
     constructor() {
