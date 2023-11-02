@@ -60,7 +60,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenId_ the token to check
      * @return true if `tokenId_` exists, false otherwise
      */
-    function tokenExists(uint256 tokenId_) public view override returns (bool) {
+    function tokenExists(uint256 tokenId_) public view virtual override returns (bool) {
         return ownerOf(tokenId_) != address(0);
     }
 
@@ -69,7 +69,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param owner_ the user to get the balance of
      * @return the user's balance
      */
-    function balanceOf(address owner_) public view override returns (uint256) {
+    function balanceOf(address owner_) public view virtual override returns (uint256) {
         return _balances[owner_].length();
     }
 
@@ -79,7 +79,10 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param index_ the id of the token in the user's array
      * @return the token the user owns
      */
-    function tokenOf(address owner_, uint256 index_) public view override returns (uint256) {
+    function tokenOf(
+        address owner_,
+        uint256 index_
+    ) public view virtual override returns (uint256) {
         return _balances[owner_].at(index_);
     }
 
@@ -88,7 +91,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param owner_ the user to get the tokens of
      * @return the array of tokens the user owns
      */
-    function tokensOf(address owner_) public view override returns (uint256[] memory) {
+    function tokensOf(address owner_) public view virtual override returns (uint256[] memory) {
         return _balances[owner_].values();
     }
 
@@ -97,7 +100,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenId_ the token to get the owner of
      * @return address of an owner or `address(0)` if token does not exist
      */
-    function ownerOf(uint256 tokenId_) public view override returns (address) {
+    function ownerOf(uint256 tokenId_) public view virtual override returns (address) {
         return _tokenOwners[tokenId_];
     }
 
