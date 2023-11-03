@@ -227,7 +227,7 @@ library DecimalsConverter {
      * @return the rounded number. Comes with 18 precision decimals
      */
     function _round18(uint256 amount_, uint256 decimals_) private pure returns (uint256) {
-        return to18(from18(amount_, decimals_), decimals_);
+        return _to18(_from18(amount_, decimals_), decimals_);
     }
 
     function _safe(uint256 amount_) private pure returns (uint256) {
