@@ -47,8 +47,16 @@ contract DecimalsConverterMock {
         return amount_.round18(decimals_);
     }
 
+    function tokenRound18(uint256 amount_, address token_) external view returns (uint256) {
+        return amount_.round18(token_);
+    }
+
     function round18Safe(uint256 amount_, uint256 decimals_) external pure returns (uint256) {
         return amount_.round18Safe(decimals_);
+    }
+
+    function tokenRound18Safe(uint256 amount_, address token_) external view returns (uint256) {
+        return amount_.round18Safe(token_);
     }
 
     function convert(
@@ -63,15 +71,7 @@ contract DecimalsConverterMock {
         uint256 amount_,
         address baseToken_,
         address destToken_
-    ) public view returns (uint256) {
-        return amount_.convert(baseToken_, destToken_);
-    }
-
-    function convertTokensSafe(
-        uint256 amount_,
-        address baseToken_,
-        address destToken_
     ) external view returns (uint256) {
-        return amount_.convertTokensSafe(baseToken_, destToken_);
+        return amount_.convert(baseToken_, destToken_);
     }
 }
