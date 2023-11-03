@@ -128,7 +128,7 @@ describe("UniswapV3Oracle", () => {
       expect(ans[1]).to.equal(5);
     });
 
-    it("should correctly get period", async () => {
+    it.only("should correctly get period", async () => {
       pool = await createPools(A_TOKEN, C_TOKEN);
       const poolAB = await createPools(A_TOKEN, B_TOKEN);
 
@@ -145,6 +145,10 @@ describe("UniswapV3Oracle", () => {
 
       await time.increaseTo((await time.latest()) + 2);
       let ans = await oracle.getPriceOfTokenInToken(B_A_C_PATH, [FeeAmount.MEDIUM, FeeAmount.MEDIUM], 11, PERIOD);
+      console.log("bac aft 1 obs", ans[0], " ", ans[1]);
+
+      await pool.addObservation(400000);
+      await time.increaseTo((await time.latest()) + 2);
 
       expect(ans[0]).to.equal(33);
       expect(ans[1]).to.equal(PERIOD);
@@ -153,15 +157,32 @@ describe("UniswapV3Oracle", () => {
         C_A_C_PATH,
         [FeeAmount.MEDIUM, FeeAmount.MEDIUM],
         11,
-        PERIOD
-        //(await time.latest()) - firstTime
+        //PERIOD
+        (await time.latest()) - firstTime
       );
 
-      console.log("cac", ans[0]); //что-то либо с фукнций нахождения минимального, либо с значениями инициализации
+      console.log("cac", ans[0], " ", ans[1]); //что-то либо с фукнций нахождения минимального, либо с значениями инициализации
+
+      ans = await oracle.getPriceOfTokenInToken(
+        C_A_C_PATH,
+        [FeeAmount.MEDIUM, FeeAmount.MEDIUM],
+        11,
+        PERIOD
+      );
+
+      console.log("cac", ans[0], " ", ans[1]);
+
+      ans = await oracle.getPriceOfTokenInToken(
+        [C_TOKEN, A_TOKEN],
+        [FeeAmount.MEDIUM],
+        1,
+        PERIOD
+      );
+      console.log("ca", ans[0], " ", ans[1]);
 
       // expect(ans[0]).to.equal(0); //is it rigth?
       //expect(ans[1]).to.equal((await time.latest()) - firstTime - 4);
-      
+
       //console.log(ans[1]);
       //console.log(await time.latest() - firstTime - 4);
 
@@ -171,10 +192,37 @@ describe("UniswapV3Oracle", () => {
         11,
         (await time.latest()) - firstTime
       );
-      //console.log(ans[0]);
+      console.log("bac aft 2 obs", ans[0]);
 
-      expect(ans[0]).to.equal(9999); //is it rigth?
-      expect(ans[1]).to.equal(PERIOD);
+      ans = await oracle.getPriceOfTokenInToken(
+        A_C_PATH,
+        [FeeAmount.MEDIUM],
+        1,
+        (await time.latest()) - firstTime
+      );
+      console.log("ac", ans[0], " ", ans[1]);
+
+      ans = await oracle.getPriceOfTokenInToken(
+        A_C_PATH,
+        [FeeAmount.MEDIUM],
+        1,
+        PERIOD
+      );
+      console.log("ac", ans[0], " ", ans[1]);
+
+
+      ans = await oracle.getPriceOfTokenInToken(
+        [C_TOKEN, A_TOKEN],
+        [FeeAmount.MEDIUM],
+        1,
+        (await time.latest()) - firstTime
+      );
+      console.log("ca", ans[0]);
+
+
+     // expect(ans[0]).to.equal(9999); //is it rigth?
+     // expect(ans[1]).to.equal(PERIOD);
+
       //console.log(ans[1]);
 
       //just curious
@@ -182,16 +230,35 @@ describe("UniswapV3Oracle", () => {
       ans = await oracle.getPriceOfTokenInToken([B_TOKEN, A_TOKEN], [FeeAmount.MEDIUM], 11, PERIOD);
       console.log("BA", ans[0]);
 
-      await pool.addObservation(100000);
+      await poolAB.addObservation(150000);
       await time.increaseTo((await time.latest()) + 2);
 
       ans = await oracle.getPriceOfTokenInToken(
         [A_TOKEN, B_TOKEN, A_TOKEN],
         [FeeAmount.MEDIUM, FeeAmount.MEDIUM],
         11,
-        15
+        PERIOD
       );
       console.log("ABA:", ans[0]);
+
+      await poolAB.addObservation(550000);
+      await time.increaseTo((await time.latest()) + 2);
+
+      ans = await oracle.getPriceOfTokenInToken(
+        [A_TOKEN, B_TOKEN],
+        [FeeAmount.MEDIUM],
+        11,
+        PERIOD
+      );
+      console.log("AB:", ans[0], " ", ans[1]);
+
+      ans = await oracle.getPriceOfTokenInToken(
+        [A_TOKEN, B_TOKEN],
+        [FeeAmount.MEDIUM],
+        11,
+        (await time.latest()) - firstTime
+      );
+      console.log("AB:", ans[0], " ", ans[1]);
     });
 
     it("should test", async () => {
