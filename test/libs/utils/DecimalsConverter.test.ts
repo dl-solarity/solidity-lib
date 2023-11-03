@@ -53,33 +53,6 @@ describe("DecimalsConverter", () => {
     });
   });
 
-  describe("convert tokens safe", () => {
-    it("should correctly convert tokens", async () => {
-      const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
-
-      const token1 = await ERC20Mock.deploy("MK1", "MK1", 6);
-      const token2 = await ERC20Mock.deploy("MK2", "MK2", 9);
-
-      expect(await mock.convertTokensSafe(wei("1", 6), await token1.getAddress(), await token2.getAddress())).to.equal(
-        wei("1", 9)
-      );
-      expect(await mock.convertTokensSafe(wei("1", 9), await token2.getAddress(), await token1.getAddress())).to.equal(
-        wei("1", 6)
-      );
-    });
-
-    it("should get exception if the result of conversion is zero", async () => {
-      const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
-
-      const token1 = await ERC20Mock.deploy("MK1", "MK1", 18);
-      const token2 = await ERC20Mock.deploy("MK2", "MK2", 3);
-
-      await expect(
-        mock.convertTokensSafe(wei("1", 3), await token1.getAddress(), await token2.getAddress())
-      ).to.be.revertedWith("DecimalsConverter: conversion failed");
-    });
-  });
-
   describe("to18", () => {
     it("should convert to 18", async () => {
       expect(await mock.to18(wei("1", 6), 6)).to.equal(wei("1"));
@@ -186,9 +159,26 @@ describe("DecimalsConverter", () => {
       expect(await mock.round18(badNum1, 4)).to.equal(wei("1"));
       expect(await mock.round18(badNum2, 12)).to.equal(wei("1") + wei("1", 7));
     });
+
+    it("should round 18 tokens", async () => {
+      const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
+
+      const token1 = await ERC20Mock.deploy("MK1", "MK1", 6);
+
+      expect(await mock.tokenRound18(wei("1"), await token1.getAddress())).to.equal(wei("1"));
+      expect(await mock.tokenRound18(wei("1", 6), await token1.getAddress())).to.equal(0n);
+    });
   });
 
   describe("round18Safe", () => {
+    it("should round 18 tokens safe", async () => {
+      const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
+
+      const token1 = await ERC20Mock.deploy("MK1", "MK1", 6);
+
+      expect(await mock.tokenRound18Safe(wei("1"), await token1.getAddress())).to.equal(wei("1"));
+    });
+
     it("should get exception if the result of conversion is zero", async () => {
       await expect(mock.round18Safe(wei("1", 6), 6)).to.be.revertedWith("DecimalsConverter: conversion failed");
     });
