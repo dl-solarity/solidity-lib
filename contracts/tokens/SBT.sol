@@ -101,7 +101,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @return address of an owner or `address(0)` if token does not exist
      */
     function ownerOf(uint256 tokenId_) public view virtual override returns (address) {
-        return _tokenOwners[tokenId_];
+        return _ownerOf(tokenId_);
     }
 
     /**
@@ -172,7 +172,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenId_ the token to burn
      */
     function _burn(uint256 tokenId_) internal virtual {
-        address owner_ = _tokenOwners[tokenId_];
+        address owner_ = _ownerOf(tokenId_);
         require(owner_ != address(0), "SBT: token doesn't exist");
 
         _beforeTokenAction(address(0), tokenId_);
@@ -202,6 +202,10 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      */
     function _setBaseURI(string memory baseURI_) internal virtual {
         _baseURI = baseURI_;
+    }
+
+    function _ownerOf(uint256 tokenId_) internal view virtual returns (address) {
+        return _tokenOwners[tokenId_];
     }
 
     /**
