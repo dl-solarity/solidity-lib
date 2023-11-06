@@ -157,7 +157,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
         require(to_ != address(0), "SBT: address(0) receiver");
-        require(!tokenExists(tokenId_), "SBT: token already exists");
+        require(_tokenOwners[tokenId_] == address(0), "SBT: token already exists");
 
         _beforeTokenAction(to_, tokenId_);
 
