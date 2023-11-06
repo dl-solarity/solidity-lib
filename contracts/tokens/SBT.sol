@@ -172,9 +172,8 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenId_ the token to burn
      */
     function _burn(uint256 tokenId_) internal virtual {
-        require(tokenExists(tokenId_), "SBT: token doesn't exist");
-
         address owner_ = _ownerOf(tokenId_);
+        require(owner_ != address(0), "SBT: token doesn't exist");
 
         _beforeTokenAction(address(0), tokenId_);
 
