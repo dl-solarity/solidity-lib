@@ -61,7 +61,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @return true if `tokenId_` exists, false otherwise
      */
     function tokenExists(uint256 tokenId_) public view virtual override returns (bool) {
-        return ownerOf(tokenId_) != address(0);
+        return _ownerOf(tokenId_) != address(0);
     }
 
     /**
@@ -157,7 +157,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
         require(to_ != address(0), "SBT: address(0) receiver");
-        require(_tokenOwners[tokenId_] == address(0), "SBT: token already exists");
+        require(!tokenExists(tokenId_), "SBT: token already exists");
 
         _beforeTokenAction(to_, tokenId_);
 
@@ -172,8 +172,9 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenId_ the token to burn
      */
     function _burn(uint256 tokenId_) internal virtual {
+        require(tokenExists(tokenId_), "SBT: token doesn't exist");
+
         address owner_ = _ownerOf(tokenId_);
-        require(owner_ != address(0), "SBT: token doesn't exist");
 
         _beforeTokenAction(address(0), tokenId_);
 
@@ -204,6 +205,11 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
         _baseURI = baseURI_;
     }
 
+    /**
+     * @notice The function to get the owner of a token
+     * @param tokenId_ the token to get the owner of
+     * @return address of an owner or `address(0)` if token does not exist
+     */
     function _ownerOf(uint256 tokenId_) internal view virtual returns (address) {
         return _tokenOwners[tokenId_];
     }
