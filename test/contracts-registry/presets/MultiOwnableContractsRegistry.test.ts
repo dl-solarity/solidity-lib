@@ -6,7 +6,7 @@ import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 import { MultiOwnableContractsRegistry } from "@ethers-v6";
 
-describe("ContractsRegistry", () => {
+describe("MultiOwnableContractsRegistry", () => {
   const reverter = new Reverter();
 
   let SECOND: SignerWithAddress;
