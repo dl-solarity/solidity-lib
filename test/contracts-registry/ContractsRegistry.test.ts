@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
 import { ZERO_ADDR } from "@/scripts/utils/constants";
 
-import { ContractsRegistry, Dependant, DependantUpgrade, ERC20Mock } from "@ethers-v6";
+import { ContractsRegistryMock, DependantMock, DependantUpgradeMock, ERC20Mock } from "@ethers-v6";
 
 describe("ContractsRegistry", () => {
   const reverter = new Reverter();
@@ -12,12 +12,12 @@ describe("ContractsRegistry", () => {
   let OWNER: SignerWithAddress;
   let SECOND: SignerWithAddress;
 
-  let contractsRegistry: ContractsRegistry;
+  let contractsRegistry: ContractsRegistryMock;
 
   before("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
-    const ContractsRegistry = await ethers.getContractFactory("ContractsRegistry");
+    const ContractsRegistry = await ethers.getContractFactory("ContractsRegistryMock");
     contractsRegistry = await ContractsRegistry.deploy();
 
     await contractsRegistry.__OwnableContractsRegistry_init();
@@ -94,8 +94,8 @@ describe("ContractsRegistry", () => {
     });
 
     it("should add and remove the contract", async () => {
-      const Dependant = await ethers.getContractFactory("Dependant");
-      const dependant = await Dependant.deploy();
+      const DependantMock = await ethers.getContractFactory("DependantMock");
+      const dependant = await DependantMock.deploy();
 
       await expect(contractsRegistry.removeContract(await contractsRegistry.DEPENDANT_NAME())).to.be.revertedWith(
         "ContractsRegistry: this mapping doesn't exist"
@@ -115,8 +115,8 @@ describe("ContractsRegistry", () => {
     });
 
     it("should add and remove the proxy contract", async () => {
-      const Dependant = await ethers.getContractFactory("Dependant");
-      const _dependant = await Dependant.deploy();
+      const DependantMock = await ethers.getContractFactory("DependantMock");
+      const _dependant = await DependantMock.deploy();
 
       await expect(contractsRegistry.getImplementation(await contractsRegistry.DEPENDANT_NAME())).to.be.revertedWith(
         "ContractsRegistry: this mapping doesn't exist"
@@ -144,8 +144,8 @@ describe("ContractsRegistry", () => {
     });
 
     it("should just add and remove the proxy contract", async () => {
-      const Dependant = await ethers.getContractFactory("Dependant");
-      const _dependant = await Dependant.deploy();
+      const DependantMock = await ethers.getContractFactory("DependantMock");
+      const _dependant = await DependantMock.deploy();
 
       await contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), await _dependant.getAddress());
 
@@ -163,26 +163,26 @@ describe("ContractsRegistry", () => {
   });
 
   describe("contract upgrades", () => {
-    let _dependant: Dependant;
-    let _dependantUpgrade: DependantUpgrade;
+    let _dependant: DependantMock;
+    let _dependantUpgrade: DependantUpgradeMock;
 
-    let dependant: DependantUpgrade;
+    let dependant: DependantUpgradeMock;
 
     beforeEach("setup", async () => {
-      const Dependant = await ethers.getContractFactory("Dependant");
-      const DependantUpgrade = await ethers.getContractFactory("DependantUpgrade");
+      const DependantMock = await ethers.getContractFactory("DependantMock");
+      const DependantUpgradeMock = await ethers.getContractFactory("DependantUpgradeMock");
 
-      _dependant = await Dependant.deploy();
-      _dependantUpgrade = await DependantUpgrade.deploy();
+      _dependant = await DependantMock.deploy();
+      _dependantUpgrade = await DependantUpgradeMock.deploy();
 
       await contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), await _dependant.getAddress());
 
-      dependant = <DependantUpgrade>DependantUpgrade.attach(await contractsRegistry.getDependantContract());
+      dependant = <DependantUpgradeMock>DependantUpgradeMock.attach(await contractsRegistry.getDependantContract());
     });
 
     it("should not upgrade non-proxy contract", async () => {
-      const Dependant = await ethers.getContractFactory("Dependant");
-      const dependant = await Dependant.deploy();
+      const DependantMock = await ethers.getContractFactory("DependantMock");
+      const dependant = await DependantMock.deploy();
 
       await contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), await dependant.getAddress());
 
@@ -239,22 +239,22 @@ describe("ContractsRegistry", () => {
   });
 
   describe("dependency injection", () => {
-    let dependant: DependantUpgrade;
+    let dependant: DependantUpgradeMock;
     let token: ERC20Mock;
 
     beforeEach("setup", async () => {
-      const DependantUpgrade = await ethers.getContractFactory("DependantUpgrade");
-      const Dependant = await ethers.getContractFactory("Dependant");
+      const DependantUpgradeMock = await ethers.getContractFactory("DependantUpgradeMock");
+      const DependantMock = await ethers.getContractFactory("DependantMock");
       const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
 
-      const _dependant = await Dependant.deploy();
+      const _dependant = await DependantMock.deploy();
       token = await ERC20Mock.deploy("Mock", "Mock", 18);
 
       await contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), await _dependant.getAddress());
 
       await contractsRegistry.addContract(await contractsRegistry.TOKEN_NAME(), await token.getAddress());
 
-      dependant = <DependantUpgrade>DependantUpgrade.attach(await contractsRegistry.getDependantContract());
+      dependant = <DependantUpgradeMock>DependantUpgradeMock.attach(await contractsRegistry.getDependantContract());
     });
 
     it("should inject dependencies", async () => {

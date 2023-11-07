@@ -5,7 +5,7 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import { MultiOwnablePoolContractsRegistryMock } from "@ethers-v6";
 
-describe("PoolContractsRegistry", () => {
+describe("MultiOwnablePoolContractsRegistry", () => {
   const reverter = new Reverter();
 
   let SECOND: SignerWithAddress;
@@ -46,6 +46,16 @@ describe("PoolContractsRegistry", () => {
       await expect(
         poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPoolsWithData("", "0x", 0, 0)
       ).to.be.revertedWith("MultiOwnable: caller is not the owner");
+    });
+  });
+
+  describe("coverage", () => {
+    it("should call these methods", async () => {
+      await expect(poolContractsRegistry.setNewImplementations([""], [await SECOND.getAddress()])).to.be.reverted;
+
+      await expect(poolContractsRegistry.injectDependenciesToExistingPools("", 0, 0)).to.be.reverted;
+
+      await expect(poolContractsRegistry.injectDependenciesToExistingPoolsWithData("", "0x", 0, 0)).to.be.reverted;
     });
   });
 });

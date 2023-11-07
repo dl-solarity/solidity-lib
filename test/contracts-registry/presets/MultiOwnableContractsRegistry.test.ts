@@ -71,4 +71,26 @@ describe("ContractsRegistry", () => {
       );
     });
   });
+
+  describe("coverage", () => {
+    it("should call these methods", async () => {
+      await expect(contractsRegistry.injectDependencies("")).to.be.reverted;
+
+      await expect(contractsRegistry.injectDependenciesWithData("", "0x")).to.be.reverted;
+
+      await expect(contractsRegistry.upgradeContract("", ZERO_ADDR)).to.be.reverted;
+
+      await expect(contractsRegistry.upgradeContractAndCall("", ZERO_ADDR, "0x")).to.be.reverted;
+
+      await expect(contractsRegistry.addContract("", ZERO_ADDR)).to.be.reverted;
+
+      await expect(contractsRegistry.addProxyContract("", ZERO_ADDR)).to.be.reverted;
+
+      await expect(contractsRegistry.addProxyContractAndCall("", ZERO_ADDR, "0x")).to.be.reverted;
+
+      await expect(contractsRegistry.justAddProxyContract("", ZERO_ADDR)).to.be.reverted;
+
+      await expect(contractsRegistry.removeContract("")).to.be.reverted;
+    });
+  });
 });

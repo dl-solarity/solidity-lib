@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import {OwnableContractsRegistry} from "../../contracts-registry/presets/OwnableContractsRegistry.sol";
 
-contract ContractsRegistry is OwnableContractsRegistry {
+contract ContractsRegistryMock is OwnableContractsRegistry {
     string public constant DEPENDANT_NAME = "DEPENDANT";
     string public constant TOKEN_NAME = "TOKEN";
 
