@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
 import { ZERO_ADDR } from "@/scripts/utils/constants";
 
-import { PoolContractsRegistry, ContractsRegistry2, Pool, PoolUpgrade, ERC20Mock } from "@ethers-v6";
+import { PoolContractsRegistry, ContractsRegistryPool, Pool, PoolUpgrade, ERC20Mock } from "@ethers-v6";
 
 describe("PoolContractsRegistry", () => {
   const reverter = new Reverter();
@@ -13,7 +13,7 @@ describe("PoolContractsRegistry", () => {
   let SECOND: SignerWithAddress;
 
   let poolContractsRegistry: PoolContractsRegistry;
-  let contractsRegistry: ContractsRegistry2;
+  let contractsRegistry: ContractsRegistryPool;
   let token: ERC20Mock;
 
   let POOL_1: SignerWithAddress;
@@ -25,11 +25,11 @@ describe("PoolContractsRegistry", () => {
   before("setup", async () => {
     [OWNER, SECOND, , POOL_1, POOL_2] = await ethers.getSigners();
 
-    const ContractsRegistry2 = await ethers.getContractFactory("ContractsRegistry2");
+    const ContractsRegistryPool = await ethers.getContractFactory("ContractsRegistryPool");
     const PoolContractsRegistry = await ethers.getContractFactory("PoolContractsRegistry");
     const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
 
-    contractsRegistry = await ContractsRegistry2.deploy();
+    contractsRegistry = await ContractsRegistryPool.deploy();
     const _poolContractsRegistry = await PoolContractsRegistry.deploy();
     token = await ERC20Mock.deploy("Mock", "Mock", 18);
 

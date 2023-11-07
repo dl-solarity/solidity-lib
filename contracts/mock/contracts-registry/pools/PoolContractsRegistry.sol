@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {ContractsRegistry2} from "./ContractsRegistry2.sol";
+import {ContractsRegistryPool} from "./ContractsRegistryPool.sol";
 
 import {OwnablePoolContractsRegistry} from "../../../contracts-registry/pools/presets/OwnablePoolContractsRegistry.sol";
 
@@ -23,10 +23,13 @@ contract PoolContractsRegistry is OwnablePoolContractsRegistry {
     function setDependencies(address contractsRegistry_, bytes memory data_) public override {
         super.setDependencies(contractsRegistry_, data_);
 
-        _poolFactory = ContractsRegistry2(contractsRegistry_).getPoolFactoryContract();
+        _poolFactory = ContractsRegistryPool(contractsRegistry_).getPoolFactoryContract();
     }
 
-    function addProxyPool(string calldata name_, address poolAddress_) external onlyPoolFactory {
+    function addProxyPool(
+        string calldata name_,
+        address poolAddress_
+    ) external override onlyPoolFactory {
         _addProxyPool(name_, poolAddress_);
     }
 }

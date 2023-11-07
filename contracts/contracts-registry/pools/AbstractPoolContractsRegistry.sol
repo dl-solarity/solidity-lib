@@ -20,9 +20,6 @@ import {ProxyBeacon} from "./proxy/ProxyBeacon.sol";
  * The registry uses BeaconProxy pattern to provide upgradeability and Dependant pattern to provide dependency
  * injection mechanism into the pools. This module should be used together with the ContractsRegistry module.
  *
- * The users of this module have to override `_onlyPoolFactory()` method and revert in case a wrong msg.sender is
- * trying to add pools into the registry.
- *
  * The contract is meant to be used behind a proxy itself.
  */
 abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDependant {

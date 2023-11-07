@@ -8,7 +8,7 @@ import {
   PoolFactory,
   PublicBeaconProxy,
   PoolContractsRegistry,
-  ContractsRegistry2,
+  ContractsRegistryPool,
   Pool,
   PoolUpgrade,
   ERC20Mock,
@@ -21,7 +21,7 @@ describe("PoolFactory", () => {
 
   let poolFactory: PoolFactory;
   let poolContractsRegistry: PoolContractsRegistry;
-  let contractsRegistry: ContractsRegistry2;
+  let contractsRegistry: ContractsRegistryPool;
   let token: ERC20Mock;
 
   let NAME_1: string;
@@ -30,12 +30,12 @@ describe("PoolFactory", () => {
   before("setup", async () => {
     [OWNER] = await ethers.getSigners();
 
-    const ContractsRegistry2 = await ethers.getContractFactory("ContractsRegistry2");
+    const ContractsRegistryPool = await ethers.getContractFactory("ContractsRegistryPool");
     const PoolFactory = await ethers.getContractFactory("PoolFactory");
     const PoolContractsRegistry = await ethers.getContractFactory("PoolContractsRegistry");
     const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
 
-    contractsRegistry = await ContractsRegistry2.deploy();
+    contractsRegistry = await ContractsRegistryPool.deploy();
     const _poolFactory = await PoolFactory.deploy();
     const _poolContractsRegistry = await PoolContractsRegistry.deploy();
     token = await ERC20Mock.deploy("Mock", "Mock", 18);
