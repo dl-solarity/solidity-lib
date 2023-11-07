@@ -27,9 +27,9 @@ contract PoolContractsRegistryMock is OwnablePoolContractsRegistry {
     }
 
     function addProxyPool(
-        string calldata name_,
+        string memory name_,
         address poolAddress_
-    ) external override onlyPoolFactory {
+    ) public override onlyPoolFactory {
         _addProxyPool(name_, poolAddress_);
     }
 }

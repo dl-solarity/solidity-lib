@@ -41,5 +41,5 @@ abstract contract OwnablePoolContractsRegistry is
         _injectDependenciesToExistingPoolsWithData(name_, data_, offset_, limit_);
     }
 
-    function addProxyPool(string calldata name_, address poolAddress_) external virtual;
+    function addProxyPool(string memory name_, address poolAddress_) public virtual;
 }
