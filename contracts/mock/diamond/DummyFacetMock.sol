@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {DummyStorage} from "./DummyStorage.sol";
+import {DummyStorageMock} from "./DummyStorageMock.sol";
 
-contract DummyFacet is DummyStorage {
+contract DummyFacetMock is DummyStorageMock {
     function setDummyString(string memory dummyString_) public {
         getDummyFacetStorage().dummyString = dummyString_;
     }

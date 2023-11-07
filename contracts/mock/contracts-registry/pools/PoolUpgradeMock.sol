@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {Pool} from "./Pool.sol";
+import {PoolMock} from "./PoolMock.sol";
 
-contract PoolUpgrade is Pool {
+contract PoolUpgradeMock is PoolMock {
     function addedFunction() external pure returns (uint256) {
         return 42;
     }

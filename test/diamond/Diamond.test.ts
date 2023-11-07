@@ -6,7 +6,7 @@ import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
 import { ZERO_ADDR, ZERO_BYTES32 } from "@/scripts/utils/constants";
 import { wei } from "@/scripts/utils/utils";
 
-import { OwnableDiamondMock, DummyFacet, DummyInit, Diamond } from "@ethers-v6";
+import { OwnableDiamondMock, DummyFacetMock, DummyInitMock, Diamond } from "@ethers-v6";
 
 describe("Diamond", () => {
   const reverter = new Reverter();
@@ -50,13 +50,13 @@ describe("Diamond", () => {
   });
 
   describe("facets", () => {
-    let dummyFacet: DummyFacet;
+    let dummyFacet: DummyFacetMock;
     let facets: Diamond.FacetStruct[] = [];
     let selectors: string[];
 
     beforeEach("setup", async () => {
-      const DummyFacet = await ethers.getContractFactory("DummyFacet");
-      dummyFacet = await DummyFacet.deploy();
+      const DummyFacetMock = await ethers.getContractFactory("DummyFacetMock");
+      dummyFacet = await DummyFacetMock.deploy();
 
       selectors = getSelectors(dummyFacet.interface);
     });
@@ -71,10 +71,10 @@ describe("Diamond", () => {
     });
 
     describe("init", () => {
-      let dummyInit: DummyInit;
+      let dummyInit: DummyInitMock;
 
       beforeEach("setup", async () => {
-        dummyInit = await ethers.getContractFactory("DummyInit").then((f) => f.deploy());
+        dummyInit = await ethers.getContractFactory("DummyInitMock").then((f) => f.deploy());
 
         facets = [
           {
@@ -93,10 +93,10 @@ describe("Diamond", () => {
 
         await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, addr, init);
 
-        const dimondInitMock = <DummyInit>dummyInit.attach(await diamond.getAddress());
+        const dimondInitMock = <DummyInitMock>dummyInit.attach(await diamond.getAddress());
         await expect(tx).to.emit(dimondInitMock, "Initialized");
 
-        dummyFacet = <DummyFacet>dummyFacet.attach(await diamond.getAddress());
+        dummyFacet = <DummyFacetMock>dummyFacet.attach(await diamond.getAddress());
         expect(await dummyFacet.getDummyString()).to.be.equal("dummy facet initialized");
       });
 
@@ -260,7 +260,7 @@ describe("Diamond", () => {
       });
 
       it("should replace facets and and part of its selectors", async () => {
-        const dummyFacet2 = await ethers.getContractFactory("DummyFacet").then((f) => f.deploy());
+        const dummyFacet2 = await ethers.getContractFactory("DummyFacetMock").then((f) => f.deploy());
 
         facets[0].action = FacetAction.Add;
         await diamond.diamondCutShort(facets);
@@ -284,7 +284,7 @@ describe("Diamond", () => {
       });
 
       it("should replace facets and all its selectors", async () => {
-        const dummyFacet2 = await ethers.getContractFactory("DummyFacet").then((f) => f.deploy());
+        const dummyFacet2 = await ethers.getContractFactory("DummyFacetMock").then((f) => f.deploy());
 
         facets[0].action = FacetAction.Add;
         await diamond.diamondCutShort(facets);
@@ -358,8 +358,8 @@ describe("Diamond", () => {
       it("should be able to call facets", async () => {
         await diamond.diamondCutShort(facets);
 
-        const DummyFacet = await ethers.getContractFactory("DummyFacet");
-        const facet = <DummyFacet>DummyFacet.attach(await diamond.getAddress());
+        const DummyFacetMock = await ethers.getContractFactory("DummyFacetMock");
+        const facet = <DummyFacetMock>DummyFacetMock.attach(await diamond.getAddress());
 
         await facet.setDummyString("hello, diamond");
 
@@ -380,8 +380,8 @@ describe("Diamond", () => {
       });
 
       it("should not call facet if selector is not added", async () => {
-        const DummyFacet = await ethers.getContractFactory("DummyFacet");
-        const facet = <DummyFacet>DummyFacet.attach(await diamond.getAddress());
+        const DummyFacetMock = await ethers.getContractFactory("DummyFacetMock");
+        const facet = <DummyFacetMock>DummyFacetMock.attach(await diamond.getAddress());
 
         await expect(facet.getDummyString()).to.be.revertedWith("Diamond: selector is not registered");
       });

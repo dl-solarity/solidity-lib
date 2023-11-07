@@ -3,12 +3,12 @@ pragma solidity ^0.8.4;
 
 import {AbstractDependant} from "../../../contracts-registry/AbstractDependant.sol";
 
-import {ContractsRegistry2} from "./ContractsRegistry2.sol";
+import {ContractsRegistryPoolMock} from "./ContractsRegistryPoolMock.sol";
 
-contract Pool is AbstractDependant {
+contract PoolMock is AbstractDependant {
     address public token;
 
     function setDependencies(address contractsRegistry_, bytes memory) public override dependant {
-        token = ContractsRegistry2(contractsRegistry_).getTokenContract();
+        token = ContractsRegistryPoolMock(contractsRegistry_).getTokenContract();
     }
 }

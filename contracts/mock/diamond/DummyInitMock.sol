@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {DummyFacet} from "./DummyFacet.sol";
+import {DummyFacetMock} from "./DummyFacetMock.sol";
 
-contract DummyInit is DummyFacet {
+contract DummyInitMock is DummyFacetMock {
     event Initialized();
 
     function init() external {
