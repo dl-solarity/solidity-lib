@@ -47,7 +47,7 @@ describe("UniswapV3Oracle", () => {
 
     let result: string[] = [];
 
-    for(var i = 0; i < tokens.length; i++) {
+    for (var i = 0; i < tokens.length; i++) {
       const t = await ERC20Mock.deploy(tokens[i], tokens[i], decimals[i]);
       result[i] = await t.getAddress();
     }
@@ -77,7 +77,7 @@ describe("UniswapV3Oracle", () => {
   });
 
   describe("getPrice", () => {
-     it("should correctly get price if there are same tokens in the path ", async () => {
+    it("should correctly get price if there are same tokens in the path ", async () => {
       [a_token] = await deployTokens(["A"], [3]);
       let ans = await oracle.getPriceOfTokenInToken([a_token, a_token], [FeeAmount.MEDIUM], 5, PERIOD);
 
@@ -122,10 +122,10 @@ describe("UniswapV3Oracle", () => {
 
       let ans = await oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10, 3);
 
-      if(a_token < b_token) {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, 250) * 1000)*10);
+      if (a_token < b_token) {
+        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, 111) * 1000) * 10);
       } else {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, -250) * 1000)*10);
+        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, -111) * 1000) * 10);
       }
 
       expect(ans[1]).to.equal(3);
@@ -138,13 +138,13 @@ describe("UniswapV3Oracle", () => {
       pool = await createPools(a_token, b_token);
       let poolBC = await createPools(b_token, c_token);
 
-      if(a_token < b_token) {
+      if (a_token < b_token) {
         await pool.initialize(encodePriceSqrt(2, 1));
       } else {
         await pool.initialize(encodePriceSqrt(1, 2));
       }
 
-      await poolBC.initialize(encodePriceSqrt(1, 1)); 
+      await poolBC.initialize(encodePriceSqrt(1, 1));
 
       await time.increaseTo((await time.latest()) + 2);
 
@@ -155,7 +155,7 @@ describe("UniswapV3Oracle", () => {
         PERIOD
       );
 
-      expect(Math.round(Number(ans[0])/100)).to.equal(4);
+      expect(Math.round(Number(ans[0]) / 100)).to.equal(4);
       expect(ans[1]).to.equal(2);
 
       ans = await oracle.getPriceOfTokenInToken(
@@ -165,7 +165,7 @@ describe("UniswapV3Oracle", () => {
         PERIOD
       );
 
-      expect(Math.round(Number(ans[0])/(10**18))).to.equal(2);
+      expect(Math.round(Number(ans[0]) / 10 ** 18)).to.equal(2);
       expect(ans[1]).to.equal(2);
     });
 
@@ -173,7 +173,7 @@ describe("UniswapV3Oracle", () => {
       [a_token, b_token] = await deployTokens(["A", "B"], [18, 6]);
       pool = await createPools(a_token, b_token);
 
-      const firstTime = await time.latest() + 2; 
+      const firstTime = (await time.latest()) + 2;
 
       await time.increaseTo(firstTime);
       await pool.initialize(encodePriceSqrt(1, 1)); //first observation taken at firstTime
@@ -189,33 +189,26 @@ describe("UniswapV3Oracle", () => {
         [a_token, b_token],
         [FeeAmount.MEDIUM],
         1,
-        PERIOD
+        PERIOD //between 2 and 3
       );
 
-      if(a_token < b_token) {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, 1100) * 10**6));
+      if (a_token < b_token) {
+        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, 1000) * 10 ** 6));
       } else {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, -1100) * 10**6));
+        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, -1000) * 10 ** 6));
       }
-
       expect(ans[1]).to.equal(PERIOD);
 
-      ans = await oracle.getPriceOfTokenInToken(
-        [a_token, b_token],
-        [FeeAmount.MEDIUM],
-        1,
-        await time.latest() - 1
-      );
- 
-      let avgTick = Math.floor((1000*4 + 1100*2)/6);
+      ans = await oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 1, (await time.latest()) - 1);
 
-      if(a_token < b_token) {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, avgTick) * 10**6));
+      let avgTick = Math.floor((0 * 4 + 1000 * 2) / 6);
+
+      if (a_token < b_token) {
+        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, avgTick) * 10 ** 6));
       } else {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, (-1)*avgTick) * 10**6));
+        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, -1 * avgTick) * 10 ** 6));
       }
-
-      expect(ans[1]).to.equal(await time.latest() - firstTime - 1); //time of first observation
+      expect(ans[1]).to.equal((await time.latest()) - firstTime - 1); //time of first observation
     });
 
     it("should not get price if there is invalid path", async () => {
@@ -225,17 +218,17 @@ describe("UniswapV3Oracle", () => {
     });
 
     it("should not get price if there wrong amount of fees or tokens", async () => {
-      await expect(oracle.getPriceOfTokenInToken([ZERO_ADDR, ZERO_ADDR, ZERO_ADDR], [FeeAmount.MEDIUM], 10, PERIOD)).to.be.revertedWith(
-        "UniswapV3Oracle: path/fee lengths do not match"
-      );
+      await expect(
+        oracle.getPriceOfTokenInToken([ZERO_ADDR, ZERO_ADDR, ZERO_ADDR], [FeeAmount.MEDIUM], 10, PERIOD)
+      ).to.be.revertedWith("UniswapV3Oracle: path/fee lengths do not match");
     });
 
     it("should not get price if there is no pool", async () => {
       [a_token, b_token] = await deployTokens(["A", "B"], [18, 6]);
 
-      await expect(oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10, PERIOD)).to.be.revertedWith(
-        "UniswapV3Oracle: such pool doesn't exist"
-      );
+      await expect(
+        oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10, PERIOD)
+      ).to.be.revertedWith("UniswapV3Oracle: such pool doesn't exist");
     });
 
     it("should not get price if period is zero", async () => {
@@ -259,9 +252,9 @@ describe("UniswapV3Oracle", () => {
 
       await pool.initialize(encodePriceSqrt(1, 1));
 
-      await expect(oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10, PERIOD)).to.be.revertedWith(
-        "UniswapV3Oracle: the oldest observation is on current block"
-      );
+      await expect(
+        oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10, PERIOD)
+      ).to.be.revertedWith("UniswapV3Oracle: the oldest observation is on current block");
     });
   });
 });

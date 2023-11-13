@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.4;
 
-//codestyle
-//remove deployer logic?
+//codestyle.oracle lib?
 
-import {IUniswapV3PoolDeployer} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3PoolDeployer.sol";
-
-//а она реально нужна? по сути только для тестов
 import {Oracle} from "../../../oracles/external-modules-UniswapV3Oracle/Oracle.sol";
 import {TickHelper} from "../../../oracles/external-modules-UniswapV3Oracle/TickHelper.sol";
 
 contract UniswapV3PoolMock {
     using Oracle for Oracle.Observation[65535];
-    
+
     struct Slot0 {
         // the current price
         uint160 sqrtPriceX96;
@@ -30,18 +26,9 @@ contract UniswapV3PoolMock {
         // whether the pool is locked
         bool unlocked;
     }
-    
+
     Slot0 public slot0;
-
     Oracle.Observation[65535] public observations;
-
-    address public immutable token0;
-    address public immutable token1;
-    uint24 public immutable fee;
-
-    constructor() {
-        (, token0, token1, fee, ) = IUniswapV3PoolDeployer(msg.sender).parameters();
-    }
 
     function observe(
         uint32[] calldata secondAgos
@@ -88,13 +75,13 @@ contract UniswapV3PoolMock {
         (slot0.observationIndex, slot0.observationCardinality) = observations.write(
             slot0.observationIndex,
             _blockTimestamp(),
-            tick_,
+            slot0.tick,
             0,
             slot0.observationCardinality,
             slot0.observationCardinalityNext
         );
 
-        slot0.tick = tick_;       
+        slot0.tick = tick_;
     }
 
     function increaseObservationCardinalityNext(uint16 observationCardinalityNext) external {

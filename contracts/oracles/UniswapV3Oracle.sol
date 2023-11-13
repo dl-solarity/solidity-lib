@@ -66,9 +66,9 @@ abstract contract UniswapV3Oracle is Initializable {
                 period_
             );
 
-            amount_ = price_ * amount_ / base_;
+            amount_ = (price_ * amount_) / base_;
 
-            base_ = uint128(10)**DecimalsConverter.decimals(nextToken_);
+            base_ = uint128(10) ** DecimalsConverter.decimals(nextToken_);
 
             if (minPeriod_ > time_) {
                 minPeriod_ = time_;
@@ -92,12 +92,7 @@ abstract contract UniswapV3Oracle is Initializable {
             newIndex_ = 0;
         }
 
-        (
-            uint32 blockTimestamp_, //should we check if initialized?
-            ,
-            ,
-
-        ) = IUniswapV3Pool(pool_).observations(newIndex_);
+        (uint32 blockTimestamp_, , , ) = IUniswapV3Pool(pool_).observations(newIndex_);
 
         return blockTimestamp_;
     }
@@ -112,7 +107,7 @@ abstract contract UniswapV3Oracle is Initializable {
         uint24 fee_,
         uint32 period_
     ) private view returns (uint256, uint32) {
-        uint128 base_  = uint128(10)**DecimalsConverter.decimals(quoteToken_);
+        uint128 base_ = uint128(10) ** DecimalsConverter.decimals(quoteToken_);
 
         if (baseToken_ == quoteToken_) {
             return (base_, period_);
