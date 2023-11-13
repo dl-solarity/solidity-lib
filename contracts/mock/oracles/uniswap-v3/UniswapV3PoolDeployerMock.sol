@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
+//codestyle
 
 import {IUniswapV3PoolDeployer} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3PoolDeployer.sol";
-import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+//import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {UniswapV3PoolMock} from "./UniswapV3PoolMock.sol";
 
 contract UniswapV3PoolDeployerMock is IUniswapV3PoolDeployer {
@@ -14,7 +15,6 @@ contract UniswapV3PoolDeployerMock is IUniswapV3PoolDeployer {
         int24 tickSpacing;
     }
 
-    /// @inheritdoc IUniswapV3PoolDeployer
     Parameters public override parameters;
 
     /// @dev Deploys a pool with the given parameters by transiently setting the parameters storage slot and then

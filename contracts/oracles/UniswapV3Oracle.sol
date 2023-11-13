@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {TickHelper} from "./external-modules-UniswapV3Oracle/TickHelper.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
-//coverage for lib functions
+import {TickHelper} from "./external-modules-UniswapV3Oracle/TickHelper.sol";
+import {DecimalsConverter} from "../libs/utils/DecimalsConverter.sol";
+
 //codestyle
-//import "hardhat/console.sol";
+//description
 
 /**
  * @notice UniswapV3Oracle module
@@ -29,6 +30,7 @@ abstract contract UniswapV3Oracle is Initializable {
 
     /**
      * @notice The function to retrieve the price of a token following the configured route
+     * @dev The function returns price multplied by 10 in power of decimals of the quoteToken_
      * @param path_ The path of token address, the last one is token in which price will be returned
      * @param fees_ The array of fees for particular pools
      * @param amount_ The amount of baseToken_
@@ -52,17 +54,25 @@ abstract contract UniswapV3Oracle is Initializable {
         );
 
         uint32 minPeriod_ = period_;
+        uint128 base_ = 1;
 
         for (uint256 i = 0; i < pathLength_ - 1; i++) {
+            address nextToken_ = path_[i + 1];
+
             (uint256 price_, uint32 time_) = _getPriceOfTokenInToken(
                 path_[i],
-                path_[i + 1],
+                nextToken_,
                 fees_[i],
                 period_
             );
 
-            amount_ = price_ * amount_;
-            if (minPeriod_ > time_) minPeriod_ = time_;
+            amount_ = price_ * amount_ / base_;
+
+            base_ = uint128(10)**DecimalsConverter.decimals(nextToken_);
+
+            if (minPeriod_ > time_) {
+                minPeriod_ = time_;
+            }
         }
         return (amount_, minPeriod_);
     }
@@ -94,6 +104,7 @@ abstract contract UniswapV3Oracle is Initializable {
 
     /**
      * @notice The private function to get the price of a token inside a pool
+     * @dev Returns price multplied by 10 in power of decimals of the quoteToken_
      */
     function _getPriceOfTokenInToken(
         address baseToken_,
@@ -101,7 +112,7 @@ abstract contract UniswapV3Oracle is Initializable {
         uint24 fee_,
         uint32 period_
     ) private view returns (uint256, uint32) {
-        uint128 base_ = 1;
+        uint128 base_  = uint128(10)**DecimalsConverter.decimals(quoteToken_);
 
         if (baseToken_ == quoteToken_) {
             return (base_, period_);

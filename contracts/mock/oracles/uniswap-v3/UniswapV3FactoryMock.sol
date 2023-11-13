@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
+//codestyle
 
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {UniswapV3PoolDeployerMock} from "./UniswapV3PoolDeployerMock.sol";
-import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+//import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 contract UniswapV3FactoryMock is IUniswapV3Factory, UniswapV3PoolDeployerMock {
     address public override owner;
@@ -14,14 +15,13 @@ contract UniswapV3FactoryMock is IUniswapV3Factory, UniswapV3PoolDeployerMock {
 
     constructor() {
         owner = msg.sender;
-        emit OwnerChanged(address(0), msg.sender);
 
         feeAmountTickSpacing[500] = 10;
-        emit FeeAmountEnabled(500, 10);
+       // emit FeeAmountEnabled(500, 10);
         feeAmountTickSpacing[3000] = 60;
-        emit FeeAmountEnabled(3000, 60);
+       // emit FeeAmountEnabled(3000, 60);
         feeAmountTickSpacing[10000] = 200;
-        emit FeeAmountEnabled(10000, 200);
+       // emit FeeAmountEnabled(10000, 200);
     }
 
     function createPool(
@@ -39,27 +39,10 @@ contract UniswapV3FactoryMock is IUniswapV3Factory, UniswapV3PoolDeployerMock {
         getPool[token0][token1][fee] = pool;
         // populate mapping in the reverse direction, deliberate choice to avoid the cost of comparing addresses
         getPool[token1][token0][fee] = pool;
-        emit PoolCreated(token0, token1, fee, tickSpacing, pool);
+        //emit PoolCreated(token0, token1, fee, tickSpacing, pool);
     }
 
-    /// @inheritdoc IUniswapV3Factory
-    function setOwner(address _owner) external override {
-        require(msg.sender == owner);
-        emit OwnerChanged(owner, _owner);
-        owner = _owner;
-    }
+    function setOwner(address _owner) external override {}
 
-    /// @inheritdoc IUniswapV3Factory
-    function enableFeeAmount(uint24 fee, int24 tickSpacing) public override {
-        require(msg.sender == owner);
-        require(fee < 1000000);
-        // tick spacing is capped at 16384 to prevent the situation where tickSpacing is so large that
-        // TickBitmap#nextInitializedTickWithinOneWord overflows int24 container from a valid tick
-        // 16384 ticks represents a >5x price change with ticks of 1 bips
-        require(tickSpacing > 0 && tickSpacing < 16384);
-        require(feeAmountTickSpacing[fee] == 0);
-
-        feeAmountTickSpacing[fee] = tickSpacing;
-        emit FeeAmountEnabled(fee, tickSpacing);
-    }
+    function enableFeeAmount(uint24 fee, int24 tickSpacing) public override {}
 }
