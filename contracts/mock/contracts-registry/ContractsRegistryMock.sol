@@ -3,16 +3,16 @@ pragma solidity ^0.8.4;
 
 import {OwnableContractsRegistry} from "../../contracts-registry/presets/OwnableContractsRegistry.sol";
 
-contract ContractsRegistry1 is OwnableContractsRegistry {
-    string public constant CRDEPENDANT_NAME = "CRDEPENDANT";
+contract ContractsRegistryMock is OwnableContractsRegistry {
+    string public constant DEPENDANT_NAME = "DEPENDANT";
     string public constant TOKEN_NAME = "TOKEN";
 
     function mockInit() external {
         __ContractsRegistry_init();
     }
 
-    function getCRDependantContract() external view returns (address) {
-        return getContract(CRDEPENDANT_NAME);
+    function getDependantContract() external view returns (address) {
+        return getContract(DEPENDANT_NAME);
     }
 
     function getTokenContract() external view returns (address) {

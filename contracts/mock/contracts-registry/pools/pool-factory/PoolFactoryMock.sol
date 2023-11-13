@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {ContractsRegistry2} from "../ContractsRegistry2.sol";
-import {PoolContractsRegistry} from "../PoolContractsRegistry.sol";
+import {ContractsRegistryPoolMock} from "../ContractsRegistryPoolMock.sol";
+import {PoolContractsRegistryMock} from "../PoolContractsRegistryMock.sol";
 
 import {AbstractPoolFactory} from "../../../../contracts-registry/pools/pool-factory/AbstractPoolFactory.sol";
 
-contract PoolFactory is AbstractPoolFactory {
+contract PoolFactoryMock is AbstractPoolFactory {
     address public poolContractsRegistry;
 
     function setDependencies(address contractsRegistry_, bytes memory data_) public override {
         super.setDependencies(contractsRegistry_, data_);
 
-        poolContractsRegistry = ContractsRegistry2(contractsRegistry_)
+        poolContractsRegistry = ContractsRegistryPoolMock(contractsRegistry_)
             .getPoolContractsRegistryContract();
     }
 
     function deployPool() external {
-        string memory poolType_ = PoolContractsRegistry(poolContractsRegistry).POOL_1_NAME();
+        string memory poolType_ = PoolContractsRegistryMock(poolContractsRegistry).POOL_1_NAME();
 
         address poolProxy_ = _deploy(poolContractsRegistry, poolType_);
 
@@ -26,7 +26,7 @@ contract PoolFactory is AbstractPoolFactory {
     }
 
     function deploy2Pool(string calldata salt_) external {
-        string memory poolType_ = PoolContractsRegistry(poolContractsRegistry).POOL_1_NAME();
+        string memory poolType_ = PoolContractsRegistryMock(poolContractsRegistry).POOL_1_NAME();
 
         address poolProxy_ = _deploy2(poolContractsRegistry, poolType_, bytes32(bytes(salt_)));
 
@@ -38,7 +38,7 @@ contract PoolFactory is AbstractPoolFactory {
         return
             _predictPoolAddress(
                 poolContractsRegistry,
-                PoolContractsRegistry(poolContractsRegistry).POOL_1_NAME(),
+                PoolContractsRegistryMock(poolContractsRegistry).POOL_1_NAME(),
                 bytes32(bytes(salt_))
             );
     }

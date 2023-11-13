@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {CRDependant} from "./CRDependant.sol";
+import {DependantMock} from "./DependantMock.sol";
 
-contract CRDependantUpgrade is CRDependant {
+contract DependantUpgradeMock is DependantMock {
     uint256 public dummyValue;
 
     function doUpgrade(uint256 value_) external {

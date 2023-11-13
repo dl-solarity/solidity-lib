@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
 import {AbstractPoolContractsRegistry} from "../AbstractPoolContractsRegistry.sol";
+import {MultiOwnable} from "../../../access-control/MultiOwnable.sol";
 
 /**
- * @notice The Ownable preset of PoolContractsRegistry
+ * @notice The MultiOwnable preset of PoolContractsRegistry
  */
-abstract contract OwnablePoolContractsRegistry is
+abstract contract MultiOwnablePoolContractsRegistry is
     AbstractPoolContractsRegistry,
-    OwnableUpgradeable
+    MultiOwnable
 {
-    function __OwnablePoolContractsRegistry_init() public initializer {
-        __Ownable_init();
+    function __MultiOwnablePoolContractsRegistry_init() public initializer {
+        __MultiOwnable_init();
         __PoolContractsRegistry_init();
     }
 
