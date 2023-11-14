@@ -14,7 +14,6 @@ describe("UniswapV3Oracle", () => {
   const enum FeeAmount {
     LOW = 500,
     MEDIUM = 3000,
-    HIGH = 10000,
   }
 
   let oracle: UniswapV3OracleMock;
@@ -123,9 +122,9 @@ describe("UniswapV3Oracle", () => {
       let ans = await oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10, 3);
 
       if (a_token < b_token) {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, 111) * 1000) * 10);
+        expect(ans[0]).to.equal(Math.floor(1.0001 ** 111 * 1000) * 10);
       } else {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, -111) * 1000) * 10);
+        expect(ans[0]).to.equal(Math.floor(1.0001 ** -111 * 1000) * 10);
       }
 
       expect(ans[1]).to.equal(3);
@@ -193,9 +192,9 @@ describe("UniswapV3Oracle", () => {
       );
 
       if (a_token < b_token) {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, 1000) * 10 ** 6));
+        expect(ans[0]).to.equal(Math.floor(1.0001 ** 1000 * 10 ** 6));
       } else {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, -1000) * 10 ** 6));
+        expect(ans[0]).to.equal(Math.floor(1.0001 ** -1000 * 10 ** 6));
       }
       expect(ans[1]).to.equal(PERIOD);
 
@@ -204,9 +203,9 @@ describe("UniswapV3Oracle", () => {
       let avgTick = Math.floor((0 * 4 + 1000 * 2) / 6);
 
       if (a_token < b_token) {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, avgTick) * 10 ** 6));
+        expect(ans[0]).to.equal(Math.floor(1.0001 ** avgTick * 10 ** 6));
       } else {
-        expect(ans[0]).to.equal(Math.floor(Math.pow(1.0001, -1 * avgTick) * 10 ** 6));
+        expect(ans[0]).to.equal(Math.floor(1.0001 ** -avgTick * 10 ** 6));
       }
       expect(ans[1]).to.equal((await time.latest()) - firstTime - 1); //time of first observation
     });
@@ -223,12 +222,17 @@ describe("UniswapV3Oracle", () => {
       ).to.be.revertedWith("UniswapV3Oracle: path/fee lengths do not match");
     });
 
-    it("should not get price if there is no pool", async () => {
+    it("should not get price if there is no such pool", async () => {
       [a_token, b_token] = await deployTokens(["A", "B"], [18, 6]);
 
       await expect(
         oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10, PERIOD)
       ).to.be.revertedWith("UniswapV3Oracle: such pool doesn't exist");
+
+      pool = await createPools(a_token, b_token);
+      await expect(oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.LOW], 10, PERIOD)).to.be.revertedWith(
+        "UniswapV3Oracle: such pool doesn't exist"
+      );
     });
 
     it("should not get price if period is zero", async () => {

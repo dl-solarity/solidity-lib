@@ -6,16 +6,17 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
-import {TickHelper} from "./external-modules-UniswapV3Oracle/TickHelper.sol";
 import {DecimalsConverter} from "../libs/utils/DecimalsConverter.sol";
-
-//codestyle
-//description
+import {TickHelper} from "./external-modules-UniswapV3Oracle/TickHelper.sol";
 
 /**
  * @notice UniswapV3Oracle module
  *
- * A contract for retrieving prices from Uniswap V3 pools.
+ * A contract for retrieving prices from Uniswap V3 pools. 
+ * Works by calculating and saving tickCumulative in every observation,
+ * so some historical prices from time-weighted tick can be retrieved. 
+ *
+ * In case required period of time is unreachable, tick is taken from oldest available observation.
  */
 abstract contract UniswapV3Oracle is Initializable {
     IUniswapV3Factory public uniswapV3Factory;
@@ -39,7 +40,7 @@ abstract contract UniswapV3Oracle is Initializable {
      * @return minPeriod_ the oldest period for which there is an observation in case period_ time ago there was no observation
      */
     function getPriceOfTokenInToken(
-        address[] memory path_, //last is QuoteToken
+        address[] memory path_,
         uint24[] memory fees_,
         uint256 amount_,
         uint32 period_
@@ -135,6 +136,7 @@ abstract contract UniswapV3Oracle is Initializable {
                 );
             } else {
                 uint32 newPeriod_ = uint32(block.timestamp) - oldest_;
+
                 return (
                     TickHelper.getQuoteAtTick(
                         TickHelper.consult(pool_, newPeriod_),

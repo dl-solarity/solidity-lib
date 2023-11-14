@@ -31,21 +31,21 @@ contract UniswapV3PoolMock {
     Oracle.Observation[65535] public observations;
 
     function observe(
-        uint32[] calldata secondAgos
+        uint32[] calldata secondAgos_
     )
         external
         view
         returns (
-            int56[] memory tickCumulatives,
-            uint160[] memory secondsPerLiquidityCumulativeX128s
+            int56[] memory tickCumulatives_,
+            uint160[] memory secondsPerLiquidityCumulativeX128s_
         )
     {
-        require(secondAgos[0] < block.timestamp, "period is bigger than current timestamp");
+        require(secondAgos_[0] < block.timestamp, "period is bigger than current timestamp");
 
         return
             observations.observe(
                 _blockTimestamp(),
-                secondAgos,
+                secondAgos_,
                 slot0.tick,
                 slot0.observationIndex,
                 0,
