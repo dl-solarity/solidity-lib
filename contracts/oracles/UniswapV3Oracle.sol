@@ -53,6 +53,7 @@ abstract contract UniswapV3Oracle is Initializable {
             block.timestamp > period_,
             "UniswapV3Oracle: period larger than current timestamp"
         );
+        require(period_ > 0, "UniswapV3Oracle: period can't be 0");
 
         if (amount_ == 0) return (0, 0);
 

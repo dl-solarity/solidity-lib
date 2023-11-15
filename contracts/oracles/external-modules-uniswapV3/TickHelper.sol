@@ -21,8 +21,6 @@ library TickHelper {
      * @return timeWeightedAverageTick_ The arithmetic mean tick from (block.timestamp - secondsAgo) to block.timestamp
      */
     function consult(address pool_, uint32 period_) internal view returns (int24) {
-        require(period_ > 0, "TickHelper: period can't be 0");
-
         uint32[] memory secondAgos_ = new uint32[](2);
         secondAgos_[0] = period_;
         secondAgos_[1] = 0;

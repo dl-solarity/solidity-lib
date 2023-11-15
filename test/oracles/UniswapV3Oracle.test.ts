@@ -285,11 +285,8 @@ describe("UniswapV3Oracle", () => {
     });
 
     it("should not get price if period is zero", async () => {
-      [a_token, b_token] = await deployTokens(["A", "B"], [18, 6]);
-      pool = await createPools(a_token, b_token);
-
-      await expect(oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10, 0)).to.be.revertedWith(
-        "TickHelper: period can't be 0"
+      await expect(oracle.getPriceOfTokenInToken([ZERO_ADDR, ZERO_ADDR], [FeeAmount.MEDIUM], 10, 0)).to.be.revertedWith(
+        "UniswapV3Oracle: period can't be 0"
       );
     });
 
