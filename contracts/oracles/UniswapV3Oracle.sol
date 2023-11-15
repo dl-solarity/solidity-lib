@@ -12,9 +12,9 @@ import {TickHelper} from "./external-modules-UniswapV3Oracle/TickHelper.sol";
 /**
  * @notice UniswapV3Oracle module
  *
- * A contract for retrieving prices from Uniswap V3 pools. 
+ * A contract for retrieving prices from Uniswap V3 pools.
  * Works by calculating and saving tickCumulative in every observation,
- * so some historical prices from time-weighted tick can be retrieved. 
+ * so some historical prices from time-weighted tick can be retrieved.
  *
  * In case required period of time is unreachable, tick is taken from oldest available observation.
  */
@@ -31,7 +31,7 @@ abstract contract UniswapV3Oracle is Initializable {
 
     /**
      * @notice The function to retrieve the price of a token following the configured route
-     * @dev The function returns price multplied by 10 in power of decimals of the quoteToken_
+     * @dev The function returns price multplied by 10 in power of decimals of the quoteToken_. If amount is zero, returns (0, 0).
      * @param path_ The path of token address, the last one is token in which price will be returned
      * @param fees_ The array of fees for particular pools
      * @param amount_ The amount of baseToken_
@@ -44,7 +44,7 @@ abstract contract UniswapV3Oracle is Initializable {
         uint24[] memory fees_,
         uint256 amount_,
         uint32 period_
-    ) external view returns (uint256, uint32) {
+    ) public view returns (uint256, uint32) {
         uint256 pathLength_ = path_.length;
 
         require(pathLength_ > 1, "UniswapV3Oracle: invalid path");
@@ -53,6 +53,8 @@ abstract contract UniswapV3Oracle is Initializable {
             block.timestamp > period_,
             "UniswapV3Oracle: period larger than current timestamp"
         );
+
+        if (amount_ == 0) return (0, 0);
 
         uint32 minPeriod_ = period_;
         uint128 base_ = 1;
