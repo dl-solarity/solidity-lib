@@ -313,11 +313,11 @@ describe("UniswapV3Oracle", () => {
       pool = await createPools(a_token, b_token);
 
       if (a_token < b_token) {
-        await expect(pool.initialize(encodePriceSqrt(1, 2 ** 190))).to.be.revertedWith(
+        await expect(pool.initialize(encodePriceSqrt(1, 2 ** 128))).to.be.revertedWith(
           "TickHelper: sqrtPriceX96 not in range"
         );
       } else {
-        await expect(pool.initialize(encodePriceSqrt(2 ** 190, 1))).to.be.revertedWith(
+        await expect(pool.initialize(encodePriceSqrt(2 ** -128, 1))).to.be.revertedWith(
           "TickHelper: sqrtPriceX96 not in range"
         );
       }
