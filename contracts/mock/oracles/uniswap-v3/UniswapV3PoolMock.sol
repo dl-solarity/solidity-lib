@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.4;
 
-import {Oracle} from "../../../oracles/external-modules-UniswapV3Oracle/Oracle.sol";
-import {TickHelper} from "../../../oracles/external-modules-UniswapV3Oracle/TickHelper.sol";
+import {Oracle} from "./Oracle.sol";
+import {TickHelper} from "../../../oracles/external-modules-uniswapV3/TickHelper.sol";
 
 contract UniswapV3PoolMock {
     using Oracle for Oracle.Observation[65535];
@@ -23,17 +23,19 @@ contract UniswapV3PoolMock {
     Slot0 public slot0;
     Oracle.Observation[65535] public observations;
 
-    function initialize(uint160 sqrtPriceX96) external {
-        int24 tick = TickHelper.getTickAtSqrtRatio(sqrtPriceX96);
+    function initialize(uint160 sqrtPriceX96_) external {
+        int24 tick_ = TickHelper.getTickAtSqrtRatio(sqrtPriceX96_);
 
-        (uint16 cardinality, uint16 cardinalityNext) = observations.initialize(_blockTimestamp());
+        (uint16 cardinality_, uint16 cardinalityNext_) = observations.initialize(
+            _blockTimestamp()
+        );
 
         slot0 = Slot0({
-            sqrtPriceX96: sqrtPriceX96,
-            tick: tick,
+            sqrtPriceX96: sqrtPriceX96_,
+            tick: tick_,
             observationIndex: 0,
-            observationCardinality: cardinality,
-            observationCardinalityNext: cardinalityNext,
+            observationCardinality: cardinality_,
+            observationCardinalityNext: cardinalityNext_,
             feeProtocol: 0,
             unlocked: true
         });
@@ -51,10 +53,10 @@ contract UniswapV3PoolMock {
         slot0.tick = tick_;
     }
 
-    function increaseObservationCardinalityNext(uint16 observationCardinalityNext) external {
+    function increaseObservationCardinalityNext(uint16 observationCardinalityNext_) external {
         slot0.observationCardinalityNext = observations.grow(
             slot0.observationCardinalityNext,
-            observationCardinalityNext
+            observationCardinalityNext_
         );
     }
 
@@ -81,6 +83,6 @@ contract UniswapV3PoolMock {
     }
 
     function _blockTimestamp() internal view virtual returns (uint32) {
-        return uint32(block.timestamp); // truncation is desired
+        return uint32(block.timestamp); // truncation is desired in original contract
     }
 }

@@ -169,27 +169,54 @@ describe("UniswapV3Oracle", () => {
     });
 
     it("should correctly get average price", async () => {
-      [a_token, b_token] = await deployTokens(["A", "B"], [18, 1]);
+      [a_token, b_token] = await deployTokens(["A", "B"], [6, 6]);
       pool = await createPools(a_token, b_token);
 
       const firstTime = (await time.latest()) + 2;
 
       await time.increaseTo(firstTime);
       await pool.initialize(encodePriceSqrt(1, 1)); //first observation taken at firstTime
-      await pool.increaseObservationCardinalityNext(3);
+      await pool.increaseObservationCardinalityNext(4);
 
-      await time.increaseTo(firstTime + 4);
-      await pool.addObservation(500000); //second observation taken at firstTime + 4
+      await time.increaseTo(firstTime + 3);
+      await pool.addObservation(-127); //second observation taken at firstTime + 3
 
-      await time.increaseTo(firstTime + 6);
-      await pool.addObservation(1222); //third observation at firstTime + 6
+      await time.increaseTo(firstTime + 5);
+      await pool.addObservation(-871); //third observation at firstTime + 5
+
+      await time.increaseTo(firstTime + 8);
+      await pool.addObservation(-1241); //forth observation at firstTime + 8
 
       let ans = await oracle.getPriceOfTokenInToken(
         [a_token, b_token],
         [FeeAmount.MEDIUM],
         1,
-        PERIOD //between 2 and 3
+        (await time.latest()) - 1
       );
+
+      let avgTick = Math.floor((0 * 3 - 127 * 2 - 871 * 3) / 8);
+
+      if (a_token < b_token) {
+        expect(ans[0]).to.equal(Math.floor(1.0001 ** avgTick * 10 ** 6));
+      } else {
+        expect(ans[0]).to.equal(Math.floor(1.0001 ** -avgTick * 10 ** 6));
+      }
+      expect(ans[1]).to.equal((await time.latest()) - firstTime - 1); //time of first observation
+    });
+
+    it("should correctly get price with huge tick", async () => {
+      [a_token, b_token] = await deployTokens(["A", "B"], [24, 1]);
+      pool = await createPools(a_token, b_token);
+
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await pool.increaseObservationCardinalityNext(3);
+
+      await time.increaseTo((await time.latest()) + 1);
+      await pool.addObservation(500000);
+
+      await time.increaseTo((await time.latest()) + 3);
+
+      let ans = await oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 1, PERIOD);
 
       if (a_token < b_token) {
         expect(ans[0] / 10n ** 12n).to.equal(Math.floor(1.0001 ** 500000 / 10 ** 11)); //not very precise for so big tick
@@ -198,16 +225,14 @@ describe("UniswapV3Oracle", () => {
       }
       expect(ans[1]).to.equal(PERIOD);
 
-      ans = await oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 1, (await time.latest()) - 1);
-
-      let avgTick = Math.floor((0 * 4 + 500000 * 2) / 6);
+      //reverse
+      ans = await oracle.getPriceOfTokenInToken([b_token, a_token], [FeeAmount.MEDIUM], 1, PERIOD);
 
       if (a_token < b_token) {
-        expect(ans[0]).to.equal(BigInt(Math.floor(1.0001 ** avgTick * 10)));
+        expect(ans[0]).to.equal(Math.floor(1.0001 ** -500000 * 10 ** 24));
       } else {
-        expect(ans[0]).to.equal(BigInt(Math.floor(1.0001 ** -avgTick * 10)));
+        expect(ans[0] / 10n ** 35n).to.equal(Math.floor(1.0001 ** 500000 / 10 ** 11));
       }
-      expect(ans[1]).to.equal((await time.latest()) - firstTime - 1); //time of first observation
     });
 
     it("should return 0 if amount is 0", async () => {
@@ -242,15 +267,6 @@ describe("UniswapV3Oracle", () => {
       );
     });
 
-    it("should not get price if period is zero", async () => {
-      [a_token, b_token] = await deployTokens(["A", "B"], [18, 6]);
-      pool = await createPools(a_token, b_token);
-
-      await expect(oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10, 0)).to.be.revertedWith(
-        "TickHelper: period can't be 0"
-      );
-    });
-
     it("should not get price if period larger than current timestamp", async () => {
       await expect(
         oracle.getPriceOfTokenInToken([ZERO_ADDR, ZERO_ADDR], [FeeAmount.MEDIUM], 10, (await time.latest()) + 10)
@@ -266,6 +282,45 @@ describe("UniswapV3Oracle", () => {
       await expect(
         oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10, PERIOD)
       ).to.be.revertedWith("UniswapV3Oracle: the oldest observation is on current block");
+    });
+
+    it("should not get price if period is zero", async () => {
+      [a_token, b_token] = await deployTokens(["A", "B"], [18, 6]);
+      pool = await createPools(a_token, b_token);
+
+      await expect(oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10, 0)).to.be.revertedWith(
+        "TickHelper: period can't be 0"
+      );
+    });
+
+    it("should not get price if tick bigger than max tick", async () => {
+      [a_token, b_token] = await deployTokens(["A", "B"], [6, 6]);
+      pool = await createPools(a_token, b_token);
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await pool.increaseObservationCardinalityNext(2);
+
+      await pool.addObservation(900000);
+
+      await time.increaseTo((await time.latest()) + 2);
+
+      await expect(oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 1, 1)).to.be.revertedWith(
+        "TickHelper: invalid tick"
+      );
+    });
+
+    it("should not get price if price not in range", async () => {
+      [a_token, b_token] = await deployTokens(["A", "B"], [6, 6]);
+      pool = await createPools(a_token, b_token);
+
+      if (a_token < b_token) {
+        await expect(pool.initialize(encodePriceSqrt(1, 2 ** 190))).to.be.revertedWith(
+          "TickHelper: sqrtPriceX96 not in range"
+        );
+      } else {
+        await expect(pool.initialize(encodePriceSqrt(2 ** 190, 1))).to.be.revertedWith(
+          "TickHelper: sqrtPriceX96 not in range"
+        );
+      }
     });
   });
 });

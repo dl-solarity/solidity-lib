@@ -3,10 +3,12 @@ pragma solidity ^0.8.4;
 
 /** @title Oracle
  * @notice Provides price and liquidity data useful for a wide variety of system designs. Adopted for Solidity 0.8.0.
- * In comparison to Oracle lib from Uniswap V3, liquidity logic is partially removed as it isn't needed for Oracle contract.
+ * @dev In comparison to Oracle lib from Uniswap V3, liquidity logic is partially removed as it isn't needed for Oracle contract.
  * secondsPerLiquidityCumulativeX128 set to zero or empty array.
+ 
  * This contract used only for correct simulation of UniswapV3PoolMock.
- * @dev Instances of stored oracle data, "observations", are collected in the oracle array
+ *
+ * Instances of stored oracle data, "observations", are collected in the oracle array
  * Every pool is initialized with an oracle array length of 1. Anyone can pay the SSTOREs to increase the
  * maximum length of the oracle array. New slots will be added when the array is fully populated.
  * Observations are overwritten when the full length of the oracle array is populated.
@@ -36,6 +38,29 @@ library Oracle {
             initialized: true
         });
         return (1, 1);
+    }
+
+    /** @notice Prepares the oracle array to store up to `next` observations
+     * @param self The stored oracle array
+     * @param current_ The current next cardinality_ of the oracle array
+     * @param next_ The proposed next cardinality_ which will be populated in the oracle array
+     * @return next_ The next cardinality_ which will be populated in the oracle
+     */
+    function grow(
+        Observation[65535] storage self,
+        uint16 current_,
+        uint16 next_
+    ) internal returns (uint16) {
+        unchecked {
+            // no-op if the passed next value isn't greater than the current next value
+            if (next_ <= current_) return current_;
+            // store in each slot to prevent fresh SSTOREs in swaps
+            // this data will not be used because the initialized boolean is still false
+            for (uint16 i = current_; i < next_; i++) {
+                self[i].blockTimestamp = 1;
+            }
+            return next_;
+        }
     }
 
     /** @notice Writes an oracle observation to the array
@@ -75,29 +100,6 @@ library Oracle {
             indexUpdated_ = (index_ + 1) % cardinalityUpdated_;
 
             self[indexUpdated_] = transform(last_, blockTimestamp_, tick_);
-        }
-    }
-
-    /** @notice Prepares the oracle array to store up to `next` observations
-     * @param self The stored oracle array
-     * @param current_ The current next cardinality_ of the oracle array
-     * @param next_ The proposed next cardinality_ which will be populated in the oracle array
-     * @return next_ The next cardinality_ which will be populated in the oracle
-     */
-    function grow(
-        Observation[65535] storage self,
-        uint16 current_,
-        uint16 next_
-    ) internal returns (uint16) {
-        unchecked {
-            // no-op if the passed next value isn't greater than the current next value
-            if (next_ <= current_) return current_;
-            // store in each slot to prevent fresh SSTOREs in swaps
-            // this data will not be used because the initialized boolean is still false
-            for (uint16 i = current_; i < next_; i++) {
-                self[i].blockTimestamp = 1;
-            }
-            return next_;
         }
     }
 
@@ -191,50 +193,6 @@ library Oracle {
         }
     }
 
-    /** @notice Fetches the observations beforeOrAt_ and atOrAfter_ a given target_, i.e. where [beforeOrAt_, atOrAfter_] is satisfied
-     * @dev Assumes there is at least 1 initialized observation.
-     * Used by observeSingle() to compute the counterfactual accumulator values as of a given block timestamp.
-     * @param self The stored oracle array
-     * @param time_ The current block.timestamp
-     * @param target_ The timestamp at which the reserved observation should be for
-     * @param tick_ The active tick at the time of the returned or simulated observation
-     * @param index_ The index_ of the observation that was most recently written to the observations array
-     * @param cardinality_ The number of populated elements in the oracle array
-     * @return beforeOrAt_ The observation which occurred at, or before, the given timestamp
-     * @return atOrAfter_ The observation which occurred at, or after, the given timestamp
-     */
-    function getSurroundingObservations(
-        Observation[65535] storage self,
-        uint32 time_,
-        uint32 target_,
-        int24 tick_,
-        uint16 index_,
-        uint16 cardinality_
-    ) private view returns (Observation memory beforeOrAt_, Observation memory atOrAfter_) {
-        unchecked {
-            // optimistically set before to the newest observation
-            beforeOrAt_ = self[index_];
-
-            // if the target_ is chronologically at or after the newest observation, we can early return
-            if (lte(time_, beforeOrAt_.blockTimestamp, target_)) {
-                if (beforeOrAt_.blockTimestamp == target_) {
-                    // if newest observation equals target_, we're in the same block, so we can ignore atOrAfter_
-                    return (beforeOrAt_, atOrAfter_);
-                } else {
-                    // otherwise, we need to transform
-                    return (beforeOrAt_, transform(beforeOrAt_, target_, tick_));
-                }
-            }
-
-            // now, set before to the oldest observation
-            beforeOrAt_ = self[(index_ + 1) % cardinality_];
-            if (!beforeOrAt_.initialized) beforeOrAt_ = self[0];
-
-            // if we've reached this point, we have to binary search
-            return binarySearch(self, time_, target_, index_, cardinality_);
-        }
-    }
-
     /** @notice Fetches the observations beforeOrAt_ and atOrAfter_ a target_, i.e. where [beforeOrAt_, atOrAfter_] is satisfied.
      * The result may be the same observation, or adjacent observations.
      * @dev The answer must be contained in the array, used when the target_ is located within the stored observation
@@ -279,6 +237,50 @@ library Oracle {
                 if (!targetAtOrAfter_) right_ = mid_ - 1;
                 else left_ = mid_ + 1;
             }
+        }
+    }
+
+    /** @notice Fetches the observations beforeOrAt_ and atOrAfter_ a given target_, i.e. where [beforeOrAt_, atOrAfter_] is satisfied
+     * @dev Assumes there is at least 1 initialized observation.
+     * Used by observeSingle() to compute the counterfactual accumulator values as of a given block timestamp.
+     * @param self The stored oracle array
+     * @param time_ The current block.timestamp
+     * @param target_ The timestamp at which the reserved observation should be for
+     * @param tick_ The active tick at the time of the returned or simulated observation
+     * @param index_ The index_ of the observation that was most recently written to the observations array
+     * @param cardinality_ The number of populated elements in the oracle array
+     * @return beforeOrAt_ The observation which occurred at, or before, the given timestamp
+     * @return atOrAfter_ The observation which occurred at, or after, the given timestamp
+     */
+    function getSurroundingObservations(
+        Observation[65535] storage self,
+        uint32 time_,
+        uint32 target_,
+        int24 tick_,
+        uint16 index_,
+        uint16 cardinality_
+    ) private view returns (Observation memory beforeOrAt_, Observation memory atOrAfter_) {
+        unchecked {
+            // optimistically set before to the newest observation
+            beforeOrAt_ = self[index_];
+
+            // if the target_ is chronologically at or after the newest observation, we can early return
+            if (lte(time_, beforeOrAt_.blockTimestamp, target_)) {
+                if (beforeOrAt_.blockTimestamp == target_) {
+                    // if newest observation equals target_, we're in the same block, so we can ignore atOrAfter_
+                    return (beforeOrAt_, atOrAfter_);
+                } else {
+                    // otherwise, we need to transform
+                    return (beforeOrAt_, transform(beforeOrAt_, target_, tick_));
+                }
+            }
+
+            // now, set before to the oldest observation
+            beforeOrAt_ = self[(index_ + 1) % cardinality_];
+            if (!beforeOrAt_.initialized) beforeOrAt_ = self[0];
+
+            // if we've reached this point, we have to binary search
+            return binarySearch(self, time_, target_, index_, cardinality_);
         }
     }
 

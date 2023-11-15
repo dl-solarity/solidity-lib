@@ -142,7 +142,7 @@ library TickHelper {
         // second inequality must be < because the price can never reach the price at the max tick
         require(
             sqrtPriceX96_ >= MIN_SQRT_RATIO && sqrtPriceX96_ < MAX_SQRT_RATIO,
-            "TickHelper: not in range"
+            "TickHelper: sqrtPriceX96 not in range"
         );
         uint256 ratio_ = uint256(sqrtPriceX96_) << 32;
 

@@ -7,7 +7,7 @@ import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 import {DecimalsConverter} from "../libs/utils/DecimalsConverter.sol";
-import {TickHelper} from "./external-modules-UniswapV3Oracle/TickHelper.sol";
+import {TickHelper} from "./external-modules-uniswapV3/TickHelper.sol";
 
 /**
  * @notice UniswapV3Oracle module
