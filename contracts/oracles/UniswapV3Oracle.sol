@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
@@ -31,11 +32,11 @@ abstract contract UniswapV3Oracle is Initializable {
 
     /**
      * @notice The function to retrieve the price of a token following the configured route
-     * @dev The function returns price multplied by 10 in power of decimals of the quoteToken_. If amount is zero, returns (0, 0).
-     * @param path_ The path of token address, the last one is token in which price will be returned
-     * @param fees_ The array of fees for particular pools
-     * @param amount_ The amount of baseToken_
-     * @param period_ The time period
+     * @dev The function returns price in quote token decimals. If amount is zero, returns (0, 0).
+     * @param path_ the path of token address, the last one is token in which price will be returned
+     * @param fees_ the array of fees for particular pools
+     * @param amount_ the amount of baseToken_
+     * @param period_ the time period
      * @return amount_ the price of start token in quote token
      * @return minPeriod_ the oldest period for which there is an observation in case period_ time ago there was no observation
      */
@@ -58,21 +59,22 @@ abstract contract UniswapV3Oracle is Initializable {
         if (amount_ == 0) return (0, 0);
 
         uint32 minPeriod_ = period_;
-        uint128 base_ = 1;
 
         for (uint256 i = 0; i < pathLength_ - 1; i++) {
-            address nextToken_ = path_[i + 1];
+            address baseToken_ = path_[i];
 
             (uint256 price_, uint32 time_) = _getPriceOfTokenInToken(
-                path_[i],
-                nextToken_,
+                baseToken_,
+                path_[i + 1],
                 fees_[i],
                 period_
             );
 
-            amount_ = (price_ * amount_) / base_;
-
-            base_ = uint128(10) ** DecimalsConverter.decimals(nextToken_);
+            amount_ = Math.mulDiv(
+                price_,
+                amount_,
+                uint128(10) ** DecimalsConverter.decimals(baseToken_)
+            );
 
             if (minPeriod_ > time_) {
                 minPeriod_ = time_;
@@ -89,14 +91,9 @@ abstract contract UniswapV3Oracle is Initializable {
             pool_
         ).slot0();
 
-        uint256 newIndex_;
-        if (observationIndex_ + 1 < observationCardinality_) {
-            newIndex_ = observationIndex_ + 1;
-        } else {
-            newIndex_ = 0;
-        }
-
-        (uint32 blockTimestamp_, , , ) = IUniswapV3Pool(pool_).observations(newIndex_);
+        (uint32 blockTimestamp_, , , ) = IUniswapV3Pool(pool_).observations(
+            (observationIndex_ + 1) % observationCardinality_
+        );
 
         return blockTimestamp_;
     }
@@ -108,6 +105,7 @@ abstract contract UniswapV3Oracle is Initializable {
     function _getPriceOfTokenInToken(
         address baseToken_,
         address quoteToken_,
+        //uint256 amount_,
         uint24 fee_,
         uint32 period_
     ) private view returns (uint256, uint32) {
@@ -115,41 +113,30 @@ abstract contract UniswapV3Oracle is Initializable {
 
         if (baseToken_ == quoteToken_) {
             return (base_, period_);
-        } else {
-            address pool_ = uniswapV3Factory.getPool(baseToken_, quoteToken_, fee_);
-
-            require(pool_ != address(0), "UniswapV3Oracle: such pool doesn't exist");
-
-            uint32 oldest_ = _findOldestObservation(pool_); //oldest available timestamp
-
-            require(
-                oldest_ != block.timestamp,
-                "UniswapV3Oracle: the oldest observation is on current block"
-            );
-
-            if (oldest_ <= block.timestamp - period_) {
-                return (
-                    TickHelper.getQuoteAtTick(
-                        TickHelper.consult(pool_, period_),
-                        base_,
-                        baseToken_,
-                        quoteToken_
-                    ),
-                    period_
-                );
-            } else {
-                uint32 newPeriod_ = uint32(block.timestamp) - oldest_;
-
-                return (
-                    TickHelper.getQuoteAtTick(
-                        TickHelper.consult(pool_, newPeriod_),
-                        base_,
-                        baseToken_,
-                        quoteToken_
-                    ),
-                    newPeriod_
-                );
-            }
         }
+        address pool_ = uniswapV3Factory.getPool(baseToken_, quoteToken_, fee_);
+
+        require(pool_ != address(0), "UniswapV3Oracle: such pool doesn't exist");
+
+        uint32 oldest_ = _findOldestObservation(pool_); //oldest available timestamp
+
+        require(
+            oldest_ != block.timestamp,
+            "UniswapV3Oracle: the oldest observation is on current block"
+        );
+
+        if (oldest_ > block.timestamp - period_) {
+            period_ = uint32(block.timestamp) - oldest_;
+        }
+
+        return (
+            TickHelper.getQuoteAtTick(
+                TickHelper.consult(pool_, period_),
+                base_,
+                baseToken_,
+                quoteToken_
+            ),
+            period_
+        );
     }
 }
