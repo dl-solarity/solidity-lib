@@ -105,7 +105,6 @@ abstract contract UniswapV3Oracle is Initializable {
     function _getPriceOfTokenInToken(
         address baseToken_,
         address quoteToken_,
-        //uint256 amount_,
         uint24 fee_,
         uint32 period_
     ) private view returns (uint256, uint32) {
