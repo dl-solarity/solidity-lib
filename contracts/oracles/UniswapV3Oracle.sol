@@ -43,7 +43,7 @@ abstract contract UniswapV3Oracle is Initializable {
     function getPriceOfTokenInToken(
         address[] memory path_,
         uint24[] memory fees_,
-        uint256 amount_,
+        uint128 amount_,
         uint32 period_
     ) public view returns (uint256, uint32) {
         uint256 pathLength_ = path_.length;
@@ -62,18 +62,22 @@ abstract contract UniswapV3Oracle is Initializable {
 
         for (uint256 i = 0; i < pathLength_ - 1; i++) {
             address baseToken_ = path_[i];
+            address quoteToken_ = path_[i + 1];
 
             (uint256 price_, uint32 time_) = _getPriceOfTokenInToken(
                 baseToken_,
-                path_[i + 1],
+                quoteToken_,
+                amount_,
                 fees_[i],
                 period_
             );
 
-            amount_ = Math.mulDiv(
-                price_,
-                amount_,
-                uint128(10) ** DecimalsConverter.decimals(baseToken_)
+            amount_ = uint128(
+                Math.mulDiv(
+                    price_, //baseDecimals * price * amount
+                    10 ** DecimalsConverter.decimals(quoteToken_),
+                    10 ** DecimalsConverter.decimals(baseToken_)
+                )
             );
 
             if (minPeriod_ > time_) {
@@ -105,14 +109,14 @@ abstract contract UniswapV3Oracle is Initializable {
     function _getPriceOfTokenInToken(
         address baseToken_,
         address quoteToken_,
+        uint128 amount_,
         uint24 fee_,
         uint32 period_
     ) private view returns (uint256, uint32) {
-        uint128 base_ = uint128(10) ** DecimalsConverter.decimals(quoteToken_);
-
         if (baseToken_ == quoteToken_) {
-            return (base_, period_);
+            return (uint256(amount_), period_);
         }
+
         address pool_ = uniswapV3Factory.getPool(baseToken_, quoteToken_, fee_);
 
         require(pool_ != address(0), "UniswapV3Oracle: such pool doesn't exist");
@@ -131,7 +135,7 @@ abstract contract UniswapV3Oracle is Initializable {
         return (
             TickHelper.getQuoteAtTick(
                 TickHelper.consult(pool_, period_),
-                base_,
+                amount_,
                 baseToken_,
                 quoteToken_
             ),

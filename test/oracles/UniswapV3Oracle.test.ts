@@ -84,7 +84,7 @@ describe("UniswapV3Oracle", () => {
     });
 
     it("should correctly get price if it older than observation", async () => {
-      [a_token, b_token] = await deployTokens(["A", "B"], [18, 2]);
+      [a_token, b_token] = await deployTokens(["A", "B"], [18, 6]);
 
       pool = await createPools(a_token, b_token);
 
@@ -98,7 +98,7 @@ describe("UniswapV3Oracle", () => {
 
       let ans = await oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 5n * 10n ** 18n, 5);
 
-      expect(ans[0]).to.equal(500);
+      expect(ans[0]).to.equal(5 * 10 ** 6);
       expect(ans[1]).to.equal((await time.latest()) - timeFirst - 1);
     });
 
@@ -122,9 +122,9 @@ describe("UniswapV3Oracle", () => {
       let ans = await oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10n ** 18n, 3);
 
       if (a_token < b_token) {
-        expect(ans[0]).to.equal(Math.floor(1.0001 ** -111 * 1000) * 10 ** 6);
+        expect(ans[0]).to.equal(Math.floor(1.0001 ** -111 * 1000 * 10 ** 6));
       } else {
-        expect(ans[0]).to.equal(Math.floor(1.0001 ** 111 * 1000) * 10 ** 6);
+        expect(ans[0]).to.equal(Math.floor(1.0001 ** 111 * 1000 * 10 ** 6));
       }
 
       expect(ans[1]).to.equal(3);
@@ -202,37 +202,6 @@ describe("UniswapV3Oracle", () => {
         expect(ans[0]).to.equal(Math.floor(1.0001 ** -avgTick * 10 ** 6));
       }
       expect(ans[1]).to.equal((await time.latest()) - firstTime - 1); //time of first observation
-    });
-
-    it("should correctly get price with huge tick", async () => {
-      [a_token, b_token] = await deployTokens(["A", "B"], [24, 24]);
-      pool = await createPools(a_token, b_token);
-
-      await pool.initialize(encodePriceSqrt(1, 1));
-      await pool.increaseObservationCardinalityNext(3);
-
-      await time.increaseTo((await time.latest()) + 1);
-      await pool.addObservation(500000);
-
-      await time.increaseTo((await time.latest()) + 3);
-
-      let ans = await oracle.getPriceOfTokenInToken([a_token, b_token], [FeeAmount.MEDIUM], 10n ** 48n, PERIOD);
-
-      if (a_token < b_token) {
-        expect(ans[0] / 10n ** 59n).to.equal(Math.floor(1.0001 ** 500000 / 10 ** 11)); //not very precise for so big tick
-      } else {
-        expect(ans[0] / 10n ** 24n).to.equal(Math.floor(1.0001 ** -500000 * 10 ** 24));
-      }
-      expect(ans[1]).to.equal(PERIOD);
-
-      //reverse
-      ans = await oracle.getPriceOfTokenInToken([b_token, a_token], [FeeAmount.MEDIUM], 10n ** 24n, PERIOD);
-
-      if (a_token < b_token) {
-        expect(ans[0]).to.equal(Math.floor(1.0001 ** -500000 * 10 ** 24));
-      } else {
-        expect(ans[0] / 10n ** 35n).to.equal(Math.floor(1.0001 ** 500000 / 10 ** 11));
-      }
     });
 
     it("should return 0 if amount is 0", async () => {

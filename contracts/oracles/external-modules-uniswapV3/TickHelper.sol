@@ -137,152 +137,158 @@ library TickHelper {
      * @return tick_ The greatest tick for which the ratio is less than or equal to the input ratio
      */
     function getTickAtSqrtRatio(uint160 sqrtPriceX96_) internal pure returns (int24 tick_) {
-        // second inequality must be < because the price can never reach the price at the max tick
-        require(
-            sqrtPriceX96_ >= MIN_SQRT_RATIO && sqrtPriceX96_ < MAX_SQRT_RATIO,
-            "TickHelper: sqrtPriceX96 not in range"
-        );
-        uint256 ratio_ = uint256(sqrtPriceX96_) << 32;
+        unchecked {
+            // second inequality must be < because the price can never reach the price at the max tick
+            require(
+                sqrtPriceX96_ >= MIN_SQRT_RATIO && sqrtPriceX96_ < MAX_SQRT_RATIO,
+                "TickHelper: sqrtPriceX96 not in range"
+            );
+            uint256 ratio_ = uint256(sqrtPriceX96_) << 32;
 
-        uint256 tempRatio_ = ratio_;
-        uint256 msb_ = 0; //Most significant bit
+            uint256 tempRatio_ = ratio_;
+            uint256 msb_ = 0; //Most significant bit
 
-        assembly {
-            let f := shl(7, gt(tempRatio_, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
-            msb_ := or(msb_, f)
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            let f := shl(6, gt(tempRatio_, 0xFFFFFFFFFFFFFFFF))
-            msb_ := or(msb_, f)
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            let f := shl(5, gt(tempRatio_, 0xFFFFFFFF))
-            msb_ := or(msb_, f)
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            let f := shl(4, gt(tempRatio_, 0xFFFF))
-            msb_ := or(msb_, f)
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            let f := shl(3, gt(tempRatio_, 0xFF))
-            msb_ := or(msb_, f)
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            let f := shl(2, gt(tempRatio_, 0xF))
-            msb_ := or(msb_, f)
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            let f := shl(1, gt(tempRatio_, 0x3))
-            msb_ := or(msb_, f)
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            let f := gt(tempRatio_, 0x1)
-            msb_ := or(msb_, f)
-        }
+            assembly {
+                let f := shl(7, gt(tempRatio_, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
+                msb_ := or(msb_, f)
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                let f := shl(6, gt(tempRatio_, 0xFFFFFFFFFFFFFFFF))
+                msb_ := or(msb_, f)
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                let f := shl(5, gt(tempRatio_, 0xFFFFFFFF))
+                msb_ := or(msb_, f)
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                let f := shl(4, gt(tempRatio_, 0xFFFF))
+                msb_ := or(msb_, f)
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                let f := shl(3, gt(tempRatio_, 0xFF))
+                msb_ := or(msb_, f)
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                let f := shl(2, gt(tempRatio_, 0xF))
+                msb_ := or(msb_, f)
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                let f := shl(1, gt(tempRatio_, 0x3))
+                msb_ := or(msb_, f)
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                let f := gt(tempRatio_, 0x1)
+                msb_ := or(msb_, f)
+            }
 
-        if (msb_ >= 128) tempRatio_ = ratio_ >> (msb_ - 127);
-        else tempRatio_ = ratio_ << (127 - msb_);
+            if (msb_ >= 128) tempRatio_ = ratio_ >> (msb_ - 127);
+            else tempRatio_ = ratio_ << (127 - msb_);
 
-        int256 log_2 = (int256(msb_) - 128) << 64;
+            int256 log_2 = (int256(msb_) - 128) << 64;
 
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(63, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(62, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(61, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(60, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(59, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(58, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(57, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(56, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(55, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(54, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(53, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(52, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(51, f))
-            tempRatio_ := shr(f, tempRatio_)
-        }
-        assembly {
-            tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
-            let f := shr(128, tempRatio_)
-            log_2 := or(log_2, shl(50, f))
-        }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(63, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(62, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(61, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(60, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(59, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(58, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(57, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(56, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(55, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(54, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(53, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(52, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(51, f))
+                tempRatio_ := shr(f, tempRatio_)
+            }
+            assembly {
+                tempRatio_ := shr(127, mul(tempRatio_, tempRatio_))
+                let f := shr(128, tempRatio_)
+                log_2 := or(log_2, shl(50, f))
+            }
 
-        int256 log_sqrt10001_ = log_2 * 255738958999603826347141; // 128.128 number
+            int256 log_sqrt10001_ = log_2 * 255738958999603826347141; // 128.128 number
 
-        int24 tickLow_ = int24((log_sqrt10001_ - 3402992956809132418596140100660247210) >> 128);
-        int24 tickHi_ = int24((log_sqrt10001_ + 291339464771989622907027621153398088495) >> 128);
+            int24 tickLow_ = int24(
+                (log_sqrt10001_ - 3402992956809132418596140100660247210) >> 128
+            );
+            int24 tickHi_ = int24(
+                (log_sqrt10001_ + 291339464771989622907027621153398088495) >> 128
+            );
 
-        tick_ = tickLow_ == tickHi_
-            ? tickLow_
-            : (getSqrtRatioAtTick(tickHi_) <= sqrtPriceX96_ ? tickHi_ : tickLow_);
+            tick_ = tickLow_ == tickHi_
+                ? tickLow_
+                : (getSqrtRatioAtTick(tickHi_) <= sqrtPriceX96_ ? tickHi_ : tickLow_);
+        }
     }
 }
