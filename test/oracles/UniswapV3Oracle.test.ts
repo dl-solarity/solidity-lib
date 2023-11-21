@@ -165,6 +165,20 @@ describe("UniswapV3Oracle", () => {
       expect(ans[1]).to.equal((await time.latest()) - firstTime - 1); //time of first observation
     });
 
+    it("should work correct is some observations aren't initialized", async () => {
+      pool = await createPools(A_TOKEN, B_TOKEN);
+
+      const timeFirst = (await time.latest()) + 2;
+      await time.increaseTo(timeFirst);
+      await pool.initialize(encodePriceSqrt(10 ** 6, 10 ** 3));
+
+      await pool.increaseObservationCardinalityNext(4);
+      await pool.addObservation(-111);
+
+      let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 10, 3);
+      expect(ans[1]).to.equal((await time.latest()) - timeFirst - 1);
+    });
+
     it("should return 0 if amount is 0", async () => {
       let ans = await oracle.getPriceOfTokenInToken([A_TOKEN, A_TOKEN], [FeeAmount.MEDIUM], 0, PERIOD);
 
@@ -194,6 +208,14 @@ describe("UniswapV3Oracle", () => {
       );
     });
 
+    it("should return if pool isn't initialized", async () => {
+      pool = await createPools(A_TOKEN, B_TOKEN);
+
+      await expect(oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 10, PERIOD)).to.be.revertedWith(
+        "UniswapV3Oracle: pool is not initialized"
+      );
+    });
+
     it("should not get price if period larger than current timestamp", async () => {
       await expect(
         oracle.getPriceOfTokenInToken([A_TOKEN, A_TOKEN], [FeeAmount.MEDIUM], 10, (await time.latest()) + 10)
@@ -216,10 +238,17 @@ describe("UniswapV3Oracle", () => {
       );
     });
 
-    it("should revert if amount is too large", async () => {
+    it("should revert if amount doesn't fit", async () => {
+      pool = await createPools(A_TOKEN, B_TOKEN);
+      await pool.initialize(encodePriceSqrt(10 ** 18, 10 ** 3));
+      await pool.increaseObservationCardinalityNext(2);
+      await pool.addObservation(400000);
+
+      await time.increaseTo((await time.latest()) + 1);
+
       await expect(
-        oracle.getPriceOfTokenInToken([A_TOKEN, A_TOKEN], [FeeAmount.MEDIUM], 10n ** 41n, 1)
-      ).to.be.revertedWith("UniswapV3Oracle: amount_ will overflow");
+        oracle.getPriceOfTokenInToken([A_TOKEN, B_TOKEN], [FeeAmount.MEDIUM], 10n ** 38n, 1)
+      ).to.be.revertedWith("SafeCast: value doesn't fit in 128 bits");
     });
 
     it("should not get price if tick bigger than max tick", async () => {

@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
@@ -34,7 +35,7 @@ abstract contract UniswapV3Oracle is Initializable {
      * @dev The function returns price in quote token decimals. If amount is zero, returns (0, 0).
      * @param path_ the path of token address, the last one is token in which price will be returned
      * @param fees_ the array of fees for particular pools
-     * @param amount_ the amount of baseToken_. Must fit into uint128
+     * @param amount_ the amount of baseToken_
      * @param period_ the time period
      * @return amount_ the price of start token in quote token
      * @return minPeriod_ the oldest period for which there is an observation in case period_ time ago there was no observation
@@ -42,9 +43,9 @@ abstract contract UniswapV3Oracle is Initializable {
     function getPriceOfTokenInToken(
         address[] memory path_,
         uint24[] memory fees_,
-        uint256 amount_,
+        uint128 amount_,
         uint32 period_
-    ) public view returns (uint256, uint32) {
+    ) public view returns (uint128, uint32) {
         uint256 pathLength_ = path_.length;
 
         require(pathLength_ > 1, "UniswapV3Oracle: invalid path");
@@ -55,15 +56,14 @@ abstract contract UniswapV3Oracle is Initializable {
         );
         require(period_ > 0, "UniswapV3Oracle: period can't be 0");
 
-        if (amount_ == 0) return (0, 0);
+        if (amount_ == 0) {
+            return (0, 0);
+        }
 
         uint32 minPeriod_ = period_;
 
         for (uint256 i = 0; i < pathLength_ - 1; i++) {
-            require(amount_ <= type(uint128).max, "UniswapV3Oracle: amount_ will overflow");
-
-            uint32 time_;
-            (amount_, time_) = _getPriceOfTokenInToken(
+            (uint256 price_, uint32 time_) = _getPriceOfTokenInToken(
                 path_[i],
                 path_[i + 1],
                 amount_,
@@ -71,10 +71,13 @@ abstract contract UniswapV3Oracle is Initializable {
                 period_
             );
 
+            amount_ = SafeCast.toUint128(price_);
+
             if (minPeriod_ > time_) {
                 minPeriod_ = time_;
             }
         }
+
         return (amount_, minPeriod_);
     }
 
@@ -86,9 +89,15 @@ abstract contract UniswapV3Oracle is Initializable {
             pool_
         ).slot0();
 
-        (uint32 blockTimestamp_, , , ) = IUniswapV3Pool(pool_).observations(
+        require(observationCardinality_ > 0, "UniswapV3Oracle: pool is not initialized");
+
+        (uint32 blockTimestamp_, , , bool initialized_) = IUniswapV3Pool(pool_).observations(
             (observationIndex_ + 1) % observationCardinality_
         );
+
+        if (!initialized_) {
+            (blockTimestamp_, , , ) = IUniswapV3Pool(pool_).observations(0);
+        }
 
         return blockTimestamp_;
     }
@@ -100,7 +109,7 @@ abstract contract UniswapV3Oracle is Initializable {
     function _getPriceOfTokenInToken(
         address baseToken_,
         address quoteToken_,
-        uint256 amount_,
+        uint128 amount_,
         uint24 fee_,
         uint32 period_
     ) private view returns (uint256, uint32) {
@@ -119,14 +128,12 @@ abstract contract UniswapV3Oracle is Initializable {
             "UniswapV3Oracle: the oldest observation is on current block"
         );
 
-        if (oldest_ > block.timestamp - period_) {
-            period_ = uint32(block.timestamp) - oldest_;
-        }
+        period_ = uint32(Math.min(uint32(block.timestamp) - oldest_, period_));
 
         return (
             TickHelper.getQuoteAtTick(
                 TickHelper.consult(pool_, period_),
-                uint128(amount_),
+                amount_,
                 baseToken_,
                 quoteToken_
             ),

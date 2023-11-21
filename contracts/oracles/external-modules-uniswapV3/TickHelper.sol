@@ -21,22 +21,26 @@ library TickHelper {
      * @return timeWeightedAverageTick_ The arithmetic mean tick from (block.timestamp - secondsAgo) to block.timestamp
      */
     function consult(address pool_, uint32 period_) internal view returns (int24) {
-        uint32[] memory secondAgos_ = new uint32[](2);
-        secondAgos_[0] = period_;
-        secondAgos_[1] = 0;
+        unchecked {
+            uint32[] memory secondAgos_ = new uint32[](2);
+            secondAgos_[0] = period_;
+            secondAgos_[1] = 0;
 
-        (int56[] memory tickCumulatives_, ) = IUniswapV3Pool(pool_).observe(secondAgos_);
+            (int56[] memory tickCumulatives_, ) = IUniswapV3Pool(pool_).observe(secondAgos_);
 
-        int56 tickCumulativesDelta_ = tickCumulatives_[1] - tickCumulatives_[0];
+            int56 tickCumulativesDelta_ = tickCumulatives_[1] - tickCumulatives_[0];
 
-        int24 timeWeightedAverageTick_ = int24(tickCumulativesDelta_ / int(uint256(period_)));
+            int24 timeWeightedAverageTick_ = int24(tickCumulativesDelta_ / int(uint256(period_)));
 
-        // Always round to negative infinity
-        if (tickCumulativesDelta_ < 0 && (tickCumulativesDelta_ % int(uint256(period_)) != 0)) {
-            timeWeightedAverageTick_--;
+            // Always round to negative infinity
+            if (
+                tickCumulativesDelta_ < 0 && (tickCumulativesDelta_ % int(uint256(period_)) != 0)
+            ) {
+                timeWeightedAverageTick_--;
+            }
+
+            return timeWeightedAverageTick_;
         }
-
-        return timeWeightedAverageTick_;
     }
 
     /**
@@ -53,21 +57,23 @@ library TickHelper {
         address baseToken_,
         address quoteToken_
     ) internal pure returns (uint256 quoteAmount_) {
-        uint160 sqrtRatioX96_ = getSqrtRatioAtTick(tick_);
+        unchecked {
+            uint160 sqrtRatioX96_ = getSqrtRatioAtTick(tick_);
 
-        // Calculate quoteAmount with better precision if it doesn't overflow when multiplied by itself
-        if (sqrtRatioX96_ <= type(uint128).max) {
-            uint256 ratioX192_ = uint256(sqrtRatioX96_) * sqrtRatioX96_;
+            // Calculate quoteAmount with better precision if it doesn't overflow when multiplied by itself
+            if (sqrtRatioX96_ <= type(uint128).max) {
+                uint256 ratioX192_ = uint256(sqrtRatioX96_) * sqrtRatioX96_;
 
-            quoteAmount_ = baseToken_ < quoteToken_
-                ? Math.mulDiv(ratioX192_, baseAmount_, 1 << 192)
-                : Math.mulDiv(1 << 192, baseAmount_, ratioX192_);
-        } else {
-            uint256 ratioX128_ = Math.mulDiv(sqrtRatioX96_, sqrtRatioX96_, 1 << 64);
+                quoteAmount_ = baseToken_ < quoteToken_
+                    ? Math.mulDiv(ratioX192_, baseAmount_, 1 << 192)
+                    : Math.mulDiv(1 << 192, baseAmount_, ratioX192_);
+            } else {
+                uint256 ratioX128_ = Math.mulDiv(sqrtRatioX96_, sqrtRatioX96_, 1 << 64);
 
-            quoteAmount_ = baseToken_ < quoteToken_
-                ? Math.mulDiv(ratioX128_, baseAmount_, 1 << 128)
-                : Math.mulDiv(1 << 128, baseAmount_, ratioX128_);
+                quoteAmount_ = baseToken_ < quoteToken_
+                    ? Math.mulDiv(ratioX128_, baseAmount_, 1 << 128)
+                    : Math.mulDiv(1 << 128, baseAmount_, ratioX128_);
+            }
         }
     }
 
