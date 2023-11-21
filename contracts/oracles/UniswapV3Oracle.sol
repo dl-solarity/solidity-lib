@@ -7,7 +7,6 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
-import {DecimalsConverter} from "../libs/utils/DecimalsConverter.sol";
 import {TickHelper} from "./external-modules-uniswapV3/TickHelper.sol";
 
 /**
@@ -35,7 +34,7 @@ abstract contract UniswapV3Oracle is Initializable {
      * @dev The function returns price in quote token decimals. If amount is zero, returns (0, 0).
      * @param path_ the path of token address, the last one is token in which price will be returned
      * @param fees_ the array of fees for particular pools
-     * @param amount_ the amount of baseToken_
+     * @param amount_ the amount of baseToken_. Must fit into uint128
      * @param period_ the time period
      * @return amount_ the price of start token in quote token
      * @return minPeriod_ the oldest period for which there is an observation in case period_ time ago there was no observation
@@ -43,7 +42,7 @@ abstract contract UniswapV3Oracle is Initializable {
     function getPriceOfTokenInToken(
         address[] memory path_,
         uint24[] memory fees_,
-        uint128 amount_,
+        uint256 amount_,
         uint32 period_
     ) public view returns (uint256, uint32) {
         uint256 pathLength_ = path_.length;
@@ -61,23 +60,15 @@ abstract contract UniswapV3Oracle is Initializable {
         uint32 minPeriod_ = period_;
 
         for (uint256 i = 0; i < pathLength_ - 1; i++) {
-            address baseToken_ = path_[i];
-            address quoteToken_ = path_[i + 1];
+            require(amount_ <= type(uint128).max, "UniswapV3Oracle: amount_ will overflow");
 
-            (uint256 price_, uint32 time_) = _getPriceOfTokenInToken(
-                baseToken_,
-                quoteToken_,
+            uint32 time_;
+            (amount_, time_) = _getPriceOfTokenInToken(
+                path_[i],
+                path_[i + 1],
                 amount_,
                 fees_[i],
                 period_
-            );
-
-            amount_ = uint128(
-                Math.mulDiv(
-                    price_, //baseDecimals * price * amount
-                    10 ** DecimalsConverter.decimals(quoteToken_),
-                    10 ** DecimalsConverter.decimals(baseToken_)
-                )
             );
 
             if (minPeriod_ > time_) {
@@ -109,12 +100,12 @@ abstract contract UniswapV3Oracle is Initializable {
     function _getPriceOfTokenInToken(
         address baseToken_,
         address quoteToken_,
-        uint128 amount_,
+        uint256 amount_,
         uint24 fee_,
         uint32 period_
     ) private view returns (uint256, uint32) {
         if (baseToken_ == quoteToken_) {
-            return (uint256(amount_), period_);
+            return (amount_, period_);
         }
 
         address pool_ = uniswapV3Factory.getPool(baseToken_, quoteToken_, fee_);
@@ -135,7 +126,7 @@ abstract contract UniswapV3Oracle is Initializable {
         return (
             TickHelper.getQuoteAtTick(
                 TickHelper.consult(pool_, period_),
-                amount_,
+                uint128(amount_),
                 baseToken_,
                 quoteToken_
             ),
