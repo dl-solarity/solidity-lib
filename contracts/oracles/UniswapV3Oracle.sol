@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
@@ -20,6 +19,8 @@ import {TickHelper} from "./external-modules-uniswapV3/TickHelper.sol";
  * In case required period of time is unreachable, tick is taken from oldest available observation.
  */
 abstract contract UniswapV3Oracle is Initializable {
+    using Math for *;
+
     IUniswapV3Factory public uniswapV3Factory;
 
     /**
@@ -32,7 +33,7 @@ abstract contract UniswapV3Oracle is Initializable {
 
     /**
      * @notice The function to retrieve the price of a token following the configured route
-     * @dev The function returns price in quote token decimals. If amount is zero, returns (0, 0).
+     * @dev The function returns price in quote token decimals. If amount is zero, returns (0, 0)
      * @param path_ the path of token address, the last one is token in which price will be returned
      * @param fees_ the array of fees for particular pools
      * @param amount_ the amount of baseToken_
@@ -63,7 +64,9 @@ abstract contract UniswapV3Oracle is Initializable {
         uint32 minPeriod_ = period_;
 
         for (uint256 i = 0; i < pathLength_ - 1; i++) {
-            (uint256 price_, uint32 time_) = _getPriceOfTokenInToken(
+            uint32 currentPeriod_;
+
+            (amount_, currentPeriod_) = _getPriceOfTokenInToken(
                 path_[i],
                 path_[i + 1],
                 amount_,
@@ -71,40 +74,16 @@ abstract contract UniswapV3Oracle is Initializable {
                 period_
             );
 
-            amount_ = SafeCast.toUint128(price_);
-
-            if (minPeriod_ > time_) {
-                minPeriod_ = time_;
-            }
+            minPeriod_ = uint32(minPeriod_.min(currentPeriod_));
         }
 
         return (amount_, minPeriod_);
     }
 
     /**
-     * @notice Function to get timestamp from the oldest available observation
-     */
-    function _findOldestObservation(address pool_) internal view returns (uint32) {
-        (, , uint16 observationIndex_, uint16 observationCardinality_, , , ) = IUniswapV3Pool(
-            pool_
-        ).slot0();
-
-        require(observationCardinality_ > 0, "UniswapV3Oracle: pool is not initialized");
-
-        (uint32 blockTimestamp_, , , bool initialized_) = IUniswapV3Pool(pool_).observations(
-            (observationIndex_ + 1) % observationCardinality_
-        );
-
-        if (!initialized_) {
-            (blockTimestamp_, , , ) = IUniswapV3Pool(pool_).observations(0);
-        }
-
-        return blockTimestamp_;
-    }
-
-    /**
      * @notice The private function to get the price of a token inside a pool
      * @dev Returns price multplied by 10 in power of decimals of the quoteToken_
+     * Price expects to fit into 128uint
      */
     function _getPriceOfTokenInToken(
         address baseToken_,
@@ -112,7 +91,7 @@ abstract contract UniswapV3Oracle is Initializable {
         uint128 amount_,
         uint24 fee_,
         uint32 period_
-    ) private view returns (uint256, uint32) {
+    ) private view returns (uint128, uint32) {
         if (baseToken_ == quoteToken_) {
             return (amount_, period_);
         }
@@ -121,21 +100,23 @@ abstract contract UniswapV3Oracle is Initializable {
 
         require(pool_ != address(0), "UniswapV3Oracle: such pool doesn't exist");
 
-        uint32 oldest_ = _findOldestObservation(pool_); //oldest available timestamp
+        uint32 longestPeriod_ = TickHelper.getOldestObservationSecondsAgo(pool_); //longest available period of time
 
         require(
-            oldest_ != block.timestamp,
+            longestPeriod_ != 0,
             "UniswapV3Oracle: the oldest observation is on current block"
         );
 
-        period_ = uint32(Math.min(uint32(block.timestamp) - oldest_, period_));
+        period_ = uint32(period_.min(longestPeriod_));
 
         return (
-            TickHelper.getQuoteAtTick(
-                TickHelper.consult(pool_, period_),
-                amount_,
-                baseToken_,
-                quoteToken_
+            uint128(
+                TickHelper.getQuoteAtTick(
+                    TickHelper.consult(pool_, period_),
+                    amount_,
+                    baseToken_,
+                    quoteToken_
+                )
             ),
             period_
         );

@@ -16,9 +16,9 @@ library TickHelper {
     /**
      * @notice Calculates time-weighted means of tick and liquidity for a given Uniswap V3 pool
      * @dev Doesn't do anything with liquidity (while original OracleLibrary library in v3-periphery do)
-     * @param pool_ Address of the pool that we want to observe
-     * @param period_ Number of seconds in the past from which to calculate the time-weighted means
-     * @return timeWeightedAverageTick_ The arithmetic mean tick from (block.timestamp - secondsAgo) to block.timestamp
+     * @param pool_ address of the pool that we want to observe
+     * @param period_ number of seconds in the past from which to calculate the time-weighted means
+     * @return timeWeightedAverageTick_ the arithmetic mean tick from (block.timestamp - secondsAgo) to block.timestamp
      */
     function consult(address pool_, uint32 period_) internal view returns (int24) {
         unchecked {
@@ -44,12 +44,39 @@ library TickHelper {
     }
 
     /**
+     * @notice Given a pool, it returns the number of seconds ago of the oldest stored observation
+     * @param pool_ address of Uniswap V3 pool that we want to observe
+     * @return longestPeriod_ the number of seconds ago of the oldest observation stored for the pool
+     */
+    function getOldestObservationSecondsAgo(
+        address pool_
+    ) internal view returns (uint32 longestPeriod_) {
+        (, , uint16 observationIndex_, uint16 observationCardinality_, , , ) = IUniswapV3Pool(
+            pool_
+        ).slot0();
+
+        require(observationCardinality_ > 0, "UniswapV3Oracle: pool is not initialized");
+
+        (uint32 observationTimestamp_, , , bool initialized_) = IUniswapV3Pool(pool_).observations(
+            (observationIndex_ + 1) % observationCardinality_
+        );
+
+        // The next index might not be initialized if the cardinality is in the process of increasing
+        // In this case the oldest observation is always in index 0
+        if (!initialized_) {
+            (observationTimestamp_, , , ) = IUniswapV3Pool(pool_).observations(0);
+        }
+
+        longestPeriod_ = uint32(block.timestamp) - observationTimestamp_;
+    }
+
+    /**
      * @notice Given a tick and a token amount, calculates the amount of token received in exchange
-     * @param tick_ Tick value used to calculate the quote
-     * @param baseAmount_ Amount of token to be converted
-     * @param baseToken_ Address of an ERC20 token contract used as the baseAmount denomination
-     * @param quoteToken_ Address of an ERC20 token contract used as the quoteAmount denomination
-     * @return quoteAmount_ Amount of quoteToken received for baseAmount of baseToken
+     * @param tick_ tick value used to calculate the quote
+     * @param baseAmount_ amount of token to be converted
+     * @param baseToken_ address of an ERC20 token contract used as the baseAmount denomination
+     * @param quoteToken_ address of an ERC20 token contract used as the quoteAmount denomination
+     * @return quoteAmount_ amount of quoteToken received for baseAmount of baseToken
      */
     function getQuoteAtTick(
         int24 tick_,
@@ -80,9 +107,9 @@ library TickHelper {
     /**
      * @notice Calculates sqrt(1.0001^tick) * 2^96
      * @dev Throws if |tick| > max tick
-     * @param tick_ The input tick for the above formula
-     * @return sqrtPriceX96_ A Fixed point Q64.96 number representing the sqrt of the ratio of the two assets (currency1/currency0)
-     * at the given tick
+     * @param tick_ the input tick for the above formula
+     * @return sqrtPriceX96_ a Fixed point Q64.96 number representing the sqrt of the ratio of the two assets
+     * (currency1/currency0) at the given tick
      */
     function getSqrtRatioAtTick(int24 tick_) internal pure returns (uint160 sqrtPriceX96_) {
         unchecked {
@@ -139,8 +166,8 @@ library TickHelper {
      * @notice Calculates the greatest tick value such that getRatioAtTick(tick) <= ratio
      * @dev Throws in case sqrtPriceX96_ < MIN_SQRT_RATIO, as MIN_SQRT_RATIO is the lowest value getRatioAtTick may
      * ever return.
-     * @param sqrtPriceX96_ The sqrt ratio for which to compute the tick as a Q64.96
-     * @return tick_ The greatest tick for which the ratio is less than or equal to the input ratio
+     * @param sqrtPriceX96_ the sqrt ratio for which to compute the tick as a Q64.96
+     * @return tick_ the greatest tick for which the ratio is less than or equal to the input ratio
      */
     function getTickAtSqrtRatio(uint160 sqrtPriceX96_) internal pure returns (int24 tick_) {
         unchecked {

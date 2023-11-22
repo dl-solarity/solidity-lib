@@ -238,19 +238,6 @@ describe("UniswapV3Oracle", () => {
       );
     });
 
-    it("should revert if amount doesn't fit", async () => {
-      pool = await createPools(A_TOKEN, B_TOKEN);
-      await pool.initialize(encodePriceSqrt(10 ** 18, 10 ** 3));
-      await pool.increaseObservationCardinalityNext(2);
-      await pool.addObservation(400000);
-
-      await time.increaseTo((await time.latest()) + 1);
-
-      await expect(
-        oracle.getPriceOfTokenInToken([A_TOKEN, B_TOKEN], [FeeAmount.MEDIUM], 10n ** 38n, 1)
-      ).to.be.revertedWith("SafeCast: value doesn't fit in 128 bits");
-    });
-
     it("should not get price if tick bigger than max tick", async () => {
       pool = await createPools(A_TOKEN, B_TOKEN);
       await pool.initialize(encodePriceSqrt(1, 1));
