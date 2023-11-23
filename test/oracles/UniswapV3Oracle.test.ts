@@ -165,7 +165,7 @@ describe("UniswapV3Oracle", () => {
       expect(ans[1]).to.equal((await time.latest()) - firstTime - 1); //time of first observation
     });
 
-    it("should work correct is some observations aren't initialized", async () => {
+    it("should work correct if some observations aren't initialized", async () => {
       pool = await createPools(A_TOKEN, B_TOKEN);
 
       const timeFirst = (await time.latest()) + 2;
@@ -212,7 +212,7 @@ describe("UniswapV3Oracle", () => {
       pool = await createPools(A_TOKEN, B_TOKEN);
 
       await expect(oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 10, PERIOD)).to.be.revertedWith(
-        "UniswapV3Oracle: pool is not initialized"
+        "OracleLibrary: pool is not initialized"
       );
     });
 
@@ -248,7 +248,7 @@ describe("UniswapV3Oracle", () => {
       await time.increaseTo((await time.latest()) + 2);
 
       await expect(oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 1, 1)).to.be.revertedWith(
-        "TickHelper: invalid tick"
+        "TickMath: invalid tick"
       );
     });
 
@@ -256,7 +256,7 @@ describe("UniswapV3Oracle", () => {
       pool = await createPools(A_TOKEN, B_TOKEN);
 
       await expect(pool.initialize(encodePriceSqrt(1, 2 ** 128))).to.be.revertedWith(
-        "TickHelper: sqrtPriceX96 not in range"
+        "TickMath: sqrtPriceX96 not in range"
       );
     });
   });

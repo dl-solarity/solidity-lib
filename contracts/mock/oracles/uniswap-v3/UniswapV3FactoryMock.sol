@@ -18,15 +18,9 @@ contract UniswapV3FactoryMock {
         pool_ = deploy(token0_, token1_, fee_);
 
         getPool[token0_][token1_][fee_] = pool_;
-        // populate mapping in the reverse direction, deliberate choice to avoid the cost of comparing addresses
         getPool[token1_][token0_][fee_] = pool_;
     }
 
-    /** @dev Deploys a pool with the given parameters
-     * @param token0_ The first token of the pool by address sort order
-     * @param token1_ The second token of the pool by address sort order
-     * @param fee_ The fee collected upon every swap in the pool, denominated in hundredths of a bip
-     */
     function deploy(
         address token0_,
         address token1_,

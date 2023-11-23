@@ -7,7 +7,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
-import {TickHelper} from "./external-modules-uniswapV3/TickHelper.sol";
+import {OracleLibrary} from "../vendor/uniswap/v3-periphery/libraries/OracleLibrary.sol";
 
 /**
  * @notice UniswapV3Oracle module
@@ -65,7 +65,6 @@ abstract contract UniswapV3Oracle is Initializable {
 
         for (uint256 i = 0; i < pathLength_ - 1; i++) {
             uint32 currentPeriod_;
-
             (amount_, currentPeriod_) = _getPriceOfTokenInToken(
                 path_[i],
                 path_[i + 1],
@@ -100,7 +99,7 @@ abstract contract UniswapV3Oracle is Initializable {
 
         require(pool_ != address(0), "UniswapV3Oracle: such pool doesn't exist");
 
-        uint32 longestPeriod_ = TickHelper.getOldestObservationSecondsAgo(pool_); //longest available period of time
+        uint32 longestPeriod_ = OracleLibrary.getOldestObservationSecondsAgo(pool_);
 
         require(
             longestPeriod_ != 0,
@@ -111,8 +110,8 @@ abstract contract UniswapV3Oracle is Initializable {
 
         return (
             uint128(
-                TickHelper.getQuoteAtTick(
-                    TickHelper.consult(pool_, period_),
+                OracleLibrary.getQuoteAtTick(
+                    OracleLibrary.consult(pool_, period_),
                     amount_,
                     baseToken_,
                     quoteToken_

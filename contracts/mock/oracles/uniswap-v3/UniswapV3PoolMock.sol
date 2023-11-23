@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.4;
 
-import {Oracle} from "./Oracle.sol";
-import {TickHelper} from "../../../oracles/external-modules-uniswapV3/TickHelper.sol";
+import {Oracle} from "../../../vendor/uniswap/v3-core/libraries/Oracle.sol";
+import {TickMath} from "../../../vendor/uniswap/v3-core/libraries/TickMath.sol";
 
 contract UniswapV3PoolMock {
     using Oracle for Oracle.Observation[65535];
@@ -24,7 +24,7 @@ contract UniswapV3PoolMock {
     Oracle.Observation[65535] public observations;
 
     function initialize(uint160 sqrtPriceX96_) external {
-        int24 tick_ = TickHelper.getTickAtSqrtRatio(sqrtPriceX96_);
+        int24 tick_ = TickMath.getTickAtSqrtRatio(sqrtPriceX96_);
 
         (uint16 cardinality_, uint16 cardinalityNext_) = observations.initialize(
             _blockTimestamp()
