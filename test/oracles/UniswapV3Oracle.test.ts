@@ -3,6 +3,7 @@ import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
 import { BigNumberish } from "ethers";
+import { wei } from "@/scripts/utils/utils";
 
 import { UniswapV3OracleMock, UniswapV3FactoryMock, UniswapV3PoolMock } from "@ethers-v6";
 
@@ -48,6 +49,10 @@ describe("UniswapV3Oracle", () => {
     return BigInt(Math.sqrt(reserve1 / reserve0) * Math.pow(2, 96));
   }
 
+  function getPriceByTick(tick: number, amount: BigInt): BigInt {
+    return BigInt(Math.floor(1.0001 ** tick * Number(amount)));
+  }
+
   afterEach(reverter.revert);
 
   describe("init", () => {
@@ -82,9 +87,9 @@ describe("UniswapV3Oracle", () => {
 
       await time.increaseTo(timeFirst + 3);
 
-      let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 5n * 10n ** 18n, 5);
+      let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 5n * wei("1"), 5);
 
-      expect(ans[0]).to.equal(Math.floor(1.0001 ** -276325 * 5 * 10 ** 18));
+      expect(ans[0]).to.equal(getPriceByTick(Number((await pool.slot0()).tick), 5n * wei("1")));
       expect(ans[1]).to.equal((await time.latest()) - timeFirst - 1);
     });
 
@@ -105,7 +110,7 @@ describe("UniswapV3Oracle", () => {
 
       let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 10n ** 6n, 3);
 
-      expect(ans[0]).to.equal(Math.floor(1.0001 ** -111 * 10 ** 6));
+      expect(ans[0]).to.equal(getPriceByTick(-111, 10n ** 6n));
       expect(ans[1]).to.equal(3);
     });
 
@@ -121,17 +126,21 @@ describe("UniswapV3Oracle", () => {
       let ans = await oracle.getPriceOfTokenInToken(
         [A_TOKEN, B_TOKEN, C_TOKEN],
         [FeeAmount.MEDIUM, FeeAmount.MEDIUM],
-        2n * 10n ** 18n,
+        2n * wei("1"),
         PERIOD
       );
 
-      expect(ans[0]).to.equal(BigInt(Math.floor(1.0001 ** (-269393 - 92109) * 2 * 10 ** 18)));
+      //priceAB = 1.0001 ** tickAB * amount, priceBC = 1.0001 ** tickBC * amount,
+      //so priceAC = priceAB*priceBC = amount(1.0001**(tickAB+tickBC))
+      let compositeTick = Number((await pool.slot0()).tick + (await poolBC.slot0()).tick);
+
+      expect(ans[0]).to.equal(getPriceByTick(compositeTick, 2n * wei("1")));
       expect(ans[1]).to.equal(PERIOD);
 
       ans = await oracle.getPriceOfTokenInToken(
         [A_TOKEN, B_TOKEN, A_TOKEN],
         [FeeAmount.MEDIUM, FeeAmount.MEDIUM],
-        2n * 10n ** 18n,
+        2n * wei("1"),
         PERIOD
       );
 
@@ -161,7 +170,7 @@ describe("UniswapV3Oracle", () => {
 
       let avgTick = Math.floor((0 * 3 - 127 * 2 - 871 * 3) / 8);
 
-      expect(ans[0]).to.equal(Math.floor(1.0001 ** avgTick * 10 ** 6));
+      expect(ans[0]).to.equal(getPriceByTick(avgTick, 10n ** 6n));
       expect(ans[1]).to.equal((await time.latest()) - firstTime - 1); //time of first observation
     });
 

@@ -47,23 +47,24 @@ library OracleLibrary {
     function getOldestObservationSecondsAgo(
         address pool_
     ) internal view returns (uint32 longestPeriod_) {
-        (, , uint16 observationIndex_, uint16 observationCardinality_, , , ) = IUniswapV3Pool(
-            pool_
-        ).slot0();
+        unchecked {
+            (, , uint16 observationIndex_, uint16 observationCardinality_, , , ) = IUniswapV3Pool(
+                pool_
+            ).slot0();
 
-        require(observationCardinality_ > 0, "OracleLibrary: pool is not initialized");
+            require(observationCardinality_ > 0, "OracleLibrary: pool is not initialized");
 
-        (uint32 observationTimestamp_, , , bool initialized_) = IUniswapV3Pool(pool_).observations(
-            (observationIndex_ + 1) % observationCardinality_
-        );
+            (uint32 observationTimestamp_, , , bool initialized_) = IUniswapV3Pool(pool_)
+                .observations((observationIndex_ + 1) % observationCardinality_);
 
-        // The next index might not be initialized if the cardinality is in the process of increasing
-        // In this case the oldest observation is always in index 0
-        if (!initialized_) {
-            (observationTimestamp_, , , ) = IUniswapV3Pool(pool_).observations(0);
+            // The next index might not be initialized if the cardinality is in the process of increasing
+            // In this case the oldest observation is always in index 0
+            if (!initialized_) {
+                (observationTimestamp_, , , ) = IUniswapV3Pool(pool_).observations(0);
+            }
+
+            longestPeriod_ = uint32(block.timestamp) - observationTimestamp_;
         }
-
-        longestPeriod_ = uint32(block.timestamp) - observationTimestamp_;
     }
 
     /**
