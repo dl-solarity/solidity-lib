@@ -82,7 +82,7 @@ abstract contract UniswapV3Oracle is Initializable {
     /**
      * @notice The private function to get the price of a token inside a pool
      * @dev Returns price multplied by 10 in power of decimals of the quoteToken_
-     * Price expects to fit into 128uint
+     * Price is expected to fit into 128uint
      */
     function _getPriceOfTokenInToken(
         address baseToken_,
