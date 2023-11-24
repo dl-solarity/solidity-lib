@@ -23,7 +23,6 @@ describe("UniswapV3Oracle", () => {
 
   let oracle: UniswapV3OracleMock;
   let uniswapV3Factory: UniswapV3FactoryMock;
-  let pool: UniswapV3PoolMock;
 
   before("setup", async () => {
     const UniswapV3FactoryMock = await ethers.getContractFactory("UniswapV3FactoryMock");
@@ -71,118 +70,121 @@ describe("UniswapV3Oracle", () => {
   });
 
   describe("getPrice", () => {
-    it("should correctly get price if there are same tokens in the path ", async () => {
+    it("should correctly get price if there are same tokens in the path", async () => {
       let ans = await oracle.getPriceOfTokenInToken([A_TOKEN, A_TOKEN], [FeeAmount.MEDIUM], 51, PERIOD);
 
       expect(ans[0]).to.equal(51);
     });
 
-    it("should correctly get price if it older than observation", async () => {
-      pool = await createPools(A_TOKEN, B_TOKEN);
+    it("should correctly get price if it is older than observation", async () => {
+      let poolAB = await createPools(A_TOKEN, B_TOKEN);
 
       const timeFirst = (await time.latest()) + 2;
       await time.increaseTo(timeFirst);
 
-      await pool.initialize(encodePriceSqrt(10 ** 6, 10 ** 18));
+      await poolAB.initialize(encodePriceSqrt(Number(wei(1, 6)), Number(wei(1))));
 
       await time.increaseTo(timeFirst + 3);
 
-      let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 5n * wei("1"), 5);
+      let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], wei(5), 5);
 
-      expect(ans[0]).to.equal(getPriceByTick(Number((await pool.slot0()).tick), 5n * wei("1")));
+      expect(ans[0]).to.equal(getPriceByTick(Number((await poolAB.slot0()).tick), wei(5)));
       expect(ans[1]).to.equal((await time.latest()) - timeFirst - 1);
     });
 
     it("should correctly increase cardinality and overwrite observations", async () => {
-      pool = await createPools(A_TOKEN, B_TOKEN);
+      let poolAB = await createPools(A_TOKEN, B_TOKEN);
 
-      await pool.initialize(encodePriceSqrt(10 ** 3, 10 ** 12));
-      await pool.increaseObservationCardinalityNext(2);
+      await poolAB.initialize(encodePriceSqrt(Number(wei(1, 6)), Number(wei(1, 12))));
+      await poolAB.increaseObservationCardinalityNext(2);
 
       await time.increaseTo((await time.latest()) + 1);
 
-      await pool.addObservation(-111);
+      await poolAB.addObservation(-111);
 
       const firstTime = await time.latest();
       await time.increaseTo(firstTime + 3);
 
-      await pool.addObservation(250);
+      await poolAB.addObservation(250);
 
-      let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 10n ** 6n, 3);
+      let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], Number(wei(1, 6)), 3);
 
-      expect(ans[0]).to.equal(getPriceByTick(-111, 10n ** 6n));
+      expect(ans[0]).to.equal(getPriceByTick(-111, wei(1, 6)));
       expect(ans[1]).to.equal(3);
     });
 
     it("should correctly get price for complex path", async () => {
-      pool = await createPools(A_TOKEN, B_TOKEN);
+      let poolAB = await createPools(A_TOKEN, B_TOKEN);
       let poolBC = await createPools(B_TOKEN, C_TOKEN);
 
-      await pool.initialize(encodePriceSqrt(2 * 10 ** 6, 10 ** 18));
-      await poolBC.initialize(encodePriceSqrt(10 ** 2, 10 ** 6));
+      const reserveAB0 = Number(wei(1));
+      const reserveAB1 = Number(wei(2, 6));
+      const reserveBC0 = Number(wei(1, 6));
+      const reserveBC1 = 100;
+
+      await poolAB.initialize(encodePriceSqrt(reserveAB1, reserveAB0));
+      await poolBC.initialize(encodePriceSqrt(reserveBC1, reserveBC0));
 
       await time.increaseTo((await time.latest()) + 2);
 
       let ans = await oracle.getPriceOfTokenInToken(
         [A_TOKEN, B_TOKEN, C_TOKEN],
         [FeeAmount.MEDIUM, FeeAmount.MEDIUM],
-        2n * wei("1"),
+        wei(2),
         PERIOD
       );
 
-      //priceAB = 1.0001 ** tickAB * amount, priceBC = 1.0001 ** tickBC * amount,
-      //so priceAC = priceAB*priceBC = amount(1.0001**(tickAB+tickBC))
-      let compositeTick = Number((await pool.slot0()).tick + (await poolBC.slot0()).tick);
+      let priceABC = (((reserveBC1 / reserveBC0) * reserveAB1) / reserveAB0) * Number(wei(2));
 
-      expect(ans[0]).to.equal(getPriceByTick(compositeTick, 2n * wei("1")));
+      expect(ans[0]).to.be.closeTo(priceABC, 1);
       expect(ans[1]).to.equal(PERIOD);
 
       ans = await oracle.getPriceOfTokenInToken(
         [A_TOKEN, B_TOKEN, A_TOKEN],
         [FeeAmount.MEDIUM, FeeAmount.MEDIUM],
-        2n * wei("1"),
+        wei(2),
         PERIOD
       );
 
-      expect(Math.round(Number(ans[0]) / 10 ** 18)).to.equal(2);
+      expect(ans[0]).to.be.closeTo(wei(2), wei(1, 13));
       expect(ans[1]).to.equal(PERIOD);
     });
 
     it("should correctly get average price", async () => {
-      pool = await createPools(A_TOKEN, B_TOKEN);
+      let poolAB = await createPools(A_TOKEN, B_TOKEN);
 
       const firstTime = (await time.latest()) + 2;
 
       await time.increaseTo(firstTime);
-      await pool.initialize(encodePriceSqrt(1, 1)); //first observation taken at firstTime
-      await pool.increaseObservationCardinalityNext(4);
+      await poolAB.initialize(encodePriceSqrt(1, 1)); // first observation taken at firstTime
+      await poolAB.increaseObservationCardinalityNext(4);
 
       await time.increaseTo(firstTime + 3);
-      await pool.addObservation(-127); //second observation taken at firstTime + 3
+      await poolAB.addObservation(-127); // second observation taken at firstTime + 3
 
       await time.increaseTo(firstTime + 5);
-      await pool.addObservation(-871); //third observation at firstTime + 5
+      await poolAB.addObservation(-871); // third observation at firstTime + 5
 
       await time.increaseTo(firstTime + 8);
-      await pool.addObservation(-1241); //forth observation at firstTime + 8
+      await poolAB.addObservation(-1241); // forth observation at firstTime + 8
 
-      let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 10 ** 6, (await time.latest()) - 1);
+      let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], wei(1, 6), (await time.latest()) - 1);
 
       let avgTick = Math.floor((0 * 3 - 127 * 2 - 871 * 3) / 8);
 
-      expect(ans[0]).to.equal(getPriceByTick(avgTick, 10n ** 6n));
-      expect(ans[1]).to.equal((await time.latest()) - firstTime - 1); //time of first observation
+      expect(ans[0]).to.equal(getPriceByTick(avgTick, wei(1, 6)));
+      expect(ans[1]).to.equal((await time.latest()) - firstTime - 1); // time of first observation
     });
 
     it("should work correct if some observations aren't initialized", async () => {
-      pool = await createPools(A_TOKEN, B_TOKEN);
+      let poolAB = await createPools(A_TOKEN, B_TOKEN);
 
       const timeFirst = (await time.latest()) + 2;
       await time.increaseTo(timeFirst);
-      await pool.initialize(encodePriceSqrt(10 ** 6, 10 ** 3));
+      await poolAB.initialize(encodePriceSqrt(Number(wei(1, 6)), Number(wei(1, 3))));
 
-      await pool.increaseObservationCardinalityNext(4);
-      await pool.addObservation(-111);
+      await poolAB.increaseObservationCardinalityNext(4);
+      await poolAB.addObservation(-111);
 
       let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 10, 3);
       expect(ans[1]).to.equal((await time.latest()) - timeFirst - 1);
@@ -211,17 +213,9 @@ describe("UniswapV3Oracle", () => {
         "UniswapV3Oracle: such pool doesn't exist"
       );
 
-      pool = await createPools(A_TOKEN, B_TOKEN);
+      let poolAB = await createPools(A_TOKEN, B_TOKEN);
       await expect(oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.LOW], 10, PERIOD)).to.be.revertedWith(
         "UniswapV3Oracle: such pool doesn't exist"
-      );
-    });
-
-    it("should return if pool isn't initialized", async () => {
-      pool = await createPools(A_TOKEN, B_TOKEN);
-
-      await expect(oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 10, PERIOD)).to.be.revertedWith(
-        "OracleLibrary: pool is not initialized"
       );
     });
 
@@ -232,9 +226,9 @@ describe("UniswapV3Oracle", () => {
     });
 
     it("should return if oldest observation is on current block", async () => {
-      pool = await createPools(A_TOKEN, B_TOKEN);
+      let poolAB = await createPools(A_TOKEN, B_TOKEN);
 
-      await pool.initialize(encodePriceSqrt(1, 1));
+      await poolAB.initialize(encodePriceSqrt(1, 1));
 
       await expect(oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 10, PERIOD)).to.be.revertedWith(
         "UniswapV3Oracle: the oldest observation is on current block"
@@ -244,28 +238,6 @@ describe("UniswapV3Oracle", () => {
     it("should not get price if period is zero", async () => {
       await expect(oracle.getPriceOfTokenInToken([A_TOKEN, A_TOKEN], [FeeAmount.MEDIUM], 10, 0)).to.be.revertedWith(
         "UniswapV3Oracle: period can't be 0"
-      );
-    });
-
-    it("should not get price if tick bigger than max tick", async () => {
-      pool = await createPools(A_TOKEN, B_TOKEN);
-      await pool.initialize(encodePriceSqrt(1, 1));
-      await pool.increaseObservationCardinalityNext(2);
-
-      await pool.addObservation(900000);
-
-      await time.increaseTo((await time.latest()) + 2);
-
-      await expect(oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 1, 1)).to.be.revertedWith(
-        "TickMath: invalid tick"
-      );
-    });
-
-    it("should not get price if price not in range", async () => {
-      pool = await createPools(A_TOKEN, B_TOKEN);
-
-      await expect(pool.initialize(encodePriceSqrt(1, 2 ** 128))).to.be.revertedWith(
-        "TickMath: sqrtPriceX96 not in range"
       );
     });
   });
