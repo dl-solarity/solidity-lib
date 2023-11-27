@@ -20,7 +20,7 @@ library TickMath {
     function getSqrtRatioAtTick(int24 tick) internal pure returns (uint160 sqrtPriceX96) {
         unchecked {
             uint256 absTick = tick < 0 ? uint256(-int256(tick)) : uint256(int256(tick));
-            require(absTick <= uint256(MAX_TICK), "TickMath: invalid tick");
+            require(absTick <= uint256(MAX_TICK), "T");
 
             uint256 ratio = absTick & 0x1 != 0
                 ? 0xfffcb933bd6fad37aa2d162d1a594001
@@ -64,10 +64,7 @@ library TickMath {
     function getTickAtSqrtRatio(uint160 sqrtPriceX96) internal pure returns (int24 tick) {
         unchecked {
             // second inequality must be < because the price can never reach the price at the max tick
-            require(
-                sqrtPriceX96 >= MIN_SQRT_RATIO && sqrtPriceX96 < MAX_SQRT_RATIO,
-                "TickMath: sqrtPriceX96 not in range"
-            );
+            require(sqrtPriceX96 >= MIN_SQRT_RATIO && sqrtPriceX96 < MAX_SQRT_RATIO, "R");
             uint256 ratio = uint256(sqrtPriceX96) << 32;
 
             uint256 tempRatio = ratio;

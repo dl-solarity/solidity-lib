@@ -100,7 +100,8 @@ describe("UniswapV3Oracle", () => {
 
       await time.increaseTo((await time.latest()) + 1);
 
-      await poolAB.addObservation(-111);
+      const tickAB = -111;
+      await poolAB.addObservation(tickAB);
 
       const firstTime = await time.latest();
       await time.increaseTo(firstTime + 3);
@@ -109,7 +110,7 @@ describe("UniswapV3Oracle", () => {
 
       let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], Number(wei(1, 6)), 3);
 
-      expect(ans[0]).to.equal(getPriceByTick(-111, wei(1, 6)));
+      expect(ans[0]).to.equal(getPriceByTick(tickAB, wei(1, 6)));
       expect(ans[1]).to.equal(3);
     });
 
@@ -160,17 +161,19 @@ describe("UniswapV3Oracle", () => {
       await poolAB.increaseObservationCardinalityNext(4);
 
       await time.increaseTo(firstTime + 3);
-      await poolAB.addObservation(-127); // second observation taken at firstTime + 3
+      const tickSecond = -127;
+      await poolAB.addObservation(tickSecond); // second observation taken at firstTime + 3
 
       await time.increaseTo(firstTime + 5);
-      await poolAB.addObservation(-871); // third observation at firstTime + 5
+      const tickThird = -871;
+      await poolAB.addObservation(tickThird); // third observation at firstTime + 5
 
       await time.increaseTo(firstTime + 8);
       await poolAB.addObservation(-1241); // forth observation at firstTime + 8
 
       let ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], wei(1, 6), (await time.latest()) - 1);
 
-      let avgTick = Math.floor((0 * 3 - 127 * 2 - 871 * 3) / 8);
+      let avgTick = Math.floor((0 * 3 + tickSecond * 2 + tickThird * 3) / 8);
 
       expect(ans[0]).to.equal(getPriceByTick(avgTick, wei(1, 6)));
       expect(ans[1]).to.equal((await time.latest()) - firstTime - 1); // time of first observation
@@ -184,7 +187,8 @@ describe("UniswapV3Oracle", () => {
       await poolAB.increaseObservationCardinalityNext(2);
 
       const firstTime = await time.latest();
-      await poolAB.addObservation(-22222);
+      const tickAB = -22222;
+      await poolAB.addObservation(tickAB);
 
       await time.increaseTo(firstTime + 2);
       await poolBC.initialize(encodePriceSqrt(Number(wei(1, 8)), Number(wei(1, 3))));
@@ -207,9 +211,9 @@ describe("UniswapV3Oracle", () => {
 
       let tickBC = Math.floor((tick0 * 4 + 25000 * 2) / 6);
 
-      // priceAB = 1.0001 ** tickAB * amount, priceBC = 1.0001 ** tickBC * amount,
-      // so priceAC = priceAB * priceBC = amount(1.0001 ** (tickAB + tickBC))
-      expect(ans[0]).to.be.closeTo(getPriceByTick(tickBC - 22222, wei(3)), wei(5, 10));
+      // priceAB = 1.0001 ** tickAB, priceBC = 1.0001 ** tickBC,
+      // so priceAC = priceAB * priceBC = 1.0001 ** (tickAB + tickBC)
+      expect(ans[0]).to.be.closeTo(getPriceByTick(tickAB + tickBC, wei(3)), wei(5, 10));
       expect(ans[1]).to.equal((await time.latest()) - firstTime - 3); // time of a first observation in second pool
 
       await time.increaseTo((await time.latest()) + 2);

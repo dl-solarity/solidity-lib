@@ -51,7 +51,7 @@ library OracleLibrary {
             (, , uint16 observationIndex, uint16 observationCardinality, , , ) = IUniswapV3Pool(
                 pool
             ).slot0();
-            require(observationCardinality > 0, "not initialized");
+            require(observationCardinality > 0, "NI");
 
             (uint32 observationTimestamp, , , bool initialized) = IUniswapV3Pool(pool)
                 .observations((observationIndex + 1) % observationCardinality);
