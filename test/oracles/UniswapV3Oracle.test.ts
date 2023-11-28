@@ -279,7 +279,7 @@ describe("UniswapV3Oracle", () => {
         "UniswapV3Oracle: such pool doesn't exist"
       );
 
-      const poolAB = await createPools(A_TOKEN, B_TOKEN);
+      await createPools(A_TOKEN, B_TOKEN);
       await expect(oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.LOW], 10, PERIOD)).to.be.revertedWith(
         "UniswapV3Oracle: such pool doesn't exist"
       );
