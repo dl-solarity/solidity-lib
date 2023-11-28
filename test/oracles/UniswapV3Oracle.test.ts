@@ -4,6 +4,7 @@ import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
 import { BigNumberish } from "ethers";
 import { wei } from "@/scripts/utils/utils";
+import BigNumber from "bignumber.js";
 
 import { UniswapV3OracleMock, UniswapV3FactoryMock, UniswapV3PoolMock } from "@ethers-v6";
 
@@ -44,12 +45,22 @@ describe("UniswapV3Oracle", () => {
     return <UniswapV3PoolMock>await ethers.getContractAt("UniswapV3PoolMock", poolAddress);
   }
 
-  function encodePriceSqrt(reserve1: number, reserve0: number): BigNumberish {
-    return BigInt(Math.sqrt(reserve1 / reserve0) * Math.pow(2, 96));
+  function encodePriceSqrt(reserve1: BigNumberish, reserve0: BigNumberish): BigNumberish {
+    return new BigNumber(reserve1.toString())
+      .div(reserve0.toString())
+      .sqrt()
+      .times((2n ** 96n).toString())
+      .toString();
+
+    // this works
+    //return BigInt(Math.sqrt(Number(reserve1) / Number(reserve0)) * Math.pow(2, 96));
   }
 
-  function getPriceByTick(tick: number, amount: BigInt): BigInt {
-    return BigInt(Math.floor(1.0001 ** tick * Number(amount)));
+  function getPriceByTick(tick: BigNumberish, amount: BigNumberish): BigNumberish {
+    return BigInt(Math.floor(1.0001 ** Number(tick) * Number(amount)));
+
+    // computation takes a long long time
+    //return new BigNumber(1.0001).pow(Number(tick)).times(new BigNumber (amount.toString())).round(0).toString();
   }
 
   afterEach(reverter.revert);
