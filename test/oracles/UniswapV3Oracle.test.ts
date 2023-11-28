@@ -50,17 +50,13 @@ describe("UniswapV3Oracle", () => {
       .div(reserve0.toString())
       .sqrt()
       .times((2n ** 96n).toString())
-      .toString();
-
-    // this works
-    //return BigInt(Math.sqrt(Number(reserve1) / Number(reserve0)) * Math.pow(2, 96));
+      .toFixed(0);
   }
 
-  function getPriceByTick(tick: BigNumberish, amount: BigNumberish): BigNumberish {
-    return BigInt(Math.floor(1.0001 ** Number(tick) * Number(amount)));
+  function getPriceByTick(tick: number, amount: BigNumberish): BigNumberish {
+    BigNumber.config({ POW_PRECISION: 100 });
 
-    // computation takes a long long time
-    //return new BigNumber(1.0001).pow(Number(tick)).times(new BigNumber (amount.toString())).round(0).toString();
+    return new BigNumber("1.0001").pow(tick).times(amount.toString()).floor().toFixed(0);
   }
 
   afterEach(reverter.revert);
