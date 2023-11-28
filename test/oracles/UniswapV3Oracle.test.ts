@@ -90,7 +90,7 @@ describe("UniswapV3Oracle", () => {
       const firstTime = (await time.latest()) + 2;
       await time.increaseTo(firstTime);
 
-      await poolAB.initialize(encodePriceSqrt(Number(wei(1, 6)), Number(wei(1))));
+      await poolAB.initialize(encodePriceSqrt(wei(1, 6), wei(1)));
 
       await time.increaseTo(firstTime + 3);
 
@@ -103,7 +103,7 @@ describe("UniswapV3Oracle", () => {
     it("should correctly increase cardinality and overwrite observations", async () => {
       const poolAB = await createPools(A_TOKEN, B_TOKEN);
 
-      await poolAB.initialize(encodePriceSqrt(Number(wei(1, 6)), Number(wei(1, 12))));
+      await poolAB.initialize(encodePriceSqrt(wei(1, 6), wei(1, 12)));
       await poolAB.increaseObservationCardinalityNext(2);
 
       await time.increaseTo((await time.latest()) + 1);
@@ -116,7 +116,7 @@ describe("UniswapV3Oracle", () => {
 
       await poolAB.addObservation(250);
 
-      const ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], Number(wei(1, 6)), 3);
+      const ans = await oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], wei(1, 6), 3);
 
       expect(ans[0]).to.equal(getPriceByTick(tickAB, wei(1, 6)));
       expect(ans[1]).to.equal(3);
@@ -126,10 +126,10 @@ describe("UniswapV3Oracle", () => {
       const poolAB = await createPools(A_TOKEN, B_TOKEN);
       const poolBC = await createPools(B_TOKEN, C_TOKEN);
 
-      const reserveAB0 = Number(wei(1));
-      const reserveAB1 = Number(wei(2, 6));
-      const reserveBC0 = Number(wei(1, 6));
-      const reserveBC1 = 100;
+      const reserveAB0 = wei(1);
+      const reserveAB1 = wei(2, 6);
+      const reserveBC0 = wei(1, 6);
+      const reserveBC1 = 100n;
 
       await poolAB.initialize(encodePriceSqrt(reserveAB1, reserveAB0));
       await poolBC.initialize(encodePriceSqrt(reserveBC1, reserveBC0));
@@ -143,7 +143,7 @@ describe("UniswapV3Oracle", () => {
         PERIOD
       );
 
-      const priceABC = (((reserveBC1 / reserveBC0) * reserveAB1) / reserveAB0) * Number(wei(2));
+      const priceABC = (((wei(2) * reserveAB1) / reserveAB0) * reserveBC1) / reserveBC0;
 
       expect(ans[0]).to.be.closeTo(priceABC, 1);
       expect(ans[1]).to.equal(PERIOD);
@@ -155,7 +155,7 @@ describe("UniswapV3Oracle", () => {
         PERIOD
       );
 
-      expect(ans[0]).to.be.closeTo(wei(2), wei(1, 13));
+      expect(ans[0]).to.be.closeTo(wei(2), wei(2, 12));
       expect(ans[1]).to.equal(PERIOD);
     });
 
@@ -196,7 +196,7 @@ describe("UniswapV3Oracle", () => {
       const poolAB = await createPools(A_TOKEN, B_TOKEN);
       const poolBC = await createPools(B_TOKEN, C_TOKEN);
 
-      await poolAB.initialize(encodePriceSqrt(Number(wei(1, 6)), Number(wei(1, 18))));
+      await poolAB.initialize(encodePriceSqrt(wei(1, 6), wei(1, 18)));
       await poolAB.increaseObservationCardinalityNext(2);
 
       const firstTime = await time.latest();
@@ -204,7 +204,7 @@ describe("UniswapV3Oracle", () => {
       await poolAB.addObservation(tickAB);
 
       await time.increaseTo(firstTime + 2);
-      await poolBC.initialize(encodePriceSqrt(Number(wei(1, 8)), Number(wei(1, 3))));
+      await poolBC.initialize(encodePriceSqrt(wei(1, 8), wei(1, 3)));
       await poolBC.increaseObservationCardinalityNext(3);
 
       const tick0 = Number((await poolBC.slot0()).tick);
@@ -226,7 +226,7 @@ describe("UniswapV3Oracle", () => {
 
       // priceAB = 1.0001 ** tickAB, priceBC = 1.0001 ** tickBC,
       // so priceAC = priceAB * priceBC = 1.0001 ** (tickAB + tickBC)
-      expect(ans[0]).to.be.closeTo(getPriceByTick(tickAB + tickBC, wei(3)), wei(5, 10));
+      expect(ans[0]).to.be.closeTo(getPriceByTick(tickAB + tickBC, wei(3)), wei(5, 3));
       expect(ans[1]).to.equal((await time.latest()) - firstTime - 3); // time of a first observation in second pool
 
       await time.increaseTo((await time.latest()) + 2);
@@ -238,7 +238,8 @@ describe("UniswapV3Oracle", () => {
       );
 
       const compositeTick = Number((await poolAB.slot0()).tick + (await poolBC.slot0()).tick);
-      expect(ans[0]).to.be.closeTo(getPriceByTick(compositeTick, wei(3)), wei(5, 6));
+
+      expect(ans[0]).equal(getPriceByTick(compositeTick, wei(3)));
     });
 
     it("should work correct if some observations aren't initialized", async () => {
@@ -246,7 +247,7 @@ describe("UniswapV3Oracle", () => {
 
       const firstTime = (await time.latest()) + 2;
       await time.increaseTo(firstTime);
-      await poolAB.initialize(encodePriceSqrt(Number(wei(1, 6)), Number(wei(1, 3))));
+      await poolAB.initialize(encodePriceSqrt(wei(1, 6), wei(1, 3)));
 
       await poolAB.increaseObservationCardinalityNext(4);
       await poolAB.addObservation(-111);
