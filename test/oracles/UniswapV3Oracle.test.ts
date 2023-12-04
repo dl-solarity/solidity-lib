@@ -16,7 +16,7 @@ describe("UniswapV3Oracle", () => {
   const C_TOKEN = "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC";
   const A_B_PATH = [A_TOKEN, B_TOKEN];
 
-  const PERIOD = 2;
+  const PERIOD = 1;
   const enum FeeAmount {
     LOW = 500,
     MEDIUM = 3000,
@@ -30,9 +30,7 @@ describe("UniswapV3Oracle", () => {
     const Oracle = await ethers.getContractFactory("UniswapV3OracleMock");
 
     uniswapV3Factory = await UniswapV3FactoryMock.deploy();
-    oracle = await Oracle.deploy();
-
-    await oracle.__OracleV3Mock_init(await uniswapV3Factory.getAddress());
+    oracle = await Oracle.deploy(await uniswapV3Factory.getAddress());
 
     await reverter.snapshot();
   });
@@ -64,16 +62,6 @@ describe("UniswapV3Oracle", () => {
   describe("init", () => {
     it("should set oracle correctly", async () => {
       expect(await oracle.uniswapV3Factory()).to.equal(await uniswapV3Factory.getAddress());
-    });
-
-    it("should not initialize twice", async () => {
-      await expect(oracle.mockInit(await uniswapV3Factory.getAddress())).to.be.revertedWith(
-        "Initializable: contract is not initializing"
-      );
-
-      await expect(oracle.__OracleV3Mock_init(await uniswapV3Factory.getAddress())).to.be.revertedWith(
-        "Initializable: contract is already initialized"
-      );
     });
   });
 

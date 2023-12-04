@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.4;
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.5.0 <0.8.0;
 
-import {Oracle} from "../../../vendor/uniswap/v3-core/libraries/Oracle.sol";
-import {TickMath} from "../../../vendor/uniswap/v3-core/libraries/TickMath.sol";
+import {Oracle} from "@uniswap/v3-core/contracts/libraries/Oracle.sol";
+import {TickMath} from "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 
 contract UniswapV3PoolMock {
     using Oracle for Oracle.Observation[65535];
@@ -10,11 +10,8 @@ contract UniswapV3PoolMock {
     struct Slot0 {
         uint160 sqrtPriceX96;
         int24 tick;
-        // the most-recently updated index of the observations array
         uint16 observationIndex;
-        // the current maximum number of observations that are being stored
         uint16 observationCardinality;
-        // the next maximum number of observations to store, triggered in observations.write
         uint16 observationCardinalityNext;
         uint8 feeProtocol;
         bool unlocked;
@@ -46,6 +43,7 @@ contract UniswapV3PoolMock {
             slot0.observationIndex,
             _blockTimestamp(),
             slot0.tick,
+            0,
             slot0.observationCardinality,
             slot0.observationCardinalityNext
         );
@@ -70,16 +68,15 @@ contract UniswapV3PoolMock {
             uint160[] memory secondsPerLiquidityCumulativeX128s_
         )
     {
-        return (
+        return
             observations.observe(
                 _blockTimestamp(),
                 secondAgos_,
                 slot0.tick,
                 slot0.observationIndex,
+                0,
                 slot0.observationCardinality
-            ),
-            new uint160[](secondAgos_.length)
-        );
+            );
     }
 
     function _blockTimestamp() internal view virtual returns (uint32) {

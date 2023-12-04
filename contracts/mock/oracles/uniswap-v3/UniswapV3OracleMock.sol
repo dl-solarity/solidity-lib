@@ -1,14 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity >=0.5.0 <0.8.0;
 
 import {UniswapV3Oracle} from "../../../oracles/UniswapV3Oracle.sol";
 
 contract UniswapV3OracleMock is UniswapV3Oracle {
-    function __OracleV3Mock_init(address uniswapV3Factory_) external initializer {
-        __OracleV3_init(uniswapV3Factory_);
-    }
-
-    function mockInit(address uniswapV3Factory_) external {
-        __OracleV3_init(uniswapV3Factory_);
-    }
+    constructor(address uniswapV3Factory_) UniswapV3Oracle(uniswapV3Factory_) {}
 }

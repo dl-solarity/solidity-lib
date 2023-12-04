@@ -1,33 +1,33 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
-
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+pragma solidity >=0.5.0 <0.8.0;
 
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-
-import {OracleLibrary} from "../vendor/uniswap/v3-periphery/libraries/OracleLibrary.sol";
+import {FullMath} from "@uniswap/v3-core/contracts/libraries/FullMath.sol";
+import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
 /**
  * @notice UniswapV3Oracle module
  *
  * A contract for retrieving prices from Uniswap V3 pools.
- * Works by calculating and saving tickCumulative in every observation,
- * so some historical prices from time-weighted tick can be retrieved.
+ * Works by calculating the time-weighted average tick as difference between two tickCumulatives
+ * divided by number of second between them, tickCumulatives are taken from the newest observation
+ * and from the one nearest to required time.
+ * Price is calculated as 1.0001 in power of this tick.
  *
  * In case required period of time is unreachable, tick is taken from oldest available observation.
  */
-abstract contract UniswapV3Oracle is Initializable {
-    using Math for *;
+abstract contract UniswapV3Oracle {
+    using FullMath for *;
 
-    IUniswapV3Factory public uniswapV3Factory;
+    IUniswapV3Factory public immutable uniswapV3Factory;
 
     /**
      * @notice Constructor
+     * @dev Contract is not an Initializable because it compiler version is below 0.8.0
      * @param uniswapV3Factory_ the Uniswap V3 factory
      */
-    function __OracleV3_init(address uniswapV3Factory_) internal onlyInitializing {
+    constructor(address uniswapV3Factory_) {
         uniswapV3Factory = IUniswapV3Factory(uniswapV3Factory_);
     }
 
@@ -73,7 +73,7 @@ abstract contract UniswapV3Oracle is Initializable {
                 period_
             );
 
-            minPeriod_ = uint32(minPeriod_.min(currentPeriod_));
+            minPeriod_ = uint32(minPeriod_ < currentPeriod_ ? minPeriod_ : currentPeriod_);
         }
 
         return (amount_, minPeriod_);
@@ -105,16 +105,13 @@ abstract contract UniswapV3Oracle is Initializable {
             "UniswapV3Oracle: the oldest observation is on current block"
         );
 
-        period_ = uint32(period_.min(longestPeriod_));
+        period_ = uint32(period_ < longestPeriod_ ? period_ : longestPeriod_);
+
+        (int24 arithmeticMeanTick, ) = OracleLibrary.consult(pool_, period_);
 
         return (
             uint128(
-                OracleLibrary.getQuoteAtTick(
-                    OracleLibrary.consult(pool_, period_),
-                    amount_,
-                    baseToken_,
-                    quoteToken_
-                )
+                OracleLibrary.getQuoteAtTick(arithmeticMeanTick, amount_, baseToken_, quoteToken_)
             ),
             period_
         );

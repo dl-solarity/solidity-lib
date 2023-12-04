@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity >=0.5.0 <0.8.0;
 
 import {UniswapV3PoolMock} from "./UniswapV3PoolMock.sol";
 
@@ -15,13 +15,13 @@ contract UniswapV3FactoryMock {
             ? (tokenA_, tokenB_)
             : (tokenB_, tokenA_);
 
-        pool_ = deploy(token0_, token1_, fee_);
+        pool_ = _deploy(token0_, token1_, fee_);
 
         getPool[token0_][token1_][fee_] = pool_;
         getPool[token1_][token0_][fee_] = pool_;
     }
 
-    function deploy(
+    function _deploy(
         address token0_,
         address token1_,
         uint24 fee_
