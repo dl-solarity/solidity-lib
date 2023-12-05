@@ -23,9 +23,7 @@ abstract contract UniswapV3Oracle {
     IUniswapV3Factory public immutable uniswapV3Factory;
 
     /**
-     * @notice Constructor
      * @dev Contract is not an Initializable because it compiler version is below 0.8.0
-     * @param uniswapV3Factory_ the Uniswap V3 factory
      */
     constructor(address uniswapV3Factory_) {
         uniswapV3Factory = IUniswapV3Factory(uniswapV3Factory_);
