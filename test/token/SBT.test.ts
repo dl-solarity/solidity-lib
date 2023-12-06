@@ -32,7 +32,7 @@ describe("SBT", () => {
   describe("access", () => {
     it("should not initialize twice", async () => {
       await expect(sbt.__SBTMock_init(name, symbol)).to.be.revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
       await expect(sbt.mockInit(name, symbol)).to.be.revertedWith("Initializable: contract is not initializing");
     });

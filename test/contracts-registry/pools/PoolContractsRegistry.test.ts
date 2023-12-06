@@ -37,7 +37,7 @@ describe("PoolContractsRegistry", () => {
 
     await contractsRegistry.addProxyContract(
       await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME(),
-      await _poolContractsRegistry.getAddress()
+      await _poolContractsRegistry.getAddress(),
     );
     await contractsRegistry.addContract(await contractsRegistry.TOKEN_NAME(), await token.getAddress());
     await contractsRegistry.addContract(await contractsRegistry.POOL_FACTORY_NAME(), OWNER);
@@ -61,7 +61,7 @@ describe("PoolContractsRegistry", () => {
   describe("access", () => {
     it("should not initialize twice", async () => {
       await expect(poolContractsRegistry.__OwnablePoolContractsRegistry_init()).to.be.revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
 
       await expect(poolContractsRegistry.mockInit()).to.be.revertedWith("Initializable: contract is not initializing");
@@ -69,21 +69,21 @@ describe("PoolContractsRegistry", () => {
 
     it("should not set dependencies from non dependant", async () => {
       await expect(poolContractsRegistry.setDependencies(OWNER.address, "0x")).to.be.rejectedWith(
-        "Dependant: not an injector"
+        "Dependant: not an injector",
       );
     });
 
     it("only owner should call these functions", async () => {
       await expect(poolContractsRegistry.connect(SECOND).setNewImplementations([], [])).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
 
       await expect(
-        poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPools("", 0, 0)
+        poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPools("", 0, 0),
       ).to.be.revertedWith("Ownable: caller is not the owner");
 
       await expect(
-        poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPoolsWithData("", "0x", 0, 0)
+        poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPoolsWithData("", "0x", 0, 0),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });
@@ -98,10 +98,10 @@ describe("PoolContractsRegistry", () => {
 
     it("should not get not existing implementation", async () => {
       await expect(poolContractsRegistry.getImplementation(NAME_1)).to.be.revertedWith(
-        "PoolContractsRegistry: this mapping doesn't exist"
+        "PoolContractsRegistry: this mapping doesn't exist",
       );
       await expect(poolContractsRegistry.getProxyBeacon(NAME_1)).to.be.revertedWith(
-        "PoolContractsRegistry: bad ProxyBeacon"
+        "PoolContractsRegistry: bad ProxyBeacon",
       );
     });
   });
@@ -129,7 +129,7 @@ describe("PoolContractsRegistry", () => {
 
     it("only owner should be able to add pools", async () => {
       await expect(poolContractsRegistry.connect(POOL_1).addProxyPool(NAME_1, POOL_1.address)).to.be.revertedWith(
-        "PoolContractsRegistry: not a factory"
+        "PoolContractsRegistry: not a factory",
       );
     });
   });
@@ -164,7 +164,7 @@ describe("PoolContractsRegistry", () => {
 
     it("should not inject dependencies to 0 pools", async () => {
       await expect(poolContractsRegistry.injectDependenciesToExistingPools(NAME_1, 0, 1)).to.be.revertedWith(
-        "PoolContractsRegistry: no pools to inject"
+        "PoolContractsRegistry: no pools to inject",
       );
     });
   });

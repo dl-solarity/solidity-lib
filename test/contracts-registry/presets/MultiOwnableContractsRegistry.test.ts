@@ -29,45 +29,45 @@ describe("MultiOwnableContractsRegistry", () => {
   describe("access", () => {
     it("should not initialize twice", async () => {
       await expect(contractsRegistry.__MultiOwnableContractsRegistry_init()).to.be.revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
     });
 
     it("only owner should call these functions", async () => {
       await expect(contractsRegistry.connect(SECOND).injectDependencies("")).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner"
+        "MultiOwnable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).injectDependenciesWithData("", "0x")).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner"
+        "MultiOwnable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).upgradeContract("", ZERO_ADDR)).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner"
+        "MultiOwnable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).upgradeContractAndCall("", ZERO_ADDR, "0x")).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner"
+        "MultiOwnable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).addContract("", ZERO_ADDR)).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner"
+        "MultiOwnable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).addProxyContract("", ZERO_ADDR)).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner"
+        "MultiOwnable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).addProxyContractAndCall("", ZERO_ADDR, "0x")).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner"
+        "MultiOwnable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).justAddProxyContract("", ZERO_ADDR)).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner"
+        "MultiOwnable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).removeContract("")).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner"
+        "MultiOwnable: caller is not the owner",
       );
     });
   });

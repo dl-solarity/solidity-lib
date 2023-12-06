@@ -53,10 +53,10 @@ describe("UniswapV2Oracle", () => {
 
     it("should not initialize twice", async () => {
       await expect(oracle.mockInit(await uniswapV2Factory.getAddress(), ORACLE_TIME_WINDOW)).to.be.revertedWith(
-        "Initializable: contract is not initializing"
+        "Initializable: contract is not initializing",
       );
       await expect(
-        oracle.__OracleV2Mock_init(await uniswapV2Factory.getAddress(), ORACLE_TIME_WINDOW)
+        oracle.__OracleV2Mock_init(await uniswapV2Factory.getAddress(), ORACLE_TIME_WINDOW),
       ).to.be.revertedWith("Initializable: contract is already initialized");
     });
   });
@@ -95,7 +95,7 @@ describe("UniswapV2Oracle", () => {
       await createPairs();
 
       await expect(oracle.addPaths([A_C_PATH, A_C_PATH])).to.be.revertedWith(
-        "UniswapV2Oracle: path already registered"
+        "UniswapV2Oracle: path already registered",
       );
     });
   });

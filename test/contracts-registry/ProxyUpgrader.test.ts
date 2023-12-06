@@ -34,7 +34,7 @@ describe("ProxyUpgrader", () => {
   describe("upgrade", () => {
     it("only owner should upgrade", async () => {
       await expect(
-        proxyUpgrader.connect(SECOND).upgrade(await proxy.getAddress(), await proxy.getAddress(), "0x")
+        proxyUpgrader.connect(SECOND).upgrade(await proxy.getAddress(), await proxy.getAddress(), "0x"),
       ).to.be.revertedWith("ProxyUpgrader: not an owner");
     });
   });
@@ -46,13 +46,13 @@ describe("ProxyUpgrader", () => {
 
     it("should not get implementation", async () => {
       await expect(proxyUpgrader.getImplementation(await token.getAddress())).to.be.revertedWith(
-        "ProxyUpgrader: not a proxy"
+        "ProxyUpgrader: not a proxy",
       );
     });
 
     it("only owner should get implementation", async () => {
       await expect(proxyUpgrader.connect(SECOND).getImplementation(await proxy.getAddress())).to.be.revertedWith(
-        "ProxyUpgrader: not an owner"
+        "ProxyUpgrader: not an owner",
       );
     });
   });

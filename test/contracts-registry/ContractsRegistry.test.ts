@@ -31,7 +31,7 @@ describe("ContractsRegistry", () => {
     it("should not initialize twice", async () => {
       await expect(contractsRegistry.mockInit()).to.be.revertedWith("Initializable: contract is not initializing");
       await expect(contractsRegistry.__OwnableContractsRegistry_init()).to.be.revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
     });
 
@@ -41,39 +41,39 @@ describe("ContractsRegistry", () => {
 
     it("only owner should call these functions", async () => {
       await expect(contractsRegistry.connect(SECOND).injectDependencies("")).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).injectDependenciesWithData("", "0x")).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).upgradeContract("", ZERO_ADDR)).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).upgradeContractAndCall("", ZERO_ADDR, "0x")).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).addContract("", ZERO_ADDR)).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).addProxyContract("", ZERO_ADDR)).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).addProxyContractAndCall("", ZERO_ADDR, "0x")).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).justAddProxyContract("", ZERO_ADDR)).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
 
       await expect(contractsRegistry.connect(SECOND).removeContract("")).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
     });
   });
@@ -81,15 +81,15 @@ describe("ContractsRegistry", () => {
   describe("contract management", async () => {
     it("should fail adding ZERO_ADDR address", async () => {
       await expect(
-        contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR)
+        contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR),
       ).to.be.revertedWith("ContractsRegistry: zero address is forbidden");
 
       await expect(
-        contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR)
+        contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR),
       ).to.be.revertedWith("ContractsRegistry: zero address is forbidden");
 
       await expect(
-        contractsRegistry.justAddProxyContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR)
+        contractsRegistry.justAddProxyContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR),
       ).to.be.revertedWith("ContractsRegistry: zero address is forbidden");
     });
 
@@ -98,7 +98,7 @@ describe("ContractsRegistry", () => {
       const dependant = await DependantMock.deploy();
 
       await expect(contractsRegistry.removeContract(await contractsRegistry.DEPENDANT_NAME())).to.be.revertedWith(
-        "ContractsRegistry: this mapping doesn't exist"
+        "ContractsRegistry: this mapping doesn't exist",
       );
 
       await contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), await dependant.getAddress());
@@ -109,7 +109,7 @@ describe("ContractsRegistry", () => {
       await contractsRegistry.removeContract(await contractsRegistry.DEPENDANT_NAME());
 
       await expect(contractsRegistry.getDependantContract()).to.be.revertedWith(
-        "ContractsRegistry: this mapping doesn't exist"
+        "ContractsRegistry: this mapping doesn't exist",
       );
       expect(await contractsRegistry.hasContract(await contractsRegistry.DEPENDANT_NAME())).to.be.false;
     });
@@ -119,7 +119,7 @@ describe("ContractsRegistry", () => {
       const _dependant = await DependantMock.deploy();
 
       await expect(contractsRegistry.getImplementation(await contractsRegistry.DEPENDANT_NAME())).to.be.revertedWith(
-        "ContractsRegistry: this mapping doesn't exist"
+        "ContractsRegistry: this mapping doesn't exist",
       );
 
       await contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), await _dependant.getAddress());
@@ -138,7 +138,7 @@ describe("ContractsRegistry", () => {
       await contractsRegistry.addProxyContractAndCall(
         await contractsRegistry.TOKEN_NAME(),
         await _token.getAddress(),
-        "0x"
+        "0x",
       );
       await contractsRegistry.removeContract(await contractsRegistry.TOKEN_NAME());
     });
@@ -187,14 +187,14 @@ describe("ContractsRegistry", () => {
       await contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), await dependant.getAddress());
 
       await expect(contractsRegistry.getImplementation(await contractsRegistry.DEPENDANT_NAME())).to.be.revertedWith(
-        "ContractsRegistry: not a proxy contract"
+        "ContractsRegistry: not a proxy contract",
       );
 
       await expect(
         contractsRegistry.upgradeContract(
           await contractsRegistry.DEPENDANT_NAME(),
-          await _dependantUpgrade.getAddress()
-        )
+          await _dependantUpgrade.getAddress(),
+        ),
       ).to.be.revertedWith("ContractsRegistry: not a proxy contract");
     });
 
@@ -202,16 +202,16 @@ describe("ContractsRegistry", () => {
       await expect(dependant.addedFunction()).to.be.reverted;
 
       expect(await contractsRegistry.getImplementation(await contractsRegistry.DEPENDANT_NAME())).to.equal(
-        await _dependant.getAddress()
+        await _dependant.getAddress(),
       );
 
       await contractsRegistry.upgradeContract(
         await contractsRegistry.DEPENDANT_NAME(),
-        await _dependantUpgrade.getAddress()
+        await _dependantUpgrade.getAddress(),
       );
 
       expect(await contractsRegistry.getImplementation(await contractsRegistry.DEPENDANT_NAME())).to.equal(
-        await _dependantUpgrade.getAddress()
+        await _dependantUpgrade.getAddress(),
       );
 
       expect(await dependant.addedFunction()).to.equal(42n);
@@ -219,7 +219,7 @@ describe("ContractsRegistry", () => {
 
     it("should not upgrade non existing contract", async () => {
       await expect(
-        contractsRegistry.upgradeContract("RANDOM CONTRACT", await _dependantUpgrade.getAddress())
+        contractsRegistry.upgradeContract("RANDOM CONTRACT", await _dependantUpgrade.getAddress()),
       ).to.be.revertedWith("ContractsRegistry: this mapping doesn't exist");
     });
 
@@ -231,7 +231,7 @@ describe("ContractsRegistry", () => {
       await contractsRegistry.upgradeContractAndCall(
         await contractsRegistry.DEPENDANT_NAME(),
         await _dependantUpgrade.getAddress(),
-        data
+        data,
       );
 
       expect(await dependant.dummyValue()).to.equal(42n);
@@ -275,7 +275,7 @@ describe("ContractsRegistry", () => {
 
     it("should not inject dependencies", async () => {
       await expect(contractsRegistry.injectDependencies("RANDOM CONTRACT")).to.be.revertedWith(
-        "ContractsRegistry: this mapping doesn't exist"
+        "ContractsRegistry: this mapping doesn't exist",
       );
     });
 
@@ -285,7 +285,7 @@ describe("ContractsRegistry", () => {
       expect(await dependant.getInjector()).to.equal(await contractsRegistry.getAddress());
 
       await expect(dependant.setDependencies(await contractsRegistry.getAddress(), "0x")).to.be.revertedWith(
-        "Dependant: not an injector"
+        "Dependant: not an injector",
       );
     });
 

@@ -1,12 +1,12 @@
 import { ethers } from "hardhat";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { Reverter } from "@/test/helpers/reverter";
 import { BigNumberish } from "ethers";
+import { BigNumber } from "bignumber.js";
 import { wei } from "@/scripts/utils/utils";
-import BigNumber from "bignumber.js";
+import { Reverter } from "@/test/helpers/reverter";
 
-import { UniswapV3OracleMock, UniswapV3FactoryMock, UniswapV3PoolMock } from "@ethers-v6";
+import { UniswapV3Oracle, UniswapV3FactoryMock, UniswapV3PoolMock } from "@ethers-v6";
 
 describe("UniswapV3Oracle", () => {
   const reverter = new Reverter();
@@ -22,18 +22,20 @@ describe("UniswapV3Oracle", () => {
     MEDIUM = 3000,
   }
 
-  let oracle: UniswapV3OracleMock;
+  let oracle: UniswapV3Oracle;
   let uniswapV3Factory: UniswapV3FactoryMock;
 
   before("setup", async () => {
     const UniswapV3FactoryMock = await ethers.getContractFactory("UniswapV3FactoryMock");
-    const Oracle = await ethers.getContractFactory("UniswapV3OracleMock");
+    const Oracle = await ethers.getContractFactory("UniswapV3Oracle");
 
     uniswapV3Factory = await UniswapV3FactoryMock.deploy();
     oracle = await Oracle.deploy(await uniswapV3Factory.getAddress());
 
     await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   async function createPools(token0: string, token1: string): Promise<UniswapV3PoolMock> {
     await uniswapV3Factory.createPool(token0, token1, FeeAmount.MEDIUM);
@@ -54,10 +56,8 @@ describe("UniswapV3Oracle", () => {
   function getPriceByTick(tick: number, amount: BigNumberish): BigNumberish {
     BigNumber.config({ POW_PRECISION: 100 });
 
-    return new BigNumber("1.0001").pow(tick).times(amount.toString()).floor().toFixed(0);
+    return new BigNumber("1.0001").pow(tick).times(amount.toString()).toFixed(0, 1);
   }
-
-  afterEach(reverter.revert);
 
   describe("init", () => {
     it("should set oracle correctly", async () => {
@@ -128,7 +128,7 @@ describe("UniswapV3Oracle", () => {
         [A_TOKEN, B_TOKEN, C_TOKEN],
         [FeeAmount.MEDIUM, FeeAmount.MEDIUM],
         wei(2),
-        PERIOD
+        PERIOD,
       );
 
       const priceABC = (((wei(2) * reserveAB1) / reserveAB0) * reserveBC1) / reserveBC0;
@@ -140,7 +140,7 @@ describe("UniswapV3Oracle", () => {
         [A_TOKEN, B_TOKEN, A_TOKEN],
         [FeeAmount.MEDIUM, FeeAmount.MEDIUM],
         wei(2),
-        PERIOD
+        PERIOD,
       );
 
       expect(ans[0]).to.be.closeTo(wei(2), wei(2, 12));
@@ -171,7 +171,7 @@ describe("UniswapV3Oracle", () => {
         A_B_PATH,
         [FeeAmount.MEDIUM],
         wei(1, 6),
-        (await time.latest()) - 1
+        (await time.latest()) - 1,
       );
 
       const avgTick = Math.floor((0 * 3 + tickSecond * 2 + tickThird * 3) / 8);
@@ -207,7 +207,7 @@ describe("UniswapV3Oracle", () => {
         [A_TOKEN, B_TOKEN, C_TOKEN],
         [FeeAmount.MEDIUM, FeeAmount.MEDIUM],
         wei(3),
-        (await time.latest()) - firstTime - 1
+        (await time.latest()) - firstTime - 1,
       );
 
       const tickBC = Math.floor((tick0 * 4 + 25000 * 2) / 6);
@@ -222,7 +222,7 @@ describe("UniswapV3Oracle", () => {
         [A_TOKEN, B_TOKEN, C_TOKEN],
         [FeeAmount.MEDIUM, FeeAmount.MEDIUM],
         wei(3),
-        PERIOD
+        PERIOD,
       );
 
       const compositeTick = Number((await poolAB.slot0()).tick + (await poolBC.slot0()).tick);
@@ -252,30 +252,30 @@ describe("UniswapV3Oracle", () => {
 
     it("should not get price if there is invalid path", async () => {
       await expect(oracle.getPriceOfTokenInToken([A_TOKEN], [FeeAmount.MEDIUM], 10, PERIOD)).to.be.revertedWith(
-        "UniswapV3Oracle: invalid path"
+        "UniswapV3Oracle: invalid path",
       );
     });
 
     it("should not get price if there wrong amount of fees or tokens", async () => {
       await expect(
-        oracle.getPriceOfTokenInToken([A_TOKEN, A_TOKEN, A_TOKEN], [FeeAmount.MEDIUM], 10, PERIOD)
+        oracle.getPriceOfTokenInToken([A_TOKEN, A_TOKEN, A_TOKEN], [FeeAmount.MEDIUM], 10, PERIOD),
       ).to.be.revertedWith("UniswapV3Oracle: path/fee lengths do not match");
     });
 
     it("should not get price if there is no such pool", async () => {
       await expect(oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 10, PERIOD)).to.be.revertedWith(
-        "UniswapV3Oracle: such pool doesn't exist"
+        "UniswapV3Oracle: such pool doesn't exist",
       );
 
       await createPools(A_TOKEN, B_TOKEN);
       await expect(oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.LOW], 10, PERIOD)).to.be.revertedWith(
-        "UniswapV3Oracle: such pool doesn't exist"
+        "UniswapV3Oracle: such pool doesn't exist",
       );
     });
 
     it("should not get price if period larger than current timestamp", async () => {
       await expect(
-        oracle.getPriceOfTokenInToken([A_TOKEN, A_TOKEN], [FeeAmount.MEDIUM], 10, (await time.latest()) + 10)
+        oracle.getPriceOfTokenInToken([A_TOKEN, A_TOKEN], [FeeAmount.MEDIUM], 10, (await time.latest()) + 10),
       ).to.be.revertedWith("UniswapV3Oracle: period larger than current timestamp");
     });
 
@@ -285,13 +285,13 @@ describe("UniswapV3Oracle", () => {
       await poolAB.initialize(encodePriceSqrt(1, 1));
 
       await expect(oracle.getPriceOfTokenInToken(A_B_PATH, [FeeAmount.MEDIUM], 10, PERIOD)).to.be.revertedWith(
-        "UniswapV3Oracle: the oldest observation is on current block"
+        "UniswapV3Oracle: the oldest observation is on the current block",
       );
     });
 
     it("should not get price if period is zero", async () => {
       await expect(oracle.getPriceOfTokenInToken([A_TOKEN, A_TOKEN], [FeeAmount.MEDIUM], 10, 0)).to.be.revertedWith(
-        "UniswapV3Oracle: period can't be 0"
+        "UniswapV3Oracle: period can't be 0",
       );
     });
   });

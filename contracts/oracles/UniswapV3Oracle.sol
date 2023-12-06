@@ -10,20 +10,22 @@ import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLib
  * @notice UniswapV3Oracle module
  *
  * A contract for retrieving prices from Uniswap V3 pools.
+ *
  * Works by calculating the time-weighted average tick as difference between two tickCumulatives
  * divided by number of second between them, tickCumulatives are taken from the newest observation
  * and from the one nearest to required time.
- * Price is calculated as 1.0001 in power of this tick.
+ *
+ * Price is obtained as 1.0001 in power of this tick.
  *
  * In case required period of time is unreachable, tick is taken from oldest available observation.
  */
-abstract contract UniswapV3Oracle {
+contract UniswapV3Oracle {
     using FullMath for *;
 
     IUniswapV3Factory public immutable uniswapV3Factory;
 
     /**
-     * @dev Contract is not an Initializable because it compiler version is below 0.8.0
+     * @dev contract is not an Initializable because the compiler version is <0.8.0
      */
     constructor(address uniswapV3Factory_) {
         uniswapV3Factory = IUniswapV3Factory(uniswapV3Factory_);
@@ -100,7 +102,7 @@ abstract contract UniswapV3Oracle {
 
         require(
             longestPeriod_ != 0,
-            "UniswapV3Oracle: the oldest observation is on current block"
+            "UniswapV3Oracle: the oldest observation is on the current block"
         );
 
         period_ = uint32(period_ < longestPeriod_ ? period_ : longestPeriod_);

@@ -1,5 +1,3 @@
-import "@nomiclabs/hardhat-web3";
-import "@nomiclabs/hardhat-truffle5";
 import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-chai-matchers";
 import "@nomicfoundation/hardhat-network-helpers";
@@ -15,16 +13,6 @@ import { HardhatUserConfig } from "hardhat/config";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-function typechainTarget() {
-  const target = process.env.TYPECHAIN_TARGET;
-
-  return target === "" || target === undefined ? "ethers-v6" : target;
-}
-
-function forceTypechain() {
-  return process.env.TYPECHAIN_FORCE === "false";
-}
-
 const config: HardhatUserConfig = {
   networks: {
     hardhat: {
@@ -32,7 +20,6 @@ const config: HardhatUserConfig = {
     },
     localhost: {
       url: "http://127.0.0.1:8545",
-      initialDate: "1970-01-01T00:00:00Z",
       gasMultiplier: 1.2,
     },
   },
@@ -78,11 +65,10 @@ const config: HardhatUserConfig = {
     coinmarketcap: `${process.env.COINMARKETCAP_KEY}`,
   },
   typechain: {
-    outDir: `generated-types/${typechainTarget().split("-")[0]}`,
-    target: typechainTarget(),
+    outDir: "generated-types/ethers",
+    target: "ethers-v6",
     alwaysGenerateOverloads: true,
     discriminateTypes: true,
-    dontOverrideCompile: forceTypechain(),
   },
 };
 

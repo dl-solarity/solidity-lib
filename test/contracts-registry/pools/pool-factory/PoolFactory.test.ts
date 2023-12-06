@@ -44,11 +44,11 @@ describe("PoolFactory", () => {
 
     await contractsRegistry.addProxyContract(
       await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME(),
-      await _poolContractsRegistry.getAddress()
+      await _poolContractsRegistry.getAddress(),
     );
     await contractsRegistry.addProxyContract(
       await contractsRegistry.POOL_FACTORY_NAME(),
-      await _poolFactory.getAddress()
+      await _poolFactory.getAddress(),
     );
     await contractsRegistry.addContract(await contractsRegistry.TOKEN_NAME(), await token.getAddress());
 
@@ -125,10 +125,10 @@ describe("PoolFactory", () => {
         const pool = <PoolMock>PoolMock.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
 
         await expect(poolContractsRegistry.addProxyPool(NAME_1, await poolFactory.getAddress())).to.be.revertedWith(
-          "PoolContractsRegistry: not a factory"
+          "PoolContractsRegistry: not a factory",
         );
         await expect(pool.setDependencies(await contractsRegistry.getAddress(), "0x")).to.be.revertedWith(
-          "Dependant: not an injector"
+          "Dependant: not an injector",
         );
       });
 
@@ -175,12 +175,12 @@ describe("PoolFactory", () => {
 
         const poolProxies = await Promise.all(pools.map(async (pool: string) => <PoolMock>PoolMock.attach(pool)));
         const beaconProxies = await Promise.all(
-          pools.map(async (pool: string) => <PublicBeaconProxy>PublicBeaconProxy.attach(pool))
+          pools.map(async (pool: string) => <PublicBeaconProxy>PublicBeaconProxy.attach(pool)),
         );
 
         const tokens = await Promise.all(poolProxies.map(async (poolProxy: PoolMock) => await poolProxy.token()));
         const implementations = await Promise.all(
-          beaconProxies.map(async (beaconProxy: PublicBeaconProxy) => await beaconProxy.implementation())
+          beaconProxies.map(async (beaconProxy: PublicBeaconProxy) => await beaconProxy.implementation()),
         );
 
         expect(tokens).to.deep.equal([await token.getAddress(), await token.getAddress()]);
