@@ -45,10 +45,10 @@ describe("DecimalsConverter", () => {
       const token2 = await ERC20Mock.deploy("MK2", "MK2", 3);
 
       expect(await mock.convertTokens(wei("1"), await token1.getAddress(), await token2.getAddress())).to.equal(
-        wei("1", 3)
+        wei("1", 3),
       );
       expect(await mock.convertTokens(wei("1", 3), await token2.getAddress(), await token1.getAddress())).to.equal(
-        wei("1")
+        wei("1"),
       );
     });
   });

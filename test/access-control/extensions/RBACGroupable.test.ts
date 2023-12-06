@@ -91,7 +91,7 @@ describe("RBAC", () => {
     describe("grantGroupRoles", () => {
       it("should revert if no permission", async () => {
         await expect(rbac.connect(SECOND).grantGroupRoles(GROUP_ALL_ROLES, ALL_ROLES)).to.be.revertedWith(
-          "RBAC: no CREATE permission for resource RBAC_RESOURCE"
+          "RBAC: no CREATE permission for resource RBAC_RESOURCE",
         );
       });
 
@@ -119,7 +119,7 @@ describe("RBAC", () => {
       describe("revokeGroupRoles", () => {
         it("should revert if no permission", async () => {
           await expect(rbac.connect(SECOND).revokeGroupRoles(GROUP_ALL_ROLES, ROLES_01)).to.be.rejectedWith(
-            "RBAC: no DELETE permission for resource RBAC_RESOURCE"
+            "RBAC: no DELETE permission for resource RBAC_RESOURCE",
           );
         });
 
@@ -139,7 +139,7 @@ describe("RBAC", () => {
       describe("addUserToGroups", () => {
         it("should revert if no permission", async () => {
           await expect(
-            rbac.connect(SECOND).addUserToGroups(SECOND.address, [GROUP_ROLES01, GROUP_ROLES12])
+            rbac.connect(SECOND).addUserToGroups(SECOND.address, [GROUP_ROLES01, GROUP_ROLES12]),
           ).to.be.rejectedWith("RBAC: no CREATE permission for resource RBAC_RESOURCE");
         });
 
@@ -159,7 +159,7 @@ describe("RBAC", () => {
       describe("toggleDefaultGroup", () => {
         it("should revert if no permission", async () => {
           await expect(rbac.connect(SECOND).toggleDefaultGroup()).to.be.rejectedWith(
-            "RBAC: no UPDATE permission for resource RBAC_RESOURCE"
+            "RBAC: no UPDATE permission for resource RBAC_RESOURCE",
           );
         });
 
@@ -192,13 +192,13 @@ describe("RBAC", () => {
         describe("removeUserFromGroups", () => {
           it("should revert if no permission", async () => {
             await expect(rbac.connect(SECOND).removeUserFromGroups(SECOND.address, [GROUP_ROLES01])).to.be.revertedWith(
-              "RBAC: no DELETE permission for resource RBAC_RESOURCE"
+              "RBAC: no DELETE permission for resource RBAC_RESOURCE",
             );
           });
 
           it("should revert if no groups provided", async () => {
             await expect(rbac.removeUserFromGroups(SECOND.address, [])).to.be.revertedWith(
-              "RBACGroupable: empty groups"
+              "RBACGroupable: empty groups",
             );
           });
 
@@ -217,8 +217,8 @@ describe("RBAC", () => {
               await rbac.hasPermission(
                 SECOND.address,
                 roles[0].resourcesWithPermissions[0].resource,
-                roles[0].resourcesWithPermissions[0].permissions[0]
-              )
+                roles[0].resourcesWithPermissions[0].permissions[0],
+              ),
             ).to.be.true;
           });
 
@@ -236,8 +236,8 @@ describe("RBAC", () => {
               await rbac.hasPermission(
                 SECOND.address,
                 roles[0].resourcesWithPermissions[0].resource,
-                roles[0].resourcesWithPermissions[0].permissions[0]
-              )
+                roles[0].resourcesWithPermissions[0].permissions[0],
+              ),
             ).to.be.false;
           });
 
@@ -251,8 +251,8 @@ describe("RBAC", () => {
               await rbac.hasPermission(
                 SECOND.address,
                 roles[0].resourcesWithPermissions[0].resource,
-                roles[0].resourcesWithPermissions[0].permissions[0]
-              )
+                roles[0].resourcesWithPermissions[0].permissions[0],
+              ),
             ).to.be.false;
           });
 
@@ -267,8 +267,8 @@ describe("RBAC", () => {
               await rbac.hasPermission(
                 SECOND.address,
                 roles[3].resourcesWithPermissions[0].resource,
-                roles[3].resourcesWithPermissions[0].permissions[0]
-              )
+                roles[3].resourcesWithPermissions[0].permissions[0],
+              ),
             ).to.be.true;
           });
 
@@ -277,8 +277,8 @@ describe("RBAC", () => {
               await rbac.hasPermission(
                 SECOND.address,
                 roles[3].resourcesWithPermissions[0].resource,
-                roles[3].resourcesWithPermissions[0].permissions[0]
-              )
+                roles[3].resourcesWithPermissions[0].permissions[0],
+              ),
             ).to.be.false;
 
             await rbac.toggleDefaultGroup();
@@ -288,8 +288,8 @@ describe("RBAC", () => {
               await rbac.hasPermission(
                 SECOND.address,
                 roles[3].resourcesWithPermissions[0].resource,
-                roles[3].resourcesWithPermissions[0].permissions[0]
-              )
+                roles[3].resourcesWithPermissions[0].permissions[0],
+              ),
             ).to.be.false;
           });
         });

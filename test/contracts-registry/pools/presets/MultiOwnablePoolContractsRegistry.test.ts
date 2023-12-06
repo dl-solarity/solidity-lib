@@ -16,7 +16,7 @@ describe("MultiOwnablePoolContractsRegistry", () => {
     [, SECOND] = await ethers.getSigners();
 
     const MultiOwnablePoolContractsRegistryMock = await ethers.getContractFactory(
-      "MultiOwnablePoolContractsRegistryMock"
+      "MultiOwnablePoolContractsRegistryMock",
     );
     poolContractsRegistry = await MultiOwnablePoolContractsRegistryMock.deploy();
 
@@ -30,21 +30,21 @@ describe("MultiOwnablePoolContractsRegistry", () => {
   describe("access", () => {
     it("should not initialize twice", async () => {
       await expect(poolContractsRegistry.__MultiOwnablePoolContractsRegistry_init()).to.be.revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
     });
 
     it("only owner should call these functions", async () => {
       await expect(poolContractsRegistry.connect(SECOND).setNewImplementations([], [])).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner"
+        "MultiOwnable: caller is not the owner",
       );
 
       await expect(
-        poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPools("", 0, 0)
+        poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPools("", 0, 0),
       ).to.be.revertedWith("MultiOwnable: caller is not the owner");
 
       await expect(
-        poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPoolsWithData("", "0x", 0, 0)
+        poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPoolsWithData("", "0x", 0, 0),
       ).to.be.revertedWith("MultiOwnable: caller is not the owner");
     });
   });

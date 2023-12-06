@@ -41,7 +41,7 @@ describe("RBAC", () => {
       await rbac.addPermissionsToRole(
         "ROLE",
         [{ resource: "resource", permissions: ["permission1", "permission2"] }],
-        true
+        true,
       );
 
       allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
@@ -57,7 +57,7 @@ describe("RBAC", () => {
       await rbac.addPermissionsToRole(
         "ROLE",
         [{ resource: "resource", permissions: ["permission1", "permission2"] }],
-        false
+        false,
       );
 
       disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
@@ -69,7 +69,7 @@ describe("RBAC", () => {
       await rbac.addPermissionsToRole(
         "ROLE",
         [{ resource: "resource", permissions: ["permission1", "permission2"] }],
-        true
+        true,
       );
       await rbac.removePermissionsFromRole("ROLE", [{ resource: "resource", permissions: ["permission1"] }], true);
 
@@ -82,7 +82,7 @@ describe("RBAC", () => {
       await rbac.addPermissionsToRole(
         "ROLE",
         [{ resource: "resource", permissions: ["permission1", "permission2"] }],
-        false
+        false,
       );
       await rbac.removePermissionsFromRole("ROLE", [{ resource: "resource", permissions: ["permission2"] }], false);
 
@@ -95,23 +95,23 @@ describe("RBAC", () => {
       await rbac.addPermissionsToRole(
         "ROLE",
         [{ resource: "resource", permissions: ["permission1", "permission2"] }],
-        true
+        true,
       );
       await rbac.addPermissionsToRole(
         "ROLE",
         [{ resource: "resource", permissions: ["permission1", "permission2"] }],
-        false
+        false,
       );
 
       await rbac.removePermissionsFromRole(
         "ROLE",
         [{ resource: "resource", permissions: ["permission1", "permission2"] }],
-        true
+        true,
       );
       await rbac.removePermissionsFromRole(
         "ROLE",
         [{ resource: "resource", permissions: ["permission1", "permission2"] }],
-        false
+        false,
       );
 
       let allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
@@ -138,7 +138,7 @@ describe("RBAC", () => {
         await rbac.addPermissionsToRole(
           "ROLE",
           [{ resource: "resource", permissions: ["permission1", "permission2"] }],
-          true
+          true,
         );
 
         expect(await rbac.hasPermission(SECOND.address, "resource", "permission2")).to.be.false;
@@ -231,7 +231,7 @@ describe("RBAC", () => {
         await rbac.addPermissionsToRole(
           "ROLE",
           [{ resource: "resource", permissions: ["permission1", "permission2"] }],
-          true
+          true,
         );
         await rbac.grantRoles(SECOND.address, ["ROLE"]);
 
@@ -341,18 +341,20 @@ describe("RBAC", () => {
   describe("access", () => {
     it("should not call these functions without permission", async () => {
       await expect(rbac.connect(SECOND).grantRoles(OWNER.address, ["ROLE"])).to.be.revertedWith(
-        "RBAC: no CREATE permission for resource RBAC_RESOURCE"
+        "RBAC: no CREATE permission for resource RBAC_RESOURCE",
       );
       await expect(rbac.connect(SECOND).revokeRoles(OWNER.address, ["MASTER"])).to.be.revertedWith(
-        "RBAC: no DELETE permission for resource RBAC_RESOURCE"
+        "RBAC: no DELETE permission for resource RBAC_RESOURCE",
       );
       await expect(
-        rbac.connect(SECOND).addPermissionsToRole("ROLE", [{ resource: "resource", permissions: ["permission"] }], true)
+        rbac
+          .connect(SECOND)
+          .addPermissionsToRole("ROLE", [{ resource: "resource", permissions: ["permission"] }], true),
       ).to.be.revertedWith("RBAC: no CREATE permission for resource RBAC_RESOURCE");
       await expect(
         rbac
           .connect(SECOND)
-          .removePermissionsFromRole("ROLE", [{ resource: "resource", permissions: ["permission"] }], false)
+          .removePermissionsFromRole("ROLE", [{ resource: "resource", permissions: ["permission"] }], false),
       ).to.be.revertedWith("RBAC: no DELETE permission for resource RBAC_RESOURCE");
     });
   });

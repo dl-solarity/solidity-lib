@@ -49,17 +49,17 @@ describe("DiamondERC165", () => {
             Number(diamond.facets.fragment.selector) ^
               Number(diamond.facetFunctionSelectors.fragment.selector) ^
               Number(diamond.facetAddresses.fragment.selector) ^
-              Number(diamond.facetAddress.fragment.selector)
-          )
-        )
+              Number(diamond.facetAddress.fragment.selector),
+          ),
+        ),
       ).to.be.true;
     });
 
     it("should support DiamondCut interface - 0x1f931c1c", async () => {
       expect(
         await erc165.supportsInterface(
-          diamond["diamondCut((address,uint8,bytes4[])[],address,bytes)"].fragment.selector
-        )
+          diamond["diamondCut((address,uint8,bytes4[])[],address,bytes)"].fragment.selector,
+        ),
       ).to.be.true;
     });
 

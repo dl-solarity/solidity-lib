@@ -83,19 +83,19 @@ describe("MerkleWhitelisted", () => {
 
     it("should revert if the user is incorrect", async () => {
       await expect(
-        merkle.connect(users[1]).onlyWhitelistedMethod(amounts[0], getProof(tree, leaves[0]))
+        merkle.connect(users[1]).onlyWhitelistedMethod(amounts[0], getProof(tree, leaves[0])),
       ).to.be.revertedWith("MerkleWhitelisted: not whitelisted");
     });
 
     it("should revert if the amount is incorrect", async () => {
       await expect(
-        merkle.connect(users[0]).onlyWhitelistedMethod(amounts[1], getProof(tree, leaves[0]))
+        merkle.connect(users[0]).onlyWhitelistedMethod(amounts[1], getProof(tree, leaves[0])),
       ).to.be.revertedWith("MerkleWhitelisted: not whitelisted");
     });
 
     it("should revert if the proof is incorrect", async () => {
       await expect(
-        merkle.connect(users[0]).onlyWhitelistedMethod(amounts[0], getProof(tree, leaves[1]))
+        merkle.connect(users[0]).onlyWhitelistedMethod(amounts[0], getProof(tree, leaves[1])),
       ).to.be.revertedWith("MerkleWhitelisted: not whitelisted");
     });
 
@@ -103,7 +103,7 @@ describe("MerkleWhitelisted", () => {
       for (let i = 0; i < 5; i++) {
         expect(await merkle.connect(users[i]).onlyWhitelistedMethod(amounts[i], getProof(tree, leaves[i]))).to.emit(
           merkle,
-          "WhitelistedData"
+          "WhitelistedData",
         );
       }
     });
@@ -118,13 +118,13 @@ describe("MerkleWhitelisted", () => {
 
     it("should revert if the user is incorrect", async () => {
       await expect(merkle.onlyWhitelistedUserMethod(getProof(tree, leaves[0]))).to.be.revertedWith(
-        "MerkleWhitelisted: not whitelisted"
+        "MerkleWhitelisted: not whitelisted",
       );
     });
 
     it("should revert if the proof is incorrect", async () => {
       await expect(merkle.connect(users[0]).onlyWhitelistedUserMethod(getProof(tree, leaves[1]))).to.be.revertedWith(
-        "MerkleWhitelisted: not whitelisted"
+        "MerkleWhitelisted: not whitelisted",
       );
     });
 
@@ -132,7 +132,7 @@ describe("MerkleWhitelisted", () => {
       for (let i = 0; i < 5; i++) {
         expect(await merkle.connect(users[i]).onlyWhitelistedUserMethod(getProof(tree, leaves[i]))).to.emit(
           merkle,
-          "WhitelistedUser"
+          "WhitelistedUser",
         );
       }
     });

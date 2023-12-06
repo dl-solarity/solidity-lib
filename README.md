@@ -17,7 +17,7 @@ The library consists of modules and utilities that are built with a help of [Ope
 - Optimized [**Incremental Merkle Tree**](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf) data structure
 - Novel **ReturnDataProxy** contract
 - Lightweight **SBT** implementation
-- Flexible UniswapV2 oracle
+- Flexible UniswapV2 and UniswapV3 oracles
 - Utilities to ease work with ERC20 decimals, arrays, sets and ZK proofs
 
 ## Overview

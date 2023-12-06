@@ -40,7 +40,7 @@ describe("Diamond", () => {
 
     it("should not transfer ownership from non-owner", async () => {
       await expect(diamond.connect(SECOND).transferOwnership(SECOND.address)).to.be.revertedWith(
-        "ODStorage: not an owner"
+        "ODStorage: not an owner",
       );
     });
 
@@ -103,21 +103,21 @@ describe("Diamond", () => {
       it("should revert if init address is not contract", async () => {
         const init = dummyInit.init.fragment.selector;
         await expect(diamond.diamondCutLong(facets, SECOND, init)).to.be.revertedWith(
-          "Diamond: init_ address has no code"
+          "Diamond: init_ address has no code",
         );
       });
 
       it("should revert if init function reverted", async () => {
         const initWithError = dummyInit.initWithError.fragment.selector;
         await expect(diamond.diamondCutLong(facets, await dummyInit.getAddress(), initWithError)).to.be.revertedWith(
-          "Diamond: initialization function reverted"
+          "Diamond: initialization function reverted",
         );
       });
 
       it("should revert if init function reverted with message", async () => {
         const initWithErrorMsg = dummyInit.initWithErrorMsg.fragment.selector;
         await expect(diamond.diamondCutLong(facets, await dummyInit.getAddress(), initWithErrorMsg)).to.be.revertedWith(
-          "DiamondInit: init error"
+          "DiamondInit: init error",
         );
       });
     });
@@ -164,7 +164,7 @@ describe("Diamond", () => {
         await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "ODStorage: not an owner"
+          "ODStorage: not an owner",
         );
       });
 
@@ -242,7 +242,7 @@ describe("Diamond", () => {
         await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "ODStorage: not an owner"
+          "ODStorage: not an owner",
         );
       });
     });
@@ -339,7 +339,7 @@ describe("Diamond", () => {
         await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "ODStorage: not an owner"
+          "ODStorage: not an owner",
         );
       });
     });

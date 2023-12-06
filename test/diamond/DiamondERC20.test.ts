@@ -48,13 +48,13 @@ describe("DiamondERC20 and InitializableStorage", () => {
   describe("access", () => {
     it("should initialize only once", async () => {
       await expect(erc20.__DiamondERC20Mock_init("Mock Token", "MT")).to.be.revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
     });
 
     it("should initialize only by top level contract", async () => {
       await expect(erc20.__DiamondERC20Direct_init("Mock Token", "MT")).to.be.revertedWith(
-        "Initializable: contract is not initializing"
+        "Initializable: contract is not initializing",
       );
     });
 
@@ -83,16 +83,16 @@ describe("DiamondERC20 and InitializableStorage", () => {
 
     it("should not transfer tokens to/from zero address", async () => {
       await expect(erc20.transferMock(SECOND.address, ZERO_ADDR, wei("100"))).to.be.revertedWith(
-        "ERC20: transfer to the zero address"
+        "ERC20: transfer to the zero address",
       );
       await expect(erc20.transferMock(ZERO_ADDR, SECOND.address, wei("100"))).to.be.revertedWith(
-        "ERC20: transfer from the zero address"
+        "ERC20: transfer from the zero address",
       );
     });
 
     it("should not transfer tokens if balance is insufficient", async () => {
       await expect(erc20.transfer(SECOND.address, wei("100"))).to.be.revertedWith(
-        "ERC20: transfer amount exceeds balance"
+        "ERC20: transfer amount exceeds balance",
       );
     });
 
@@ -129,10 +129,10 @@ describe("DiamondERC20 and InitializableStorage", () => {
 
     it("should not approve tokens to/from zero address", async () => {
       await expect(erc20.approveMock(OWNER.address, ZERO_ADDR, wei("100"))).to.be.revertedWith(
-        "ERC20: approve to the zero address"
+        "ERC20: approve to the zero address",
       );
       await expect(erc20.approveMock(ZERO_ADDR, OWNER.address, wei("100"))).to.be.revertedWith(
-        "ERC20: approve from the zero address"
+        "ERC20: approve from the zero address",
       );
     });
 
@@ -150,7 +150,7 @@ describe("DiamondERC20 and InitializableStorage", () => {
       await erc20.approve(SECOND.address, wei("100"));
 
       await expect(erc20.connect(SECOND).transferFrom(OWNER.address, SECOND.address, wei("110"))).to.be.revertedWith(
-        "ERC20: insufficient allowance"
+        "ERC20: insufficient allowance",
       );
     });
 
