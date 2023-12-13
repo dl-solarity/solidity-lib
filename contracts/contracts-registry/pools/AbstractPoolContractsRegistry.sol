@@ -125,7 +125,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
             }
 
             if (_beacons[names_[i]].implementation() != newImplementations_[i]) {
-                _beacons[names_[i]].upgrade(newImplementations_[i]);
+                _beacons[names_[i]].upgradeTo(newImplementations_[i]);
             }
         }
     }
