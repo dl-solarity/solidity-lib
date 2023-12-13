@@ -33,17 +33,17 @@ describe("ProxyBeacon", () => {
     it("should upgrade", async () => {
       expect(await proxyBeacon.implementation()).to.equal(ZERO_ADDR);
 
-      await proxyBeacon.upgrade(await token.getAddress());
+      await proxyBeacon.upgradeTo(await token.getAddress());
 
       expect(await proxyBeacon.implementation()).to.equal(await token.getAddress());
     });
 
     it("should not upgrade to non-contract", async () => {
-      await expect(proxyBeacon.upgrade(SECOND)).to.be.revertedWith("ProxyBeacon: not a contract");
+      await expect(proxyBeacon.upgradeTo(SECOND)).to.be.revertedWith("ProxyBeacon: not a contract");
     });
 
     it("only owner should upgrade", async () => {
-      await expect(proxyBeacon.connect(SECOND).upgrade(await token.getAddress())).to.be.revertedWith(
+      await expect(proxyBeacon.connect(SECOND).upgradeTo(await token.getAddress())).to.be.revertedWith(
         "ProxyBeacon: not an owner",
       );
     });
