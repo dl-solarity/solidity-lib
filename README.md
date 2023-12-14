@@ -1,4 +1,4 @@
-![](https://github.com/dl-solarity/solidity-lib/assets/47551140/f5c3929c-657e-4a27-84a2-e5f1bf14e4e9)
+![](https://github.com/dl-solarity/solidity-lib/assets/47551140/87464015-a97a-4f5b-a16f-b34c98eb6549)
 
 [![npm](https://img.shields.io/npm/v/@solarity/solidity-lib.svg)](https://www.npmjs.com/package/@solarity/solidity-lib)
 [![Coverage Status](https://codecov.io/gh/dl-solarity/solidity-lib/graph/badge.svg)](https://codecov.io/gh/dl-solarity/solidity-lib)
