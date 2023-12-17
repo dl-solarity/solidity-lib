@@ -6,7 +6,7 @@ import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {AbstractDependant} from "../../../contracts-registry/AbstractDependant.sol";
 import {AbstractPoolContractsRegistry} from "../AbstractPoolContractsRegistry.sol";
 
-import {PublicBeaconProxy} from "./proxy/PublicBeaconProxy.sol";
+import {PublicBeaconProxy} from "../../../proxy/beacon/PublicBeaconProxy.sol";
 
 /**
  * @notice The PoolContractsRegistry module
@@ -74,11 +74,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         string memory poolType_,
         address poolProxy_
     ) internal virtual {
-        (bool success, ) = poolRegistry_.call(
-            abi.encodeWithSignature("addProxyPool(string,address)", poolType_, poolProxy_)
-        );
-
-        require(success, "AbstractPoolFactory: failed to register contract");
+        AbstractPoolContractsRegistry(poolRegistry_).addProxyPool(poolType_, poolProxy_);
     }
 
     /**

@@ -9,7 +9,7 @@ import {Paginator} from "../../libs/arrays/Paginator.sol";
 
 import {AbstractDependant} from "../../contracts-registry/AbstractDependant.sol";
 
-import {ProxyBeacon} from "./proxy/ProxyBeacon.sol";
+import {ProxyBeacon} from "../../proxy/beacon/ProxyBeacon.sol";
 
 /**
  * @notice The PoolContractsRegistry module
@@ -47,6 +47,16 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
     ) public virtual override dependant {
         _contractsRegistry = contractsRegistry_;
     }
+
+    /**
+     * @notice The function to add new pools into the registry. Gets called from PoolFactory
+     *
+     * Proper only factory access control must be added in descending contracts + `_addProxyPool()` should be called inside.
+     *
+     * @param name_ the pool's associated name
+     * @param poolAddress_ the proxy address of the pool
+     */
+    function addProxyPool(string memory name_, address poolAddress_) public virtual;
 
     /**
      * @notice The function to get implementation of the specific pools

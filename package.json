@@ -1,6 +1,6 @@
 {
   "name": "@solarity/solidity-lib",
-  "version": "2.6.11",
+  "version": "2.6.12",
   "license": "MIT",
   "author": "Distributed Lab",
   "description": "Solidity Library by Distributed Lab",
@@ -29,8 +29,8 @@
     "publish-to-npm": "npm run lint-fix && bash ./scripts/publish.sh"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "4.9.2",
-    "@openzeppelin/contracts-upgradeable": "4.9.2",
+    "@openzeppelin/contracts": "4.9.5",
+    "@openzeppelin/contracts-upgradeable": "4.9.5",
     "@uniswap/v2-core": "1.0.1",
     "@uniswap/v2-periphery": "1.1.0-beta.0",
     "@uniswap/v3-core": "1.0.1",
