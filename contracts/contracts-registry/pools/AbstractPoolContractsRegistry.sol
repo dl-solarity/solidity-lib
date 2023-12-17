@@ -9,7 +9,7 @@ import {Paginator} from "../../libs/arrays/Paginator.sol";
 
 import {AbstractDependant} from "../../contracts-registry/AbstractDependant.sol";
 
-import {ProxyBeacon} from "./proxy/ProxyBeacon.sol";
+import {ProxyBeacon} from "../../proxy/beacon/ProxyBeacon.sol";
 
 /**
  * @notice The PoolContractsRegistry module

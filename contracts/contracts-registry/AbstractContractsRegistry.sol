@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {ProxyUpgrader} from "./proxy/ProxyUpgrader.sol";
+import {TransparentProxyUpgrader} from "../proxy/transparent/TransparentProxyUpgrader.sol";
 import {AbstractDependant} from "./AbstractDependant.sol";
 
 /**
@@ -36,7 +36,7 @@ import {AbstractDependant} from "./AbstractDependant.sol";
  * The management is simplified because all of the contracts are now located in a single place.
  */
 abstract contract AbstractContractsRegistry is Initializable {
-    ProxyUpgrader private _proxyUpgrader;
+    TransparentProxyUpgrader private _proxyUpgrader;
 
     mapping(string => address) private _contracts;
     mapping(address => bool) private _isProxy;
@@ -50,7 +50,7 @@ abstract contract AbstractContractsRegistry is Initializable {
      * @notice The proxy initializer function
      */
     function __ContractsRegistry_init() internal onlyInitializing {
-        _proxyUpgrader = new ProxyUpgrader();
+        _proxyUpgrader = new TransparentProxyUpgrader();
     }
 
     /**

@@ -4,10 +4,11 @@ pragma solidity ^0.8.4;
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
 /**
- * @notice The PoolContractsRegistry module
+ * @notice The proxies module
  *
- * The helper BeaconProxy that get deployed by the PoolFactory. Note that the external
- * `implementation()` function is added to the contract to provide compatability with the
+ * The helper BeaconProxy that can be deployed by the factories.
+ *
+ * Note that the external `implementation()` function is added to the contract to provide compatability with
  * Etherscan. This means that the implementation must not have such a function declared.
  */
 contract PublicBeaconProxy is BeaconProxy {

@@ -6,7 +6,7 @@ import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {AbstractDependant} from "../../../contracts-registry/AbstractDependant.sol";
 import {AbstractPoolContractsRegistry} from "../AbstractPoolContractsRegistry.sol";
 
-import {PublicBeaconProxy} from "./proxy/PublicBeaconProxy.sol";
+import {PublicBeaconProxy} from "../../../proxy/beacon/PublicBeaconProxy.sol";
 
 /**
  * @notice The PoolContractsRegistry module

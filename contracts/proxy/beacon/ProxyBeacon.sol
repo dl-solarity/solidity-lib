@@ -5,9 +5,9 @@ import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
- * @notice The PoolContractsRegistry module
+ * @notice The proxies module
  *
- * This is a utility lightweighted ProxyBeacon contract this is used as a beacon that BeaconProxies point to.
+ * This is a lightweight utility ProxyBeacon contract this may be used as a beacon that BeaconProxies point to.
  */
 contract ProxyBeacon is IBeacon {
     using Address for address;

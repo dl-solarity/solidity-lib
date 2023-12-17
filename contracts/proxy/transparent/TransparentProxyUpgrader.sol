@@ -5,12 +5,11 @@ import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transp
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
- * @notice The ContractsRegistry module
+ * @notice The proxies module
  *
- * This is the helper contract that is used by an AbstractContractsRegistry as a proxy admin.
- * It is essential to distinguish between the admin and the registry due to the Transparent proxies nature
+ * This is the lightweight helper contract that may be used as a transparent proxy admin.
  */
-contract ProxyUpgrader {
+contract TransparentProxyUpgrader {
     using Address for address;
 
     address private immutable _OWNER;
@@ -36,12 +35,12 @@ contract ProxyUpgrader {
         // bytes4(keccak256("implementation()")) == 0x5c60da1b
         (bool success_, bytes memory returndata_) = address(what_).staticcall(hex"5c60da1b");
 
-        require(success_, "ProxyUpgrader: not a proxy");
+        require(success_, "TransparentProxyUpgrader: not a proxy");
 
         return abi.decode(returndata_, (address));
     }
 
     function _onlyOwner() internal view {
-        require(_OWNER == msg.sender, "ProxyUpgrader: not an owner");
+        require(_OWNER == msg.sender, "TransparentProxyUpgrader: not an owner");
     }
 }
