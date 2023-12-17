@@ -7,7 +7,7 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 /**
  * @notice The proxies module
  *
- * This is a lightweight utility ProxyBeacon contract this may be used as a beacon that BeaconProxies point to.
+ * This is a lightweight utility ProxyBeacon contract that may be used as a beacon that BeaconProxies point to.
  */
 contract ProxyBeacon is IBeacon {
     using Address for address;
