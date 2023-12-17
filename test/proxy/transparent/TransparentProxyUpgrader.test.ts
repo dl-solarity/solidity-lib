@@ -11,7 +11,7 @@ describe("TransparentProxyUpgrader", () => {
   let OWNER: SignerWithAddress;
   let SECOND: SignerWithAddress;
 
-  let proxyUpgrader: TransparentProxyUpgrader;
+  let transparentProxyUpgrader: TransparentProxyUpgrader;
   let token: ERC20Mock;
   let proxy: TransparentUpgradeableProxy;
 
@@ -23,8 +23,13 @@ describe("TransparentProxyUpgrader", () => {
     const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
 
     token = await ERC20Mock.deploy("mock", "mock", 18);
-    proxyUpgrader = await TransparentProxyUpgrader.deploy();
-    proxy = await TransparentUpgradeableProxy.deploy(await token.getAddress(), await proxyUpgrader.getAddress(), "0x");
+
+    transparentProxyUpgrader = await TransparentProxyUpgrader.deploy();
+    proxy = await TransparentUpgradeableProxy.deploy(
+      await token.getAddress(),
+      await transparentProxyUpgrader.getAddress(),
+      "0x",
+    );
 
     await reverter.snapshot();
   });
@@ -34,25 +39,21 @@ describe("TransparentProxyUpgrader", () => {
   describe("upgrade", () => {
     it("only owner should upgrade", async () => {
       await expect(
-        proxyUpgrader.connect(SECOND).upgrade(await proxy.getAddress(), await proxy.getAddress(), "0x"),
+        transparentProxyUpgrader.connect(SECOND).upgrade(await proxy.getAddress(), await proxy.getAddress(), "0x"),
       ).to.be.revertedWith("TransparentProxyUpgrader: not an owner");
     });
   });
 
   describe("getImplementation", () => {
     it("should get implementation", async () => {
-      expect(await proxyUpgrader.getImplementation(await proxy.getAddress())).to.equal(await token.getAddress());
-    });
-
-    it("should not get implementation", async () => {
-      await expect(proxyUpgrader.getImplementation(await token.getAddress())).to.be.revertedWith(
-        "TransparentProxyUpgrader: not a proxy",
+      expect(await transparentProxyUpgrader.getImplementation(await proxy.getAddress())).to.equal(
+        await token.getAddress(),
       );
     });
 
-    it("only owner should get implementation", async () => {
-      await expect(proxyUpgrader.connect(SECOND).getImplementation(await proxy.getAddress())).to.be.revertedWith(
-        "TransparentProxyUpgrader: not an owner",
+    it("should not get implementation", async () => {
+      await expect(transparentProxyUpgrader.getImplementation(await token.getAddress())).to.be.revertedWith(
+        "TransparentProxyUpgrader: not a proxy",
       );
     });
   });

@@ -9,7 +9,7 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
  * The helper BeaconProxy that can be deployed by the factories.
  *
  * Note that the external `implementation()` function is added to the contract to provide compatability with
- * Etherscan. This means that the implementation must not have such a function declared.
+ * Etherscan. This means that the implementation contract must not have such a function declared.
  */
 contract PublicBeaconProxy is BeaconProxy {
     constructor(address beacon_, bytes memory data_) payable BeaconProxy(beacon_, data_) {}
@@ -18,7 +18,7 @@ contract PublicBeaconProxy is BeaconProxy {
      * @notice The function that returns implementation contract this proxy points to
      * @return address the implementation address
      */
-    function implementation() external view virtual returns (address) {
+    function implementation() public view virtual returns (address) {
         return _implementation();
     }
 }

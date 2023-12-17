@@ -15,7 +15,7 @@ contract TransparentProxyUpgrader {
     address private immutable _OWNER;
 
     modifier onlyOwner() {
-        _onlyOwner();
+        require(_OWNER == msg.sender, "TransparentProxyUpgrader: not an owner");
         _;
     }
 
@@ -23,7 +23,7 @@ contract TransparentProxyUpgrader {
         _OWNER = msg.sender;
     }
 
-    function upgrade(address what_, address to_, bytes calldata data_) external onlyOwner {
+    function upgrade(address what_, address to_, bytes calldata data_) external virtual onlyOwner {
         if (data_.length > 0) {
             ITransparentUpgradeableProxy(payable(what_)).upgradeToAndCall(to_, data_);
         } else {
@@ -31,16 +31,12 @@ contract TransparentProxyUpgrader {
         }
     }
 
-    function getImplementation(address what_) external view onlyOwner returns (address) {
+    function getImplementation(address what_) public view virtual returns (address) {
         // bytes4(keccak256("implementation()")) == 0x5c60da1b
         (bool success_, bytes memory returndata_) = address(what_).staticcall(hex"5c60da1b");
 
         require(success_, "TransparentProxyUpgrader: not a proxy");
 
         return abi.decode(returndata_, (address));
-    }
-
-    function _onlyOwner() internal view {
-        require(_OWNER == msg.sender, "TransparentProxyUpgrader: not an owner");
     }
 }
