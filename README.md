@@ -7,7 +7,7 @@
 
 # Solidity Library for Savvies by Distributed Lab
 
-The library consists of modules and utilities that are built with a help of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (4.9.2) and **go far beyond mediocre solidity**.
+The library consists of modules and utilities that are built with a help of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (4.9.5) and **go far beyond mediocre solidity**.
 
 - Implementation of [**Contracts Registry**](https://eips.ethereum.org/EIPS/eip-6224) pattern
 - Versatile **RBAC** and **MultiOwnable** smart contracts
