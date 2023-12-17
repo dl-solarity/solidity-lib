@@ -49,6 +49,16 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
     }
 
     /**
+     * @notice The function to add new pools into the registry. Gets called from PoolFactory
+     *
+     * Proper only factory access control must be added in descending contracts + `_addProxyPool()` should be called inside.
+     *
+     * @param name_ the pool's associated name
+     * @param poolAddress_ the proxy address of the pool
+     */
+    function addProxyPool(string memory name_, address poolAddress_) public virtual;
+
+    /**
      * @notice The function to get implementation of the specific pools
      * @param name_ the name of the pools
      * @return address_ the implementation these pools point to

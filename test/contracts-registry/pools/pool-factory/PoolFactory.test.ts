@@ -107,7 +107,7 @@ describe("PoolFactory", () => {
         await contractsRegistry.addContract(await contractsRegistry.POOL_FACTORY_NAME(), OWNER);
         await contractsRegistry.injectDependencies(await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME());
 
-        await expect(poolFactory.deployPool()).to.be.revertedWith("AbstractPoolFactory: failed to register contract");
+        await expect(poolFactory.deployPool()).to.be.revertedWith("PoolContractsRegistry: not a factory");
       });
 
       it("should deploy several pools", async () => {

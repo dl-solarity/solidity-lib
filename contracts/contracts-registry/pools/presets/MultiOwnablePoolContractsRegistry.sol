@@ -39,6 +39,4 @@ abstract contract MultiOwnablePoolContractsRegistry is
     ) external onlyOwner {
         _injectDependenciesToExistingPoolsWithData(name_, data_, offset_, limit_);
     }
-
-    function addProxyPool(string memory name_, address poolAddress_) public virtual;
 }

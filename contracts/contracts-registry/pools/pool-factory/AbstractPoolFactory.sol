@@ -74,11 +74,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         string memory poolType_,
         address poolProxy_
     ) internal virtual {
-        (bool success, ) = poolRegistry_.call(
-            abi.encodeWithSignature("addProxyPool(string,address)", poolType_, poolProxy_)
-        );
-
-        require(success, "AbstractPoolFactory: failed to register contract");
+        AbstractPoolContractsRegistry(poolRegistry_).addProxyPool(poolType_, poolProxy_);
     }
 
     /**
