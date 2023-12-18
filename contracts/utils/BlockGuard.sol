@@ -11,11 +11,11 @@ pragma solidity ^0.8.4;
  *
  * ```
  * contract NotFlashloanable is BlockGuard {
- *     function deposit(uint256 amount) lockBlock("DEPOSIT", msg.sender) external {
+ *     function deposit(uint256 amount) external lockBlock("DEPOSIT", msg.sender) {
  *         . . .
  *     }
  *
- *     function withdraw(uint256 amount) checkBlock("DEPOSIT", msg.sender) external {
+ *     function withdraw(uint256 amount) external checkBlock("DEPOSIT", msg.sender) {
  *         . . .
  *     }
  * }

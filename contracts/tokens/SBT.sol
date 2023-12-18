@@ -14,7 +14,7 @@ import {ISBT} from "../interfaces/tokens/ISBT.sol";
  * An abstract lightweight implementation of a Soul Bound Token. Does not comply with ERC721 standard.
  * Approve and transfer functionality has been removed as it is not needed in SBTs.
  *
- * The contract is still compatible with Metamask and Opensea.
+ * The contract is compatible with Metamask and Opensea.
  */
 abstract contract SBT is ISBT, ERC165Upgradeable {
     using Strings for uint256;
