@@ -9,13 +9,13 @@ import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLib
 /**
  * @notice UniswapV3Oracle module
  *
- * A contract for retrieving prices from Uniswap V3 pools.
+ * The contract for retrieving prices from Uniswap V3 pools.
  *
  * Works by calculating the time-weighted average tick as difference between two tickCumulatives
- * divided by number of second between them, tickCumulatives are taken from the newest observation
- * and from the one nearest to required time.
+ * divided by number of second between them. Where tickCumulatives are taken from the newest observation
+ * and the nearest one to the required time frame.
  *
- * Price is obtained as 1.0001 in power of this tick.
+ * Price is obtained as 1.0001 in power of the calculated tick.
  *
  * In case required period of time is unreachable, tick is taken from oldest available observation.
  */
@@ -25,7 +25,7 @@ contract UniswapV3Oracle {
     IUniswapV3Factory public immutable uniswapV3Factory;
 
     /**
-     * @dev contract is not an Initializable because the compiler version is <0.8.0
+     * @dev contract is not an Initializable due to the difference in compiler versions in UniswapV3 and Openzeppelin.
      */
     constructor(address uniswapV3Factory_) {
         uniswapV3Factory = IUniswapV3Factory(uniswapV3Factory_);
@@ -35,7 +35,7 @@ contract UniswapV3Oracle {
      * @notice The function to retrieve the price of a token following the configured route
      * @dev The function returns price in quote token decimals. If amount is zero, returns (0, 0)
      * @param path_ the path of token address, the last one is token in which price will be returned
-     * @param fees_ the array of fees for particular pools
+     * @param fees_ the array of fees for particular pools (10\**4 precision)
      * @param amount_ the amount of baseToken_
      * @param period_ the time period
      * @return amount_ the price of start token in quote token

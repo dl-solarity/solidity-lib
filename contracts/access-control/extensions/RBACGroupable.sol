@@ -13,6 +13,14 @@ import {RBAC} from "../RBAC.sol";
  *
  * This contract is an extension for the RBAC contract to provide the ability to organize roles
  * into groups and assign users to them.
+ *
+ * The contract also supports default groups that all users may be in by default.
+ *
+ * The RBAC structure becomes the following:
+ *
+ * ((PERMISSION >- RESOURCE) >- ROLE) >- GROUP
+ *
+ * Where ROLE and GROUP are assignable to users
  */
 abstract contract RBACGroupable is IRBACGroupable, RBAC {
     using StringSet for StringSet.Set;

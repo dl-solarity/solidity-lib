@@ -27,6 +27,10 @@ contract ProxyBeacon is IBeacon {
         _OWNER = msg.sender;
     }
 
+    /**
+     * @notice The function to upgrade to implementation contract
+     * @param newImplementation_ the new implementation
+     */
     function upgradeTo(address newImplementation_) external virtual onlyOwner {
         require(newImplementation_.isContract(), "ProxyBeacon: not a contract");
 
@@ -35,6 +39,10 @@ contract ProxyBeacon is IBeacon {
         emit Upgraded(newImplementation_);
     }
 
+    /**
+     * @notice The function to get the address of the implementation contract
+     * @return the address of the implementation contract
+     */
     function implementation() public view virtual override returns (address) {
         return _implementation;
     }

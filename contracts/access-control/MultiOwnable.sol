@@ -13,7 +13,8 @@ import {IMultiOwnable} from "../interfaces/access-control/IMultiOwnable.sol";
  *
  * Contract module which provides a basic access control mechanism, where there is a list of
  * owner addresses those can be granted exclusive access to specific functions.
- * All owners are equal in their access, they can add new owners, also remove each other and themself.
+ *
+ * All owners are equal in their access, they can add new owners, also remove each other and themselves.
  *
  * By default, the owner account will be the one that deploys the contract.
  *
@@ -60,8 +61,7 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
     }
 
     /**
-     * @notice Gives ownership of the contract to array of new owners.
-     * Null address will not be added and function will be reverted.
+     * @notice Gives ownership of the contract to array of new owners. Null address addition is not allowed.
      * @dev Internal function without access restriction.
      * @param newOwners_ the array of addresses to add to _owners
      */

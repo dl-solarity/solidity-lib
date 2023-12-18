@@ -12,10 +12,15 @@ import {PRECISION} from "../utils/Globals.sol";
  * @notice The Compound Rate Keeper module
  *
  * The purpose of this module is to calculate the compound interest rate via 2 parameters:
- * capitalizationRate and capitalizationPeriod.
+ * `capitalizationRate` and `capitalizationPeriod`. Where `capitalizationRate` is the compound percentage
+ * and `capitalizationPeriod` is the number of elapsed seconds the `capitalizationRate` has to be applied to get the interest.
  *
- * The CompoundRateKeeper can be used in landing protocols to calculate the interest and borrow rates. It can
- * also be used in regular staking contracts to get users' rewards accrual.
+ * The CompoundRateKeeper can be used in lending protocols to calculate the interest and borrow rates. It can
+ * also be used in regular staking contracts to get users' rewards accrual, where the APY is fixed.
+ *
+ * The compound interest formula is the following:
+ *
+ * newRate = curRate * (capitalizationRate\**(secondsPassed / capitalizationPeriod)), where curRate is initially 1
  *
  * The compound rate is calculated with 10\**25 precision.
  * The maximal possible compound rate is (type(uint128).max * 10\**25)

@@ -14,6 +14,9 @@ import {ERC20, IERC20, IERC20Metadata} from "@openzeppelin/contracts/token/ERC20
  * Also it is recommended to call `round18()` function on the first execution line in order to get rid of the
  * trailing numbers if the destination decimals are less than 18
  *
+ * IMPORTANT
+ * Users are requested to use `from18Safe()` instead of `from18()` by default to avoid "small amount exploits".
+ *
  * ## Usage example:
  *
  * ```

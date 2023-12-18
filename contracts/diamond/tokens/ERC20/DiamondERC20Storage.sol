@@ -7,7 +7,9 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {InitializableStorage} from "../../utils/InitializableStorage.sol";
 
 /**
- * @notice This is an ERC20 token Storage contract with Diamond Standard support
+ * @notice The Diamond standard module
+ *
+ * This is an ERC20 token Storage contract with Diamond Standard support
  */
 abstract contract DiamondERC20Storage is InitializableStorage, IERC20, IERC20Metadata {
     bytes32 public constant DIAMOND_ERC20_STORAGE_SLOT =

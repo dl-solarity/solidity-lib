@@ -201,9 +201,9 @@ library ArrayHelper {
     }
 
     /**
-     * @notice The function that free memory that was allocated for array
+     * @notice The function to crop the array
      * @param array_ the array to crop
-     * @param newLength_ the new length of the array
+     * @param newLength_ the new length of the array (has to be less or equal)
      * @return ref to cropped array
      */
     function crop(

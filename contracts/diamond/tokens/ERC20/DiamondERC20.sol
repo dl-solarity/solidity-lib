@@ -6,7 +6,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {DiamondERC20Storage} from "./DiamondERC20Storage.sol";
 
 /**
- * @notice This is modified version of OpenZeppelin's ERC20 contract to be used as a Storage contract
+ * @notice The Diamond standard module
+ *
+ * This is modified version of OpenZeppelin's ERC20 contract to be used as a Storage contract
  * by the Diamond Standard.
  */
 contract DiamondERC20 is DiamondERC20Storage {

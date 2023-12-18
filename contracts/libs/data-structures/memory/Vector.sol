@@ -8,7 +8,7 @@ import {TypeCaster} from "../../utils/TypeCaster.sol";
  *
  * This library is inspired by C++ STD vector to enable push() and pop() operations for memory arrays.
  *
- * Currently Solidity allows resizing storage arrays only, which may be a roadblock if you need to
+ * Currently Solidity allows resizing only storage arrays, which may be a roadblock if you need to
  * filter the elements by a specific property or add new ones without writing bulky code. The Vector library
  * is ment to help with that.
  *

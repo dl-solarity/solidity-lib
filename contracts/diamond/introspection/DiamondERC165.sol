@@ -4,7 +4,9 @@ pragma solidity ^0.8.4;
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 /**
- * @notice DiamondERC165 - Contract implementing ERC165 interface for Diamonds
+ * @notice The Diamond standard module
+ *
+ * DiamondERC165 - Contract implementing ERC165 interface for Diamonds
  */
 contract DiamondERC165 is ERC165 {
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {

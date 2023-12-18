@@ -13,7 +13,7 @@ import {ArrayHelper} from "../libs/arrays/ArrayHelper.sol";
 /**
  * @notice UniswapV2Oracle module
  *
- * A contract for retrieving prices from Uniswap V2 pairs. Works by keeping track of pairs that were
+ * The contract for retrieving prices from Uniswap V2 pairs. Works by keeping track of pairs that were
  * added as paths and returns prices of tokens following the configured routes.
  *
  * Arbitrary time window (time between oracle observations) may be configured and the Oracle will adjust automatically.

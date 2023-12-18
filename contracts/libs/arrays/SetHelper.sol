@@ -6,7 +6,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {StringSet} from "../data-structures/StringSet.sol";
 
 /**
- * @notice A simple library to work with sets
+ * @notice A simple library to work with Openzeppelin sets
  */
 library SetHelper {
     using EnumerableSet for EnumerableSet.UintSet;
