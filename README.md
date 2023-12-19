@@ -46,6 +46,7 @@ contract ContractsRegistry is OwnableContractsRegistry {
 }
 ```
 
+> [!IMPORTANT]
 > It is important to use the library as it is shipped and not copy-paste the code from untrusted sources.
 
 ## License

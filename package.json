@@ -41,7 +41,7 @@
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
-    "@solarity/hardhat-markup": "^1.0.3",
+    "@solarity/hardhat-markup": "^1.0.4",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@types/chai": "^4.3.11",
