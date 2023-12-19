@@ -70,7 +70,7 @@ library Vector {
     }
 
     /**
-     * @notice The function to push new elements (as an array) to the vector, amortized O(n)
+     * @notice The function to push new elements (as an array) to the uint256 vector, amortized O(n)
      * @param vector self
      * @param values_ the new elements to add
      */
@@ -79,7 +79,7 @@ library Vector {
     }
 
     /**
-     * @notice The function to push a new element to the vector, amortized O(1)
+     * @notice The function to push a new element to the uint256 vector, amortized O(1)
      * @param vector self
      * @param value_ the new element to add
      */
@@ -88,7 +88,7 @@ library Vector {
     }
 
     /**
-     * @notice The function to pop the last element from the vector, O(1)
+     * @notice The function to pop the last element from the uint256 vector, O(1)
      * @param vector self
      */
     function pop(UintVector memory vector) internal pure {
@@ -96,7 +96,7 @@ library Vector {
     }
 
     /**
-     * @notice The function to assign the value to a vector element
+     * @notice The function to assign the value to a uint256 vector element
      * @param vector self
      * @param index_ the index of the element to be assigned
      * @param value_ the value to assign
@@ -106,7 +106,7 @@ library Vector {
     }
 
     /**
-     * @notice The function to read the element of the vector
+     * @notice The function to read the element of the uint256 vector
      * @param vector self
      * @param index_ the index of the element to read
      * @return the vector element
@@ -116,7 +116,7 @@ library Vector {
     }
 
     /**
-     * @notice The function to get the number of vector elements
+     * @notice The function to get the number of uint256 vector elements
      * @param vector self
      * @return the number of vector elements
      */
@@ -125,7 +125,7 @@ library Vector {
     }
 
     /**
-     * @notice The function to cast the vector to an array
+     * @notice The function to cast the uint256 vector to an array
      * @dev The function returns the *reference* to the underlying array. Modifying the reference
      * will also modify the vector itself. However, this might not always be the case as the vector
      * resizes
@@ -146,44 +146,74 @@ library Vector {
         Vector _vector;
     }
 
+    /**
+     * @notice The Bytes32Vector constructor, creates an empty vector instance, O(1) complex
+     */
     function newBytes32() internal pure returns (Bytes32Vector memory vector) {
         vector._vector = _new();
     }
 
+    /**
+     * @notice The Bytes32Vector constructor, creates a vector instance with defined length, O(n) complex
+     */
     function newBytes32(uint256 length_) internal pure returns (Bytes32Vector memory vector) {
         vector._vector = _new(length_);
     }
 
+    /**
+     * @notice The Bytes32Vector constructor, creates a vector instance from the array, O(1) complex
+     */
     function newBytes32(
         bytes32[] memory array_
     ) internal pure returns (Bytes32Vector memory vector) {
         vector._vector = _new(array_);
     }
 
+    /**
+     * @notice The function to push new elements (as an array) to the bytes32 vector, amortized O(n)
+     */
     function push(Bytes32Vector memory vector, bytes32[] memory values_) internal pure {
         _push(vector._vector, values_);
     }
 
+    /**
+     * @notice The function to push a new element to the bytes32 vector, amortized O(1)
+     */
     function push(Bytes32Vector memory vector, bytes32 value_) internal pure {
         _push(vector._vector, value_);
     }
 
+    /**
+     * @notice The function to pop the last element from the bytes32 vector, O(1)
+     */
     function pop(Bytes32Vector memory vector) internal pure {
         _pop(vector._vector);
     }
 
+    /**
+     * @notice The function to assign the value to a bytes32 vector element
+     */
     function set(Bytes32Vector memory vector, uint256 index_, bytes32 value_) internal pure {
         _set(vector._vector, index_, value_);
     }
 
+    /**
+     * @notice The function to read the element of the bytes32 vector
+     */
     function at(Bytes32Vector memory vector, uint256 index_) internal pure returns (bytes32) {
         return _at(vector._vector, index_);
     }
 
+    /**
+     * @notice The function to get the number of bytes32 vector elements
+     */
     function length(Bytes32Vector memory vector) internal pure returns (uint256) {
         return _length(vector._vector);
     }
 
+    /**
+     * @notice The function to cast the bytes32 vector to an array
+     */
     function toArray(Bytes32Vector memory vector) internal pure returns (bytes32[] memory) {
         return _toArray(vector._vector);
     }
@@ -198,44 +228,74 @@ library Vector {
         Vector _vector;
     }
 
+    /**
+     * @notice The AddressVector constructor, creates an empty vector instance, O(1) complex
+     */
     function newAddress() internal pure returns (AddressVector memory vector) {
         vector._vector = _new();
     }
 
+    /**
+     * @notice The AddressVector constructor, creates a vector instance with defined length, O(n) complex
+     */
     function newAddress(uint256 length_) internal pure returns (AddressVector memory vector) {
         vector._vector = _new(length_);
     }
 
+    /**
+     * @notice The AddressVector constructor, creates a vector instance from the array, O(1) complex
+     */
     function newAddress(
         address[] memory array_
     ) internal pure returns (AddressVector memory vector) {
         vector._vector = _new(array_.asBytes32Array());
     }
 
+    /**
+     * @notice The function to push new elements (as an array) to the address vector, amortized O(n)
+     */
     function push(AddressVector memory vector, address[] memory values_) internal pure {
         _push(vector._vector, values_.asBytes32Array());
     }
 
+    /**
+     * @notice The function to push a new element to the address vector, amortized O(1)
+     */
     function push(AddressVector memory vector, address value_) internal pure {
         _push(vector._vector, bytes32(uint256(uint160(value_))));
     }
 
+    /**
+     * @notice The function to pop the last element from the address vector, O(1)
+     */
     function pop(AddressVector memory vector) internal pure {
         _pop(vector._vector);
     }
 
+    /**
+     * @notice The function to assign the value to an address vector element
+     */
     function set(AddressVector memory vector, uint256 index_, address value_) internal pure {
         _set(vector._vector, index_, bytes32(uint256(uint160(value_))));
     }
 
+    /**
+     * @notice The function to read the element of the address vector
+     */
     function at(AddressVector memory vector, uint256 index_) internal pure returns (address) {
         return address(uint160(uint256(_at(vector._vector, index_))));
     }
 
+    /**
+     * @notice The function to get the number of address vector elements
+     */
     function length(AddressVector memory vector) internal pure returns (uint256) {
         return _length(vector._vector);
     }
 
+    /**
+     * @notice The function to cast the address vector to an array
+     */
     function toArray(AddressVector memory vector) internal pure returns (address[] memory) {
         return _toArray(vector._vector).asAddressArray();
     }

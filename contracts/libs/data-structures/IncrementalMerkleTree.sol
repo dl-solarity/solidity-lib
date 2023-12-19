@@ -58,7 +58,7 @@ library IncrementalMerkleTree {
     }
 
     /**
-     * @notice The function to add a new element to the tree.
+     * @notice The function to add a new element to the uint256 tree.
      * Complexity is O(log(n)), where n is the number of elements in the tree.
      *
      * @param tree self.
@@ -69,7 +69,7 @@ library IncrementalMerkleTree {
     }
 
     /**
-     * @notice The function to return the root hash of the tree.
+     * @notice The function to return the root hash of the uint256 tree.
      * Complexity is O(log(n) + h), where n is the number of elements in the tree and
      * h is the height of the tree.
      *
@@ -81,7 +81,7 @@ library IncrementalMerkleTree {
     }
 
     /**
-     * @notice The function to return the height of the tree. Complexity is O(1).
+     * @notice The function to return the height of the uint256 tree. Complexity is O(1).
      * @param tree self.
      * @return The height of the Merkle tree.
      */
@@ -90,7 +90,7 @@ library IncrementalMerkleTree {
     }
 
     /**
-     * @notice The function to return the number of elements in the tree. Complexity is O(1).
+     * @notice The function to return the number of elements in the uint256 tree. Complexity is O(1).
      * @param tree self.
      * @return The number of elements in the Merkle tree.
      */
@@ -108,18 +108,33 @@ library IncrementalMerkleTree {
         IMT _tree;
     }
 
+    /**
+     * @notice The function to add a new element to the bytes32 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     */
     function add(Bytes32IMT storage tree, bytes32 element_) internal {
         _add(tree._tree, element_);
     }
 
+    /**
+     * @notice The function to return the root hash of the bytes32 tree.
+     * Complexity is O(log(n) + h), where n is the number of elements in the tree and
+     * h is the height of the tree.
+     */
     function root(Bytes32IMT storage tree) internal view returns (bytes32) {
         return _root(tree._tree);
     }
 
+    /**
+     * @notice The function to return the height of the bytes32 tree. Complexity is O(1).
+     */
     function height(Bytes32IMT storage tree) internal view returns (uint256) {
         return _height(tree._tree);
     }
 
+    /**
+     * @notice The function to return the number of elements in the bytes32 tree. Complexity is O(1).
+     */
     function length(Bytes32IMT storage tree) internal view returns (uint256) {
         return _length(tree._tree);
     }
@@ -134,18 +149,33 @@ library IncrementalMerkleTree {
         IMT _tree;
     }
 
+    /**
+     * @notice The function to add a new element to the address tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     */
     function add(AddressIMT storage tree, address element_) internal {
         _add(tree._tree, bytes32(uint256(uint160(element_))));
     }
 
+    /**
+     * @notice The function to return the root hash of the address tree.
+     * Complexity is O(log(n) + h), where n is the number of elements in the tree and
+     * h is the height of the tree.
+     */
     function root(AddressIMT storage tree) internal view returns (bytes32) {
         return _root(tree._tree);
     }
 
+    /**
+     * @notice The function to return the height of the address tree. Complexity is O(1).
+     */
     function height(AddressIMT storage tree) internal view returns (uint256) {
         return _height(tree._tree);
     }
 
+    /**
+     * @notice The function to return the number of elements in the address tree. Complexity is O(1).
+     */
     function length(AddressIMT storage tree) internal view returns (uint256) {
         return _length(tree._tree);
     }

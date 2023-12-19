@@ -8,9 +8,9 @@ pragma solidity ^0.8.4;
  */
 library TypeCaster {
     /**
-     * @notice The function that casts the list of `X`-type elements to the list of uint256
-     * @param from_ the list of `X`-type elements
-     * @return array_ the list of uint256
+     * @notice The function that casts the bytes32 array to the uint256 array
+     * @param from_ the bytes32 array
+     * @return array_ the uint256 array
      */
     function asUint256Array(
         bytes32[] memory from_
@@ -20,6 +20,9 @@ library TypeCaster {
         }
     }
 
+    /**
+     * @notice The function that casts the address array to the uint256 array
+     */
     function asUint256Array(
         address[] memory from_
     ) internal pure returns (uint256[] memory array_) {
@@ -29,8 +32,8 @@ library TypeCaster {
     }
 
     /**
-     * @notice The function that casts the list of `X`-type elements to the list of addresses
-     * @param from_ the list of `X`-type elements
+     * @notice The function that casts the bytes32 array to the address array
+     * @param from_ the bytes32 array
      * @return array_ the list of addresses
      */
     function asAddressArray(
@@ -41,6 +44,9 @@ library TypeCaster {
         }
     }
 
+    /**
+     * @notice The function that casts the uint256 array to the address array
+     */
     function asAddressArray(
         uint256[] memory from_
     ) internal pure returns (address[] memory array_) {
@@ -50,9 +56,9 @@ library TypeCaster {
     }
 
     /**
-     * @notice The function that casts the list of `X`-type elements to the list of bytes32
-     * @param from_ the list of `X`-type elements
-     * @return array_ the list of bytes32
+     * @notice The function that casts the uint256 array to the bytes32 array
+     * @param from_ the bytes32 array
+     * @return array_ the list of addresses
      */
     function asBytes32Array(
         uint256[] memory from_
@@ -62,6 +68,9 @@ library TypeCaster {
         }
     }
 
+    /**
+     * @notice The function that casts the address array to the bytes32 array
+     */
     function asBytes32Array(
         address[] memory from_
     ) internal pure returns (bytes32[] memory array_) {
@@ -71,7 +80,7 @@ library TypeCaster {
     }
 
     /**
-     * @notice The function to transform an element into an array
+     * @notice The function to transform a uint256 element into an array
      * @param from_ the element
      * @return array_ the element as an array
      */
@@ -80,28 +89,40 @@ library TypeCaster {
         array_[0] = from_;
     }
 
+    /**
+     * @notice The function to transform an address element into an array
+     */
     function asSingletonArray(address from_) internal pure returns (address[] memory array_) {
         array_ = new address[](1);
         array_[0] = from_;
     }
 
+    /**
+     * @notice The function to transform a bool element into an array
+     */
     function asSingletonArray(bool from_) internal pure returns (bool[] memory array_) {
         array_ = new bool[](1);
         array_[0] = from_;
     }
 
+    /**
+     * @notice The function to transform a string element into an array
+     */
     function asSingletonArray(string memory from_) internal pure returns (string[] memory array_) {
         array_ = new string[](1);
         array_[0] = from_;
     }
 
+    /**
+     * @notice The function to transform a bytes32 element into an array
+     */
     function asSingletonArray(bytes32 from_) internal pure returns (bytes32[] memory array_) {
         array_ = new bytes32[](1);
         array_[0] = from_;
     }
 
     /**
-     * @notice The function to convert static array to dynamic
+     * @notice The function to convert static uint256[1] array to dynamic
      * @param static_ the static array to convert
      * @return dynamic_ the converted dynamic array
      */
@@ -111,6 +132,9 @@ library TypeCaster {
         return asSingletonArray(static_[0]);
     }
 
+    /**
+     * @notice The function to convert static uint256[2] array to dynamic
+     */
     function asDynamic(
         uint256[2] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
@@ -127,6 +151,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 2);
     }
 
+    /**
+     * @notice The function to convert static uint256[3] array to dynamic
+     */
     function asDynamic(
         uint256[3] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
@@ -143,6 +170,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 3);
     }
 
+    /**
+     * @notice The function to convert static uint256[4] array to dynamic
+     */
     function asDynamic(
         uint256[4] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
@@ -159,6 +189,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 4);
     }
 
+    /**
+     * @notice The function to convert static uint256[5] array to dynamic
+     */
     function asDynamic(
         uint256[5] memory static_
     ) internal pure returns (uint256[] memory dynamic_) {
@@ -175,12 +208,18 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 5);
     }
 
+    /**
+     * @notice The function to convert static address[1] array to dynamic
+     */
     function asDynamic(
         address[1] memory static_
     ) internal pure returns (address[] memory dynamic_) {
         return asSingletonArray(static_[0]);
     }
 
+    /**
+     * @notice The function to convert static address[2] array to dynamic
+     */
     function asDynamic(
         address[2] memory static_
     ) internal pure returns (address[] memory dynamic_) {
@@ -197,6 +236,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 2);
     }
 
+    /**
+     * @notice The function to convert static address[3] array to dynamic
+     */
     function asDynamic(
         address[3] memory static_
     ) internal pure returns (address[] memory dynamic_) {
@@ -213,6 +255,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 3);
     }
 
+    /**
+     * @notice The function to convert static address[4] array to dynamic
+     */
     function asDynamic(
         address[4] memory static_
     ) internal pure returns (address[] memory dynamic_) {
@@ -229,6 +274,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 4);
     }
 
+    /**
+     * @notice The function to convert static address[5] array to dynamic
+     */
     function asDynamic(
         address[5] memory static_
     ) internal pure returns (address[] memory dynamic_) {
@@ -245,10 +293,16 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 5);
     }
 
+    /**
+     * @notice The function to convert static bool[1] array to dynamic
+     */
     function asDynamic(bool[1] memory static_) internal pure returns (bool[] memory dynamic_) {
         return asSingletonArray(static_[0]);
     }
 
+    /**
+     * @notice The function to convert static bool[2] array to dynamic
+     */
     function asDynamic(bool[2] memory static_) internal pure returns (bool[] memory dynamic_) {
         dynamic_ = new bool[](2);
 
@@ -263,6 +317,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 2);
     }
 
+    /**
+     * @notice The function to convert static bool[3] array to dynamic
+     */
     function asDynamic(bool[3] memory static_) internal pure returns (bool[] memory dynamic_) {
         dynamic_ = new bool[](3);
 
@@ -277,6 +334,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 3);
     }
 
+    /**
+     * @notice The function to convert static bool[4] array to dynamic
+     */
     function asDynamic(bool[4] memory static_) internal pure returns (bool[] memory dynamic_) {
         dynamic_ = new bool[](4);
 
@@ -291,6 +351,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 4);
     }
 
+    /**
+     * @notice The function to convert static bool[5] array to dynamic
+     */
     function asDynamic(bool[5] memory static_) internal pure returns (bool[] memory dynamic_) {
         dynamic_ = new bool[](5);
 
@@ -305,10 +368,16 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 5);
     }
 
+    /**
+     * @notice The function to convert static string[1] array to dynamic
+     */
     function asDynamic(string[1] memory static_) internal pure returns (string[] memory dynamic_) {
         return asSingletonArray(static_[0]);
     }
 
+    /**
+     * @notice The function to convert static string[2] array to dynamic
+     */
     function asDynamic(string[2] memory static_) internal pure returns (string[] memory dynamic_) {
         dynamic_ = new string[](2);
 
@@ -323,6 +392,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 2);
     }
 
+    /**
+     * @notice The function to convert static string[3] array to dynamic
+     */
     function asDynamic(string[3] memory static_) internal pure returns (string[] memory dynamic_) {
         dynamic_ = new string[](3);
 
@@ -337,6 +409,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 3);
     }
 
+    /**
+     * @notice The function to convert static string[4] array to dynamic
+     */
     function asDynamic(string[4] memory static_) internal pure returns (string[] memory dynamic_) {
         dynamic_ = new string[](4);
 
@@ -351,6 +426,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 4);
     }
 
+    /**
+     * @notice The function to convert static string[5] array to dynamic
+     */
     function asDynamic(string[5] memory static_) internal pure returns (string[] memory dynamic_) {
         dynamic_ = new string[](5);
 
@@ -365,12 +443,18 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 5);
     }
 
+    /**
+     * @notice The function to convert static bytes32[1] array to dynamic
+     */
     function asDynamic(
         bytes32[1] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
         return asSingletonArray(static_[0]);
     }
 
+    /**
+     * @notice The function to convert static bytes32[2] array to dynamic
+     */
     function asDynamic(
         bytes32[2] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
@@ -387,6 +471,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 2);
     }
 
+    /**
+     * @notice The function to convert static bytes32[3] array to dynamic
+     */
     function asDynamic(
         bytes32[3] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
@@ -403,6 +490,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 3);
     }
 
+    /**
+     * @notice The function to convert static bytes32[4] array to dynamic
+     */
     function asDynamic(
         bytes32[4] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
@@ -419,6 +509,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 4);
     }
 
+    /**
+     * @notice The function to convert static bytes32[5] array to dynamic
+     */
     function asDynamic(
         bytes32[5] memory static_
     ) internal pure returns (bytes32[] memory dynamic_) {
@@ -435,6 +528,9 @@ library TypeCaster {
         _copy(pointerS_, pointerD_, 5);
     }
 
+    /**
+     * @notice private function to copy memory
+     */
     function _copy(uint256 locationS_, uint256 locationD_, uint256 length_) private pure {
         assembly {
             for {

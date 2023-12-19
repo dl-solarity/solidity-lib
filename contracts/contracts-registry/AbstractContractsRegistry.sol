@@ -49,7 +49,7 @@ abstract contract AbstractContractsRegistry is Initializable {
     event ContractRemoved(string name);
 
     /**
-     * @notice The proxy initializer function
+     * @notice The initialization function
      */
     function __ContractsRegistry_init() internal onlyInitializing {
         _proxyUpgrader = new TransparentProxyUpgrader();

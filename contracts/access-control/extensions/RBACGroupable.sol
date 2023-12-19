@@ -32,7 +32,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     mapping(string => StringSet.Set) private _groupRoles;
 
     /**
-     * @notice The init function
+     * @notice The initialization function
      */
     function __RBACGroupable_init() internal onlyInitializing {
         __RBAC_init();

@@ -141,7 +141,7 @@ library VerifierHelper {
             )
         );
 
-        // We have to use abi.encodePacked to encode a dynamic array as a static array (without offset and length)
+        /// @dev We have to use abi.encodePacked to encode a dynamic array as a static array (without offset and length)
         (bool success_, bytes memory returnData_) = verifier_.staticcall(
             abi.encodePacked(abi.encodeWithSignature(funcSign_, a_, b_, c_), pubSignals_)
         );

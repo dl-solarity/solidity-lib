@@ -9,36 +9,35 @@ interface IMultiOwnable {
     event OwnersRemoved(address[] removedOwners);
 
     /**
-     * @notice Owner can add new owners to the contract's owners list.
-     * @param newOwners_ the array of addresses to add to _owners.
+     * @notice The function to add equally rightful owners to the contract
+     * @param newOwners_ the owners to be added
      */
     function addOwners(address[] calldata newOwners_) external;
 
     /**
-     * @notice Owner can remove the array of owners from the contract's owners list.
-     * @param oldOwners_ the array of addresses to remove from _owners
+     * @notice The function to remove owners from the contract
+     * @param oldOwners_ the owners to be removed. Note that one can remove themself
      */
     function removeOwners(address[] calldata oldOwners_) external;
 
     /**
-     * @notice Allows to remove yourself from list of owners.
-     
+     * @notice The function to remove yourself from the owners list
+     *
      * Note: renouncing ownership may leave the contract without an owner,
      * thereby disabling any functionality that is only available to the owner.
      */
     function renounceOwnership() external;
 
     /**
-     * @notice Returns the addresses of the current owners.
-     * @dev Returns a copy of the whole Set of owners.
-     * @return the array of addresses.
+     * @notice The function to get the list of current owners. Be careful, O(n) complexity
+     * @return the list of current owners
      */
     function getOwners() external view returns (address[] memory);
 
     /**
-     * @notice Returns true if address is in the contract's owners list.
-     * @param address_ the address to check.
-     * @return whether the _address in _owners.
+     * @notice The function to check the ownership of a user
+     * @param address_ the user to check
+     * @return true if address_ is owner, false otherwise
      */
     function isOwner(address address_) external view returns (bool);
 }

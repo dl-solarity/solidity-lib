@@ -38,7 +38,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     uint256 private _currentRate;
 
     /**
-     * @notice The proxy initializer function
+     * @notice The initialization function
      */
     function __CompoundRateKeeper_init(
         uint256 capitalizationRate_,

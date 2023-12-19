@@ -101,7 +101,7 @@ library ArrayHelper {
     }
 
     /**
-     * @notice The function to reverse an array
+     * @notice The function to reverse a uint256 array
      * @param arr_ the array to reverse
      * @return reversed_ the reversed array
      */
@@ -115,6 +115,9 @@ library ArrayHelper {
         }
     }
 
+    /**
+     * @notice The function to reverse an address array
+     */
     function reverse(address[] memory arr_) internal pure returns (address[] memory reversed_) {
         reversed_ = new address[](arr_.length);
         uint256 i = arr_.length;
@@ -125,6 +128,9 @@ library ArrayHelper {
         }
     }
 
+    /**
+     * @notice The function to reverse a string array
+     */
     function reverse(string[] memory arr_) internal pure returns (string[] memory reversed_) {
         reversed_ = new string[](arr_.length);
         uint256 i = arr_.length;
@@ -135,6 +141,9 @@ library ArrayHelper {
         }
     }
 
+    /**
+     * @notice The function to reverse a bytes32 array
+     */
     function reverse(bytes32[] memory arr_) internal pure returns (bytes32[] memory reversed_) {
         reversed_ = new bytes32[](arr_.length);
         uint256 i = arr_.length;
@@ -146,7 +155,7 @@ library ArrayHelper {
     }
 
     /**
-     * @notice The function to insert an array into the other array
+     * @notice The function to insert a uint256 array into the other array
      * @param to_ the array to insert into
      * @param index_ the insertion starting index
      * @param what_ the array to be inserted
@@ -164,6 +173,9 @@ library ArrayHelper {
         return index_ + what_.length;
     }
 
+    /**
+     * @notice The function to insert an address array into the other array
+     */
     function insert(
         address[] memory to_,
         uint256 index_,
@@ -176,6 +188,9 @@ library ArrayHelper {
         return index_ + what_.length;
     }
 
+    /**
+     * @notice The function to insert a string array into the other array
+     */
     function insert(
         string[] memory to_,
         uint256 index_,
@@ -188,6 +203,9 @@ library ArrayHelper {
         return index_ + what_.length;
     }
 
+    /**
+     * @notice The function to insert a bytes32 array into the other array
+     */
     function insert(
         bytes32[] memory to_,
         uint256 index_,
@@ -201,7 +219,7 @@ library ArrayHelper {
     }
 
     /**
-     * @notice The function to crop the array
+     * @notice The function to crop a uint256 array
      * @param array_ the array to crop
      * @param newLength_ the new length of the array (has to be less or equal)
      * @return ref to cropped array
@@ -219,6 +237,9 @@ library ArrayHelper {
         return array_;
     }
 
+    /**
+     * @notice The function to crop an address array
+     */
     function crop(
         address[] memory array_,
         uint256 newLength_
@@ -232,6 +253,9 @@ library ArrayHelper {
         return array_;
     }
 
+    /**
+     * @notice The function to crop a bool array
+     */
     function crop(bool[] memory array_, uint256 newLength_) internal pure returns (bool[] memory) {
         if (newLength_ < array_.length) {
             assembly {
@@ -242,6 +266,9 @@ library ArrayHelper {
         return array_;
     }
 
+    /**
+     * @notice The function to crop a string array
+     */
     function crop(
         string[] memory array_,
         uint256 newLength_
@@ -255,6 +282,9 @@ library ArrayHelper {
         return array_;
     }
 
+    /**
+     * @notice The function to crop a bytes32 array
+     */
     function crop(
         bytes32[] memory array_,
         uint256 newLength_
