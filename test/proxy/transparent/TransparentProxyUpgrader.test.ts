@@ -40,7 +40,7 @@ describe("TransparentProxyUpgrader", () => {
     it("only owner should upgrade", async () => {
       await expect(
         transparentProxyUpgrader.connect(SECOND).upgrade(await proxy.getAddress(), await proxy.getAddress(), "0x"),
-      ).to.be.revertedWith("TransparentProxyUpgrader: not an owner");
+      ).to.be.revertedWith("PermanentOwnable: caller is not the owner");
     });
   });
 

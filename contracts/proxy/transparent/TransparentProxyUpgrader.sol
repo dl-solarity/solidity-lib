@@ -4,24 +4,17 @@ pragma solidity ^0.8.4;
 import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
+import {PermanentOwnable} from "../../access-control/PermanentOwnable.sol";
+
 /**
  * @notice The proxies module
  *
  * This is the lightweight helper contract that may be used as a TransparentProxy admin.
  */
-contract TransparentProxyUpgrader {
+contract TransparentProxyUpgrader is PermanentOwnable {
     using Address for address;
 
-    address private immutable _OWNER;
-
-    modifier onlyOwner() {
-        require(_OWNER == msg.sender, "TransparentProxyUpgrader: not an owner");
-        _;
-    }
-
-    constructor() {
-        _OWNER = msg.sender;
-    }
+    constructor() PermanentOwnable(msg.sender) {}
 
     /**
      * @notice The function to upgrade the implementation contract

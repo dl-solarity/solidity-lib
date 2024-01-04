@@ -4,28 +4,21 @@ pragma solidity ^0.8.4;
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
+import {PermanentOwnable} from "../../access-control/PermanentOwnable.sol";
+
 /**
  * @notice The proxies module
  *
  * This is a lightweight utility ProxyBeacon contract that may be used as a beacon that BeaconProxies point to.
  */
-contract ProxyBeacon is IBeacon {
+contract ProxyBeacon is IBeacon, PermanentOwnable {
     using Address for address;
 
-    address private immutable _OWNER;
+    constructor() PermanentOwnable(msg.sender) {}
 
     address private _implementation;
 
     event Upgraded(address implementation);
-
-    modifier onlyOwner() {
-        require(_OWNER == msg.sender, "ProxyBeacon: not an owner");
-        _;
-    }
-
-    constructor() {
-        _OWNER = msg.sender;
-    }
 
     /**
      * @notice The function to upgrade to implementation contract
