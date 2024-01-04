@@ -44,7 +44,7 @@ describe("ProxyBeacon", () => {
 
     it("only owner should upgrade", async () => {
       await expect(proxyBeacon.connect(SECOND).upgradeTo(await token.getAddress())).to.be.revertedWith(
-        "ProxyBeacon: not an owner",
+        "PermanentOwnable: caller is not the owner",
       );
     });
   });
