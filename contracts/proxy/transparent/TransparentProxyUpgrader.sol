@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+
 import {PermanentOwnable} from "../../access-control/PermanentOwnable.sol";
 
 /**
