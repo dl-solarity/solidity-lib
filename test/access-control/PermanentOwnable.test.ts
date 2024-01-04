@@ -32,6 +32,7 @@ describe("PermanentOwnable", () => {
 
     it("should reject zero address during the owner initialization", async () => {
       const permanentOwnableMock = await ethers.getContractFactory("PermanentOwnableMock");
+
       await expect(permanentOwnableMock.deploy(ZERO_ADDR)).to.be.revertedWith(
         "PermanentOwnable: zero address can not be the owner",
       );
