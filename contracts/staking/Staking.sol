@@ -1,49 +1,44 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-abstract contract Staking {
-    uint public rewardRate; // R
-    uint public rewardPerToken; // r
-    uint public totalSupply;
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-    mapping(address => uint) public stakedAmounts;
-    mapping(address => uint) public rewardsPerTokenPaid;
-    mapping(address => uint) public rewardsPerToken;
+import {ValueDistributor} from "./ValueDistributor.sol";
 
-    uint public updatedAt;
+contract Staking is ValueDistributor {
+    address public tokenToDistribute;
+    uint256 public rate;
 
-    modifier updateReward(address _user) {
-        _updateRewardPerToken(_user);
-
-        _;
+    function stake(uint256 amount_) public {
+        _addShares(msg.sender, amount_);
     }
 
-    function _updateRewardPerToken(address _user) internal {
-        rewardPerToken = calculateRewardPerToken();
-        updatedAt = block.timestamp;
-
-        // 1st -> rptPaid = 0
-        //        rpt = r1
-        // 2nd -> rptPaid = r1
-        //        rpt = r2
-
-        rewardsPerTokenPaid[_user] = rewardsPerToken[_user];
-        rewardsPerToken[_user] = rewardPerToken;
+    function withdraw(uint256 amount_) public {
+        _removeShares(msg.sender, amount_);
     }
 
-    function calculateRewardPerToken() public view returns (uint) {
-        if (totalSupply == 0) {
-            return rewardPerToken;
-        }
-
-        return rewardPerToken + (rewardRate / totalSupply) * (block.timestamp - updatedAt);
+    function _changeDistributionToken(address newToken_) internal {
+        tokenToDistribute = newToken_;
     }
 
-    function rewardEarned(address _user) public view returns (uint) {
-        return stakedAmounts[_user] * (rewardsPerToken[_user] - rewardsPerTokenPaid[_user]);
+    function _setRate(uint256 newRate_) internal {
+        _update(address(0));
+
+        rate = newRate_;
     }
 
-    function stake(uint amount) external updateReward(msg.sender) {}
+    function _afterAddShares(address user_, uint256 amount_) internal virtual override {
+        IERC20(tokenToDistribute).transferFrom(user_, address(this), amount_); // FIXME USDT, decimals
+    }
 
-    function withdraw(uint amount) external updateReward(msg.sender) {}
+    function _afterRemoveShares(address user_, uint256 amount_) internal virtual override {
+        IERC20(tokenToDistribute).transfer(user_, amount_); // FIXME USDT, decimals
+    }
+
+    function _getValueToDistribute(
+        uint256 timeUpTo,
+        uint256 timeLastUpdate
+    ) internal view virtual override returns (uint256) {
+        return rate * (timeUpTo - timeLastUpdate);
+    }
 }
