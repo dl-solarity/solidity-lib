@@ -8,6 +8,8 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {ValueDistributor} from "./ValueDistributor.sol";
 
 contract Staking is ValueDistributor, Initializable {
+    using SafeERC20 for IERC20;
+
     address private _sharesToken;
     address private _rewardsToken;
 
@@ -29,7 +31,6 @@ contract Staking is ValueDistributor, Initializable {
      */
     modifier stakingStarted() {
         _checkStakingStarted();
-
         _;
     }
 
@@ -48,7 +49,6 @@ contract Staking is ValueDistributor, Initializable {
     ) internal onlyInitializing {
         require(sharesToken_ != address(0), "Staking: zero address cannot be the Shares Token");
         require(rewardsToken_ != address(0), "Staking: zero address cannot be the Rewards Token");
-        require(rate_ > 0, "Staking: rate has to be more than 0");
 
         _sharesToken = sharesToken_;
         _rewardsToken = rewardsToken_;
@@ -88,9 +88,6 @@ contract Staking is ValueDistributor, Initializable {
      * @param amount_ The amount of rewards to claim.
      */
     function claim(uint256 amount_) public stakingStarted {
-        uint256 owed = userDistribution(msg.sender).owedValue;
-        require(amount_ <= owed, "Staking: insufficient amount");
-
         _distributeValue(msg.sender, amount_);
     }
 
@@ -150,7 +147,7 @@ contract Staking is ValueDistributor, Initializable {
      * @param amount_ The amount of shares added.
      */
     function _afterAddShares(address user_, uint256 amount_) internal virtual override {
-        SafeERC20.safeTransferFrom(IERC20(_sharesToken), user_, address(this), amount_);
+        IERC20(_sharesToken).safeTransferFrom(user_, address(this), amount_);
     }
 
     /**
@@ -159,7 +156,7 @@ contract Staking is ValueDistributor, Initializable {
      * @param amount_ The amount of shares removed.
      */
     function _afterRemoveShares(address user_, uint256 amount_) internal virtual override {
-        SafeERC20.safeTransfer(IERC20(_sharesToken), user_, amount_);
+        IERC20(_sharesToken).safeTransfer(user_, amount_);
     }
 
     /**
@@ -168,7 +165,7 @@ contract Staking is ValueDistributor, Initializable {
      * @param amount_ The amount of value distributed.
      */
     function _afterDistributeValue(address user_, uint256 amount_) internal virtual override {
-        SafeERC20.safeTransfer(IERC20(_rewardsToken), user_, amount_);
+        IERC20(_rewardsToken).safeTransfer(user_, amount_);
     }
 
     /**

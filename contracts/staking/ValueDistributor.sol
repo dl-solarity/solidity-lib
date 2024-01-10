@@ -113,14 +113,14 @@ abstract contract ValueDistributor {
      * @param user_ The address of the user.
      * @param amount_ The amount of value to distribute.
      */
-    function _distributeValue(address user_, uint256 amount_) internal {
+    function _distributeValue(address user_, uint256 amount_) internal virtual {
+        _update(user_);
+
         require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
         require(
             amount_ <= _userDistributions[user_].owedValue,
             "ValueDistributor: insufficient amount"
         );
-
-        _update(user_);
 
         _userDistributions[user_].owedValue -= amount_;
 
@@ -168,11 +168,6 @@ abstract contract ValueDistributor {
      * @param user_ The address of the user.
      */
     function _update(address user_) internal {
-        if (_updatedAt == 0) {
-            _updatedAt = block.timestamp;
-            return;
-        }
-
         _cumulativeSum = _getFutureCumulativeSum(block.timestamp);
         _updatedAt = block.timestamp;
 
