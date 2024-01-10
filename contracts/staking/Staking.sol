@@ -3,10 +3,11 @@ pragma solidity ^0.8.4;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import {ValueDistributor} from "./ValueDistributor.sol";
 
-contract Staking is ValueDistributor {
+contract Staking is ValueDistributor, Initializable {
     address private _sharesToken;
     address private _rewardsToken;
 
@@ -33,21 +34,21 @@ contract Staking is ValueDistributor {
     }
 
     /**
-     * @notice Initializes the contract setting the values provided by the deployer as shares token, rewards token, reward rate and staking start time.
+     * @notice Initializes the contract setting the values provided as shares token, rewards token, reward rate and staking start time.
      * @param sharesToken_ The address of the shares token.
      * @param rewardsToken_ The address of the rewards token.
      * @param rate_ The reward rate.
      * @param stakingStartTime_ The staking start time
      */
-    constructor(
+    function __Staking_init(
         address sharesToken_,
         address rewardsToken_,
         uint256 rate_,
         uint256 stakingStartTime_
-    ) {
+    ) internal onlyInitializing {
         require(sharesToken_ != address(0), "Staking: zero address cannot be the Shares Token");
         require(rewardsToken_ != address(0), "Staking: zero address cannot be the Rewards Token");
-        require(rate_ > 0, "Rate has to be more than 0");
+        require(rate_ > 0, "Staking: rate has to be more than 0");
 
         _sharesToken = sharesToken_;
         _rewardsToken = rewardsToken_;
@@ -64,10 +65,21 @@ contract Staking is ValueDistributor {
     }
 
     /**
-     * @notice Withdraws the specified amount of tokens.
-     * @param amount_ The amount of tokens to withdraw.
+     * @notice Withdraws all the staked tokens.
+     *
+     * Note: All the rewards are claimed after the shares were removed.
      */
-    function withdraw(uint256 amount_) public stakingStarted {
+    function withdraw() public stakingStarted {
+        unstake(userDistribution(msg.sender).shares);
+
+        claim(getOwedValue(msg.sender));
+    }
+
+    /**
+     * @notice Unstakes the specified amount of tokens.
+     * @param amount_ The amount of tokens to unstake.
+     */
+    function unstake(uint256 amount_) public stakingStarted {
         _removeShares(msg.sender, amount_);
     }
 
@@ -77,9 +89,9 @@ contract Staking is ValueDistributor {
      */
     function claim(uint256 amount_) public stakingStarted {
         uint256 owed = userDistribution(msg.sender).owedValue;
-        require(amount_ <= owed, "Insufficient amount");
+        require(amount_ <= owed, "Staking: insufficient amount");
 
-        distributeValue(msg.sender, amount_);
+        _distributeValue(msg.sender, amount_);
     }
 
     /**
@@ -143,16 +155,11 @@ contract Staking is ValueDistributor {
 
     /**
      * @notice Hook function that is called after shares have been removed from a user's distribution.
-     *
-     * Note: All the rewards are claimed after the shares were removed.
-     *
      * @param user_ The address of the user.
      * @param amount_ The amount of shares removed.
      */
     function _afterRemoveShares(address user_, uint256 amount_) internal virtual override {
         SafeERC20.safeTransfer(IERC20(_sharesToken), user_, amount_);
-
-        distributeValue(msg.sender, getOwedValue(user_));
     }
 
     /**
@@ -168,7 +175,7 @@ contract Staking is ValueDistributor {
      * @dev Throws if the staking has not started yet.
      */
     function _checkStakingStarted() internal view {
-        require(block.timestamp >= _stakingStartTime, "Staking has not started yet");
+        require(block.timestamp >= _stakingStartTime, "Staking: staking has not started yet");
     }
 
     /**

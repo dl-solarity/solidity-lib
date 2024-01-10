@@ -28,20 +28,6 @@ abstract contract ValueDistributor {
     mapping(address => UserDistribution) private _userDistributions;
 
     /**
-     * @notice Distributes value to a specific user.
-     * @param user_ The address of the user.
-     * @param amount_ The amount of value to distribute.
-     */
-    function distributeValue(address user_, uint256 amount_) public {
-        require(amount_ > 0, "Amount has to be more than 0");
-        require(amount_ <= _userDistributions[user_].owedValue, "Insufficient amount");
-
-        _userDistributions[user_].owedValue -= amount_;
-
-        _afterDistributeValue(user_, amount_);
-    }
-
-    /**
      * @notice Returns the total number of shares.
      */
     function totalShares() public view returns (uint256) {
@@ -92,7 +78,7 @@ abstract contract ValueDistributor {
      * @param amount_ The amount of shares to add.
      */
     function _addShares(address user_, uint256 amount_) internal virtual {
-        require(amount_ > 0, "Amount has to be more than 0");
+        require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
 
         _update(user_);
 
@@ -108,8 +94,11 @@ abstract contract ValueDistributor {
      * @param amount_ The amount of shares to remove.
      */
     function _removeShares(address user_, uint256 amount_) internal virtual {
-        require(amount_ > 0, "Amount has to be more than 0");
-        require(amount_ <= _userDistributions[user_].shares, "Insufficient amount");
+        require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
+        require(
+            amount_ <= _userDistributions[user_].shares,
+            "ValueDistributor: insufficient amount"
+        );
 
         _update(user_);
 
@@ -117,6 +106,25 @@ abstract contract ValueDistributor {
         _userDistributions[user_].shares -= amount_;
 
         _afterRemoveShares(user_, amount_);
+    }
+
+    /**
+     * @notice Distributes value to a specific user.
+     * @param user_ The address of the user.
+     * @param amount_ The amount of value to distribute.
+     */
+    function _distributeValue(address user_, uint256 amount_) internal {
+        require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
+        require(
+            amount_ <= _userDistributions[user_].owedValue,
+            "ValueDistributor: insufficient amount"
+        );
+
+        _update(user_);
+
+        _userDistributions[user_].owedValue -= amount_;
+
+        _afterDistributeValue(user_, amount_);
     }
 
     /**
