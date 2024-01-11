@@ -1,288 +1,292 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import {EnumerableSet} from "../libs/arrays/SetHelper.sol";
+import {OwnableUpgradeable, Initializable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {MathUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
-// should we move revoke to a separate contract as extension/preset
-// should we allow the owner of the contract configure cliff
-// should we make this contract ownable or make it as a separate preset
-// add additional exetenstions with different formula of vesting (linear, exponential, etc)
-abstract contract VestingWallet is Initializable {
-    using EnumerableSet for EnumerableSet.AddressSet;
+abstract contract VestingWallet is Initializable, OwnableUpgradeable {
+    using MathUpgradeable for uint256;
+    using SafeERC20 for IERC20;
 
-    event BeneficiaryAdded(address account, uint256 shares);
-
-    event AssetReleased(address indexed beneficiary, address indexed token, uint256 amount);
-    event AssetRevoked(address indexed beneficiary, address indexed token, uint256 amount);
-
-    address public constant ETH = address(0);
-
-    EnumerableSet.AddressSet private _beneficiaries;
-
-    uint64 private _cliff;
-    uint64 private _start;
-    uint64 private _duration;
-
-    bool private _revocable;
-
-    uint256 private _totalShares;
-
-    struct VestingData {
-        uint256 shares;
-        mapping(address asset => AssetInfo) assetsInfo;
+    // examples of vesting types
+    enum VestingScheduleType {
+        VAULT
+        // ANGELROUND,
+        // SEEDROUND,
+        // PRIVATEROUND,
+        // LISTINGS,
+        // GROWTH,
+        // OPERATIONAL,
+        // FOUNDERS,
+        // DEVELOPERS,
+        // BUGFINDING,
     }
 
-    struct AssetInfo {
-        bool isRevoked;
-        uint256 releasedAmount;
+    // structure of vesting object
+    struct Vesting {
+        bool isActive;
+        address beneficiary;
+        uint256 totalAmount;
+        VestingScheduleType vestingScheduleType;
+        uint256 paidAmount;
+        bool isRevocable;
     }
 
-    mapping(address beneficiary => VestingData) private _vestingData;
-    mapping(address asset => uint256) private _totalReleased;
+    // properties for linear vesting schedule
+    struct LinearVestingSchedule {
+        uint256 portionOfTotal;
+        uint256 startDate;
+        uint256 periodInSeconds;
+        uint256 portionPerPeriod;
+        uint256 cliffInPeriods;
+    }
 
-    function __VestingWallet_init(
-        address[] memory beneficiaries_,
-        uint256[] memory shares_,
-        uint64 startTimestamp_,
-        uint64 cliffSeconds_,
-        uint64 durationSeconds_,
-        bool revocable_
-    ) internal onlyInitializing {
-        require(
-            beneficiaries_.length == shares_.length,
-            "Vesting: beneficiaries and shares length mismatch"
+    uint256 public constant SECONDS_IN_MONTH = 60 * 60 * 24 * 30;
+    uint256 public constant PORTION_OF_TOTAL_PRECISION = 10 ** 10;
+    uint256 public constant PORTION_PER_PERIOD_PRECISION = 10 ** 10;
+
+    uint256 public _activationTimestamp;
+
+    IERC20 public _vestingToken;
+
+    Vesting[] public _vestings;
+    uint256 public _amountInVestings;
+    mapping(VestingScheduleType => LinearVestingSchedule[]) public _vestingSchedules;
+
+    event VestingTokenSet(IERC20 token);
+    event VestingAdded(uint256 vestingId, address beneficiary);
+    event VestingRevoked(uint256 vestingId);
+    event VestingWithdraw(uint256 vestingId, uint256 amount);
+
+    // initialization
+    function __VestingWallet_init(uint256 activationTimestamp_) internal onlyInitializing {
+        __Ownable_init();
+
+        _activationTimestamp = activationTimestamp_;
+
+        _initializeVestingSchedules();
+    }
+
+    // get available amount to withdraw
+    function getWithdrawableAmount(uint256 vestingId_) external view virtual returns (uint256) {
+        Vesting memory _vesting = getVesting(vestingId_);
+
+        require(_vesting.isActive, "VestingWallet: vesting is canceled");
+
+        return _getWithdrawableAmount(_vesting);
+    }
+
+    // withdraw available tokens from multiple vestings
+    function withdrawFromVestingBulk(uint256 offset_, uint256 limit_) external virtual {
+        uint256 _to = (offset_ + limit_).min(_vestings.length).max(offset_);
+
+        for (uint256 i = offset_; i < _to; i++) {
+            Vesting storage vesting = _getVesting(i);
+            if (vesting.isActive) {
+                _withdrawFromVesting(vesting, i);
+            }
+        }
+    }
+
+    // withdraw available tokens from vesting
+    function withdrawFromVesting(uint256 vestingId_) external virtual {
+        Vesting storage _vesting = _getVesting(vestingId_);
+
+        require(_vesting.isActive, "VestingWallet: vesting is canceled");
+
+        _withdrawFromVesting(_vesting, vestingId_);
+    }
+
+    // get vesting info by vesting id
+    function getVesting(uint256 vestingId_) public view virtual returns (Vesting memory) {
+        return _getVesting(vestingId_);
+    }
+
+    // get amount that is present on the contract but not allocated to vesting
+    function getAvailableTokensAmount() public view virtual returns (uint256) {
+        return _vestingToken.balanceOf(address(this)) - (_amountInVestings);
+    }
+
+    // initilizes default vesting schedules (here used as an example)
+    function _initializeVestingSchedules() internal virtual {
+        _addLinearVestingSchedule(
+            VestingScheduleType.VAULT,
+            LinearVestingSchedule({
+                portionOfTotal: PORTION_OF_TOTAL_PRECISION,
+                startDate: _activationTimestamp,
+                periodInSeconds: SECONDS_IN_MONTH,
+                portionPerPeriod: PORTION_PER_PERIOD_PRECISION / 2,
+                cliffInPeriods: 1
+            })
         );
-        require(beneficiaries_.length > 0, "Vesting: no beneficiaries");
-        require(cliffSeconds_ <= durationSeconds_, "Vesting: cliff is longer than duration");
+    }
+
+    // add linear vesting schedule with your own properties
+    function _addLinearVestingSchedule(
+        VestingScheduleType type_,
+        LinearVestingSchedule memory schedule_
+    ) internal virtual onlyOwner {
+        _vestingSchedules[type_].push(schedule_);
+    }
+
+    // set vesting token
+    function _setVestingToken(IERC20 token_) internal virtual onlyOwner {
+        require(address(token_) == address(0), "VestingWallet: token is already set");
+
+        _vestingToken = token_;
+
+        emit VestingTokenSet(token_);
+    }
+
+    // create vesting for multiple beneficiaries
+    function _createVestingBulk(
+        address[] calldata beneficiaries_,
+        uint256[] calldata amounts_,
+        VestingScheduleType[] calldata vestingSchedules_,
+        bool[] calldata isRevokable_
+    ) internal virtual onlyOwner {
         require(
-            startTimestamp_ + durationSeconds_ > block.timestamp,
-            "Vesting: final time is before current time"
+            beneficiaries_.length == amounts_.length &&
+                beneficiaries_.length == vestingSchedules_.length &&
+                beneficiaries_.length == isRevokable_.length,
+            "VestingWallet: parameters length mismatch"
         );
 
         for (uint256 i = 0; i < beneficiaries_.length; i++) {
-            _addBeneficiary(beneficiaries_[i], shares_[i]);
+            _createVesting(beneficiaries_[i], amounts_[i], vestingSchedules_[i], isRevokable_[i]);
         }
-
-        _start = startTimestamp_;
-        _duration = durationSeconds_;
-        _cliff = startTimestamp_ + cliffSeconds_;
-        _revocable = revocable_;
     }
 
-    receive() external payable virtual {}
+    // create vesting
+    function _createVesting(
+        address beneficiary_,
+        uint256 amount_,
+        VestingScheduleType vestingSchedule_,
+        bool isRevokable_
+    ) internal virtual onlyOwner returns (uint256 _vestingId) {
+        require(
+            getAvailableTokensAmount() >= amount_,
+            "VestingWallet: not enough tokens in vesting contract"
+        );
+        require(
+            beneficiary_ != address(0),
+            "VestingWallet: cannot create vesting for zero address"
+        );
+        require(amount_ > 0, "VestingWallet: cannot create vesting for zero amount");
 
-    function releasable(address account_) public view virtual returns (uint256) {
-        return releasable(account_, ETH);
+        _amountInVestings += amount_;
+
+        _vestingId = _vestings.length;
+
+        _vestings.push(
+            Vesting({
+                isActive: true,
+                beneficiary: beneficiary_,
+                totalAmount: amount_,
+                vestingScheduleType: vestingSchedule_,
+                paidAmount: 0,
+                isRevocable: isRevokable_
+            })
+        );
+
+        emit VestingAdded(_vestingId, beneficiary_);
     }
 
-    function releasable(address account_, address token_) public view virtual returns (uint256) {
-        return
-            vestedAmount(account_, token_, uint64(block.timestamp)) - released(account_, token_);
+    // revoke vesting and release locked tokens
+    function _revokeVesting(uint256 vestingId_) internal virtual onlyOwner {
+        Vesting storage _vesting = _getVesting(vestingId_);
+
+        require(_vesting.isActive, "VestingWallet: vesting is revoked");
+        require(_vesting.isRevocable, "VestingWallet: vesting is not revokable");
+
+        _vesting.isActive = false;
+
+        uint256 _amountReleased = _vesting.totalAmount - _vesting.paidAmount;
+        _amountInVestings -= _amountReleased;
+
+        emit VestingRevoked(vestingId_);
     }
 
-    function vestedAmount(
-        address account_,
-        uint64 timestamp_
-    ) public view virtual returns (uint256) {
-        return vestedAmount(account_, ETH, timestamp_);
+    // withdraw tokens from vesting and transfer to beneficiary
+    function _withdrawFromVesting(Vesting storage vesting_, uint256 vestingId_) internal virtual {
+        uint256 _amountToPay = _getWithdrawableAmount(vesting_);
+
+        vesting_.paidAmount += _amountToPay;
+        _amountInVestings -= _amountToPay;
+
+        _vestingToken.safeTransfer(vesting_.beneficiary, _amountToPay);
+
+        emit VestingWithdraw(vestingId_, _amountToPay);
     }
 
-    function vestedAmount(
-        address account_,
-        address token_,
-        uint64 timestamp_
-    ) public view virtual returns (uint256) {
-        return
-            _vestingSchedule(
-                account_,
-                token_,
-                beneficiaryAllocation(account_, token_),
-                timestamp_
+    // get available amount to withdraw
+    function _getWithdrawableAmount(
+        Vesting memory _vesting
+    ) internal view virtual returns (uint256) {
+        return _calculateReleasableAmount(_vesting) - _vesting.paidAmount;
+    }
+
+    // calculate releasable amount at the moment
+    function _calculateReleasableAmount(
+        Vesting memory vesting_
+    ) internal view virtual returns (uint256) {
+        LinearVestingSchedule[] storage _vestingSchedulesByType = _vestingSchedules[
+            vesting_.vestingScheduleType
+        ];
+
+        uint256 _releasableAmount;
+
+        for (uint256 i = 0; i < _vestingSchedulesByType.length; i++) {
+            LinearVestingSchedule storage _vestingSchedule = _vestingSchedulesByType[i];
+
+            if (_vestingSchedule.startDate > block.timestamp) return _releasableAmount;
+
+            uint256 _releasableAmountForThisSchedule = _calculateLinearVestingAvailableAmount(
+                _vestingSchedule,
+                vesting_.totalAmount
             );
-    }
 
-    function beneficiaryAllocation(address account_) public view virtual returns (uint256) {
-        return beneficiaryAllocation(account_, ETH);
-    }
-
-    function beneficiaryAllocation(
-        address account_,
-        address token_
-    ) public view virtual returns (uint256) {
-        return (totalAllocation(token_) * shares(account_)) / totalShares();
-    }
-
-    function totalAllocation() public view virtual returns (uint256) {
-        return totalAllocation(ETH);
-    }
-
-    function totalAllocation(address token_) public view virtual returns (uint256) {
-        return
-            (token_ == ETH ? address(this).balance : IERC20(token_).balanceOf(address(this))) +
-            totalReleased(token_);
-    }
-
-    function totalReleased() public view virtual returns (uint256) {
-        return totalReleased(ETH);
-    }
-
-    function totalReleased(address token_) public view virtual returns (uint256) {
-        return _totalReleased[token_];
-    }
-
-    function shares(address account_) public view virtual returns (uint256) {
-        return _vestingData[account_].shares;
-    }
-
-    function totalShares() public view virtual returns (uint256) {
-        return _totalShares;
-    }
-
-    function released(address account_) public view virtual returns (uint256) {
-        return released(account_, ETH);
-    }
-
-    function released(address account_, address token_) public view virtual returns (uint256) {
-        return _vestingData[account_].assetsInfo[token_].releasedAmount;
-    }
-
-    function cliff() public view virtual returns (uint256) {
-        return _cliff;
-    }
-
-    function start() public view virtual returns (uint256) {
-        return _start;
-    }
-
-    function duration() public view virtual returns (uint256) {
-        return _duration;
-    }
-
-    function end() public view virtual returns (uint256) {
-        return start() + duration();
-    }
-
-    function isBeneficiary(address account_) public view virtual returns (bool) {
-        return _beneficiaries.contains(account_);
-    }
-
-    function revocable() public view virtual returns (bool) {
-        return _revocable;
-    }
-
-    function revoked(address account_) public view virtual returns (bool) {
-        return revoked(account_, ETH);
-    }
-
-    function revoked(address account_, address token_) public view virtual returns (bool) {
-        return _vestingData[account_].assetsInfo[token_].isRevoked;
-    }
-
-    function vestingData(
-        address account_
-    ) public view virtual returns (uint256 _shares, AssetInfo memory _assetInfo) {
-        (_shares, _assetInfo) = vestingData(account_, ETH);
-    }
-
-    function vestingData(
-        address account_,
-        address token_
-    ) public view virtual returns (uint256 _shares, AssetInfo memory _assetInfo) {
-        VestingData storage _accountVesting = _vestingData[account_];
-
-        _shares = _accountVesting.shares;
-        _assetInfo = _accountVesting.assetsInfo[token_];
-    }
-
-    function _vestingSchedule(
-        address account_,
-        uint256 totalAllocation_,
-        uint64 timestamp_
-    ) internal view virtual returns (uint256) {
-        return _vestingSchedule(account_, ETH, totalAllocation_, timestamp_);
-    }
-
-    function _vestingSchedule(
-        address account_,
-        address token_,
-        uint256 totalAllocation_,
-        uint64 timestamp_
-    ) internal view virtual returns (uint256) {
-        if (timestamp_ < cliff()) {
-            return 0;
-        } else if (timestamp_ >= end() || revoked(account_, token_)) {
-            return totalAllocation_;
-        } else {
-            return (totalAllocation_ * (timestamp_ - start())) / duration();
+            _releasableAmount += _releasableAmountForThisSchedule;
         }
+
+        return _releasableAmount;
     }
 
-    function _release(address account_) internal virtual {
-        _release(account_, ETH);
+    // calculation of linear vesting
+    function _calculateLinearVestingAvailableAmount(
+        LinearVestingSchedule storage vestingSchedule_,
+        uint256 amount_
+    ) internal view virtual returns (uint256) {
+        uint256 _elapsedPeriods = _calculateElapsedPeriods(vestingSchedule_);
+
+        if (_elapsedPeriods <= vestingSchedule_.cliffInPeriods) return 0;
+
+        uint256 _amountThisVestingSchedule = (amount_ * vestingSchedule_.portionOfTotal) /
+            (PORTION_OF_TOTAL_PRECISION);
+
+        uint256 _amountPerPeriod = (_amountThisVestingSchedule *
+            vestingSchedule_.portionPerPeriod) / (PORTION_PER_PERIOD_PRECISION);
+
+        return (_amountPerPeriod * _elapsedPeriods).min(_amountThisVestingSchedule);
     }
 
-    function _release(address account_, address token_) internal virtual {
-        require(_beneficiaries.contains(account_), "Vesting: not a beneficiary");
-
-        VestingData storage _accountVesting = _vestingData[account_];
-
-        require(_accountVesting.shares > 0, "Vesting: account has no shares");
-
-        uint256 _amount = releasable(token_);
-
-        _accountVesting.assetsInfo[token_].releasedAmount += _amount;
-        _totalReleased[token_] += _amount;
-
-        token_ == ETH
-            ? Address.sendValue(payable(account_), _amount)
-            : SafeERC20.safeTransfer(IERC20(token_), account_, _amount);
-
-        emit AssetReleased(account_, token_, _amount);
+    // withdraw tokens that is present on the contract but not allocated to vesting
+    function _withdrawExcessiveTokens() internal virtual onlyOwner {
+        _vestingToken.safeTransfer(owner(), getAvailableTokensAmount());
     }
 
-    function _revoke(address account_) internal virtual {
-        _revoke(account_, ETH);
+    // get vesting info
+    function _getVesting(uint256 _vestingId) internal view virtual returns (Vesting storage) {
+        require(_vestingId < _vestings.length, "VestingWallet: no vesting with such id");
+
+        return _vestings[_vestingId];
     }
 
-    function _revoke(address account_, address token_) internal virtual {
-        require(_beneficiaries.contains(account_), "Vesting: not a beneficiary");
-        require(revocable(), "Vesting: cannot revoke");
-
-        VestingData storage _accountVesting = _vestingData[account_];
-
-        require(_accountVesting.shares > 0, "Vesting: account has no shares");
-
-        AssetInfo storage _accountAssetInfo = _accountVesting.assetsInfo[token_];
-
-        require(!_accountAssetInfo.isRevoked, "Vesting: already revoked");
-
-        uint256 _amount = beneficiaryAllocation(account_, token_) - releasable(account_, token_);
-
-        _accountAssetInfo.isRevoked = true;
-
-        token_ == ETH
-            ? Address.sendValue(payable(account_), _amount)
-            : SafeERC20.safeTransfer(IERC20(token_), account_, _amount);
-
-        emit AssetRevoked(account_, token_, _amount);
-    }
-
-    function _addBeneficiary(address account_, uint256 shares_) private {
-        VestingData storage _accountVesting = _vestingData[account_];
-
-        require(account_ != ETH, "Vesting: account is the zero address");
-        require(shares_ > 0, "Shares: shares are 0");
-        require(_accountVesting.shares == 0, "Shares: account already has shares");
-
-        _beneficiaries.add(account_);
-        _accountVesting.shares = shares_;
-        _totalShares += shares_;
-
-        emit BeneficiaryAdded(account_, shares_);
+    // calculate elapsed periods
+    function _calculateElapsedPeriods(
+        LinearVestingSchedule storage _linearVesting
+    ) private view returns (uint256) {
+        return (block.timestamp - _linearVesting.startDate) / (_linearVesting.periodInSeconds);
     }
 }
