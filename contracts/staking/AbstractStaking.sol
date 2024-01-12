@@ -5,9 +5,14 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import {ValueDistributor} from "./ValueDistributor.sol";
+import {AbstractValueDistributor} from "./AbstractValueDistributor.sol";
 
-contract Staking is ValueDistributor, Initializable {
+/**
+ * @notice The AbstractStaking module
+ *
+ * Contract module for staking tokens and earning rewards based on shares.
+ */
+abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
     using SafeERC20 for IERC20;
 
     address private _sharesToken;
@@ -41,7 +46,7 @@ contract Staking is ValueDistributor, Initializable {
      * @param rate_ The reward rate.
      * @param stakingStartTime_ The staking start time
      */
-    function __Staking_init(
+    function __AbstractStaking_init(
         address sharesToken_,
         address rewardsToken_,
         uint256 rate_,
@@ -71,7 +76,6 @@ contract Staking is ValueDistributor, Initializable {
      */
     function withdraw() public stakingStarted {
         unstake(userDistribution(msg.sender).shares);
-
         claim(getOwedValue(msg.sender));
     }
 

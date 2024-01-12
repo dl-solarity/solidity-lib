@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import {PRECISION, DECIMAL} from "../utils/Globals.sol";
 
 /**
- * @notice The ValueDistributor module
+ * @notice The AbstractValueDistributor module
  *
  * Contract module for distributing a value among users based on their shares.
  *
@@ -14,7 +14,7 @@ import {PRECISION, DECIMAL} from "../utils/Globals.sol";
  * It includes hooks for performing additional logic
  * when shares are added or removed, or when value is distributed.
  */
-abstract contract ValueDistributor {
+abstract contract AbstractValueDistributor {
     struct UserDistribution {
         uint256 shares;
         uint256 cumulativeSum;
