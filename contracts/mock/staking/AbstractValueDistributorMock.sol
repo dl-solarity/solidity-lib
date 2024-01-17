@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "@openzeppelin/contracts/utils/Multicall.sol";
+
 import {AbstractValueDistributor} from "../../staking/AbstractValueDistributor.sol";
 import {DECIMAL} from "../../utils/Globals.sol";
 
-contract AbstractValueDistributorMock is AbstractValueDistributor {
+contract AbstractValueDistributorMock is AbstractValueDistributor, Multicall {
     event SharesAdded(address user_, uint256 amount_);
     event SharesRemoved(address user_, uint256 amount_);
     event ValueDistributed(address user_, uint256 amount_);

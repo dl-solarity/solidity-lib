@@ -6,7 +6,10 @@ import {PRECISION, DECIMAL} from "../utils/Globals.sol";
 /**
  * @notice The AbstractValueDistributor module
  *
- * Contract module for distributing a value among users based on their shares.
+ * Contract module for distributing value among users based on their shares.
+ *
+ * The algorithm ensures that the distribution is proportional to the shares
+ * held by each user and takes into account changes in the cumulative sum over time.
  *
  * This contract can be used as a base contract for implementing various distribution mechanisms,
  * such as token staking, profit sharing, or dividend distribution.
@@ -29,6 +32,7 @@ abstract contract AbstractValueDistributor {
 
     /**
      * @notice Returns the total number of shares.
+     * @return The total number of shares.
      */
     function totalShares() public view returns (uint256) {
         return _totalShares;
@@ -36,6 +40,7 @@ abstract contract AbstractValueDistributor {
 
     /**
      * @notice Returns the cumulative sum of value that has been distributed.
+     * @return The cumulative sum of value that has been distributed.
      */
     function cumulativeSum() public view returns (uint256) {
         return _cumulativeSum;
@@ -43,6 +48,7 @@ abstract contract AbstractValueDistributor {
 
     /**
      * @notice Returns the timestamp of the last update.
+     * @return The timestamp of the last update.
      */
     function updatedAt() public view returns (uint256) {
         return _updatedAt;
@@ -78,6 +84,7 @@ abstract contract AbstractValueDistributor {
      * @param amount_ The amount of shares to add.
      */
     function _addShares(address user_, uint256 amount_) internal virtual {
+        require(user_ != address(0), "ValueDistributor: zero address is not allowed");
         require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
 
         _update(user_);
@@ -165,6 +172,8 @@ abstract contract AbstractValueDistributor {
      *
      * This function should be called whenever user shares are modified or value distribution occurs.
      *
+     * Note: It will usually be required to override this function to provide custom distribution mechanics.
+     *
      * @param user_ The address of the user.
      */
     function _update(address user_) internal {
@@ -194,10 +203,10 @@ abstract contract AbstractValueDistributor {
         return DECIMAL * (timeUpTo - timeLastUpdate); // 1 token with 18 decimals per second
     }
 
-    /**
-     * @notice Gets the expected cumulative sum of values that have been distributed at a given timestamp.
-     * @param timeUpTo The end timestamp.
-     * @return The future cumulative sum of tokens that have been distributed.
+    /*
+     * @notice Gets the expected cumulative sum of value per token staked distributed at a given timestamp.
+     * @param The timestamp up to which to calculate the value distribution.
+     * @return The future cumulative sum of value per token staked that has been distributed.
      */
     function _getFutureCumulativeSum(uint256 timeUpTo) internal view returns (uint256) {
         if (_totalShares == 0) {

@@ -6,6 +6,7 @@ import { Reverter } from "@/test/helpers/reverter";
 import { wei } from "@/scripts/utils/utils";
 
 import { AbstractValueDistributorMock } from "@ethers-v6";
+import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 describe("AbstractValueDistributor", () => {
   const reverter = new Reverter();
@@ -47,25 +48,47 @@ describe("AbstractValueDistributor", () => {
 
     await abstractValueDistributor.addShares(SECOND, 200);
 
-    await time.setNextBlockTimestamp((await time.latest()) + 1);
-
     await abstractValueDistributor.addShares(THIRD, 100);
 
     await time.setNextBlockTimestamp((await time.latest()) + 3);
 
     await abstractValueDistributor.removeShares(FIRST, 100);
 
-    await time.setNextBlockTimestamp((await time.latest()) + 1);
-
     await abstractValueDistributor.addShares(THIRD, 100);
-
-    await time.setNextBlockTimestamp((await time.latest()) + 1);
 
     await abstractValueDistributor.removeShares(SECOND, 200);
 
     await time.setNextBlockTimestamp((await time.latest()) + 2);
 
     await abstractValueDistributor.removeShares(THIRD, 200);
+  };
+
+  const performSharesManipulations2 = async () => {
+    await abstractValueDistributor.addShares(FIRST, 200);
+
+    await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+    await abstractValueDistributor.addShares(SECOND, 100);
+
+    await abstractValueDistributor.addShares(THIRD, 300);
+
+    await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+    await abstractValueDistributor.addShares(FIRST, 200);
+
+    await abstractValueDistributor.removeShares(FIRST, 100);
+
+    await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+    await abstractValueDistributor.removeShares(SECOND, 100);
+
+    await abstractValueDistributor.addShares(THIRD, 100);
+
+    await time.setNextBlockTimestamp((await time.latest()) + 2);
+
+    await abstractValueDistributor.removeShares(FIRST, 300);
+
+    await abstractValueDistributor.removeShares(THIRD, 400);
   };
 
   before("setup", async () => {
@@ -94,6 +117,12 @@ describe("AbstractValueDistributor", () => {
       );
     });
 
+    it("should not allow zero address to add shares", async () => {
+      await expect(abstractValueDistributor.addShares(ZERO_ADDR, 2)).to.be.revertedWith(
+        "ValueDistributor: zero address is not allowed",
+      );
+    });
+
     it("should trigger the _afterAddShares hook", async () => {
       await expect(abstractValueDistributor.addShares(FIRST, 100))
         .to.emit(abstractValueDistributor, "SharesAdded")
@@ -118,12 +147,27 @@ describe("AbstractValueDistributor", () => {
       await removeSharesFromAllUsers([2, 1, 1, 2]);
 
       await checkAllShares([0, 0, 0, 0]);
+
       expect(await abstractValueDistributor.totalShares()).to.equal(0);
+
+      const cumulativeSum = await abstractValueDistributor.cumulativeSum();
+
+      await abstractValueDistributor.addShares(FIRST, 2);
+
+      expect(await abstractValueDistributor.cumulativeSum()).to.equal(cumulativeSum);
+      expect(await abstractValueDistributor.totalShares()).to.equal(2);
+      expect(await abstractValueDistributor.userShares(FIRST)).to.equal(2);
     });
 
     it("should not allow to remove 0 shares", async () => {
       await expect(abstractValueDistributor.removeShares(SECOND, 0)).to.be.revertedWith(
         "ValueDistributor: amount has to be more than 0",
+      );
+    });
+
+    it("should not allow zero address to remove shares", async () => {
+      await expect(abstractValueDistributor.removeShares(ZERO_ADDR, 2)).to.be.revertedWith(
+        "ValueDistributor: insufficient amount",
       );
     });
 
@@ -160,6 +204,22 @@ describe("AbstractValueDistributor", () => {
       const firstExpectedReward = wei(3) + wei(1) / 12n;
       const secondExpectedReward = wei(3) + wei(1) / 3n;
       const thirdExpectedReward = wei(3) + wei(7) / 12n;
+
+      expect(await abstractValueDistributor.getOwedValue(FIRST)).to.equal(firstExpectedReward);
+      expect(await abstractValueDistributor.getOwedValue(SECOND)).to.equal(secondExpectedReward);
+      expect(await abstractValueDistributor.getOwedValue(THIRD)).to.equal(thirdExpectedReward);
+
+      expect(await abstractValueDistributor.userOwedValue(FIRST)).to.equal(firstExpectedReward);
+      expect(await abstractValueDistributor.userOwedValue(SECOND)).to.equal(secondExpectedReward);
+      expect(await abstractValueDistributor.userOwedValue(THIRD)).to.equal(thirdExpectedReward);
+    });
+
+    it("should calculate the value owed to multiple users correctly", async () => {
+      await performSharesManipulations2();
+
+      const firstExpectedReward = wei(7) + wei(2) / 3n + wei(1) / 7n;
+      const secondExpectedReward = wei(233) / 168n;
+      const thirdExpectedReward = wei(5) + wei(3) / 8n + wei(3) / 7n;
 
       expect(await abstractValueDistributor.getOwedValue(FIRST)).to.equal(firstExpectedReward);
       expect(await abstractValueDistributor.getOwedValue(SECOND)).to.equal(secondExpectedReward);
@@ -242,6 +302,12 @@ describe("AbstractValueDistributor", () => {
       );
     });
 
+    it("should not allow zero address to distribute values", async () => {
+      await expect(abstractValueDistributor.distributeValue(ZERO_ADDR, 2)).to.be.revertedWith(
+        "ValueDistributor: insufficient amount",
+      );
+    });
+
     it("should not allow to distribute more values than owed", async () => {
       await performSharesManipulations();
 
@@ -260,6 +326,46 @@ describe("AbstractValueDistributor", () => {
       await expect(abstractValueDistributor.distributeValue(FIRST, 30))
         .to.emit(abstractValueDistributor, "ValueDistributed")
         .withArgs(FIRST.address, 30);
+    });
+  });
+
+  describe("same block transactions", () => {
+    it("should work as expected if more than one transaction which updates the key values is sent within one block", async () => {
+      await abstractValueDistributor.addShares(FIRST, 100);
+
+      await abstractValueDistributor.multicall([
+        abstractValueDistributor.interface.encodeFunctionData("addShares", [await FIRST.getAddress(), 200]),
+        abstractValueDistributor.interface.encodeFunctionData("addShares", [await SECOND.getAddress(), 200]),
+      ]);
+
+      await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+      await abstractValueDistributor.removeShares(SECOND, 100);
+
+      await time.setNextBlockTimestamp((await time.latest()) + 4);
+
+      await abstractValueDistributor.addShares(THIRD, 100);
+
+      await abstractValueDistributor.multicall([
+        abstractValueDistributor.interface.encodeFunctionData("removeShares", [await FIRST.getAddress(), 300]),
+        abstractValueDistributor.interface.encodeFunctionData("removeShares", [await SECOND.getAddress(), 100]),
+      ]);
+
+      await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+      await abstractValueDistributor.removeShares(THIRD, 100);
+
+      const firstExpectedReward = wei(6) + wei(2) / 5n;
+      const secondExpectedReward = wei(2) + wei(2) / 5n;
+      const thirdExpectedReward = wei(3) + wei(1) / 5n;
+
+      expect(await abstractValueDistributor.getOwedValue(FIRST)).to.equal(firstExpectedReward);
+      expect(await abstractValueDistributor.getOwedValue(SECOND)).to.equal(secondExpectedReward);
+      expect(await abstractValueDistributor.getOwedValue(THIRD)).to.equal(thirdExpectedReward);
+
+      expect(await abstractValueDistributor.userOwedValue(FIRST)).to.equal(firstExpectedReward);
+      expect(await abstractValueDistributor.userOwedValue(SECOND)).to.equal(secondExpectedReward);
+      expect(await abstractValueDistributor.userOwedValue(THIRD)).to.equal(thirdExpectedReward);
     });
   });
 });

@@ -17,48 +17,176 @@ describe("AbstractStaking", () => {
   let SHARES_TOKEN: ERC20Mock;
   let REWARDS_TOKEN: ERC20Mock;
 
+  let shares_decimals: number;
+  let rewards_decimals: number;
+
   let stakingStartTime: bigint;
   let rate: bigint;
 
   let abstractStaking: AbstractStakingMock;
 
-  const mintAndApproveTokens = async (user: SignerWithAddress, token: ERC20Mock, amount: number) => {
+  const mintAndApproveTokens = async (user: SignerWithAddress, token: ERC20Mock, amount: bigint) => {
     await token.mint(user, amount);
     await token.connect(user).approve(abstractStaking, amount);
   };
 
   const performStakingManipulations = async () => {
-    await mintAndApproveTokens(FIRST, SHARES_TOKEN, 100);
-    await mintAndApproveTokens(SECOND, SHARES_TOKEN, 200);
-    await mintAndApproveTokens(THIRD, SHARES_TOKEN, 200);
+    await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
+    await mintAndApproveTokens(SECOND, SHARES_TOKEN, wei(200, shares_decimals));
+    await mintAndApproveTokens(THIRD, SHARES_TOKEN, wei(200, shares_decimals));
 
     await time.setNextBlockTimestamp((await time.latest()) + 2);
 
-    await abstractStaking.connect(FIRST).stake(100);
+    await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
 
     await time.setNextBlockTimestamp((await time.latest()) + 2);
 
-    await abstractStaking.connect(SECOND).stake(200);
+    await abstractStaking.connect(SECOND).stake(wei(200, shares_decimals));
 
-    await time.setNextBlockTimestamp((await time.latest()) + 1);
-
-    await abstractStaking.connect(THIRD).stake(100);
+    await abstractStaking.connect(THIRD).stake(wei(100, shares_decimals));
 
     await time.setNextBlockTimestamp((await time.latest()) + 3);
 
-    await abstractStaking.connect(FIRST).unstake(100);
+    await abstractStaking.connect(FIRST).unstake(wei(100, shares_decimals));
 
-    await time.setNextBlockTimestamp((await time.latest()) + 1);
+    await abstractStaking.connect(THIRD).stake(wei(100, shares_decimals));
 
-    await abstractStaking.connect(THIRD).stake(100);
-
-    await time.setNextBlockTimestamp((await time.latest()) + 1);
-
-    await abstractStaking.connect(SECOND).unstake(200);
+    await abstractStaking.connect(SECOND).unstake(wei(200, shares_decimals));
 
     await time.setNextBlockTimestamp((await time.latest()) + 2);
 
-    await abstractStaking.connect(THIRD).unstake(200);
+    await abstractStaking.connect(THIRD).unstake(wei(200, shares_decimals));
+  };
+
+  const checkManipulationRewards = async () => {
+    const firstExpectedReward = wei(3, rewards_decimals) + wei(1, rewards_decimals) / 12n;
+    const secondExpectedReward = wei(3, rewards_decimals) + wei(1, rewards_decimals) / 3n;
+    const thirdExpectedReward = wei(3, rewards_decimals) + wei(7, rewards_decimals) / 12n;
+
+    expect(await abstractStaking.getOwedValue(FIRST)).to.equal(firstExpectedReward);
+    expect(await abstractStaking.getOwedValue(SECOND)).to.equal(secondExpectedReward);
+    expect(await abstractStaking.getOwedValue(THIRD)).to.equal(thirdExpectedReward);
+
+    expect(await abstractStaking.userOwedValue(FIRST)).to.equal(firstExpectedReward);
+    expect(await abstractStaking.userOwedValue(SECOND)).to.equal(secondExpectedReward);
+    expect(await abstractStaking.userOwedValue(THIRD)).to.equal(thirdExpectedReward);
+  };
+
+  const performStakingManipulations2 = async () => {
+    await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(400, shares_decimals));
+    await mintAndApproveTokens(SECOND, SHARES_TOKEN, wei(100, shares_decimals));
+    await mintAndApproveTokens(THIRD, SHARES_TOKEN, wei(400, shares_decimals));
+
+    await abstractStaking.connect(FIRST).stake(wei(200, shares_decimals));
+
+    await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+    await abstractStaking.connect(SECOND).stake(wei(100, shares_decimals));
+
+    await abstractStaking.connect(THIRD).stake(wei(300, shares_decimals));
+
+    await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+    await abstractStaking.connect(FIRST).stake(wei(200, shares_decimals));
+
+    await abstractStaking.connect(FIRST).unstake(wei(100, shares_decimals));
+
+    await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+    await abstractStaking.connect(SECOND).unstake(wei(100, shares_decimals));
+
+    await abstractStaking.connect(THIRD).stake(wei(100, shares_decimals));
+
+    await time.setNextBlockTimestamp((await time.latest()) + 2);
+
+    await abstractStaking.connect(FIRST).unstake(wei(300, shares_decimals));
+
+    await abstractStaking.connect(THIRD).unstake(wei(400, shares_decimals));
+  };
+
+  const checkManipulationRewards2 = async () => {
+    const firstExpectedReward =
+      wei(7, rewards_decimals) + wei(2, rewards_decimals) / 3n + wei(1, rewards_decimals) / 7n;
+    const secondExpectedReward = wei(233, rewards_decimals) / 168n;
+    const thirdExpectedReward =
+      wei(5, rewards_decimals) + wei(3, rewards_decimals) / 8n + wei(3, rewards_decimals) / 7n;
+
+    expect(await abstractStaking.getOwedValue(FIRST)).to.equal(firstExpectedReward);
+    expect(await abstractStaking.getOwedValue(SECOND)).to.equal(secondExpectedReward);
+    expect(await abstractStaking.getOwedValue(THIRD)).to.equal(thirdExpectedReward);
+
+    expect(await abstractStaking.userOwedValue(FIRST)).to.equal(firstExpectedReward);
+    expect(await abstractStaking.userOwedValue(SECOND)).to.equal(secondExpectedReward);
+    expect(await abstractStaking.userOwedValue(THIRD)).to.equal(thirdExpectedReward);
+  };
+
+  const performAndCheckSameBlockStaking = async () => {
+    const StakersFactory = await ethers.getContractFactory("StakersFactory");
+    const stakersFactory = await StakersFactory.deploy();
+
+    await stakersFactory.createStaker();
+    await stakersFactory.createStaker();
+
+    const staker1 = await stakersFactory.stakers(0);
+    const staker2 = await stakersFactory.stakers(1);
+
+    await SHARES_TOKEN.mint(staker1, wei(500, shares_decimals));
+    await SHARES_TOKEN.mint(staker2, wei(500, shares_decimals));
+    await mintAndApproveTokens(THIRD, SHARES_TOKEN, wei(100, shares_decimals));
+
+    await stakersFactory.stake(abstractStaking, staker1, SHARES_TOKEN, wei(100, shares_decimals));
+
+    await stakersFactory.multicall([
+      stakersFactory.interface.encodeFunctionData("stake", [
+        await abstractStaking.getAddress(),
+        staker1,
+        await SHARES_TOKEN.getAddress(),
+        wei(200, shares_decimals),
+      ]),
+      stakersFactory.interface.encodeFunctionData("stake", [
+        await abstractStaking.getAddress(),
+        staker2,
+        await SHARES_TOKEN.getAddress(),
+        wei(200, shares_decimals),
+      ]),
+    ]);
+
+    await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+    await stakersFactory.unstake(abstractStaking, staker2, wei(100, shares_decimals));
+
+    await time.setNextBlockTimestamp((await time.latest()) + 4);
+
+    await abstractStaking.connect(THIRD).stake(wei(100, shares_decimals));
+
+    await stakersFactory.multicall([
+      stakersFactory.interface.encodeFunctionData("unstake", [
+        await abstractStaking.getAddress(),
+        staker1,
+        wei(300, shares_decimals),
+      ]),
+      stakersFactory.interface.encodeFunctionData("unstake", [
+        await abstractStaking.getAddress(),
+        staker2,
+        wei(100, shares_decimals),
+      ]),
+    ]);
+
+    await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+    await abstractStaking.connect(THIRD).unstake(wei(100, shares_decimals));
+
+    const firstExpectedReward = wei(6, rewards_decimals) + wei(2, rewards_decimals) / 5n;
+    const secondExpectedReward = wei(2, rewards_decimals) + wei(2, rewards_decimals) / 5n;
+    const thirdExpectedReward = wei(3, rewards_decimals) + wei(1, rewards_decimals) / 5n;
+
+    expect(await abstractStaking.getOwedValue(staker1)).to.equal(firstExpectedReward);
+    expect(await abstractStaking.getOwedValue(staker2)).to.equal(secondExpectedReward);
+    expect(await abstractStaking.getOwedValue(THIRD)).to.equal(thirdExpectedReward);
+
+    expect(await abstractStaking.userOwedValue(staker1)).to.equal(firstExpectedReward);
+    expect(await abstractStaking.userOwedValue(staker2)).to.equal(secondExpectedReward);
+    expect(await abstractStaking.userOwedValue(THIRD)).to.equal(thirdExpectedReward);
   };
 
   before("setup", async () => {
@@ -71,10 +199,13 @@ describe("AbstractStaking", () => {
     SHARES_TOKEN = await ERC20Mock.deploy("SharesMock", "SMock", 18);
     REWARDS_TOKEN = await ERC20Mock.deploy("RewardsMock", "RMock", 18);
 
-    await REWARDS_TOKEN.mint(await abstractStaking.getAddress(), wei(1000));
+    shares_decimals = Number(await SHARES_TOKEN.decimals());
+    rewards_decimals = Number(await REWARDS_TOKEN.decimals());
+
+    await REWARDS_TOKEN.mint(await abstractStaking.getAddress(), wei(100, rewards_decimals));
 
     stakingStartTime = 3n;
-    rate = wei(1);
+    rate = wei(1, rewards_decimals);
 
     await abstractStaking.__AbstractStakingMock_init(SHARES_TOKEN, REWARDS_TOKEN, rate, stakingStartTime);
 
@@ -101,46 +232,75 @@ describe("AbstractStaking", () => {
     });
   });
 
-  describe("stakingStartTime", () => {
+  describe("timestamps", () => {
     it("should not allow to stake, unstake, withdraw tokens or claim rewards before the start of the staking", async () => {
       await abstractStaking.setStakingStartTime(1638474321);
 
       const revertMessage = "Staking: staking has not started yet";
 
-      await expect(abstractStaking.stake(100)).to.be.revertedWith(revertMessage);
-      await expect(abstractStaking.unstake(100)).to.be.revertedWith(revertMessage);
+      await expect(abstractStaking.stake(wei(100, shares_decimals))).to.be.revertedWith(revertMessage);
+      await expect(abstractStaking.unstake(wei(100, shares_decimals))).to.be.revertedWith(revertMessage);
       await expect(abstractStaking.withdraw()).to.be.revertedWith(revertMessage);
-      await expect(abstractStaking.claim(100)).to.be.revertedWith(revertMessage);
+      await expect(abstractStaking.claim(wei(100, shares_decimals))).to.be.revertedWith(revertMessage);
+    });
+
+    it("should work as expected if the staking start time is set to the timestamp in the past", async () => {
+      await time.setNextBlockTimestamp((await time.latest()) + 20);
+
+      await abstractStaking.setStakingStartTime(2);
+
+      expect(await abstractStaking.stakingStartTime()).to.equal(2);
+
+      await performStakingManipulations();
+
+      await checkManipulationRewards();
+    });
+
+    it("should update values correctly if more than one transaction which updates the key values is sent within one block", async () => {
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(400, shares_decimals));
+
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
+
+      await abstractStaking.multicall([
+        abstractStaking.interface.encodeFunctionData("stake", [wei(100, shares_decimals)]),
+        abstractStaking.interface.encodeFunctionData("stake", [wei(100, shares_decimals)]),
+      ]);
+
+      expect(await abstractStaking.userShares(FIRST)).to.equal(wei(400, shares_decimals));
+      expect(await abstractStaking.cumulativeSum()).to.equal(wei(1.5, 23));
+    });
+
+    it("should work as expected if more than one transaction which updates the key values is sent within one block", async () => {
+      await performAndCheckSameBlockStaking();
     });
   });
 
   describe("stake()", () => {
     it("should add shares after staking correctly", async () => {
-      await mintAndApproveTokens(FIRST, SHARES_TOKEN, 100);
-      await mintAndApproveTokens(SECOND, SHARES_TOKEN, 300);
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
+      await mintAndApproveTokens(SECOND, SHARES_TOKEN, wei(300, shares_decimals));
 
-      await abstractStaking.connect(FIRST).stake(100);
-      await abstractStaking.connect(SECOND).stake(300);
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
+      await abstractStaking.connect(SECOND).stake(wei(300, shares_decimals));
 
-      expect(await abstractStaking.totalShares()).to.equal(400);
-      expect(await abstractStaking.userShares(FIRST)).to.equal(100);
-      expect(await abstractStaking.userShares(SECOND)).to.equal(300);
+      expect(await abstractStaking.totalShares()).to.equal(wei(400, shares_decimals));
+      expect(await abstractStaking.userShares(FIRST)).to.equal(wei(100, shares_decimals));
+      expect(await abstractStaking.userShares(SECOND)).to.equal(wei(300, shares_decimals));
     });
 
-    it("should transfer tokens corrently on stake", async () => {
-      await mintAndApproveTokens(FIRST, SHARES_TOKEN, 100);
+    it("should transfer tokens correctly on stake", async () => {
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
 
-      await expect(abstractStaking.connect(FIRST).stake(50))
-        .to.emit(SHARES_TOKEN, "Transfer")
-        .withArgs(FIRST.address, await abstractStaking.getAddress(), 50);
+      await abstractStaking.connect(FIRST).stake(wei(50, shares_decimals));
 
-      expect(await SHARES_TOKEN.balanceOf(FIRST)).to.equal(50);
-      expect(await SHARES_TOKEN.balanceOf(abstractStaking)).to.equal(50);
+      expect(await SHARES_TOKEN.balanceOf(FIRST)).to.equal(wei(50, shares_decimals));
+      expect(await SHARES_TOKEN.balanceOf(abstractStaking)).to.equal(wei(50, shares_decimals));
 
-      await abstractStaking.connect(FIRST).stake(50);
+      await abstractStaking.connect(FIRST).stake(wei(50, shares_decimals));
 
       expect(await SHARES_TOKEN.balanceOf(FIRST)).to.equal(0);
-      expect(await SHARES_TOKEN.balanceOf(abstractStaking)).to.equal(100);
+      expect(await SHARES_TOKEN.balanceOf(abstractStaking)).to.equal(wei(100, shares_decimals));
     });
 
     it("should not allow to stake 0 tokens", async () => {
@@ -152,45 +312,63 @@ describe("AbstractStaking", () => {
 
   describe("unstake()", () => {
     it("should remove shares after unstaking correctly", async () => {
-      await mintAndApproveTokens(FIRST, SHARES_TOKEN, 100);
-      await mintAndApproveTokens(SECOND, SHARES_TOKEN, 300);
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
+      await mintAndApproveTokens(SECOND, SHARES_TOKEN, wei(300, shares_decimals));
 
-      await abstractStaking.connect(FIRST).stake(100);
-      await abstractStaking.connect(SECOND).stake(300);
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
+      await abstractStaking.connect(SECOND).stake(wei(300, shares_decimals));
 
-      await abstractStaking.connect(FIRST).unstake(50);
-      await abstractStaking.connect(SECOND).unstake(200);
+      await abstractStaking.connect(FIRST).unstake(wei(50, shares_decimals));
+      await abstractStaking.connect(SECOND).unstake(wei(200, shares_decimals));
 
-      expect(await abstractStaking.totalShares()).to.equal(150);
-      expect(await abstractStaking.userShares(FIRST)).to.equal(50);
-      expect(await abstractStaking.userShares(SECOND)).to.equal(100);
+      expect(await abstractStaking.totalShares()).to.equal(wei(150, shares_decimals));
+      expect(await abstractStaking.userShares(FIRST)).to.equal(wei(50, shares_decimals));
+      expect(await abstractStaking.userShares(SECOND)).to.equal(wei(100, shares_decimals));
     });
 
     it("should handle unstaking the whole amount staked correctly", async () => {
-      await mintAndApproveTokens(FIRST, SHARES_TOKEN, 100);
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
+      await mintAndApproveTokens(SECOND, SHARES_TOKEN, wei(200, shares_decimals));
 
-      await abstractStaking.connect(FIRST).stake(100);
-      await abstractStaking.connect(FIRST).unstake(100);
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
+      await abstractStaking.connect(SECOND).stake(wei(200, shares_decimals));
+
+      await abstractStaking.connect(FIRST).unstake(wei(100, shares_decimals));
+      await abstractStaking.connect(SECOND).unstake(wei(200, shares_decimals));
+
+      const cumulativeSum = await abstractStaking.cumulativeSum();
 
       expect(await abstractStaking.totalShares()).to.equal(0);
       expect(await abstractStaking.userShares(FIRST)).to.equal(0);
+      expect(await abstractStaking.userShares(SECOND)).to.equal(0);
+
+      await SHARES_TOKEN.connect(FIRST).approve(abstractStaking, wei(50, shares_decimals));
+      await SHARES_TOKEN.connect(SECOND).approve(abstractStaking, wei(100, shares_decimals));
+
+      await abstractStaking.connect(FIRST).stake(wei(50, shares_decimals));
+
+      expect(await abstractStaking.cumulativeSum()).to.equal(cumulativeSum);
+
+      await abstractStaking.connect(SECOND).stake(wei(100, shares_decimals));
+
+      expect(await abstractStaking.totalShares()).to.equal(wei(150, shares_decimals));
+      expect(await abstractStaking.userShares(FIRST)).to.equal(wei(50, shares_decimals));
+      expect(await abstractStaking.userShares(SECOND)).to.equal(wei(100, shares_decimals));
     });
 
     it("should transfer tokens correctly on unstake", async () => {
-      await mintAndApproveTokens(FIRST, SHARES_TOKEN, 100);
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
 
-      await abstractStaking.connect(FIRST).stake(100);
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
 
-      await expect(abstractStaking.connect(FIRST).unstake(50))
-        .to.emit(SHARES_TOKEN, "Transfer")
-        .withArgs(await abstractStaking.getAddress(), FIRST.address, 50);
+      await abstractStaking.connect(FIRST).unstake(wei(50, shares_decimals));
 
-      expect(await SHARES_TOKEN.balanceOf(FIRST)).to.equal(50);
-      expect(await SHARES_TOKEN.balanceOf(abstractStaking)).to.equal(50);
+      expect(await SHARES_TOKEN.balanceOf(FIRST)).to.equal(wei(50, shares_decimals));
+      expect(await SHARES_TOKEN.balanceOf(abstractStaking)).to.equal(wei(50, shares_decimals));
 
-      await abstractStaking.connect(FIRST).unstake(50);
+      await abstractStaking.connect(FIRST).unstake(wei(50, shares_decimals));
 
-      expect(await SHARES_TOKEN.balanceOf(FIRST)).to.equal(100);
+      expect(await SHARES_TOKEN.balanceOf(FIRST)).to.equal(wei(100, shares_decimals));
       expect(await SHARES_TOKEN.balanceOf(abstractStaking)).to.equal(0);
     });
 
@@ -201,10 +379,10 @@ describe("AbstractStaking", () => {
     });
 
     it("should not allow to unstake more than it was staked", async () => {
-      await mintAndApproveTokens(FIRST, SHARES_TOKEN, 100);
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
 
-      await abstractStaking.connect(FIRST).stake(100);
-      await expect(abstractStaking.connect(FIRST).unstake(150)).to.be.revertedWith(
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
+      await expect(abstractStaking.connect(FIRST).unstake(wei(150, shares_decimals))).to.be.revertedWith(
         "ValueDistributor: insufficient amount",
       );
     });
@@ -212,9 +390,9 @@ describe("AbstractStaking", () => {
 
   describe("withdraw()", () => {
     it("should withdraw tokens correctly", async () => {
-      await mintAndApproveTokens(FIRST, SHARES_TOKEN, 100);
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
 
-      await abstractStaking.connect(FIRST).stake(100);
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
 
       await abstractStaking.connect(FIRST).withdraw();
 
@@ -223,60 +401,54 @@ describe("AbstractStaking", () => {
     });
 
     it("should transfer tokens correctly on withdraw", async () => {
-      await mintAndApproveTokens(FIRST, SHARES_TOKEN, 100);
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
 
-      await abstractStaking.connect(FIRST).stake(100);
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
 
-      await expect(abstractStaking.connect(FIRST).withdraw())
-        .to.emit(SHARES_TOKEN, "Transfer")
-        .withArgs(await abstractStaking.getAddress(), FIRST.address, 100);
+      await abstractStaking.connect(FIRST).withdraw();
 
       expect(await SHARES_TOKEN.balanceOf(abstractStaking)).to.equal(0);
-      expect(await SHARES_TOKEN.balanceOf(FIRST)).to.equal(100);
+      expect(await SHARES_TOKEN.balanceOf(FIRST)).to.equal(wei(100, shares_decimals));
     });
 
     it("should claim all the rewards earned after the withdrawal", async () => {
-      await mintAndApproveTokens(FIRST, SHARES_TOKEN, 100);
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
 
-      await abstractStaking.connect(FIRST).stake(100);
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
 
       await time.setNextBlockTimestamp((await time.latest()) + 30);
 
       await abstractStaking.connect(FIRST).withdraw();
 
-      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(wei(0));
-      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(wei(0));
+      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(0);
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(0);
     });
   });
 
   describe("claim()", () => {
     it("should calculate the rewards earned for a user correctly", async () => {
-      await mintAndApproveTokens(FIRST, SHARES_TOKEN, 100);
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
 
-      await abstractStaking.connect(FIRST).stake(100);
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
 
       await time.setNextBlockTimestamp((await time.latest()) + 30);
 
-      await abstractStaking.connect(FIRST).unstake(100);
+      await abstractStaking.connect(FIRST).unstake(wei(100, shares_decimals));
 
-      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(wei(30));
-      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(wei(30));
+      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(wei(30, rewards_decimals));
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(wei(30, rewards_decimals));
     });
 
     it("should calculate the reward earned for multiple users correctly", async () => {
       await performStakingManipulations();
 
-      const firstExpectedReward = wei(3) + wei(1) / 12n;
-      const secondExpectedReward = wei(3) + wei(1) / 3n;
-      const thirdExpectedReward = wei(3) + wei(7) / 12n;
+      await checkManipulationRewards();
+    });
 
-      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(firstExpectedReward);
-      expect(await abstractStaking.getOwedValue(SECOND)).to.equal(secondExpectedReward);
-      expect(await abstractStaking.getOwedValue(THIRD)).to.equal(thirdExpectedReward);
+    it("should calculate the reward earned for multiple users correctly", async () => {
+      await performStakingManipulations2();
 
-      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(firstExpectedReward);
-      expect(await abstractStaking.userOwedValue(SECOND)).to.equal(secondExpectedReward);
-      expect(await abstractStaking.userOwedValue(THIRD)).to.equal(thirdExpectedReward);
+      await checkManipulationRewards2();
     });
 
     it("should claim all the rewards correctly", async () => {
@@ -298,36 +470,42 @@ describe("AbstractStaking", () => {
     it("should correctly claim rewards partially", async () => {
       await performStakingManipulations();
 
-      await abstractStaking.connect(FIRST).claim((await abstractStaking.getOwedValue(FIRST)) - wei(1));
-      await abstractStaking.connect(SECOND).claim((await abstractStaking.getOwedValue(SECOND)) - wei(2));
-      await abstractStaking.connect(THIRD).claim((await abstractStaking.getOwedValue(THIRD)) - wei(3));
+      await abstractStaking
+        .connect(FIRST)
+        .claim((await abstractStaking.getOwedValue(FIRST)) - wei(1, rewards_decimals));
+      await abstractStaking
+        .connect(SECOND)
+        .claim((await abstractStaking.getOwedValue(SECOND)) - wei(2, rewards_decimals));
+      await abstractStaking
+        .connect(THIRD)
+        .claim((await abstractStaking.getOwedValue(THIRD)) - wei(3, rewards_decimals));
 
-      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(wei(1));
-      expect(await abstractStaking.getOwedValue(SECOND)).to.equal(wei(2));
-      expect(await abstractStaking.getOwedValue(THIRD)).to.equal(wei(3));
+      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(wei(1, rewards_decimals));
+      expect(await abstractStaking.getOwedValue(SECOND)).to.equal(wei(2, rewards_decimals));
+      expect(await abstractStaking.getOwedValue(THIRD)).to.equal(wei(3, rewards_decimals));
 
-      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(wei(1));
-      expect(await abstractStaking.userOwedValue(SECOND)).to.equal(wei(2));
-      expect(await abstractStaking.userOwedValue(THIRD)).to.equal(wei(3));
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(wei(1, rewards_decimals));
+      expect(await abstractStaking.userOwedValue(SECOND)).to.equal(wei(2, rewards_decimals));
+      expect(await abstractStaking.userOwedValue(THIRD)).to.equal(wei(3, rewards_decimals));
     });
 
     it("should allow to claim rewards in several rounds correctly", async () => {
-      await performStakingManipulations();
+      await performStakingManipulations2();
 
       await abstractStaking.connect(FIRST).claim((await abstractStaking.getOwedValue(FIRST)) - wei(3));
 
-      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(wei(3));
-      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(wei(3));
+      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(wei(3, rewards_decimals));
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(wei(3, rewards_decimals));
 
       await abstractStaking.connect(FIRST).claim((await abstractStaking.getOwedValue(FIRST)) - wei(2));
 
-      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(wei(2));
-      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(wei(2));
+      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(wei(2, rewards_decimals));
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(wei(2, rewards_decimals));
 
-      await abstractStaking.connect(FIRST).claim(wei(2));
+      await abstractStaking.connect(FIRST).claim(wei(2, rewards_decimals));
 
       expect(await abstractStaking.getOwedValue(FIRST)).to.equal(0);
-      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(wei(0));
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(0);
     });
 
     it("should transfer tokens correctly on the claim", async () => {
@@ -342,9 +520,7 @@ describe("AbstractStaking", () => {
       await abstractStaking.connect(FIRST).claim(firstOwed);
       await abstractStaking.connect(SECOND).claim(secondOwed);
 
-      await expect(abstractStaking.connect(THIRD).claim(thirdOwed))
-        .to.emit(REWARDS_TOKEN, "Transfer")
-        .withArgs(await abstractStaking.getAddress(), THIRD.address, thirdOwed);
+      await abstractStaking.connect(THIRD).claim(thirdOwed);
 
       expect(await REWARDS_TOKEN.balanceOf(abstractStaking)).to.equal(
         initialRewardsBalance - (firstOwed + secondOwed + thirdOwed),
@@ -363,9 +539,94 @@ describe("AbstractStaking", () => {
     it("should not allow to claim more rewards than earned", async () => {
       await performStakingManipulations();
 
-      await expect(abstractStaking.connect(FIRST).claim(wei(4))).to.be.revertedWith(
+      await expect(abstractStaking.connect(FIRST).claim(wei(4, rewards_decimals))).to.be.revertedWith(
         "ValueDistributor: insufficient amount",
       );
+    });
+  });
+
+  describe("rate", () => {
+    it("should accept 0 as a rate and calculate owed values according to this rate correctly", async () => {
+      const AbstractStakingMock = await ethers.getContractFactory("AbstractStakingMock");
+      abstractStaking = await AbstractStakingMock.deploy();
+
+      await abstractStaking.__AbstractStakingMock_init(SHARES_TOKEN, REWARDS_TOKEN, 0, stakingStartTime);
+
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
+
+      await abstractStaking.connect(FIRST).stake(wei(100, shares_decimals));
+
+      await time.setNextBlockTimestamp((await time.latest()) + 20);
+
+      await abstractStaking.connect(FIRST).unstake(wei(100, shares_decimals));
+
+      expect(await abstractStaking.rate()).to.equal(0);
+
+      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(0);
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(0);
+      expect(await abstractStaking.cumulativeSum()).to.equal(0);
+    });
+
+    it("should calculate owed value properly after the rate is changed to 0", async () => {
+      const AbstractStakingMock = await ethers.getContractFactory("AbstractStakingMock");
+      abstractStaking = await AbstractStakingMock.deploy();
+
+      await abstractStaking.__AbstractStakingMock_init(SHARES_TOKEN, REWARDS_TOKEN, rate, stakingStartTime);
+
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
+      await mintAndApproveTokens(SECOND, SHARES_TOKEN, wei(300, shares_decimals));
+
+      await abstractStaking.connect(FIRST).stake(wei(50, shares_decimals));
+      await abstractStaking.connect(SECOND).stake(wei(150, shares_decimals));
+
+      await abstractStaking.connect(FIRST).unstake(wei(50, shares_decimals));
+      await abstractStaking.connect(SECOND).unstake(wei(100, shares_decimals));
+
+      await abstractStaking.setRate(0);
+
+      expect(await abstractStaking.rate()).to.equal(0);
+
+      await abstractStaking.connect(SECOND).unstake(wei(50, shares_decimals));
+
+      let firstOwedValue = await abstractStaking.getOwedValue(FIRST);
+      let secondOwedValue = await abstractStaking.getOwedValue(SECOND);
+
+      await performStakingManipulations();
+
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(firstOwedValue);
+      expect(await abstractStaking.userOwedValue(SECOND)).to.equal(secondOwedValue);
+    });
+
+    it("should work as expected after updating the rate", async () => {
+      const AbstractStakingMock = await ethers.getContractFactory("AbstractStakingMock");
+      abstractStaking = await AbstractStakingMock.deploy();
+
+      await abstractStaking.__AbstractStakingMock_init(SHARES_TOKEN, REWARDS_TOKEN, rate, stakingStartTime);
+
+      await mintAndApproveTokens(FIRST, SHARES_TOKEN, wei(100, shares_decimals));
+      await mintAndApproveTokens(SECOND, SHARES_TOKEN, wei(300, shares_decimals));
+
+      await abstractStaking.connect(FIRST).stake(wei(50, shares_decimals));
+      await abstractStaking.connect(SECOND).stake(wei(150, shares_decimals));
+
+      await abstractStaking.connect(FIRST).unstake(wei(50, shares_decimals));
+      await abstractStaking.connect(SECOND).unstake(wei(100, shares_decimals));
+
+      const prevCumulativeSum = await abstractStaking.cumulativeSum();
+
+      let firstOwedValue = await abstractStaking.getOwedValue(FIRST);
+      let secondOwedValue = await abstractStaking.getOwedValue(SECOND);
+
+      await abstractStaking.setRate(wei(2, rewards_decimals));
+
+      const expectedCumulativeSum = prevCumulativeSum + wei(rate, 25) / (await abstractStaking.totalShares());
+
+      expect(await abstractStaking.rate()).to.equal(wei(2, rewards_decimals));
+      expect(await abstractStaking.cumulativeSum()).to.equal(expectedCumulativeSum);
+      expect(await abstractStaking.updatedAt()).to.equal(await time.latest());
+
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(firstOwedValue);
+      expect(await abstractStaking.userOwedValue(SECOND)).to.equal(secondOwedValue);
     });
   });
 
@@ -374,61 +635,20 @@ describe("AbstractStaking", () => {
       const AbstractStakingMock = await ethers.getContractFactory("AbstractStakingMock");
       const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
 
-      const abstractStaking6Decimals = await AbstractStakingMock.deploy();
-      const SHARES_TOKEN = await ERC20Mock.deploy("SharesMock", "SMock", 6);
-      const REWARDS_TOKEN = await ERC20Mock.deploy("RewardsMock", "RMock", 6);
-      await REWARDS_TOKEN.mint(await abstractStaking6Decimals.getAddress(), wei(1000));
+      abstractStaking = await AbstractStakingMock.deploy();
+      SHARES_TOKEN = await ERC20Mock.deploy("SharesMock", "SMock", 6);
+      REWARDS_TOKEN = await ERC20Mock.deploy("RewardsMock", "RMock", 6);
 
-      await abstractStaking6Decimals.__AbstractStakingMock_init(SHARES_TOKEN, REWARDS_TOKEN, wei(1, 6), 3n);
+      shares_decimals = Number(await SHARES_TOKEN.decimals());
+      rewards_decimals = Number(await REWARDS_TOKEN.decimals());
 
-      await SHARES_TOKEN.mint(FIRST, 100);
-      await SHARES_TOKEN.mint(SECOND, 200);
-      await SHARES_TOKEN.mint(THIRD, 200);
-      await REWARDS_TOKEN.mint(await abstractStaking6Decimals.getAddress(), wei(1000));
+      await REWARDS_TOKEN.mint(await abstractStaking.getAddress(), wei(100, rewards_decimals));
 
-      await SHARES_TOKEN.connect(FIRST).approve(abstractStaking6Decimals.getAddress(), 100);
-      await SHARES_TOKEN.connect(SECOND).approve(abstractStaking6Decimals.getAddress(), 200);
-      await SHARES_TOKEN.connect(THIRD).approve(abstractStaking6Decimals.getAddress(), 200);
+      await abstractStaking.__AbstractStakingMock_init(SHARES_TOKEN, REWARDS_TOKEN, wei(1, rewards_decimals), 3n);
 
-      await time.setNextBlockTimestamp((await time.latest()) + 2);
+      await performStakingManipulations2();
 
-      await abstractStaking6Decimals.connect(FIRST).stake(100);
-
-      await time.setNextBlockTimestamp((await time.latest()) + 2);
-
-      await abstractStaking6Decimals.connect(SECOND).stake(200);
-
-      await time.setNextBlockTimestamp((await time.latest()) + 1);
-
-      await abstractStaking6Decimals.connect(THIRD).stake(100);
-
-      await time.setNextBlockTimestamp((await time.latest()) + 3);
-
-      await abstractStaking6Decimals.connect(FIRST).unstake(100);
-
-      await time.setNextBlockTimestamp((await time.latest()) + 1);
-
-      await abstractStaking6Decimals.connect(THIRD).stake(100);
-
-      await time.setNextBlockTimestamp((await time.latest()) + 1);
-
-      await abstractStaking6Decimals.connect(SECOND).unstake(200);
-
-      await time.setNextBlockTimestamp((await time.latest()) + 2);
-
-      await abstractStaking6Decimals.connect(THIRD).unstake(200);
-
-      const firstExpectedReward = wei(3, 6) + wei(1, 6) / 12n;
-      const secondExpectedReward = wei(3, 6) + wei(1, 6) / 3n;
-      const thirdExpectedReward = wei(3, 6) + wei(7, 6) / 12n;
-
-      expect(await abstractStaking6Decimals.getOwedValue(FIRST)).to.equal(firstExpectedReward);
-      expect(await abstractStaking6Decimals.getOwedValue(SECOND)).to.equal(secondExpectedReward);
-      expect(await abstractStaking6Decimals.getOwedValue(THIRD)).to.equal(thirdExpectedReward);
-
-      expect(await abstractStaking6Decimals.userOwedValue(FIRST)).to.equal(firstExpectedReward);
-      expect(await abstractStaking6Decimals.userOwedValue(SECOND)).to.equal(secondExpectedReward);
-      expect(await abstractStaking6Decimals.userOwedValue(THIRD)).to.equal(thirdExpectedReward);
+      await checkManipulationRewards2();
     });
   });
 });

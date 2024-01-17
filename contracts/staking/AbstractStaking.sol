@@ -70,16 +70,6 @@ abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
     }
 
     /**
-     * @notice Withdraws all the staked tokens.
-     *
-     * Note: All the rewards are claimed after the shares were removed.
-     */
-    function withdraw() public stakingStarted {
-        unstake(userDistribution(msg.sender).shares);
-        claim(getOwedValue(msg.sender));
-    }
-
-    /**
      * @notice Unstakes the specified amount of tokens.
      * @param amount_ The amount of tokens to unstake.
      */
@@ -93,6 +83,22 @@ abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
      */
     function claim(uint256 amount_) public stakingStarted {
         _distributeValue(msg.sender, amount_);
+    }
+
+    /**
+     * @notice Withdraws all the staked tokens together with rewards.
+     *
+     * Note: All the rewards are claimed after the shares are removed.
+     *
+     * @return shares_ The amount of shares being withdrawn.
+     * @return owedValue_ The total value of the rewards owed to the user.
+     */
+    function withdraw() public stakingStarted returns (uint256 shares_, uint256 owedValue_) {
+        shares_ = userDistribution(msg.sender).shares;
+        owedValue_ = getOwedValue(msg.sender);
+
+        unstake(userDistribution(msg.sender).shares);
+        claim(getOwedValue(msg.sender));
     }
 
     /**
@@ -113,7 +119,7 @@ abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
 
     /**
      * @notice Returns the staking start time.
-     * @return The timestamp when staking started.
+     * @return The timestamp when staking starts.
      */
     function stakingStartTime() public view returns (uint256) {
         return _stakingStartTime;
