@@ -7,10 +7,6 @@ import {AbstractValueDistributor} from "../../staking/AbstractValueDistributor.s
 import {DECIMAL} from "../../utils/Globals.sol";
 
 contract AbstractValueDistributorMock is AbstractValueDistributor, Multicall {
-    event SharesAdded(address user_, uint256 amount_);
-    event SharesRemoved(address user_, uint256 amount_);
-    event ValueDistributed(address user_, uint256 amount_);
-
     function addShares(address user_, uint256 amount_) external {
         _addShares(user_, amount_);
     }
@@ -29,17 +25,5 @@ contract AbstractValueDistributorMock is AbstractValueDistributor, Multicall {
 
     function userOwedValue(address user_) external view returns (uint256) {
         return userDistribution(user_).owedValue;
-    }
-
-    function _afterAddShares(address user_, uint256 amount_) internal override {
-        emit SharesAdded(user_, amount_);
-    }
-
-    function _afterRemoveShares(address user_, uint256 amount_) internal override {
-        emit SharesRemoved(user_, amount_);
-    }
-
-    function _afterDistributeValue(address user_, uint256 amount_) internal override {
-        emit ValueDistributed(user_, amount_);
     }
 }

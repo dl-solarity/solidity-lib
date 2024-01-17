@@ -30,6 +30,10 @@ abstract contract AbstractValueDistributor {
 
     mapping(address => UserDistribution) private _userDistributions;
 
+    event SharesAdded(address user_, uint256 amount_);
+    event SharesRemoved(address user_, uint256 amount_);
+    event ValueDistributed(address user_, uint256 amount_);
+
     /**
      * @notice Returns the total number of shares.
      * @return The total number of shares.
@@ -92,6 +96,8 @@ abstract contract AbstractValueDistributor {
         _totalShares += amount_;
         _userDistributions[user_].shares += amount_;
 
+        emit SharesAdded(user_, amount_);
+
         _afterAddShares(user_, amount_);
     }
 
@@ -112,6 +118,8 @@ abstract contract AbstractValueDistributor {
         _totalShares -= amount_;
         _userDistributions[user_].shares -= amount_;
 
+        emit SharesRemoved(user_, amount_);
+
         _afterRemoveShares(user_, amount_);
     }
 
@@ -130,6 +138,8 @@ abstract contract AbstractValueDistributor {
         );
 
         _userDistributions[user_].owedValue -= amount_;
+
+        emit ValueDistributed(user_, amount_);
 
         _afterDistributeValue(user_, amount_);
     }

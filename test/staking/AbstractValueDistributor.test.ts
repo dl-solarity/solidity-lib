@@ -63,34 +63,6 @@ describe("AbstractValueDistributor", () => {
     await abstractValueDistributor.removeShares(THIRD, 200);
   };
 
-  const performSharesManipulations2 = async () => {
-    await abstractValueDistributor.addShares(FIRST, 200);
-
-    await time.setNextBlockTimestamp((await time.latest()) + 3);
-
-    await abstractValueDistributor.addShares(SECOND, 100);
-
-    await abstractValueDistributor.addShares(THIRD, 300);
-
-    await time.setNextBlockTimestamp((await time.latest()) + 3);
-
-    await abstractValueDistributor.addShares(FIRST, 200);
-
-    await abstractValueDistributor.removeShares(FIRST, 100);
-
-    await time.setNextBlockTimestamp((await time.latest()) + 3);
-
-    await abstractValueDistributor.removeShares(SECOND, 100);
-
-    await abstractValueDistributor.addShares(THIRD, 100);
-
-    await time.setNextBlockTimestamp((await time.latest()) + 2);
-
-    await abstractValueDistributor.removeShares(FIRST, 300);
-
-    await abstractValueDistributor.removeShares(THIRD, 400);
-  };
-
   before("setup", async () => {
     [FIRST, SECOND, THIRD, FOURTH] = await ethers.getSigners();
 
@@ -121,12 +93,6 @@ describe("AbstractValueDistributor", () => {
       await expect(abstractValueDistributor.addShares(ZERO_ADDR, 2)).to.be.revertedWith(
         "ValueDistributor: zero address is not allowed",
       );
-    });
-
-    it("should trigger the _afterAddShares hook", async () => {
-      await expect(abstractValueDistributor.addShares(FIRST, 100))
-        .to.emit(abstractValueDistributor, "SharesAdded")
-        .withArgs(FIRST.address, 100);
     });
   });
 
@@ -176,14 +142,6 @@ describe("AbstractValueDistributor", () => {
         "ValueDistributor: insufficient amount",
       );
     });
-
-    it("should trigger the _afterRemoveShares hook", async () => {
-      await abstractValueDistributor.addShares(FIRST, 100);
-
-      await expect(abstractValueDistributor.removeShares(FIRST, 100))
-        .to.emit(abstractValueDistributor, "SharesRemoved")
-        .withArgs(FIRST.address, 100);
-    });
   });
 
   describe("distributeValue()", () => {
@@ -215,7 +173,31 @@ describe("AbstractValueDistributor", () => {
     });
 
     it("should calculate the value owed to multiple users correctly", async () => {
-      await performSharesManipulations2();
+      await abstractValueDistributor.addShares(FIRST, 200);
+
+      await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+      await abstractValueDistributor.addShares(SECOND, 100);
+
+      await abstractValueDistributor.addShares(THIRD, 300);
+
+      await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+      await abstractValueDistributor.addShares(FIRST, 200);
+
+      await abstractValueDistributor.removeShares(FIRST, 100);
+
+      await time.setNextBlockTimestamp((await time.latest()) + 3);
+
+      await abstractValueDistributor.removeShares(SECOND, 100);
+
+      await abstractValueDistributor.addShares(THIRD, 100);
+
+      await time.setNextBlockTimestamp((await time.latest()) + 2);
+
+      await abstractValueDistributor.removeShares(FIRST, 300);
+
+      await abstractValueDistributor.removeShares(THIRD, 400);
 
       const firstExpectedReward = wei(7) + wei(2) / 3n + wei(1) / 7n;
       const secondExpectedReward = wei(233) / 168n;
@@ -314,18 +296,6 @@ describe("AbstractValueDistributor", () => {
       await expect(abstractValueDistributor.distributeValue(FIRST, wei(4))).to.be.revertedWith(
         "ValueDistributor: insufficient amount",
       );
-    });
-
-    it("should trigger the _afterDistributeValue hook", async () => {
-      await abstractValueDistributor.addShares(FIRST, 100);
-
-      await time.setNextBlockTimestamp((await time.latest()) + 30);
-
-      await abstractValueDistributor.removeShares(FIRST, 100);
-
-      await expect(abstractValueDistributor.distributeValue(FIRST, 30))
-        .to.emit(abstractValueDistributor, "ValueDistributed")
-        .withArgs(FIRST.address, 30);
     });
   });
 
