@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 
 import {AbstractValueDistributor} from "../../staking/AbstractValueDistributor.sol";
 import {DECIMAL} from "../../utils/Globals.sol";

@@ -172,8 +172,6 @@ abstract contract AbstractValueDistributor {
      *
      * This function should be called whenever user shares are modified or value distribution occurs.
      *
-     * Note: It will usually be required to override this function to provide custom distribution mechanics.
-     *
      * @param user_ The address of the user.
      */
     function _update(address user_) internal {
@@ -192,6 +190,9 @@ abstract contract AbstractValueDistributor {
 
     /**
      * @notice Gets the value to be distributed for a given time period.
+     *
+     * Note: It will usually be required to override this function to provide custom distribution mechanics.
+     *
      * @param timeUpTo The end timestamp of the period.
      * @param timeLastUpdate The start timestamp of the period.
      * @return The value to be distributed for the period.
@@ -203,9 +204,9 @@ abstract contract AbstractValueDistributor {
         return DECIMAL * (timeUpTo - timeLastUpdate); // 1 token with 18 decimals per second
     }
 
-    /*
+    /**
      * @notice Gets the expected cumulative sum of value per token staked distributed at a given timestamp.
-     * @param The timestamp up to which to calculate the value distribution.
+     * @param timeUpTo The timestamp up to which to calculate the value distribution.
      * @return The future cumulative sum of value per token staked that has been distributed.
      */
     function _getFutureCumulativeSum(uint256 timeUpTo) internal view returns (uint256) {

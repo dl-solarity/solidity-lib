@@ -97,8 +97,8 @@ abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
         shares_ = userDistribution(msg.sender).shares;
         owedValue_ = getOwedValue(msg.sender);
 
-        unstake(userDistribution(msg.sender).shares);
-        claim(getOwedValue(msg.sender));
+        unstake(shares_);
+        claim(owedValue_);
     }
 
     /**
