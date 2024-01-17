@@ -6,6 +6,7 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import { AbstractStakingMock, ERC20Mock } from "@ethers-v6";
 import { wei } from "@/scripts/utils/utils";
+import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 describe("AbstractStaking", () => {
   const reverter = new Reverter();
@@ -158,6 +159,19 @@ describe("AbstractStaking", () => {
       expect(await abstractStaking.rewardsToken()).to.equal(await rewardsToken.getAddress());
       expect(await abstractStaking.rate()).to.equal(rate);
       expect(await abstractStaking.stakingStartTime()).to.equal(stakingStartTime);
+    });
+
+    it("should not allow to set 0 as a Shares Token or Rewards Token", async () => {
+      const AbstractStakingMock = await ethers.getContractFactory("AbstractStakingMock");
+      let abstractStaking = await AbstractStakingMock.deploy();
+
+      await expect(
+        abstractStaking.__AbstractStakingMock_init(ZERO_ADDR, rewardsToken, rate, stakingStartTime),
+      ).to.be.revertedWith("Staking: zero address cannot be the Shares Token");
+
+      await expect(
+        abstractStaking.__AbstractStakingMock_init(sharesToken, ZERO_ADDR, rate, stakingStartTime),
+      ).to.be.revertedWith("Staking: zero address cannot be the Rewards Token");
     });
   });
 
