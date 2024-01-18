@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {PRECISION, DECIMAL} from "../utils/Globals.sol";
+import {PRECISION} from "../utils/Globals.sol";
 
 /**
  * @notice The AbstractValueDistributor module
@@ -203,28 +203,26 @@ abstract contract AbstractValueDistributor {
      *
      * Note: It will usually be required to override this function to provide custom distribution mechanics.
      *
-     * @param timeUpTo The end timestamp of the period.
-     * @param timeLastUpdate The start timestamp of the period.
+     * @param timeUpTo_ The end timestamp of the period.
+     * @param timeLastUpdate_ The start timestamp of the period.
      * @return The value to be distributed for the period.
      */
     function _getValueToDistribute(
-        uint256 timeUpTo,
-        uint256 timeLastUpdate
-    ) internal view virtual returns (uint256) {
-        return DECIMAL * (timeUpTo - timeLastUpdate); // 1 token with 18 decimals per second
-    }
+        uint256 timeUpTo_,
+        uint256 timeLastUpdate_
+    ) internal view virtual returns (uint256);
 
     /**
      * @notice Gets the expected cumulative sum of value per token staked distributed at a given timestamp.
-     * @param timeUpTo The timestamp up to which to calculate the value distribution.
+     * @param timeUpTo_ The timestamp up to which to calculate the value distribution.
      * @return The future cumulative sum of value per token staked that has been distributed.
      */
-    function _getFutureCumulativeSum(uint256 timeUpTo) internal view returns (uint256) {
+    function _getFutureCumulativeSum(uint256 timeUpTo_) internal view returns (uint256) {
         if (_totalShares == 0) {
             return _cumulativeSum;
         }
 
-        uint256 value_ = _getValueToDistribute(timeUpTo, _updatedAt);
+        uint256 value_ = _getValueToDistribute(timeUpTo_, _updatedAt);
 
         return _cumulativeSum + (value_ * PRECISION) / _totalShares;
     }

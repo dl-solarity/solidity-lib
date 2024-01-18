@@ -26,4 +26,11 @@ contract AbstractValueDistributorMock is AbstractValueDistributor, Multicall {
     function userOwedValue(address user_) external view returns (uint256) {
         return userDistribution(user_).owedValue;
     }
+
+    function _getValueToDistribute(
+        uint256 timeUpTo_,
+        uint256 timeLastUpdate_
+    ) internal view virtual override returns (uint256) {
+        return DECIMAL * (timeUpTo_ - timeLastUpdate_);
+    }
 }

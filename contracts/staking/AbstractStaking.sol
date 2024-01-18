@@ -41,6 +41,9 @@ abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
 
     /**
      * @notice Initializes the contract setting the values provided as shares token, rewards token, reward rate and staking start time.
+     *
+     * Warning: when shares and rewards tokens are the same, users may accidentally withdraw other users' shares as a reward.
+     *
      * @param sharesToken_ The address of the shares token.
      * @param rewardsToken_ The address of the rewards token.
      * @param rate_ The reward rate.
@@ -187,14 +190,14 @@ abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
 
     /**
      * @notice Gets the value to be distributed for a given time period.
-     * @param timeUpTo The end timestamp of the period.
-     * @param timeLastUpdate The start timestamp of the period.
+     * @param timeUpTo_ The end timestamp of the period.
+     * @param timeLastUpdate_ The start timestamp of the period.
      * @return The value to be distributed for the period.
      */
     function _getValueToDistribute(
-        uint256 timeUpTo,
-        uint256 timeLastUpdate
+        uint256 timeUpTo_,
+        uint256 timeLastUpdate_
     ) internal view virtual override returns (uint256) {
-        return _rate * (timeUpTo - timeLastUpdate);
+        return _rate * (timeUpTo_ - timeLastUpdate_);
     }
 }
