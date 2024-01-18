@@ -30,7 +30,7 @@ abstract contract VestingWallet is Initializable {
         address vestingToken;
         uint256 vestingAmount;
         uint256 paidAmount;
-        Schedule schedule;
+        uint256 scheduleId;
     }
 
     struct Vesting {
@@ -43,13 +43,38 @@ abstract contract VestingWallet is Initializable {
             returns (uint256) calculate;
     }
 
-    Counters.Counter internal _counter;
+    Counters.Counter internal _vestingIds;
+    Counters.Counter internal _scheduleIds;
 
     mapping(uint256 id => Vesting) internal _vestings;
+    mapping(uint256 id => Schedule) internal _schedules;
     mapping(address beneficiary => EnumerableSet.UintSet) internal _beneficiaryIds;
 
     // initialization
-    function __VestingWallet_init() internal onlyInitializing {}
+    function __VestingWallet_init(Schedule[] memory schedules_) internal onlyInitializing {
+        for (uint i = 0; i < schedules_.length; i++) {
+            _createSchedule(schedules_[i]);
+        }
+    }
+
+    function _createSchedule(
+        Schedule memory schedule_
+    ) internal virtual returns (uint256 _scheduleId) {
+        require(
+            schedule_.startTime + schedule_.durationInPeriods * schedule_.secondsInPeriod >
+                block.timestamp,
+            "VestingWallet: cannot create vesting for past date"
+        );
+
+        _scheduleIds.increment();
+        _scheduleId = _scheduleIds.current();
+
+        _schedules[_scheduleId] = schedule_;
+    }
+
+    function getSchedule(uint256 scheduleId_) public view virtual returns (Schedule memory) {
+        return _schedules[scheduleId_];
+    }
 
     function getVesting(uint256 vestingId_) public view virtual returns (BaseVesting memory) {
         return _vestings[vestingId_].vestingData;
@@ -79,7 +104,9 @@ abstract contract VestingWallet is Initializable {
         uint256 timestampCurrent_
     ) public view virtual returns (uint256) {
         Vesting memory _vesting = _vestings[vestingId_];
-        return _getWithdrawableAmount(_vesting, timestampUpTo_, timestampCurrent_);
+        Schedule memory _schedule = _schedules[_vesting.vestingData.scheduleId];
+
+        return _getWithdrawableAmount(_vesting, _schedule, timestampUpTo_, timestampCurrent_);
     }
 
     // get vested amount at the moment
@@ -89,18 +116,21 @@ abstract contract VestingWallet is Initializable {
         uint256 timestampCurrent_
     ) public view virtual returns (uint256) {
         Vesting memory _vesting = _vestings[vestingId_];
-        return _getVestedAmount(_vesting, timestampUpTo_, timestampCurrent_);
+        Schedule memory _schedule = _schedules[_vesting.vestingData.scheduleId];
+
+        return _getVestedAmount(_vesting, _schedule, timestampUpTo_, timestampCurrent_);
     }
 
     // get available amount to withdraw
     function _getWithdrawableAmount(
         Vesting memory vesting_,
+        Schedule memory schedule_,
         uint256 timestampUpTo_,
         uint256 timestampCurrent_
     ) internal view virtual returns (uint256) {
         return
             vesting_.calculate(
-                vesting_.vestingData.schedule,
+                schedule_,
                 vesting_.vestingData.vestingAmount,
                 timestampUpTo_,
                 timestampCurrent_
@@ -110,12 +140,13 @@ abstract contract VestingWallet is Initializable {
     // get released amount at the moment
     function _getVestedAmount(
         Vesting memory vesting_,
+        Schedule memory schedule_,
         uint256 timestampUpTo_,
         uint256 timestampCurrent_
     ) internal view virtual returns (uint256) {
         return
             vesting_.calculate(
-                vesting_.vestingData.schedule,
+                schedule_,
                 vesting_.vestingData.vestingAmount,
                 timestampUpTo_,
                 timestampCurrent_
@@ -127,7 +158,7 @@ abstract contract VestingWallet is Initializable {
     ) internal virtual returns (uint256 _vestingId) {
         _prepareVestingForCreation(vesting_);
 
-        _vestingId = _counter.current();
+        _vestingId = _vestingIds.current();
 
         _vestings[_vestingId] = Vesting({vestingData: vesting_, calculate: _vestingCalculation});
     }
@@ -137,7 +168,7 @@ abstract contract VestingWallet is Initializable {
     ) internal virtual returns (uint256 _vestingId) {
         _prepareVestingForCreation(vesting_.vestingData);
 
-        _vestingId = _counter.current();
+        _vestingId = _vestingIds.current();
 
         _vestings[_vestingId] = vesting_;
     }
@@ -152,19 +183,20 @@ abstract contract VestingWallet is Initializable {
             vesting_.beneficiary != address(0),
             "VestingWallet: cannot create vesting for zero address"
         );
+
+        Schedule memory _schedule = _schedules[vesting_.scheduleId];
+
         require(
-            vesting_.schedule.startTime +
-                vesting_.schedule.durationInPeriods *
-                vesting_.schedule.secondsInPeriod >
+            _schedule.startTime + _schedule.durationInPeriods * _schedule.secondsInPeriod >
                 block.timestamp,
             "VestingWallet: cannot create vesting for past date"
         );
 
-        _counter.increment();
+        _vestingIds.increment();
 
-        _beneficiaryIds[vesting_.beneficiary].add(_counter.current());
+        _beneficiaryIds[vesting_.beneficiary].add(_vestingIds.current());
 
-        _vestings[_counter.current()] = Vesting({
+        _vestings[_vestingIds.current()] = Vesting({
             vestingData: vesting_,
             calculate: _vestingCalculation
         });
@@ -179,6 +211,7 @@ abstract contract VestingWallet is Initializable {
     // withdraw tokens from vesting and transfer to beneficiary
     function _withdrawFromVesting(uint256 vestingId_) internal virtual {
         Vesting storage _vesting = _vestings[vestingId_];
+        Schedule memory _schedule = _schedules[_vesting.vestingData.scheduleId];
 
         require(
             msg.sender == _vesting.vestingData.beneficiary,
@@ -187,7 +220,8 @@ abstract contract VestingWallet is Initializable {
 
         uint256 _amountToPay = _getWithdrawableAmount(
             _vesting,
-            _vesting.vestingData.schedule.startTime,
+            _schedule,
+            _schedule.startTime,
             block.timestamp
         );
 
