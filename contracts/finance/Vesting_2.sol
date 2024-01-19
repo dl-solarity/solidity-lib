@@ -10,22 +10,30 @@ import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
 import {PRECISION} from "../utils/Globals.sol";
 
-abstract contract VestingWallet is Initializable {
+abstract contract Vesting is Initializable {
     using MathUpgradeable for uint256;
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
-    using Counters for Counters.Counter;
 
-    struct Schedule {
-        uint256 startTime;
+    struct BaseSchedule {
         uint256 secondsInPeriod;
         uint256 durationInPeriods;
         uint256 cliffInPeriods;
         uint256 allocationPercentagePerPeriod;
-        uint256 allocationPercentagePerVestingAmount;
     }
 
-    struct BaseVesting {
+    struct Schedule {
+        BaseSchedule scheduleData;
+        // function that will calculate vested amount
+        // schedule, total vesting amount, vesting start time, timestamp up to, timestamp current
+        function(BaseSchedule memory, uint256, uint256, uint256, uint256)
+            internal
+            view
+            returns (uint256) calculate;
+    }
+
+    struct VestingData {
+        uint256 vestingstartTime;
         address beneficiary;
         address vestingToken;
         uint256 vestingAmount;
@@ -33,60 +41,59 @@ abstract contract VestingWallet is Initializable {
         uint256 scheduleId;
     }
 
-    struct Vesting {
-        BaseVesting vestingData;
-        // function that will calculate vested amount
-        // schedule, total vesting amount, timestamp up to, timestamp current
-        function(Schedule memory, uint256, uint256, uint256)
-            internal
-            view
-            returns (uint256) calculate;
-    }
+    uint256 internal _scheduleId;
+    uint256 internal _vestingId;
 
-    Counters.Counter internal _vestingIds;
-    Counters.Counter internal _scheduleIds;
-
-    mapping(uint256 id => Vesting) internal _vestings;
     mapping(uint256 id => Schedule) internal _schedules;
+    mapping(uint256 id => VestingData) internal _vestings;
     mapping(address beneficiary => EnumerableSet.UintSet) internal _beneficiaryIds;
 
     // initialization
-    function __VestingWallet_init(Schedule[] memory schedules_) internal onlyInitializing {
-        for (uint i = 0; i < schedules_.length; i++) {
-            _createSchedule(schedules_[i]);
-        }
-    }
+    function __Vesting_init(Schedule[] memory schedules_) internal onlyInitializing {}
 
     function _createSchedule(
-        Schedule memory schedule_
-    ) internal virtual returns (uint256 _scheduleId) {
+        BaseSchedule memory baseSchedule_
+    ) internal virtual returns (uint256) {
+        _validateSchedule(baseSchedule_);
+
+        _schedules[++_scheduleId] = Schedule({
+            scheduleData: baseSchedule_,
+            calculate: _vestingCalculation
+        });
+
+        return _scheduleId;
+    }
+
+    function _createSchedule(Schedule memory schedule_) internal virtual returns (uint256) {
+        _validateSchedule(schedule_.scheduleData);
+
+        _schedules[++_scheduleId] = schedule_;
+
+        return _scheduleId;
+    }
+
+    function _validateSchedule(BaseSchedule memory schedule_) internal pure virtual {
         require(
-            schedule_.startTime + schedule_.durationInPeriods * schedule_.secondsInPeriod >
-                block.timestamp,
-            "VestingWallet: cannot create vesting for past date"
+            schedule_.durationInPeriods > 0 && schedule_.secondsInPeriod > 0,
+            "VestingWallet: cannot create schedule with zero duration or zero seconds in period"
         );
-
-        _scheduleIds.increment();
-        _scheduleId = _scheduleIds.current();
-
-        _schedules[_scheduleId] = schedule_;
     }
 
-    function getSchedule(uint256 scheduleId_) public view virtual returns (Schedule memory) {
-        return _schedules[scheduleId_];
+    function getSchedule(uint256 scheduleId_) public view virtual returns (BaseSchedule memory) {
+        return _schedules[scheduleId_].scheduleData;
     }
 
-    function getVesting(uint256 vestingId_) public view virtual returns (BaseVesting memory) {
-        return _vestings[vestingId_].vestingData;
+    function getVesting(uint256 vestingId_) public view virtual returns (VestingData memory) {
+        return _vestings[vestingId_];
     }
 
     // get vesting ids by beneficiary
-    function getVestings(address beneficiary_) public view virtual returns (BaseVesting[] memory) {
+    function getVestings(address beneficiary_) public view virtual returns (VestingData[] memory) {
         uint256[] memory _ids = _beneficiaryIds[beneficiary_].values();
-        BaseVesting[] memory _beneficiaryVestings = new BaseVesting[](_ids.length);
+        VestingData[] memory _beneficiaryVestings = new VestingData[](_ids.length);
 
         for (uint i = 0; i < _ids.length; i++) {
-            _beneficiaryVestings[i] = _vestings[i].vestingData;
+            _beneficiaryVestings[i] = _vestings[i];
         }
 
         return _beneficiaryVestings;
@@ -103,8 +110,8 @@ abstract contract VestingWallet is Initializable {
         uint256 timestampUpTo_,
         uint256 timestampCurrent_
     ) public view virtual returns (uint256) {
-        Vesting memory _vesting = _vestings[vestingId_];
-        Schedule memory _schedule = _schedules[_vesting.vestingData.scheduleId];
+        VestingData storage _vesting = _vestings[vestingId_];
+        Schedule storage _schedule = _schedules[_vesting.scheduleId];
 
         return _getWithdrawableAmount(_vesting, _schedule, timestampUpTo_, timestampCurrent_);
     }
@@ -115,66 +122,51 @@ abstract contract VestingWallet is Initializable {
         uint256 timestampUpTo_,
         uint256 timestampCurrent_
     ) public view virtual returns (uint256) {
-        Vesting memory _vesting = _vestings[vestingId_];
-        Schedule memory _schedule = _schedules[_vesting.vestingData.scheduleId];
+        VestingData storage _vesting = _vestings[vestingId_];
+        Schedule storage _schedule = _schedules[_vesting.scheduleId];
 
         return _getVestedAmount(_vesting, _schedule, timestampUpTo_, timestampCurrent_);
     }
 
     // get available amount to withdraw
     function _getWithdrawableAmount(
-        Vesting memory vesting_,
+        VestingData memory vesting_,
         Schedule memory schedule_,
         uint256 timestampUpTo_,
         uint256 timestampCurrent_
     ) internal view virtual returns (uint256) {
         return
-            vesting_.calculate(
-                schedule_,
-                vesting_.vestingData.vestingAmount,
+            schedule_.calculate(
+                schedule_.scheduleData,
+                vesting_.vestingAmount,
+                vesting_.vestingstartTime,
                 timestampUpTo_,
                 timestampCurrent_
-            ) - vesting_.vestingData.paidAmount;
+            ) - vesting_.paidAmount;
     }
 
     // get released amount at the moment
     function _getVestedAmount(
-        Vesting memory vesting_,
+        VestingData memory vesting_,
         Schedule memory schedule_,
         uint256 timestampUpTo_,
         uint256 timestampCurrent_
     ) internal view virtual returns (uint256) {
         return
-            vesting_.calculate(
-                schedule_,
-                vesting_.vestingData.vestingAmount,
+            schedule_.calculate(
+                schedule_.scheduleData,
+                vesting_.vestingAmount,
+                vesting_.vestingstartTime,
                 timestampUpTo_,
                 timestampCurrent_
             );
     }
 
-    function _createVesting(
-        BaseVesting memory vesting_
-    ) internal virtual returns (uint256 _vestingId) {
-        _prepareVestingForCreation(vesting_);
-
-        _vestingId = _vestingIds.current();
-
-        _vestings[_vestingId] = Vesting({vestingData: vesting_, calculate: _vestingCalculation});
-    }
-
-    function _createVesting(
-        Vesting memory vesting_
-    ) internal virtual returns (uint256 _vestingId) {
-        _prepareVestingForCreation(vesting_.vestingData);
-
-        _vestingId = _vestingIds.current();
-
-        _vestings[_vestingId] = vesting_;
-    }
-
-    // create vesting
-    function _prepareVestingForCreation(BaseVesting memory vesting_) internal virtual {
+    function _createVesting(VestingData memory vesting_) internal virtual returns (uint256) {
+        require(
+            vesting_.vestingstartTime > 0,
+            "VestingWallet: cannot create vesting for zero time"
+        );
         require(
             vesting_.vestingAmount > 0,
             "VestingWallet: cannot create vesting for zero amount"
@@ -187,84 +179,76 @@ abstract contract VestingWallet is Initializable {
         Schedule memory _schedule = _schedules[vesting_.scheduleId];
 
         require(
-            _schedule.startTime + _schedule.durationInPeriods * _schedule.secondsInPeriod >
+            vesting_.vestingstartTime +
+                _schedule.scheduleData.durationInPeriods *
+                _schedule.scheduleData.secondsInPeriod >
                 block.timestamp,
             "VestingWallet: cannot create vesting for past date"
         );
 
-        _vestingIds.increment();
+        _vestingId++;
 
-        _beneficiaryIds[vesting_.beneficiary].add(_vestingIds.current());
+        _beneficiaryIds[vesting_.beneficiary].add(_vestingId);
 
-        _vestings[_vestingIds.current()] = Vesting({
-            vestingData: vesting_,
-            calculate: _vestingCalculation
-        });
+        _vestings[_vestingId] = vesting_;
 
-        // IERC20(vesting_.vestingToken).safeTransferFrom(
-        //     _vesting.vestingData.beneficiary,
-        //     address(this),
-        //     vesting_.vestingAmount
-        // );
+        return _vestingId;
     }
 
     // withdraw tokens from vesting and transfer to beneficiary
-    function _withdrawFromVesting(uint256 vestingId_) internal virtual {
-        Vesting storage _vesting = _vestings[vestingId_];
-        Schedule memory _schedule = _schedules[_vesting.vestingData.scheduleId];
+    function _withdrawFromVesting(
+        uint256 vestingId_,
+        uint256 timestampUpTo_,
+        uint256 timestampCurrent_
+    ) internal virtual {
+        VestingData storage _vesting = _vestings[vestingId_];
 
         require(
-            msg.sender == _vesting.vestingData.beneficiary,
+            msg.sender == _vesting.beneficiary,
             "VestingWallet: only befeciary can withdraw from his vesting"
         );
 
-        uint256 _amountToPay = _getWithdrawableAmount(
-            _vesting,
-            _schedule,
-            _schedule.startTime,
-            block.timestamp
+        uint256 _amountToPay = getWithdrawableAmount(
+            vestingId_,
+            timestampUpTo_,
+            timestampCurrent_
         );
 
-        _vesting.vestingData.paidAmount += _amountToPay;
-
-        // IERC20(_vesting.vestingData.vestingToken).safeTransfer(
-        //     _vesting.vestingData.beneficiary,
-        //     _amountToPay
-        // );
+        _vesting.paidAmount += _amountToPay;
     }
 
     // default implementation of vesting calculation
     function _vestingCalculation(
-        Schedule memory schedule_,
+        BaseSchedule memory schedule_,
         uint256 vestingAmount_,
+        uint256 vestingStartTime_,
         uint256 timestampUpTo_,
         uint256 timestampCurrent_
     ) internal view virtual returns (uint256 _vestedAmount) {
-        if (schedule_.startTime > timestampCurrent_) return _vestedAmount;
+        if (vestingStartTime_ > timestampCurrent_) return _vestedAmount;
 
-        uint256 _elapsedPeriods = _calculateElapsedPeriods(schedule_, timestampUpTo_);
+        uint256 _elapsedPeriods = _calculateElapsedPeriods(
+            vestingStartTime_,
+            timestampUpTo_,
+            schedule_.secondsInPeriod
+        );
 
         if (_elapsedPeriods <= schedule_.cliffInPeriods) return 0;
 
-        // amount we should get after vesting
-        uint256 _availableVestingAmount = (vestingAmount_ *
-            schedule_.allocationPercentagePerVestingAmount) / (PRECISION);
-
         // amount we should get at the end of one period
-        uint256 _amountPerPeriod = (_availableVestingAmount *
-            schedule_.allocationPercentagePerPeriod) / (PRECISION);
+        uint256 _amountPerPeriod = (vestingAmount_ * schedule_.allocationPercentagePerPeriod) /
+            (PRECISION);
 
-        _vestedAmount = (_amountPerPeriod * _elapsedPeriods).min(_availableVestingAmount);
+        _vestedAmount = (_amountPerPeriod * _elapsedPeriods).min(vestingAmount_);
     }
 
     // calculate elapsed periods
     function _calculateElapsedPeriods(
-        Schedule memory schedule_,
-        uint256 timestampUpTo_
+        uint256 startTime_,
+        uint256 timestampUpTo_,
+        uint256 secondsInPeriod_
     ) internal view virtual returns (uint256) {
         return
-            timestampUpTo_ > schedule_.startTime
-                ? (timestampUpTo_ - schedule_.startTime) / (schedule_.secondsInPeriod)
-                : 0;
+            timestampUpTo_ > startTime_ ? (timestampUpTo_ - startTime_) / (secondsInPeriod_) : 0;
     }
 }
