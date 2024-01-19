@@ -3,6 +3,14 @@ pragma solidity ^0.8.4;
 
 import {IncrementalMerkleTree} from "../../../libs/data-structures/IncrementalMerkleTree.sol";
 
+library PoseidonUnit1L {
+    function poseidon(uint256[1] calldata) public pure returns (uint256) {}
+}
+
+library PoseidonUnit2L {
+    function poseidon(uint256[2] calldata) public pure returns (uint256) {}
+}
+
 contract IncrementalMerkleTreeMock {
     using IncrementalMerkleTree for *;
 
@@ -20,6 +28,18 @@ contract IncrementalMerkleTreeMock {
 
     function addAddress(address element_) external {
         _addressTree.add(element_);
+    }
+
+    function setUintPoseidonHasher() external {
+        _uintTree.setHashers(_hash1Fn, _hash2Fn);
+    }
+
+    function setBytes32PoseidonHasher() external {
+        _bytes32Tree.setHashers(_hash1Fn, _hash2Fn);
+    }
+
+    function setAddressPoseidonHasher() external {
+        _addressTree.setHashers(_hash1Fn, _hash2Fn);
     }
 
     function getUintRoot() external view returns (bytes32) {
@@ -56,5 +76,25 @@ contract IncrementalMerkleTreeMock {
 
     function getAddressTreeLength() external view returns (uint256) {
         return _addressTree.length();
+    }
+
+    function isUnitHashFnSet() external view returns (bool) {
+        return _uintTree.isHashFnSet();
+    }
+
+    function isBytes32HashFnSet() external view returns (bool) {
+        return _bytes32Tree.isHashFnSet();
+    }
+
+    function isAddressHashFnSet() external view returns (bool) {
+        return _addressTree.isHashFnSet();
+    }
+
+    function _hash1Fn(bytes32 element1_) internal pure returns (bytes32) {
+        return bytes32(PoseidonUnit1L.poseidon([uint256(element1_)]));
+    }
+
+    function _hash2Fn(bytes32 element1_, bytes32 element2_) internal pure returns (bytes32) {
+        return bytes32(PoseidonUnit2L.poseidon([uint256(element1_), uint256(element2_)]));
     }
 }

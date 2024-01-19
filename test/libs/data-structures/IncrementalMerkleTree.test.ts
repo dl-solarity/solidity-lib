@@ -1,17 +1,20 @@
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { MerkleTree } from "merkletreejs";
 import { expect } from "chai";
-import { getRoot, buildSparseMerkleTree } from "../../helpers/merkle-tree-helper";
-import { Reverter } from "@/test/helpers/reverter";
+import { ethers } from "hardhat";
+
+import { MerkleTree } from "merkletreejs";
 
 import { IncrementalMerkleTreeMock } from "@ethers-v6";
+
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+
+import { Reverter } from "@/test/helpers/reverter";
+import { getPoseidon, poseidonHash } from "@/test/helpers/poseidon-hash";
+import { getRoot, buildSparseMerkleTree } from "@/test/helpers/merkle-tree-helper";
 
 describe("IncrementalMerkleTree", () => {
   const reverter = new Reverter();
   const coder = ethers.AbiCoder.defaultAbiCoder();
 
-  let OWNER: SignerWithAddress;
   let USER1: SignerWithAddress;
 
   let merkleTree: IncrementalMerkleTreeMock;
@@ -19,9 +22,14 @@ describe("IncrementalMerkleTree", () => {
   let localMerkleTree: MerkleTree;
 
   before("setup", async () => {
-    [OWNER, USER1] = await ethers.getSigners();
+    [USER1] = await ethers.getSigners();
 
-    const IncrementalMerkleTreeMock = await ethers.getContractFactory("IncrementalMerkleTreeMock");
+    const IncrementalMerkleTreeMock = await ethers.getContractFactory("IncrementalMerkleTreeMock", {
+      libraries: {
+        PoseidonUnit1L: await (await getPoseidon(1)).getAddress(),
+        PoseidonUnit2L: await (await getPoseidon(2)).getAddress(),
+      },
+    });
     merkleTree = await IncrementalMerkleTreeMock.deploy();
 
     await reverter.snapshot();
@@ -33,16 +41,16 @@ describe("IncrementalMerkleTree", () => {
 
   afterEach(reverter.revert);
 
-  function getBytes32ElementHash(element: any) {
-    return ethers.keccak256(coder.encode(["bytes32"], [element]));
+  function getBytes32ElementHash(element: any, hashFn: any = ethers.keccak256) {
+    return hashFn(coder.encode(["bytes32"], [element]));
   }
 
-  function getUintElementHash(element: any) {
-    return ethers.keccak256(coder.encode(["uint256"], [element]));
+  function getUintElementHash(element: any, hashFn: any = ethers.keccak256) {
+    return hashFn(coder.encode(["uint256"], [element]));
   }
 
-  function getAddressElementHash(element: any) {
-    return ethers.keccak256(coder.encode(["address"], [element]));
+  function getAddressElementHash(element: any, hashFn: any = ethers.keccak256) {
+    return hashFn(coder.encode(["address"], [element]));
   }
 
   describe("Uint IMT", () => {
@@ -77,6 +85,28 @@ describe("IncrementalMerkleTree", () => {
       }
     });
 
+    it("should set external Hashers and build Merkle Tree correctly", async () => {
+      await merkleTree.setUintPoseidonHasher();
+
+      const elements = [];
+
+      for (let i = 1; i < 5; i++) {
+        const element = i;
+
+        await merkleTree.addUint(element);
+
+        const elementHash = getUintElementHash(element, poseidonHash);
+        elements.push(elementHash);
+
+        localMerkleTree = buildSparseMerkleTree(elements, Number(await merkleTree.getUintTreeHeight()), poseidonHash);
+
+        expect(await merkleTree.getUintRoot()).to.equal(getRoot(localMerkleTree));
+        expect(await merkleTree.getUintTreeLength()).to.equal(BigInt(i));
+      }
+
+      expect(await merkleTree.isUnitHashFnSet()).to.be.true;
+    });
+
     it("should return zeroHash if tree is empty", async () => {
       expect(await merkleTree.getUintRoot()).to.equal(getRoot(localMerkleTree));
     });
@@ -99,7 +129,7 @@ describe("IncrementalMerkleTree", () => {
     it("should add elements to tree", async () => {
       const elements = [];
 
-      for (let i = 1; i < 33; i++) {
+      for (let i = 1; i < 5; i++) {
         const element = ethers.encodeBytes32String(`0x${i}234`);
 
         await merkleTree.addBytes32(element);
@@ -112,6 +142,32 @@ describe("IncrementalMerkleTree", () => {
         expect(await merkleTree.getBytes32Root()).to.equal(getRoot(localMerkleTree));
         expect(await merkleTree.getBytes32TreeLength()).to.equal(BigInt(i));
       }
+    });
+
+    it("should set external Hashers and build Merkle Tree correctly", async () => {
+      await merkleTree.setBytes32PoseidonHasher();
+
+      const elements = [];
+
+      for (let i = 1; i < 33; i++) {
+        const element = ethers.encodeBytes32String(`0x${i}234`);
+
+        await merkleTree.addBytes32(element);
+
+        const elementHash = getBytes32ElementHash(element, poseidonHash);
+        elements.push(elementHash);
+
+        localMerkleTree = buildSparseMerkleTree(
+          elements,
+          Number(await merkleTree.getBytes32TreeHeight()),
+          poseidonHash,
+        );
+
+        expect(await merkleTree.getBytes32Root()).to.equal(getRoot(localMerkleTree));
+        expect(await merkleTree.getBytes32TreeLength()).to.equal(BigInt(i));
+      }
+
+      expect(await merkleTree.isBytes32HashFnSet()).to.be.true;
     });
 
     it("should return zeroHash if tree is empty", async () => {
@@ -136,7 +192,7 @@ describe("IncrementalMerkleTree", () => {
     it("should add elements to tree", async () => {
       const elements = [];
 
-      for (let i = 1; i < 10; i++) {
+      for (let i = 1; i < 5; i++) {
         const element = (await ethers.getSigners())[i].address;
 
         await merkleTree.addAddress(element);
@@ -149,6 +205,32 @@ describe("IncrementalMerkleTree", () => {
         expect(await merkleTree.getAddressRoot()).to.equal(getRoot(localMerkleTree));
         expect(await merkleTree.getAddressTreeLength()).to.equal(BigInt(i));
       }
+    });
+
+    it("should set external Hashers and build Merkle Tree correctly", async () => {
+      await merkleTree.setAddressPoseidonHasher();
+
+      const elements = [];
+
+      for (let i = 1; i < 10; i++) {
+        const element = (await ethers.getSigners())[i].address;
+
+        await merkleTree.addAddress(element);
+
+        const elementHash = getAddressElementHash(element, poseidonHash);
+        elements.push(elementHash);
+
+        localMerkleTree = buildSparseMerkleTree(
+          elements,
+          Number(await merkleTree.getAddressTreeHeight()),
+          poseidonHash,
+        );
+
+        expect(await merkleTree.getAddressRoot()).to.equal(getRoot(localMerkleTree));
+        expect(await merkleTree.getAddressTreeLength()).to.equal(BigInt(i));
+      }
+
+      expect(await merkleTree.isAddressHashFnSet()).to.be.true;
     });
 
     it("should return zeroHash if tree is empty", async () => {
