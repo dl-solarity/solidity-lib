@@ -17,7 +17,16 @@ pragma solidity ^0.8.4;
  *
  * Gas usage for _add and _root functions (where count is the number of elements added to the tree):
  *
- * TODO: recalculate table.
+ * | Statistic | _add         | _root            |
+ * | --------- | ------------ | ---------------- |
+ * | count     | 49999        | 49999            |
+ * | mean      | 38972 gas    | 60213 gas        |
+ * | std       | 3871 gas     | 4996 gas         |
+ * | min       | 36251 gas    | 31238 gas        |
+ * | 25%       | 36263 gas    | 57020 gas        |
+ * | 50%       | 38954 gas    | 60292 gas        |
+ * | 75%       | 41657 gas    | 63564 gas        |
+ * | max       | 96758 gas    | 78071 gas        |
  *
  * ## Usage example:
  *
@@ -297,7 +306,14 @@ library IncrementalMerkleTree {
     }
 
     function _add(IMT storage tree, bytes32 element_) private {
-        bytes32 resultValue_ = _hash1Fn(tree, element_);
+        function(bytes32) view returns (bytes32) hash1Fn_ = tree.isHashFnSet
+            ? tree.hash1Fn
+            : _hash1Fn;
+        function(bytes32, bytes32) view returns (bytes32) hash2Fn_ = tree.isHashFnSet
+            ? tree.hash2Fn
+            : _hash2Fn;
+
+        bytes32 resultValue_ = hash1Fn_(element_);
 
         uint256 index_ = 0;
         uint256 size_ = ++tree.leavesCount;
@@ -309,7 +325,7 @@ library IncrementalMerkleTree {
             }
 
             bytes32 branch_ = tree.branches[index_];
-            resultValue_ = _hash2Fn(tree, branch_, resultValue_);
+            resultValue_ = hash2Fn_(branch_, resultValue_);
 
             size_ >>= 1;
             ++index_;
@@ -323,26 +339,33 @@ library IncrementalMerkleTree {
     }
 
     function _root(IMT storage tree) private view returns (bytes32) {
+        function(bytes32) view returns (bytes32) hash1Fn_ = tree.isHashFnSet
+            ? tree.hash1Fn
+            : _hash1Fn;
+        function(bytes32, bytes32) view returns (bytes32) hash2Fn_ = tree.isHashFnSet
+            ? tree.hash2Fn
+            : _hash2Fn;
+
         uint256 treeHeight_ = tree.branches.length;
 
         if (treeHeight_ == 0) {
-            return _getZeroHash(tree);
+            return hash1Fn_(bytes32(0));
         }
 
         uint256 height_;
         uint256 size_ = tree.leavesCount;
-        bytes32 root_ = _getZeroHash(tree);
+        bytes32 root_ = hash1Fn_(bytes32(0));
         bytes32[] memory zeroHashes_ = _getZeroHashes(tree, treeHeight_);
 
         while (height_ < treeHeight_) {
             if (size_ & 1 == 1) {
                 bytes32 branch_ = tree.branches[height_];
 
-                root_ = _hash2Fn(tree, branch_, root_);
+                root_ = hash2Fn_(branch_, root_);
             } else {
                 bytes32 zeroHash_ = zeroHashes_[height_];
 
-                root_ = _hash2Fn(tree, root_, zeroHash_);
+                root_ = hash2Fn_(root_, zeroHash_);
             }
 
             size_ >>= 1;
@@ -364,28 +387,27 @@ library IncrementalMerkleTree {
         IMT storage tree,
         uint256 height_
     ) private view returns (bytes32[] memory) {
+        function(bytes32) view returns (bytes32) hash1Fn_ = tree.isHashFnSet
+            ? tree.hash1Fn
+            : _hash1Fn;
+        function(bytes32, bytes32) view returns (bytes32) hash2Fn_ = tree.isHashFnSet
+            ? tree.hash2Fn
+            : _hash2Fn;
+
         bytes32[] memory zeroHashes_ = new bytes32[](height_);
 
-        zeroHashes_[0] = _getZeroHash(tree);
+        zeroHashes_[0] = hash1Fn_(bytes32(0));
 
         for (uint256 i = 1; i < height_; ++i) {
             bytes32 prevHash_ = zeroHashes_[i - 1];
 
-            zeroHashes_[i] = _hash2Fn(tree, prevHash_, prevHash_);
+            zeroHashes_[i] = hash2Fn_(prevHash_, prevHash_);
         }
 
         return zeroHashes_;
     }
 
-    function _getZeroHash(IMT storage tree) private view returns (bytes32) {
-        return _hash1Fn(tree, bytes32(0));
-    }
-
-    function _hash1Fn(IMT storage tree, bytes32 a) private view returns (bytes32 result) {
-        if (tree.isHashFnSet) {
-            return tree.hash1Fn(a);
-        }
-
+    function _hash1Fn(bytes32 a) private pure returns (bytes32 result) {
         assembly {
             mstore(0, a)
 
@@ -393,15 +415,7 @@ library IncrementalMerkleTree {
         }
     }
 
-    function _hash2Fn(
-        IMT storage tree,
-        bytes32 a,
-        bytes32 b
-    ) private view returns (bytes32 result) {
-        if (tree.isHashFnSet) {
-            return tree.hash2Fn(a, b);
-        }
-
+    function _hash2Fn(bytes32 a, bytes32 b) private pure returns (bytes32 result) {
         assembly {
             mstore(0, a)
             mstore(32, b)
