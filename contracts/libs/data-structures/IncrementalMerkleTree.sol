@@ -49,6 +49,14 @@ library IncrementalMerkleTree {
     }
 
     /**
+     * @notice The Uint256 Incremental Merkle Tree constructor, creates a tree instance with the
+     * given size, O(1) complex
+     */
+    function newUint(uint256 size_) internal pure returns (UintIMT memory imt) {
+        imt._tree = _new(size_);
+    }
+
+    /**
      * @notice The function to add a new element to the uint256 tree.
      * Complexity is O(log(n)), where n is the number of elements in the tree.
      *
@@ -124,6 +132,14 @@ library IncrementalMerkleTree {
     }
 
     /**
+     * @notice The Bytes32 Incremental Merkle Tree constructor, creates a tree instance with the
+     * given size, O(1) complex
+     */
+    function newBytes32(uint256 size_) internal pure returns (Bytes32IMT memory imt) {
+        imt._tree = _new(size_);
+    }
+
+    /**
      * @notice The function to add a new element to the bytes32 tree.
      * Complexity is O(log(n)), where n is the number of elements in the tree.
      */
@@ -186,6 +202,14 @@ library IncrementalMerkleTree {
 
     struct AddressIMT {
         IMT _tree;
+    }
+
+    /**
+     * @notice The Address Incremental Merkle Tree constructor, creates a tree instance with the
+     * given size, O(1) complex
+     */
+    function newAddress(uint256 size_) internal pure returns (AddressIMT memory imt) {
+        imt._tree = _new(size_);
     }
 
     /**
@@ -255,6 +279,10 @@ library IncrementalMerkleTree {
         bool isHashFnSet;
         function(bytes32) view returns (bytes32) hash1Fn;
         function(bytes32, bytes32) view returns (bytes32) hash2Fn;
+    }
+
+    function _new(uint256 size_) private pure returns (IMT memory imt) {
+        imt.branches = new bytes32[](size_);
     }
 
     function _setHashers(

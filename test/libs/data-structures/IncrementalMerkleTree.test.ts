@@ -54,6 +54,22 @@ describe("IncrementalMerkleTree", () => {
   }
 
   describe("Uint IMT", () => {
+    it("should build a Merkle Tree with predefined size", async () => {
+      await merkleTree.newUintTree(10);
+
+      const element = 2341;
+
+      await merkleTree.addUint(element);
+
+      const elementHash = getUintElementHash(element);
+
+      localMerkleTree = buildSparseMerkleTree([elementHash], 10);
+
+      expect(await merkleTree.getUintRoot()).to.equal(getRoot(localMerkleTree));
+      expect(await merkleTree.getUintTreeLength()).to.equal(1n);
+      expect(await merkleTree.getUintTreeHeight()).to.equal(10n);
+    });
+
     it("should add element to tree", async () => {
       const element = 1234;
 
@@ -113,6 +129,22 @@ describe("IncrementalMerkleTree", () => {
   });
 
   describe("Bytes32 IMT", () => {
+    it("should build a Merkle Tree with predefined size", async () => {
+      await merkleTree.newBytes32Tree(10);
+
+      const element = ethers.encodeBytes32String(`0x1234`);
+
+      await merkleTree.addBytes32(element);
+
+      const elementHash = getBytes32ElementHash(element);
+
+      localMerkleTree = buildSparseMerkleTree([elementHash], 10);
+
+      expect(await merkleTree.getBytes32Root()).to.equal(getRoot(localMerkleTree));
+      expect(await merkleTree.getBytes32TreeLength()).to.equal(1n);
+      expect(await merkleTree.getBytes32TreeHeight()).to.equal(10n);
+    });
+
     it("should add element to tree", async () => {
       const element = ethers.encodeBytes32String(`0x1234`);
 
@@ -176,6 +208,22 @@ describe("IncrementalMerkleTree", () => {
   });
 
   describe("Address IMT", () => {
+    it("should build a Merkle Tree with predefined size", async () => {
+      await merkleTree.newAddressTree(10);
+
+      const element = USER1.address;
+
+      await merkleTree.addAddress(element);
+
+      const elementHash = getAddressElementHash(element);
+
+      localMerkleTree = buildSparseMerkleTree([elementHash], 10);
+
+      expect(await merkleTree.getAddressRoot()).to.equal(getRoot(localMerkleTree));
+      expect(await merkleTree.getAddressTreeLength()).to.equal(1n);
+      expect(await merkleTree.getAddressTreeHeight()).to.equal(10n);
+    });
+
     it("should add element to tree", async () => {
       const element = USER1.address;
 

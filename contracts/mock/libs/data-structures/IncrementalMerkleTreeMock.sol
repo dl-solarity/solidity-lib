@@ -18,6 +18,18 @@ contract IncrementalMerkleTreeMock {
     IncrementalMerkleTree.Bytes32IMT internal _bytes32Tree;
     IncrementalMerkleTree.AddressIMT internal _addressTree;
 
+    function newUintTree(uint256 treeHeight_) external {
+        _uintTree = IncrementalMerkleTree.newUint(treeHeight_);
+    }
+
+    function newBytes32Tree(uint256 treeHeight_) external {
+        _bytes32Tree = IncrementalMerkleTree.newBytes32(treeHeight_);
+    }
+
+    function newAddressTree(uint256 treeHeight_) external {
+        _addressTree = IncrementalMerkleTree.newAddress(treeHeight_);
+    }
+
     function addUint(uint256 element_) external {
         _uintTree.add(element_);
     }
