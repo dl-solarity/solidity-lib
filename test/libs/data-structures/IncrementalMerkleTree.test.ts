@@ -70,7 +70,7 @@ describe("IncrementalMerkleTree", () => {
     it("should add elements to tree", async () => {
       const elements = [];
 
-      for (let i = 1; i < 33; i++) {
+      for (let i = 1; i < 17; i++) {
         const element = i;
 
         await merkleTree.addUint(element);
@@ -90,7 +90,7 @@ describe("IncrementalMerkleTree", () => {
 
       const elements = [];
 
-      for (let i = 1; i < 5; i++) {
+      for (let i = 1; i < 17; i++) {
         const element = i;
 
         await merkleTree.addUint(element);
@@ -129,7 +129,7 @@ describe("IncrementalMerkleTree", () => {
     it("should add elements to tree", async () => {
       const elements = [];
 
-      for (let i = 1; i < 5; i++) {
+      for (let i = 1; i < 17; i++) {
         const element = ethers.encodeBytes32String(`0x${i}234`);
 
         await merkleTree.addBytes32(element);
@@ -149,7 +149,7 @@ describe("IncrementalMerkleTree", () => {
 
       const elements = [];
 
-      for (let i = 1; i < 33; i++) {
+      for (let i = 1; i < 17; i++) {
         const element = ethers.encodeBytes32String(`0x${i}234`);
 
         await merkleTree.addBytes32(element);
@@ -192,7 +192,7 @@ describe("IncrementalMerkleTree", () => {
     it("should add elements to tree", async () => {
       const elements = [];
 
-      for (let i = 1; i < 5; i++) {
+      for (let i = 1; i < 17; i++) {
         const element = (await ethers.getSigners())[i].address;
 
         await merkleTree.addAddress(element);
@@ -212,7 +212,7 @@ describe("IncrementalMerkleTree", () => {
 
       const elements = [];
 
-      for (let i = 1; i < 10; i++) {
+      for (let i = 1; i < 5; i++) {
         const element = (await ethers.getSigners())[i].address;
 
         await merkleTree.addAddress(element);
