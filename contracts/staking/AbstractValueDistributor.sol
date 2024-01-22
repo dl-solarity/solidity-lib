@@ -30,9 +30,9 @@ abstract contract AbstractValueDistributor {
 
     mapping(address => UserDistribution) private _userDistributions;
 
-    event SharesAdded(address user_, uint256 amount_);
-    event SharesRemoved(address user_, uint256 amount_);
-    event ValueDistributed(address user_, uint256 amount_);
+    event SharesAdded(address user, uint256 amount);
+    event SharesRemoved(address user, uint256 amount);
+    event ValueDistributed(address user, uint256 amount);
 
     /**
      * @notice Returns the total number of shares.

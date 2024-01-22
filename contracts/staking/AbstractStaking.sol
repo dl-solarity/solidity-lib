@@ -42,7 +42,8 @@ abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
     /**
      * @notice Initializes the contract setting the values provided as shares token, rewards token, reward rate and staking start time.
      *
-     * Warning: when shares and rewards tokens are the same, users may accidentally withdraw other users' shares as a reward.
+     * Warning: when shares and rewards tokens are the same, users may accidentally withdraw
+     * other users' shares as a reward if the rewards token balance is improperly handled.
      *
      * @param sharesToken_ The address of the shares token.
      * @param rewardsToken_ The address of the rewards token.
