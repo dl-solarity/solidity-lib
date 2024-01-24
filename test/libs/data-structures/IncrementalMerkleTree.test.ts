@@ -101,7 +101,7 @@ describe("IncrementalMerkleTree", () => {
       }
     });
 
-    it("should set external Hashers and build Merkle Tree correctly", async () => {
+    it("should build Merkle Tree correctly and set external Hashers only if the tree is empty", async () => {
       await merkleTree.setUintPoseidonHasher();
 
       const elements = [];
@@ -121,6 +121,10 @@ describe("IncrementalMerkleTree", () => {
       }
 
       expect(await merkleTree.isUnitHashFnSet()).to.be.true;
+
+      await expect(merkleTree.setUintPoseidonHasher()).to.be.rejectedWith(
+        "IncrementalMerkleTree: The tree must be empty.",
+      );
     });
 
     it("should return zeroHash if tree is empty", async () => {
@@ -176,7 +180,7 @@ describe("IncrementalMerkleTree", () => {
       }
     });
 
-    it("should set external Hashers and build Merkle Tree correctly", async () => {
+    it("should build Merkle Tree correctly and set external Hashers only if the tree is empty", async () => {
       await merkleTree.setBytes32PoseidonHasher();
 
       const elements = [];
@@ -200,6 +204,10 @@ describe("IncrementalMerkleTree", () => {
       }
 
       expect(await merkleTree.isBytes32HashFnSet()).to.be.true;
+
+      await expect(merkleTree.setBytes32PoseidonHasher()).to.be.rejectedWith(
+        "IncrementalMerkleTree: The tree must be empty.",
+      );
     });
 
     it("should return zeroHash if tree is empty", async () => {
@@ -255,7 +263,7 @@ describe("IncrementalMerkleTree", () => {
       }
     });
 
-    it("should set external Hashers and build Merkle Tree correctly", async () => {
+    it("should build Merkle Tree correctly and set external Hashers only if the tree is empty", async () => {
       await merkleTree.setAddressPoseidonHasher();
 
       const elements = [];
@@ -279,6 +287,10 @@ describe("IncrementalMerkleTree", () => {
       }
 
       expect(await merkleTree.isAddressHashFnSet()).to.be.true;
+
+      await expect(merkleTree.setAddressPoseidonHasher()).to.be.rejectedWith(
+        "IncrementalMerkleTree: The tree must be empty.",
+      );
     });
 
     it("should return zeroHash if tree is empty", async () => {

@@ -299,6 +299,8 @@ library IncrementalMerkleTree {
         function(bytes32) view returns (bytes32) hash1Fn_,
         function(bytes32, bytes32) view returns (bytes32) hash2Fn_
     ) private {
+        require(_length(tree) == 0, "IncrementalMerkleTree: The tree must be empty.");
+
         tree.isHashFnSet = true;
 
         tree.hash1Fn = hash1Fn_;
