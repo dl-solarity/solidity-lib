@@ -19,7 +19,7 @@ abstract contract Vesting is Initializable {
 
     event ScheduleCreated(uint256 vestingId);
     event VestingCreated(uint256 vestingId);
-    event WithdrawFromVesting(uint256 vestingId);
+    event WithdrawFromVesting(uint256 indexed vestingId, uint256 amount);
 
     struct BaseSchedule {
         uint256 secondsInPeriod;
@@ -223,7 +223,7 @@ abstract contract Vesting is Initializable {
 
         _vesting.paidAmount += _amountToPay;
 
-        emit WithdrawFromVesting(vestingId_);
+        emit WithdrawFromVesting(vestingId_, _amountToPay);
     }
 
     // default implementation of vesting calculation
