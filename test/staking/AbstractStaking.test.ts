@@ -431,6 +431,54 @@ describe("AbstractStaking", () => {
       expect(await abstractStaking.getOwedValue(FIRST)).to.equal(0);
       expect(await abstractStaking.userOwedValue(FIRST)).to.equal(0);
     });
+
+    it("should work as expected if withdraw is called right after claiming all the rewards within one block", async () => {
+      await mintAndApproveTokens(SECOND, sharesToken, wei(200, sharesDecimals));
+      await mintAndApproveTokens(FIRST, sharesToken, wei(200, sharesDecimals));
+
+      await abstractStaking.connect(FIRST).stake(wei(100, sharesDecimals));
+
+      // triggering the next block
+      await mintAndApproveTokens(FIRST, sharesToken, wei(100, sharesDecimals));
+
+      await abstractStaking.multicall([
+        abstractStaking.interface.encodeFunctionData("claim", [await abstractStaking.getOwedValue(FIRST)]),
+        abstractStaking.interface.encodeFunctionData("withdraw"),
+      ]);
+
+      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(0);
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(0);
+      expect(await abstractStaking.userShares(FIRST)).to.equal(0);
+    });
+
+    it("should withdraw as expected if there are no rewards because of the 0 rate", async () => {
+      await abstractStaking.setRate(0);
+
+      await mintAndApproveTokens(FIRST, sharesToken, wei(100, sharesDecimals));
+
+      await abstractStaking.connect(FIRST).stake(wei(100, sharesDecimals));
+
+      await time.setNextBlockTimestamp((await time.latest()) + 30);
+
+      await abstractStaking.withdraw();
+
+      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(0);
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(0);
+      expect(await abstractStaking.userShares(FIRST)).to.equal(0);
+    });
+
+    it("should not allow to withdraw if there are no shares", async () => {
+      await mintAndApproveTokens(FIRST, sharesToken, wei(200, sharesDecimals));
+
+      await abstractStaking.connect(FIRST).stake(wei(200, sharesDecimals));
+
+      await expect(
+        abstractStaking.multicall([
+          abstractStaking.interface.encodeFunctionData("unstake", [wei(200, sharesDecimals)]),
+          abstractStaking.interface.encodeFunctionData("withdraw"),
+        ]),
+      ).to.be.revertedWith("ValueDistributor: amount has to be more than 0");
+    });
   });
 
   describe("claim()", () => {
