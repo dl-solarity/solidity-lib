@@ -37,6 +37,7 @@
     "@uniswap/v3-periphery": "1.4.4"
   },
   "devDependencies": {
+    "@iden3/js-crypto": "^1.0.3",
     "@metamask/eth-sig-util": "^7.0.1",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
@@ -49,6 +50,7 @@
     "@types/node": "^18.16.0",
     "bignumber.js": "^9.1.2",
     "chai": "^4.3.10",
+    "circomlibjs": "^0.1.7",
     "dotenv": "^10.0.0",
     "hardhat": "^2.19.0",
     "hardhat-contract-sizer": "^2.10.0",

@@ -19,14 +19,14 @@ pragma solidity ^0.8.4;
  *
  * | Statistic | _add         | _root            |
  * | --------- | ------------ | ---------------- |
- * | count     | 106000       | 106000           |
- * | mean      | 36619 gas    | 71941 gas        |
- * | std       | 3617 gas     | 4324 gas         |
- * | min       | 34053 gas    | 28670 gas        |
- * | 25%       | 34077 gas    | 69715 gas        |
- * | 50%       | 36598 gas    | 72641 gas        |
- * | 75%       | 39143 gas    | 75557 gas        |
- * | max       | 94661 gas    | 75637 gas        |
+ * | count     | 49999        | 49999            |
+ * | mean      | 38972 gas    | 60213 gas        |
+ * | std       | 3871 gas     | 4996 gas         |
+ * | min       | 36251 gas    | 31238 gas        |
+ * | 25%       | 36263 gas    | 57020 gas        |
+ * | 50%       | 38954 gas    | 60292 gas        |
+ * | 75%       | 41657 gas    | 63564 gas        |
+ * | max       | 96758 gas    | 78071 gas        |
  *
  * ## Usage example:
  *
@@ -58,6 +58,17 @@ library IncrementalMerkleTree {
     }
 
     /**
+     * @notice The function to set the height of the uint256 tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param height_ The new height of the Merkle tree. Should be greater than the current one.
+     */
+    function setHeight(UintIMT storage tree, uint256 height_) internal {
+        _setHeight(tree._tree, height_);
+    }
+
+    /**
      * @notice The function to add a new element to the uint256 tree.
      * Complexity is O(log(n)), where n is the number of elements in the tree.
      *
@@ -66,6 +77,21 @@ library IncrementalMerkleTree {
      */
     function add(UintIMT storage tree, uint256 element_) internal {
         _add(tree._tree, bytes32(element_));
+    }
+
+    /**
+     * @notice The function to set a custom hash functions, that will be used to build the Merkle Tree.
+     *
+     * @param tree self.
+     * @param hash1_ The hash function that accepts one argument.
+     * @param hash2_ The hash function that accepts two arguments.
+     */
+    function setHashers(
+        UintIMT storage tree,
+        function(bytes32) view returns (bytes32) hash1_,
+        function(bytes32, bytes32) view returns (bytes32) hash2_
+    ) internal {
+        _setHashers(tree._tree, hash1_, hash2_);
     }
 
     /**
@@ -99,6 +125,15 @@ library IncrementalMerkleTree {
     }
 
     /**
+     * @notice The function to check whether the custom hash functions are set.
+     * @param tree self.
+     * @return True if the custom hash functions are set, false otherwise.
+     */
+    function isCustomHasherSet(UintIMT storage tree) internal view returns (bool) {
+        return tree._tree.isCustomHasherSet;
+    }
+
+    /**
      **********************
      *     Bytes32IMT     *
      **********************
@@ -109,11 +144,37 @@ library IncrementalMerkleTree {
     }
 
     /**
+     * @notice The function to set the height of the bytes32 tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param height_ The new height of the Merkle tree. Should be greater than the current one.
+     */
+    function setHeight(Bytes32IMT storage tree, uint256 height_) internal {
+        _setHeight(tree._tree, height_);
+    }
+
+    /**
      * @notice The function to add a new element to the bytes32 tree.
      * Complexity is O(log(n)), where n is the number of elements in the tree.
      */
     function add(Bytes32IMT storage tree, bytes32 element_) internal {
         _add(tree._tree, element_);
+    }
+
+    /**
+     * @notice The function to set a custom hash functions, that will be used to build the Merkle Tree.
+     *
+     * @param tree self.
+     * @param hash1_ The hash function that accepts one argument.
+     * @param hash2_ The hash function that accepts two arguments.
+     */
+    function setHashers(
+        Bytes32IMT storage tree,
+        function(bytes32) view returns (bytes32) hash1_,
+        function(bytes32, bytes32) view returns (bytes32) hash2_
+    ) internal {
+        _setHashers(tree._tree, hash1_, hash2_);
     }
 
     /**
@@ -140,6 +201,15 @@ library IncrementalMerkleTree {
     }
 
     /**
+     * @notice The function to check whether the custom hash functions are set.
+     * @param tree self.
+     * @return True if the custom hash functions are set, false otherwise.
+     */
+    function isCustomHasherSet(Bytes32IMT storage tree) internal view returns (bool) {
+        return tree._tree.isCustomHasherSet;
+    }
+
+    /**
      ************************
      *      AddressIMT      *
      ************************
@@ -150,11 +220,37 @@ library IncrementalMerkleTree {
     }
 
     /**
+     * @notice The function to set the height of the address tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param height_ The new height of the Merkle tree. Should be greater than the current one.
+     */
+    function setHeight(AddressIMT storage tree, uint256 height_) internal {
+        _setHeight(tree._tree, height_);
+    }
+
+    /**
      * @notice The function to add a new element to the address tree.
      * Complexity is O(log(n)), where n is the number of elements in the tree.
      */
     function add(AddressIMT storage tree, address element_) internal {
         _add(tree._tree, bytes32(uint256(uint160(element_))));
+    }
+
+    /**
+     * @notice The function to set a custom hash functions, that will be used to build the Merkle Tree.
+     *
+     * @param tree self.
+     * @param hash1_ The hash function that accepts one argument.
+     * @param hash2_ The hash function that accepts two arguments.
+     */
+    function setHashers(
+        AddressIMT storage tree,
+        function(bytes32) view returns (bytes32) hash1_,
+        function(bytes32, bytes32) view returns (bytes32) hash2_
+    ) internal {
+        _setHashers(tree._tree, hash1_, hash2_);
     }
 
     /**
@@ -181,6 +277,15 @@ library IncrementalMerkleTree {
     }
 
     /**
+     * @notice The function to check whether the custom hash functions are set.
+     * @param tree self.
+     * @return True if the custom hash functions are set, false otherwise.
+     */
+    function isCustomHasherSet(AddressIMT storage tree) internal view returns (bool) {
+        return tree._tree.isCustomHasherSet;
+    }
+
+    /**
      ************************
      *       InnerIMT       *
      ************************
@@ -189,17 +294,47 @@ library IncrementalMerkleTree {
     struct IMT {
         bytes32[] branches;
         uint256 leavesCount;
+        bool isStrictHeightSet;
+        bool isCustomHasherSet;
+        function(bytes32) view returns (bytes32) hash1;
+        function(bytes32, bytes32) view returns (bytes32) hash2;
     }
 
-    bytes32 private constant ZERO_HASH = keccak256(abi.encode(0));
+    function _setHeight(IMT storage tree, uint256 height_) private {
+        require(
+            height_ > _height(tree),
+            "IncrementalMerkleTree: the height must be greater than the current one"
+        );
 
-    function _add(IMT storage tree, bytes32 element_) private {
-        bytes32 resultValue_;
+        tree.isStrictHeightSet = true;
 
         assembly {
-            mstore(0, element_)
-            resultValue_ := keccak256(0, 32)
+            sstore(tree.slot, height_)
         }
+    }
+
+    function _setHashers(
+        IMT storage tree,
+        function(bytes32) view returns (bytes32) hash1_,
+        function(bytes32, bytes32) view returns (bytes32) hash2_
+    ) private {
+        require(_length(tree) == 0, "IncrementalMerkleTree: the tree must be empty");
+
+        tree.isCustomHasherSet = true;
+
+        tree.hash1 = hash1_;
+        tree.hash2 = hash2_;
+    }
+
+    function _add(IMT storage tree, bytes32 element_) private {
+        function(bytes32) view returns (bytes32) hash1_ = tree.isCustomHasherSet
+            ? tree.hash1
+            : _hash1;
+        function(bytes32, bytes32) view returns (bytes32) hash2_ = tree.isCustomHasherSet
+            ? tree.hash2
+            : _hash2;
+
+        bytes32 resultValue_ = hash1_(element_);
 
         uint256 index_ = 0;
         uint256 size_ = ++tree.leavesCount;
@@ -211,19 +346,17 @@ library IncrementalMerkleTree {
             }
 
             bytes32 branch_ = tree.branches[index_];
-
-            assembly {
-                mstore(0, branch_)
-                mstore(32, resultValue_)
-
-                resultValue_ := keccak256(0, 64)
-            }
+            resultValue_ = hash2_(branch_, resultValue_);
 
             size_ >>= 1;
             ++index_;
         }
 
         if (index_ == treeHeight_) {
+            if (tree.isStrictHeightSet) {
+                revert("IncrementalMerkleTree: the tree is full");
+            }
+
             tree.branches.push(resultValue_);
         } else {
             tree.branches[index_] = resultValue_;
@@ -231,36 +364,33 @@ library IncrementalMerkleTree {
     }
 
     function _root(IMT storage tree) private view returns (bytes32) {
+        function(bytes32) view returns (bytes32) hash1_ = tree.isCustomHasherSet
+            ? tree.hash1
+            : _hash1;
+        function(bytes32, bytes32) view returns (bytes32) hash2_ = tree.isCustomHasherSet
+            ? tree.hash2
+            : _hash2;
+
         uint256 treeHeight_ = tree.branches.length;
 
         if (treeHeight_ == 0) {
-            return ZERO_HASH;
+            return hash1_(bytes32(0));
         }
 
         uint256 height_;
         uint256 size_ = tree.leavesCount;
-        bytes32 root_ = ZERO_HASH;
-        bytes32[] memory zeroHashes_ = _getZeroHashes(treeHeight_);
+        bytes32 root_ = hash1_(bytes32(0));
+        bytes32[] memory zeroHashes_ = _getZeroHashes(tree, treeHeight_);
 
         while (height_ < treeHeight_) {
             if (size_ & 1 == 1) {
                 bytes32 branch_ = tree.branches[height_];
 
-                assembly {
-                    mstore(0, branch_)
-                    mstore(32, root_)
-
-                    root_ := keccak256(0, 64)
-                }
+                root_ = hash2_(branch_, root_);
             } else {
                 bytes32 zeroHash_ = zeroHashes_[height_];
 
-                assembly {
-                    mstore(0, root_)
-                    mstore(32, zeroHash_)
-
-                    root_ := keccak256(0, 64)
-                }
+                root_ = hash2_(root_, zeroHash_);
             }
 
             size_ >>= 1;
@@ -278,25 +408,44 @@ library IncrementalMerkleTree {
         return tree.leavesCount;
     }
 
-    function _getZeroHashes(uint256 height_) private pure returns (bytes32[] memory) {
+    function _getZeroHashes(
+        IMT storage tree,
+        uint256 height_
+    ) private view returns (bytes32[] memory) {
+        function(bytes32) view returns (bytes32) hash1_ = tree.isCustomHasherSet
+            ? tree.hash1
+            : _hash1;
+        function(bytes32, bytes32) view returns (bytes32) hash2_ = tree.isCustomHasherSet
+            ? tree.hash2
+            : _hash2;
+
         bytes32[] memory zeroHashes_ = new bytes32[](height_);
 
-        zeroHashes_[0] = ZERO_HASH;
+        zeroHashes_[0] = hash1_(bytes32(0));
 
         for (uint256 i = 1; i < height_; ++i) {
-            bytes32 result;
             bytes32 prevHash_ = zeroHashes_[i - 1];
 
-            assembly {
-                mstore(0, prevHash_)
-                mstore(32, prevHash_)
-
-                result := keccak256(0, 64)
-            }
-
-            zeroHashes_[i] = result;
+            zeroHashes_[i] = hash2_(prevHash_, prevHash_);
         }
 
         return zeroHashes_;
+    }
+
+    function _hash1(bytes32 a) private pure returns (bytes32 result) {
+        assembly {
+            mstore(0, a)
+
+            result := keccak256(0, 32)
+        }
+    }
+
+    function _hash2(bytes32 a, bytes32 b) private pure returns (bytes32 result) {
+        assembly {
+            mstore(0, a)
+            mstore(32, b)
+
+            result := keccak256(0, 64)
+        }
     }
 }
