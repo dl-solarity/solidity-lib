@@ -26,8 +26,10 @@ export async function getPoseidon(num: number): Promise<BaseContract> {
 
 export function poseidonHash(data: string): string {
   data = ethers.hexlify(data);
+
   const chunks = splitHexIntoChunks(data.replace("0x", ""), 64);
   const inputs = chunks.map((v) => BigInt(v));
+
   return ethers.toBeHex(Poseidon.hash(inputs), 32);
 }
 

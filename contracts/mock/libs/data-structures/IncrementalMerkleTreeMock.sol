@@ -18,16 +18,16 @@ contract IncrementalMerkleTreeMock {
     IncrementalMerkleTree.Bytes32IMT internal _bytes32Tree;
     IncrementalMerkleTree.AddressIMT internal _addressTree;
 
-    function newUintTree(uint256 treeHeight_) external {
-        _uintTree = IncrementalMerkleTree.newUint(treeHeight_);
+    function setUintTreeHeight(uint256 height_) external {
+        _uintTree.setHeight(height_);
     }
 
-    function newBytes32Tree(uint256 treeHeight_) external {
-        _bytes32Tree = IncrementalMerkleTree.newBytes32(treeHeight_);
+    function setBytes32TreeHeight(uint256 height_) external {
+        _bytes32Tree.setHeight(height_);
     }
 
-    function newAddressTree(uint256 treeHeight_) external {
-        _addressTree = IncrementalMerkleTree.newAddress(treeHeight_);
+    function setAddressTreeHeight(uint256 height_) external {
+        _addressTree.setHeight(height_);
     }
 
     function addUint(uint256 element_) external {
@@ -43,15 +43,15 @@ contract IncrementalMerkleTreeMock {
     }
 
     function setUintPoseidonHasher() external {
-        _uintTree.setHashers(_hash1Fn, _hash2Fn);
+        _uintTree.setHashers(_hash1, _hash2);
     }
 
     function setBytes32PoseidonHasher() external {
-        _bytes32Tree.setHashers(_hash1Fn, _hash2Fn);
+        _bytes32Tree.setHashers(_hash1, _hash2);
     }
 
     function setAddressPoseidonHasher() external {
-        _addressTree.setHashers(_hash1Fn, _hash2Fn);
+        _addressTree.setHashers(_hash1, _hash2);
     }
 
     function getUintRoot() external view returns (bytes32) {
@@ -91,22 +91,22 @@ contract IncrementalMerkleTreeMock {
     }
 
     function isUnitHashFnSet() external view returns (bool) {
-        return _uintTree.isHashFnSet();
+        return _uintTree.isCustomHasherSet();
     }
 
     function isBytes32HashFnSet() external view returns (bool) {
-        return _bytes32Tree.isHashFnSet();
+        return _bytes32Tree.isCustomHasherSet();
     }
 
     function isAddressHashFnSet() external view returns (bool) {
-        return _addressTree.isHashFnSet();
+        return _addressTree.isCustomHasherSet();
     }
 
-    function _hash1Fn(bytes32 element1_) internal pure returns (bytes32) {
+    function _hash1(bytes32 element1_) internal pure returns (bytes32) {
         return bytes32(PoseidonUnit1L.poseidon([uint256(element1_)]));
     }
 
-    function _hash2Fn(bytes32 element1_, bytes32 element2_) internal pure returns (bytes32) {
+    function _hash2(bytes32 element1_, bytes32 element2_) internal pure returns (bytes32) {
         return bytes32(PoseidonUnit2L.poseidon([uint256(element1_), uint256(element2_)]));
     }
 }

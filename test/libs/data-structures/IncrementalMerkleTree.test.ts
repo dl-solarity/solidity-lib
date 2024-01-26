@@ -54,8 +54,8 @@ describe("IncrementalMerkleTree", () => {
   }
 
   describe("Uint IMT", () => {
-    it("should build a Merkle Tree with predefined size", async () => {
-      await merkleTree.newUintTree(10);
+    it("should build a Merkle Tree of a predefined size", async () => {
+      await merkleTree.setUintTreeHeight(10);
 
       const element = 2341;
 
@@ -70,7 +70,7 @@ describe("IncrementalMerkleTree", () => {
       expect(await merkleTree.getUintTreeHeight()).to.equal(10n);
     });
 
-    it("should add element to tree", async () => {
+    it("should add an element to the tree", async () => {
       const element = 1234;
 
       await merkleTree.addUint(element);
@@ -83,13 +83,15 @@ describe("IncrementalMerkleTree", () => {
       expect(await merkleTree.getUintTreeLength()).to.equal(1n);
     });
 
-    it("should add elements to tree", async () => {
+    it("should add elements to the tree with dynamically changing tree height", async () => {
       const elements = [];
 
       for (let i = 1; i < 17; i++) {
         const element = i;
 
         await merkleTree.addUint(element);
+
+        await merkleTree.setUintTreeHeight(i + 2);
 
         const elementHash = getUintElementHash(element);
         elements.push(elementHash);
@@ -98,10 +100,11 @@ describe("IncrementalMerkleTree", () => {
 
         expect(await merkleTree.getUintRoot()).to.equal(getRoot(localMerkleTree));
         expect(await merkleTree.getUintTreeLength()).to.equal(BigInt(i));
+        expect(await merkleTree.getUintTreeHeight()).to.equal(BigInt(i + 2));
       }
     });
 
-    it("should build Merkle Tree correctly and set external Hashers only if the tree is empty", async () => {
+    it("should build a Merkle Tree correctly and set external Hashers only if the tree is empty", async () => {
       await merkleTree.setUintPoseidonHasher();
 
       const elements = [];
@@ -123,18 +126,32 @@ describe("IncrementalMerkleTree", () => {
       expect(await merkleTree.isUnitHashFnSet()).to.be.true;
 
       await expect(merkleTree.setUintPoseidonHasher()).to.be.rejectedWith(
-        "IncrementalMerkleTree: The tree must be empty.",
+        "IncrementalMerkleTree: the tree must be empty",
       );
     });
 
     it("should return zeroHash if tree is empty", async () => {
       expect(await merkleTree.getUintRoot()).to.equal(getRoot(localMerkleTree));
     });
+
+    it("should revert if an attempt is made to set the tree height lower than the current one", async () => {
+      await expect(merkleTree.setUintTreeHeight(0)).to.be.rejectedWith(
+        "IncrementalMerkleTree: the height must be greater than the current one",
+      );
+    });
+
+    it("should revert if the set tree height's limit is reached", async () => {
+      await merkleTree.setUintTreeHeight(1);
+
+      await merkleTree.addUint(1);
+
+      await expect(merkleTree.addUint(2)).to.be.rejectedWith("IncrementalMerkleTree: the tree is full");
+    });
   });
 
   describe("Bytes32 IMT", () => {
-    it("should build a Merkle Tree with predefined size", async () => {
-      await merkleTree.newBytes32Tree(10);
+    it("should build a Merkle Tree of a predefined size", async () => {
+      await merkleTree.setBytes32TreeHeight(10);
 
       const element = ethers.encodeBytes32String(`0x1234`);
 
@@ -149,7 +166,7 @@ describe("IncrementalMerkleTree", () => {
       expect(await merkleTree.getBytes32TreeHeight()).to.equal(10n);
     });
 
-    it("should add element to tree", async () => {
+    it("should add an element to the tree", async () => {
       const element = ethers.encodeBytes32String(`0x1234`);
 
       await merkleTree.addBytes32(element);
@@ -162,11 +179,13 @@ describe("IncrementalMerkleTree", () => {
       expect(await merkleTree.getBytes32TreeLength()).to.equal(1n);
     });
 
-    it("should add elements to tree", async () => {
+    it("should add elements to the tree with dynamically changing tree height", async () => {
       const elements = [];
 
       for (let i = 1; i < 17; i++) {
         const element = ethers.encodeBytes32String(`0x${i}234`);
+
+        await merkleTree.setBytes32TreeHeight(i + 2);
 
         await merkleTree.addBytes32(element);
 
@@ -177,10 +196,11 @@ describe("IncrementalMerkleTree", () => {
 
         expect(await merkleTree.getBytes32Root()).to.equal(getRoot(localMerkleTree));
         expect(await merkleTree.getBytes32TreeLength()).to.equal(BigInt(i));
+        expect(await merkleTree.getBytes32TreeHeight()).to.equal(BigInt(i + 2));
       }
     });
 
-    it("should build Merkle Tree correctly and set external Hashers only if the tree is empty", async () => {
+    it("should build a Merkle Tree correctly and set external Hashers only if the tree is empty", async () => {
       await merkleTree.setBytes32PoseidonHasher();
 
       const elements = [];
@@ -206,18 +226,34 @@ describe("IncrementalMerkleTree", () => {
       expect(await merkleTree.isBytes32HashFnSet()).to.be.true;
 
       await expect(merkleTree.setBytes32PoseidonHasher()).to.be.rejectedWith(
-        "IncrementalMerkleTree: The tree must be empty.",
+        "IncrementalMerkleTree: the tree must be empty",
       );
     });
 
     it("should return zeroHash if tree is empty", async () => {
       expect(await merkleTree.getBytes32Root()).to.equal(getRoot(localMerkleTree));
     });
+
+    it("should revert if an attempt is made to set the tree height lower than the current one", async () => {
+      await expect(merkleTree.setBytes32TreeHeight(0)).to.be.rejectedWith(
+        "IncrementalMerkleTree: the height must be greater than the current one",
+      );
+    });
+
+    it("should revert if the set tree height's limit is reached", async () => {
+      await merkleTree.setBytes32TreeHeight(1);
+
+      await merkleTree.addBytes32(ethers.ZeroHash);
+
+      await expect(merkleTree.addBytes32(ethers.ZeroHash)).to.be.rejectedWith(
+        "IncrementalMerkleTree: the tree is full",
+      );
+    });
   });
 
   describe("Address IMT", () => {
-    it("should build a Merkle Tree with predefined size", async () => {
-      await merkleTree.newAddressTree(10);
+    it("should build a Merkle Tree of a predefined size", async () => {
+      await merkleTree.setAddressTreeHeight(10);
 
       const element = USER1.address;
 
@@ -232,7 +268,7 @@ describe("IncrementalMerkleTree", () => {
       expect(await merkleTree.getAddressTreeHeight()).to.equal(10n);
     });
 
-    it("should add element to tree", async () => {
+    it("should add an element to the tree", async () => {
       const element = USER1.address;
 
       await merkleTree.addAddress(element);
@@ -245,13 +281,15 @@ describe("IncrementalMerkleTree", () => {
       expect(await merkleTree.getAddressTreeLength()).to.equal(1n);
     });
 
-    it("should add elements to tree", async () => {
+    it("should add elements to the tree with dynamically changing tree height", async () => {
       const elements = [];
 
       for (let i = 1; i < 17; i++) {
         const element = (await ethers.getSigners())[i].address;
 
         await merkleTree.addAddress(element);
+
+        await merkleTree.setAddressTreeHeight(i + 2);
 
         const elementHash = getAddressElementHash(element);
         elements.push(elementHash);
@@ -260,10 +298,11 @@ describe("IncrementalMerkleTree", () => {
 
         expect(await merkleTree.getAddressRoot()).to.equal(getRoot(localMerkleTree));
         expect(await merkleTree.getAddressTreeLength()).to.equal(BigInt(i));
+        expect(await merkleTree.getAddressTreeHeight()).to.equal(BigInt(i + 2));
       }
     });
 
-    it("should build Merkle Tree correctly and set external Hashers only if the tree is empty", async () => {
+    it("should build a Merkle Tree correctly and set external Hashers only if the tree is empty", async () => {
       await merkleTree.setAddressPoseidonHasher();
 
       const elements = [];
@@ -289,12 +328,26 @@ describe("IncrementalMerkleTree", () => {
       expect(await merkleTree.isAddressHashFnSet()).to.be.true;
 
       await expect(merkleTree.setAddressPoseidonHasher()).to.be.rejectedWith(
-        "IncrementalMerkleTree: The tree must be empty.",
+        "IncrementalMerkleTree: the tree must be empty",
       );
     });
 
     it("should return zeroHash if tree is empty", async () => {
       expect(await merkleTree.getAddressRoot()).to.equal(getRoot(localMerkleTree));
+    });
+
+    it("should revert if an attempt is made to set the tree height lower than the current one", async () => {
+      await expect(merkleTree.setAddressTreeHeight(0)).to.be.rejectedWith(
+        "IncrementalMerkleTree: the height must be greater than the current one",
+      );
+    });
+
+    it("should revert if the set tree height's limit is reached", async () => {
+      await merkleTree.setAddressTreeHeight(1);
+
+      await merkleTree.addAddress(USER1.address);
+
+      await expect(merkleTree.addAddress(USER1.address)).to.be.rejectedWith("IncrementalMerkleTree: the tree is full");
     });
   });
 });

@@ -58,11 +58,14 @@ library IncrementalMerkleTree {
     }
 
     /**
-     * @notice The Uint256 Incremental Merkle Tree constructor, creates a tree instance with the
-     * given size, O(1) complex
+     * @notice The function to set the height of the uint256 tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param height_ The new height of the Merkle tree. Should be greater than the current one.
      */
-    function newUint(uint256 size_) internal pure returns (UintIMT memory imt) {
-        imt._tree = _new(size_);
+    function setHeight(UintIMT storage tree, uint256 height_) internal {
+        _setHeight(tree._tree, height_);
     }
 
     /**
@@ -80,15 +83,15 @@ library IncrementalMerkleTree {
      * @notice The function to set a custom hash functions, that will be used to build the Merkle Tree.
      *
      * @param tree self.
-     * @param hash1Fn_ The hash function that accepts one argument.
-     * @param hash2Fn_ The hash function that accepts two arguments.
+     * @param hash1_ The hash function that accepts one argument.
+     * @param hash2_ The hash function that accepts two arguments.
      */
     function setHashers(
         UintIMT storage tree,
-        function(bytes32) view returns (bytes32) hash1Fn_,
-        function(bytes32, bytes32) view returns (bytes32) hash2Fn_
+        function(bytes32) view returns (bytes32) hash1_,
+        function(bytes32, bytes32) view returns (bytes32) hash2_
     ) internal {
-        _setHashers(tree._tree, hash1Fn_, hash2Fn_);
+        _setHashers(tree._tree, hash1_, hash2_);
     }
 
     /**
@@ -126,8 +129,8 @@ library IncrementalMerkleTree {
      * @param tree self.
      * @return True if the custom hash functions are set, false otherwise.
      */
-    function isHashFnSet(UintIMT storage tree) internal view returns (bool) {
-        return tree._tree.isHashFnSet;
+    function isCustomHasherSet(UintIMT storage tree) internal view returns (bool) {
+        return tree._tree.isCustomHasherSet;
     }
 
     /**
@@ -141,11 +144,14 @@ library IncrementalMerkleTree {
     }
 
     /**
-     * @notice The Bytes32 Incremental Merkle Tree constructor, creates a tree instance with the
-     * given size, O(1) complex
+     * @notice The function to set the height of the bytes32 tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param height_ The new height of the Merkle tree. Should be greater than the current one.
      */
-    function newBytes32(uint256 size_) internal pure returns (Bytes32IMT memory imt) {
-        imt._tree = _new(size_);
+    function setHeight(Bytes32IMT storage tree, uint256 height_) internal {
+        _setHeight(tree._tree, height_);
     }
 
     /**
@@ -160,15 +166,15 @@ library IncrementalMerkleTree {
      * @notice The function to set a custom hash functions, that will be used to build the Merkle Tree.
      *
      * @param tree self.
-     * @param hash1Fn_ The hash function that accepts one argument.
-     * @param hash2Fn_ The hash function that accepts two arguments.
+     * @param hash1_ The hash function that accepts one argument.
+     * @param hash2_ The hash function that accepts two arguments.
      */
     function setHashers(
         Bytes32IMT storage tree,
-        function(bytes32) view returns (bytes32) hash1Fn_,
-        function(bytes32, bytes32) view returns (bytes32) hash2Fn_
+        function(bytes32) view returns (bytes32) hash1_,
+        function(bytes32, bytes32) view returns (bytes32) hash2_
     ) internal {
-        _setHashers(tree._tree, hash1Fn_, hash2Fn_);
+        _setHashers(tree._tree, hash1_, hash2_);
     }
 
     /**
@@ -199,8 +205,8 @@ library IncrementalMerkleTree {
      * @param tree self.
      * @return True if the custom hash functions are set, false otherwise.
      */
-    function isHashFnSet(Bytes32IMT storage tree) internal view returns (bool) {
-        return tree._tree.isHashFnSet;
+    function isCustomHasherSet(Bytes32IMT storage tree) internal view returns (bool) {
+        return tree._tree.isCustomHasherSet;
     }
 
     /**
@@ -214,11 +220,14 @@ library IncrementalMerkleTree {
     }
 
     /**
-     * @notice The Address Incremental Merkle Tree constructor, creates a tree instance with the
-     * given size, O(1) complex
+     * @notice The function to set the height of the address tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param height_ The new height of the Merkle tree. Should be greater than the current one.
      */
-    function newAddress(uint256 size_) internal pure returns (AddressIMT memory imt) {
-        imt._tree = _new(size_);
+    function setHeight(AddressIMT storage tree, uint256 height_) internal {
+        _setHeight(tree._tree, height_);
     }
 
     /**
@@ -233,15 +242,15 @@ library IncrementalMerkleTree {
      * @notice The function to set a custom hash functions, that will be used to build the Merkle Tree.
      *
      * @param tree self.
-     * @param hash1Fn_ The hash function that accepts one argument.
-     * @param hash2Fn_ The hash function that accepts two arguments.
+     * @param hash1_ The hash function that accepts one argument.
+     * @param hash2_ The hash function that accepts two arguments.
      */
     function setHashers(
         AddressIMT storage tree,
-        function(bytes32) view returns (bytes32) hash1Fn_,
-        function(bytes32, bytes32) view returns (bytes32) hash2Fn_
+        function(bytes32) view returns (bytes32) hash1_,
+        function(bytes32, bytes32) view returns (bytes32) hash2_
     ) internal {
-        _setHashers(tree._tree, hash1Fn_, hash2Fn_);
+        _setHashers(tree._tree, hash1_, hash2_);
     }
 
     /**
@@ -272,8 +281,8 @@ library IncrementalMerkleTree {
      * @param tree self.
      * @return True if the custom hash functions are set, false otherwise.
      */
-    function isHashFnSet(AddressIMT storage tree) internal view returns (bool) {
-        return tree._tree.isHashFnSet;
+    function isCustomHasherSet(AddressIMT storage tree) internal view returns (bool) {
+        return tree._tree.isCustomHasherSet;
     }
 
     /**
@@ -285,37 +294,47 @@ library IncrementalMerkleTree {
     struct IMT {
         bytes32[] branches;
         uint256 leavesCount;
-        bool isHashFnSet;
-        function(bytes32) view returns (bytes32) hash1Fn;
-        function(bytes32, bytes32) view returns (bytes32) hash2Fn;
+        bool isStrictHeightSet;
+        bool isCustomHasherSet;
+        function(bytes32) view returns (bytes32) hash1;
+        function(bytes32, bytes32) view returns (bytes32) hash2;
     }
 
-    function _new(uint256 size_) private pure returns (IMT memory imt) {
-        imt.branches = new bytes32[](size_);
+    function _setHeight(IMT storage tree, uint256 height_) private {
+        require(
+            height_ > _height(tree),
+            "IncrementalMerkleTree: the height must be greater than the current one"
+        );
+
+        tree.isStrictHeightSet = true;
+
+        assembly {
+            sstore(tree.slot, height_)
+        }
     }
 
     function _setHashers(
         IMT storage tree,
-        function(bytes32) view returns (bytes32) hash1Fn_,
-        function(bytes32, bytes32) view returns (bytes32) hash2Fn_
+        function(bytes32) view returns (bytes32) hash1_,
+        function(bytes32, bytes32) view returns (bytes32) hash2_
     ) private {
-        require(_length(tree) == 0, "IncrementalMerkleTree: The tree must be empty.");
+        require(_length(tree) == 0, "IncrementalMerkleTree: the tree must be empty");
 
-        tree.isHashFnSet = true;
+        tree.isCustomHasherSet = true;
 
-        tree.hash1Fn = hash1Fn_;
-        tree.hash2Fn = hash2Fn_;
+        tree.hash1 = hash1_;
+        tree.hash2 = hash2_;
     }
 
     function _add(IMT storage tree, bytes32 element_) private {
-        function(bytes32) view returns (bytes32) hash1Fn_ = tree.isHashFnSet
-            ? tree.hash1Fn
-            : _hash1Fn;
-        function(bytes32, bytes32) view returns (bytes32) hash2Fn_ = tree.isHashFnSet
-            ? tree.hash2Fn
-            : _hash2Fn;
+        function(bytes32) view returns (bytes32) hash1_ = tree.isCustomHasherSet
+            ? tree.hash1
+            : _hash1;
+        function(bytes32, bytes32) view returns (bytes32) hash2_ = tree.isCustomHasherSet
+            ? tree.hash2
+            : _hash2;
 
-        bytes32 resultValue_ = hash1Fn_(element_);
+        bytes32 resultValue_ = hash1_(element_);
 
         uint256 index_ = 0;
         uint256 size_ = ++tree.leavesCount;
@@ -327,13 +346,17 @@ library IncrementalMerkleTree {
             }
 
             bytes32 branch_ = tree.branches[index_];
-            resultValue_ = hash2Fn_(branch_, resultValue_);
+            resultValue_ = hash2_(branch_, resultValue_);
 
             size_ >>= 1;
             ++index_;
         }
 
         if (index_ == treeHeight_) {
+            if (tree.isStrictHeightSet) {
+                revert("IncrementalMerkleTree: the tree is full");
+            }
+
             tree.branches.push(resultValue_);
         } else {
             tree.branches[index_] = resultValue_;
@@ -341,33 +364,33 @@ library IncrementalMerkleTree {
     }
 
     function _root(IMT storage tree) private view returns (bytes32) {
-        function(bytes32) view returns (bytes32) hash1Fn_ = tree.isHashFnSet
-            ? tree.hash1Fn
-            : _hash1Fn;
-        function(bytes32, bytes32) view returns (bytes32) hash2Fn_ = tree.isHashFnSet
-            ? tree.hash2Fn
-            : _hash2Fn;
+        function(bytes32) view returns (bytes32) hash1_ = tree.isCustomHasherSet
+            ? tree.hash1
+            : _hash1;
+        function(bytes32, bytes32) view returns (bytes32) hash2_ = tree.isCustomHasherSet
+            ? tree.hash2
+            : _hash2;
 
         uint256 treeHeight_ = tree.branches.length;
 
         if (treeHeight_ == 0) {
-            return hash1Fn_(bytes32(0));
+            return hash1_(bytes32(0));
         }
 
         uint256 height_;
         uint256 size_ = tree.leavesCount;
-        bytes32 root_ = hash1Fn_(bytes32(0));
+        bytes32 root_ = hash1_(bytes32(0));
         bytes32[] memory zeroHashes_ = _getZeroHashes(tree, treeHeight_);
 
         while (height_ < treeHeight_) {
             if (size_ & 1 == 1) {
                 bytes32 branch_ = tree.branches[height_];
 
-                root_ = hash2Fn_(branch_, root_);
+                root_ = hash2_(branch_, root_);
             } else {
                 bytes32 zeroHash_ = zeroHashes_[height_];
 
-                root_ = hash2Fn_(root_, zeroHash_);
+                root_ = hash2_(root_, zeroHash_);
             }
 
             size_ >>= 1;
@@ -389,27 +412,27 @@ library IncrementalMerkleTree {
         IMT storage tree,
         uint256 height_
     ) private view returns (bytes32[] memory) {
-        function(bytes32) view returns (bytes32) hash1Fn_ = tree.isHashFnSet
-            ? tree.hash1Fn
-            : _hash1Fn;
-        function(bytes32, bytes32) view returns (bytes32) hash2Fn_ = tree.isHashFnSet
-            ? tree.hash2Fn
-            : _hash2Fn;
+        function(bytes32) view returns (bytes32) hash1_ = tree.isCustomHasherSet
+            ? tree.hash1
+            : _hash1;
+        function(bytes32, bytes32) view returns (bytes32) hash2_ = tree.isCustomHasherSet
+            ? tree.hash2
+            : _hash2;
 
         bytes32[] memory zeroHashes_ = new bytes32[](height_);
 
-        zeroHashes_[0] = hash1Fn_(bytes32(0));
+        zeroHashes_[0] = hash1_(bytes32(0));
 
         for (uint256 i = 1; i < height_; ++i) {
             bytes32 prevHash_ = zeroHashes_[i - 1];
 
-            zeroHashes_[i] = hash2Fn_(prevHash_, prevHash_);
+            zeroHashes_[i] = hash2_(prevHash_, prevHash_);
         }
 
         return zeroHashes_;
     }
 
-    function _hash1Fn(bytes32 a) private pure returns (bytes32 result) {
+    function _hash1(bytes32 a) private pure returns (bytes32 result) {
         assembly {
             mstore(0, a)
 
@@ -417,7 +440,7 @@ library IncrementalMerkleTree {
         }
     }
 
-    function _hash2Fn(bytes32 a, bytes32 b) private pure returns (bytes32 result) {
+    function _hash2(bytes32 a, bytes32 b) private pure returns (bytes32 result) {
         assembly {
             mstore(0, a)
             mstore(32, b)
