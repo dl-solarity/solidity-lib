@@ -4,13 +4,15 @@ pragma solidity ^0.8.4;
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {ProxyUpgrader} from "./proxy/ProxyUpgrader.sol";
+import {TransparentProxyUpgrader} from "../proxy/transparent/TransparentProxyUpgrader.sol";
 import {AbstractDependant} from "./AbstractDependant.sol";
 
 /**
  * @notice The ContractsRegistry module
  *
- * The purpose of this module is to provide an organized registry of the project's smartcontracts
+ * For more information please refer to [EIP-6224](https://eips.ethereum.org/EIPS/eip-6224).
+ *
+ * The purpose of this module is to provide an organized registry of the project's smart contracts
  * together with the upgradeability and dependency injection mechanisms.
  *
  * The ContractsRegistry should be used as the highest level smart contract that is aware of any other
@@ -24,19 +26,19 @@ import {AbstractDependant} from "./AbstractDependant.sol";
  * 2) Making the system contracts-interchangeable
  * 3) Simplifying the contracts management and deployment
  *
- * The ContractsRegistry acts as a Transparent proxy deployer. One can add proxy-compatible implementations to the registry
- * and deploy proxies to them. Then these proxies can be upgraded easily using the ContractsRegistry.
+ * The ContractsRegistry acts as a TransparentProxy deployer. One can add proxy-compatible implementations to the registry
+ * and deploy proxies to them. Then these proxies can be upgraded easily using the provided interface.
  * The ContractsRegistry itself can be deployed behind a proxy as well.
  *
  * The dependency injection system may come in handy when one wants to substitute a contract `A` with a contract `B`
  * (for example contract `A` got exploited) without a necessity of redeploying the whole system. One would just add
  * a new `B` contract to a ContractsRegistry and re-inject all the required dependencies. Dependency injection mechanism
- * also works with factories.
+ * is also meant to be compatible with factories.
  *
- * The management is simplified because all of the contracts are now located in a single place.
+ * Users may also fetch all the contracts present in the system as they are now located in a single place.
  */
 abstract contract AbstractContractsRegistry is Initializable {
-    ProxyUpgrader private _proxyUpgrader;
+    TransparentProxyUpgrader private _proxyUpgrader;
 
     mapping(string => address) private _contracts;
     mapping(address => bool) private _isProxy;
@@ -47,10 +49,10 @@ abstract contract AbstractContractsRegistry is Initializable {
     event ContractRemoved(string name);
 
     /**
-     * @notice The proxy initializer function
+     * @notice The initialization function
      */
     function __ContractsRegistry_init() internal onlyInitializing {
-        _proxyUpgrader = new ProxyUpgrader();
+        _proxyUpgrader = new TransparentProxyUpgrader();
     }
 
     /**

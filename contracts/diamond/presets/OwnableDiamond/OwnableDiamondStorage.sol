@@ -2,7 +2,9 @@
 pragma solidity ^0.8.4;
 
 /**
- * @notice The storage contract of Ownable Diamond preset
+ * @notice The Diamond standard module
+ *
+ * The storage contract of Ownable Diamond preset
  */
 abstract contract OwnableDiamondStorage {
     bytes32 public constant OWNABLE_DIAMOND_STORAGE_SLOT =
@@ -30,6 +32,10 @@ abstract contract OwnableDiamondStorage {
         }
     }
 
+    /**
+     * @notice The function to get the Diamond owner
+     * @return the owner of the Diamond
+     */
     function owner() public view returns (address) {
         return _getOwnableDiamondStorage().owner;
     }

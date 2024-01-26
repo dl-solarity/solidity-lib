@@ -1,4 +1,4 @@
-![](https://github.com/dl-solarity/solidity-lib/assets/47551140/f5c3929c-657e-4a27-84a2-e5f1bf14e4e9)
+![](https://github.com/dl-solarity/solidity-lib/assets/47551140/87464015-a97a-4f5b-a16f-b34c98eb6549)
 
 [![npm](https://img.shields.io/npm/v/@solarity/solidity-lib.svg)](https://www.npmjs.com/package/@solarity/solidity-lib)
 [![Coverage Status](https://codecov.io/gh/dl-solarity/solidity-lib/graph/badge.svg)](https://codecov.io/gh/dl-solarity/solidity-lib)
@@ -7,7 +7,7 @@
 
 # Solidity Library for Savvies by Distributed Lab
 
-The library consists of modules and utilities that are built with a help of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (4.9.2) and **go far beyond mediocre solidity**.
+The library consists of modules and utilities that are built with a help of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (4.9.5) and **go far beyond mediocre solidity**.
 
 - Implementation of [**Contracts Registry**](https://eips.ethereum.org/EIPS/eip-6224) pattern
 - Versatile **RBAC** and **MultiOwnable** smart contracts
@@ -17,7 +17,7 @@ The library consists of modules and utilities that are built with a help of [Ope
 - Optimized [**Incremental Merkle Tree**](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf) data structure
 - Novel **ReturnDataProxy** contract
 - Lightweight **SBT** implementation
-- Flexible UniswapV2 oracle
+- Flexible UniswapV2 and UniswapV3 oracles
 - Utilities to ease work with ERC20 decimals, arrays, sets and ZK proofs
 
 ## Overview
@@ -46,6 +46,7 @@ contract ContractsRegistry is OwnableContractsRegistry {
 }
 ```
 
+> [!IMPORTANT]
 > It is important to use the library as it is shipped and not copy-paste the code from untrusted sources.
 
 ## License

@@ -14,7 +14,7 @@ import {ISBT} from "../interfaces/tokens/ISBT.sol";
  * An abstract lightweight implementation of a Soul Bound Token. Does not comply with ERC721 standard.
  * Approve and transfer functionality has been removed as it is not needed in SBTs.
  *
- * Has to be inherited in order to be useful in the project
+ * The contract is compatible with Metamask and Opensea.
  */
 abstract contract SBT is ISBT, ERC165Upgradeable {
     using Strings for uint256;
@@ -60,8 +60,8 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenId_ the token to check
      * @return true if `tokenId_` exists, false otherwise
      */
-    function tokenExists(uint256 tokenId_) public view override returns (bool) {
-        return ownerOf(tokenId_) != address(0);
+    function tokenExists(uint256 tokenId_) public view virtual override returns (bool) {
+        return _ownerOf(tokenId_) != address(0);
     }
 
     /**
@@ -69,7 +69,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param owner_ the user to get the balance of
      * @return the user's balance
      */
-    function balanceOf(address owner_) public view override returns (uint256) {
+    function balanceOf(address owner_) public view virtual override returns (uint256) {
         return _balances[owner_].length();
     }
 
@@ -79,7 +79,10 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param index_ the id of the token in the user's array
      * @return the token the user owns
      */
-    function tokenOf(address owner_, uint256 index_) public view override returns (uint256) {
+    function tokenOf(
+        address owner_,
+        uint256 index_
+    ) public view virtual override returns (uint256) {
         return _balances[owner_].at(index_);
     }
 
@@ -88,7 +91,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param owner_ the user to get the tokens of
      * @return the array of tokens the user owns
      */
-    function tokensOf(address owner_) public view override returns (uint256[] memory) {
+    function tokensOf(address owner_) public view virtual override returns (uint256[] memory) {
         return _balances[owner_].values();
     }
 
@@ -97,8 +100,8 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenId_ the token to get the owner of
      * @return address of an owner or `address(0)` if token does not exist
      */
-    function ownerOf(uint256 tokenId_) public view override returns (address) {
-        return _tokenOwners[tokenId_];
+    function ownerOf(uint256 tokenId_) public view virtual override returns (address) {
+        return _ownerOf(tokenId_);
     }
 
     /**
@@ -169,7 +172,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenId_ the token to burn
      */
     function _burn(uint256 tokenId_) internal virtual {
-        address owner_ = ownerOf(tokenId_);
+        address owner_ = _ownerOf(tokenId_);
         require(owner_ != address(0), "SBT: token doesn't exist");
 
         _beforeTokenAction(address(0), tokenId_);
@@ -199,6 +202,15 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      */
     function _setBaseURI(string memory baseURI_) internal virtual {
         _baseURI = baseURI_;
+    }
+
+    /**
+     * @notice The function to get the owner of a token
+     * @param tokenId_ the token to get the owner of
+     * @return address of an owner or `address(0)` if token does not exist
+     */
+    function _ownerOf(uint256 tokenId_) internal view virtual returns (address) {
+        return _tokenOwners[tokenId_];
     }
 
     /**

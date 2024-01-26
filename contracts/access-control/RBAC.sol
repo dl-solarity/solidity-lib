@@ -21,6 +21,14 @@ import {StringSet} from "../libs/data-structures/StringSet.sol";
  * The RBAC model supports antipermissions as well. One can grant antipermissions to users to restrict their access level.
  * There also is a special wildcard symbol "*" that means "everything". This symbol can be applied either to the
  * resources or permissions.
+ *
+ * By default, the MASTER role is configured with "*" as resources and permissions, allowing masters to do everything.
+ *
+ * The RBAC structure is the following:
+ *
+ * (PERMISSION >- RESOURCE) >- ROLE
+ *
+ * Where ROLE is assignable to users
  */
 abstract contract RBAC is IRBAC, Initializable {
     using StringSet for StringSet.Set;
@@ -55,7 +63,7 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
-     * @notice The init function
+     * @notice The initialization function
      */
     function __RBAC_init() internal onlyInitializing {
         _addPermissionsToRole(MASTER_ROLE, ALL_RESOURCE, ALL_PERMISSION.asSingletonArray(), true);
@@ -182,9 +190,11 @@ abstract contract RBAC is IRBAC, Initializable {
     }
 
     /**
+     * @notice The function to check the user's possession of the role
+     *
      * @dev DO NOT call `super.hasPermission(...)` in derived contracts, because this method
      * handles not 2 but 3 states: NO PERMISSION, ALLOWED, DISALLOWED
-     * @notice The function to check the user's possession of the role
+     *
      * @param who_ the user
      * @param resource_ the resource the user has to have the permission of
      * @param permission_ the permission the user has to have

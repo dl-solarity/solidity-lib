@@ -34,7 +34,7 @@ describe("BlockGuard", () => {
       await mock.deposit();
 
       expect(await mock.getLatestLockBlock(await mock.DEPOSIT_WITHDRAW_RESOURCE(), FIRST)).to.equal(
-        await time.latestBlock()
+        await time.latestBlock(),
       );
 
       expect(await mock.getLatestLockBlock(await mock.DEPOSIT_WITHDRAW_RESOURCE(), SECOND)).to.equal(0n);
@@ -50,7 +50,7 @@ describe("BlockGuard", () => {
 
     it("should disallow to call in the same block", async () => {
       await expect(
-        mock.multicall([mock.interface.encodeFunctionData("deposit"), mock.interface.encodeFunctionData("withdraw")])
+        mock.multicall([mock.interface.encodeFunctionData("deposit"), mock.interface.encodeFunctionData("withdraw")]),
       ).to.be.revertedWith("BlockGuard: locked");
     });
   });
@@ -70,7 +70,7 @@ describe("BlockGuard", () => {
 
     it("should disallow to call in the same block", async () => {
       await expect(
-        mock.multicall([mock.interface.encodeFunctionData("lock"), mock.interface.encodeFunctionData("lock")])
+        mock.multicall([mock.interface.encodeFunctionData("lock"), mock.interface.encodeFunctionData("lock")]),
       ).to.be.revertedWith("BlockGuard: locked");
     });
   });

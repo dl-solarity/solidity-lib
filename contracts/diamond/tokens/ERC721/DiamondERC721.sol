@@ -8,7 +8,9 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {DiamondERC721Storage} from "./DiamondERC721Storage.sol";
 
 /**
- * @notice This is modified version of OpenZeppelin's ERC721 contract to be used as a Storage contract
+ * @notice The Diamond standard module
+ *
+ * This is modified version of OpenZeppelin's ERC721 contract to be used as a Storage contract
  * by the Diamond Standard.
  */
 contract DiamondERC721 is DiamondERC721Storage {

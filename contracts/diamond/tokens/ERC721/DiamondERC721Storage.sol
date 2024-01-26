@@ -11,7 +11,9 @@ import {DiamondERC165} from "../../introspection/DiamondERC165.sol";
 import {InitializableStorage} from "../../utils/InitializableStorage.sol";
 
 /**
- * @notice This is an ERC721 token Storage contract with Diamond Standard support
+ * @notice The Diamond standard module
+ *
+ * This is an ERC721 token Storage contract with Diamond Standard support
  */
 abstract contract DiamondERC721Storage is
     InitializableStorage,

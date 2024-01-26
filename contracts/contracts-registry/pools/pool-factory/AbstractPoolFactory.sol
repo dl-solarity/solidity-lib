@@ -6,16 +6,18 @@ import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {AbstractDependant} from "../../../contracts-registry/AbstractDependant.sol";
 import {AbstractPoolContractsRegistry} from "../AbstractPoolContractsRegistry.sol";
 
-import {PublicBeaconProxy} from "./proxy/PublicBeaconProxy.sol";
+import {PublicBeaconProxy} from "../../../proxy/beacon/PublicBeaconProxy.sol";
 
 /**
  * @notice The PoolContractsRegistry module
  *
  * This is an abstract factory contract that is used in pair with the PoolContractsRegistry contract to
- * deploy, register and inject pools.
+ * deploy, register and inject dependencies to pools. Built via EIP-6224 Contracts Dependencies Registry pattern.
  *
  * The actual `deploy()` function has to be implemented in the descendants of this contract. The deployment
  * is made via the BeaconProxy pattern.
+ *
+ * Both "create1" and "create2" deployment modes are supported.
  */
 abstract contract AbstractPoolFactory is AbstractDependant {
     address internal _contractsRegistry;
@@ -74,11 +76,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         string memory poolType_,
         address poolProxy_
     ) internal virtual {
-        (bool success, ) = poolRegistry_.call(
-            abi.encodeWithSignature("addProxyPool(string,address)", poolType_, poolProxy_)
-        );
-
-        require(success, "AbstractPoolFactory: failed to register contract");
+        AbstractPoolContractsRegistry(poolRegistry_).addProxyPool(poolType_, poolProxy_);
     }
 
     /**

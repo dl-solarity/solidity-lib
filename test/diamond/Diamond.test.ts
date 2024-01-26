@@ -6,7 +6,7 @@ import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
 import { ZERO_ADDR, ZERO_BYTES32 } from "@/scripts/utils/constants";
 import { wei } from "@/scripts/utils/utils";
 
-import { OwnableDiamondMock, DummyFacet, DummyInit, Diamond } from "@ethers-v6";
+import { OwnableDiamondMock, DummyFacetMock, DummyInitMock, Diamond } from "@ethers-v6";
 
 describe("Diamond", () => {
   const reverter = new Reverter();
@@ -40,7 +40,7 @@ describe("Diamond", () => {
 
     it("should not transfer ownership from non-owner", async () => {
       await expect(diamond.connect(SECOND).transferOwnership(SECOND.address)).to.be.revertedWith(
-        "ODStorage: not an owner"
+        "ODStorage: not an owner",
       );
     });
 
@@ -50,13 +50,13 @@ describe("Diamond", () => {
   });
 
   describe("facets", () => {
-    let dummyFacet: DummyFacet;
+    let dummyFacet: DummyFacetMock;
     let facets: Diamond.FacetStruct[] = [];
     let selectors: string[];
 
     beforeEach("setup", async () => {
-      const DummyFacet = await ethers.getContractFactory("DummyFacet");
-      dummyFacet = await DummyFacet.deploy();
+      const DummyFacetMock = await ethers.getContractFactory("DummyFacetMock");
+      dummyFacet = await DummyFacetMock.deploy();
 
       selectors = getSelectors(dummyFacet.interface);
     });
@@ -71,10 +71,10 @@ describe("Diamond", () => {
     });
 
     describe("init", () => {
-      let dummyInit: DummyInit;
+      let dummyInit: DummyInitMock;
 
       beforeEach("setup", async () => {
-        dummyInit = await ethers.getContractFactory("DummyInit").then((f) => f.deploy());
+        dummyInit = await ethers.getContractFactory("DummyInitMock").then((f) => f.deploy());
 
         facets = [
           {
@@ -93,31 +93,31 @@ describe("Diamond", () => {
 
         await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, addr, init);
 
-        const dimondInitMock = <DummyInit>dummyInit.attach(await diamond.getAddress());
+        const dimondInitMock = <DummyInitMock>dummyInit.attach(await diamond.getAddress());
         await expect(tx).to.emit(dimondInitMock, "Initialized");
 
-        dummyFacet = <DummyFacet>dummyFacet.attach(await diamond.getAddress());
+        dummyFacet = <DummyFacetMock>dummyFacet.attach(await diamond.getAddress());
         expect(await dummyFacet.getDummyString()).to.be.equal("dummy facet initialized");
       });
 
       it("should revert if init address is not contract", async () => {
         const init = dummyInit.init.fragment.selector;
         await expect(diamond.diamondCutLong(facets, SECOND, init)).to.be.revertedWith(
-          "Diamond: init_ address has no code"
+          "Diamond: init_ address has no code",
         );
       });
 
       it("should revert if init function reverted", async () => {
         const initWithError = dummyInit.initWithError.fragment.selector;
         await expect(diamond.diamondCutLong(facets, await dummyInit.getAddress(), initWithError)).to.be.revertedWith(
-          "Diamond: initialization function reverted"
+          "Diamond: initialization function reverted",
         );
       });
 
       it("should revert if init function reverted with message", async () => {
         const initWithErrorMsg = dummyInit.initWithErrorMsg.fragment.selector;
         await expect(diamond.diamondCutLong(facets, await dummyInit.getAddress(), initWithErrorMsg)).to.be.revertedWith(
-          "DiamondInit: init error"
+          "DiamondInit: init error",
         );
       });
     });
@@ -164,7 +164,7 @@ describe("Diamond", () => {
         await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "ODStorage: not an owner"
+          "ODStorage: not an owner",
         );
       });
 
@@ -242,7 +242,7 @@ describe("Diamond", () => {
         await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "ODStorage: not an owner"
+          "ODStorage: not an owner",
         );
       });
     });
@@ -260,7 +260,7 @@ describe("Diamond", () => {
       });
 
       it("should replace facets and and part of its selectors", async () => {
-        const dummyFacet2 = await ethers.getContractFactory("DummyFacet").then((f) => f.deploy());
+        const dummyFacet2 = await ethers.getContractFactory("DummyFacetMock").then((f) => f.deploy());
 
         facets[0].action = FacetAction.Add;
         await diamond.diamondCutShort(facets);
@@ -284,7 +284,7 @@ describe("Diamond", () => {
       });
 
       it("should replace facets and all its selectors", async () => {
-        const dummyFacet2 = await ethers.getContractFactory("DummyFacet").then((f) => f.deploy());
+        const dummyFacet2 = await ethers.getContractFactory("DummyFacetMock").then((f) => f.deploy());
 
         facets[0].action = FacetAction.Add;
         await diamond.diamondCutShort(facets);
@@ -339,7 +339,7 @@ describe("Diamond", () => {
         await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "ODStorage: not an owner"
+          "ODStorage: not an owner",
         );
       });
     });
@@ -358,8 +358,8 @@ describe("Diamond", () => {
       it("should be able to call facets", async () => {
         await diamond.diamondCutShort(facets);
 
-        const DummyFacet = await ethers.getContractFactory("DummyFacet");
-        const facet = <DummyFacet>DummyFacet.attach(await diamond.getAddress());
+        const DummyFacetMock = await ethers.getContractFactory("DummyFacetMock");
+        const facet = <DummyFacetMock>DummyFacetMock.attach(await diamond.getAddress());
 
         await facet.setDummyString("hello, diamond");
 
@@ -380,8 +380,8 @@ describe("Diamond", () => {
       });
 
       it("should not call facet if selector is not added", async () => {
-        const DummyFacet = await ethers.getContractFactory("DummyFacet");
-        const facet = <DummyFacet>DummyFacet.attach(await diamond.getAddress());
+        const DummyFacetMock = await ethers.getContractFactory("DummyFacetMock");
+        const facet = <DummyFacetMock>DummyFacetMock.attach(await diamond.getAddress());
 
         await expect(facet.getDummyString()).to.be.revertedWith("Diamond: selector is not registered");
       });

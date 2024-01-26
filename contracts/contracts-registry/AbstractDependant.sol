@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 /**
  * @notice The ContractsRegistry module
  *
- * This is a contract that must be used as dependencies accepter in the dependency injection mechanism.
+ * The contract that must be used as dependencies accepter in the dependency injection mechanism.
  * Upon the injection, the Injector (ContractsRegistry most of the time) will call the `setDependencies()` function.
  * The dependant contract will have to pull the required addresses from the supplied ContractsRegistry as a parameter.
  *
@@ -13,6 +13,7 @@ pragma solidity ^0.8.4;
 abstract contract AbstractDependant {
     /**
      * @notice The slot where the dependency injector is located.
+     *
      * @dev bytes32(uint256(keccak256("eip6224.dependant.slot")) - 1)
      *
      * Only the injector is allowed to inject dependencies.
@@ -29,7 +30,9 @@ abstract contract AbstractDependant {
 
     /**
      * @notice The function that will be called from the ContractsRegistry (or factory) to inject dependencies.
-     * The Dependant must apply dependant() modifier to this function
+     *
+     * The Dependant must apply `dependant()` modifier to this function
+     *
      * @param contractsRegistry_ the registry to pull dependencies from
      * @param data_ the extra data that might provide additional context
      */

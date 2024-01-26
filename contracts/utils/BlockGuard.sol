@@ -4,8 +4,22 @@ pragma solidity ^0.8.4;
 /**
  * @notice The BlockGuard module
  *
- * This module facilitates the flash-loan protection. Users may be prohibited from calling certain
+ * This module facilitates the flash-loan protection mechanism. Users may be prohibited from calling certain
  * functions in the same block e.g. via the Multicall.
+ *
+ * ## Usage example:
+ *
+ * ```
+ * contract NotFlashloanable is BlockGuard {
+ *     function deposit(uint256 amount) external lockBlock("DEPOSIT", msg.sender) {
+ *         . . .
+ *     }
+ *
+ *     function withdraw(uint256 amount) external checkBlock("DEPOSIT", msg.sender) {
+ *         . . .
+ *     }
+ * }
+ * ```
  */
 abstract contract BlockGuard {
     mapping(string => mapping(address => uint256)) private _lockedInBlocks;
@@ -28,8 +42,8 @@ abstract contract BlockGuard {
 
     /**
      * @notice The function to save the block when the resource key has been locked
-     * @param resource_ the id of the resource
-     * @param key_ the key of the resource
+     * @param resource_ the id of the resource (the shared function)
+     * @param key_ the key of the resource (the caller)
      */
     function _lockBlock(string memory resource_, address key_) internal {
         _lockedInBlocks[resource_][key_] = block.number;
@@ -37,8 +51,8 @@ abstract contract BlockGuard {
 
     /**
      * @notice The function to check if the resource key is called in the same block
-     * @param resource_ the id of the resource
-     * @param key_ the key of the resource
+     * @param resource_ the id of the resource (the shared function)
+     * @param key_ the key of the resource (the caller)
      */
     function _checkBlock(string memory resource_, address key_) internal view {
         require(_lockedInBlocks[resource_][key_] != block.number, "BlockGuard: locked");
@@ -46,8 +60,8 @@ abstract contract BlockGuard {
 
     /**
      * @notice The function to fetch the latest block when the resource key has been locked
-     * @param resource_ the id of the resource
-     * @param key_ the key of the resource
+     * @param resource_ the id of the resource (the shared function)
+     * @param key_ the key of the resource (the caller)
      * @return block_ the block when the resource key has been locked
      */
     function _getLatestLockBlock(

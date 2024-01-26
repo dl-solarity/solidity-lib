@@ -39,7 +39,7 @@ describe("VerifierHelper", () => {
   describe("verifyProof", () => {
     it("should correctly call verifyProof function", async () => {
       const contractInterface = expect(
-        await verifierHelper.verifyProofStruct(await verifier3.getAddress(), pubSignals3, { a, b, c })
+        await verifierHelper.verifyProofStruct(await verifier3.getAddress(), pubSignals3, { a, b, c }),
       ).to.be.true;
 
       expect(await verifierHelper.verifyProof(await verifier3.getAddress(), pubSignals3, a, b, c)).to.be.true;
@@ -55,10 +55,10 @@ describe("VerifierHelper", () => {
       const wrongPubSignals = [1, 1, 2, 3];
 
       await expect(
-        verifierHelper.verifyProofStruct(await verifier2.getAddress(), wrongPubSignals, { a, b, c })
+        verifierHelper.verifyProofStruct(await verifier2.getAddress(), wrongPubSignals, { a, b, c }),
       ).to.be.revertedWith("VerifierHelper: failed to call verifyProof function");
       await expect(
-        verifierHelper.verifyProof(await verifier3.getAddress(), wrongPubSignals, a, b, c)
+        verifierHelper.verifyProof(await verifier3.getAddress(), wrongPubSignals, a, b, c),
       ).to.be.revertedWith("VerifierHelper: failed to call verifyProof function");
     });
   });
@@ -78,10 +78,10 @@ describe("VerifierHelper", () => {
 
     it("should get an exception if it passes invalid public signals arr", async () => {
       await expect(
-        verifierHelper.verifyProofStructSafe(await verifier2.getAddress(), pubSignals2, { a, b, c }, 4)
+        verifierHelper.verifyProofStructSafe(await verifier2.getAddress(), pubSignals2, { a, b, c }, 4),
       ).to.be.revertedWith("VerifierHelper: invalid public signals count");
       await expect(
-        verifierHelper.verifyProofSafe(await verifier3.getAddress(), pubSignals3, a, b, c, 4)
+        verifierHelper.verifyProofSafe(await verifier3.getAddress(), pubSignals3, a, b, c, 4),
       ).to.be.revertedWith("VerifierHelper: invalid public signals count");
     });
   });

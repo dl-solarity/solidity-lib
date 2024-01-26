@@ -1,6 +1,6 @@
 {
   "name": "@solarity/solidity-lib",
-  "version": "2.6.5",
+  "version": "2.6.14",
   "license": "MIT",
   "author": "Distributed Lab",
   "readme": "README.md",
@@ -21,9 +21,11 @@
     "!mock/**/*"
   ],
   "dependencies": {
-    "@openzeppelin/contracts": "4.9.2",
-    "@openzeppelin/contracts-upgradeable": "4.9.2",
+    "@openzeppelin/contracts": "4.9.5",
+    "@openzeppelin/contracts-upgradeable": "4.9.5",
     "@uniswap/v2-core": "1.0.1",
-    "@uniswap/v2-periphery": "1.1.0-beta.0"
+    "@uniswap/v2-periphery": "1.1.0-beta.0",
+    "@uniswap/v3-core": "1.0.1",
+    "@uniswap/v3-periphery": "1.4.4"
   }
 }

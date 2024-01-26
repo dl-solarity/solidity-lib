@@ -13,7 +13,8 @@ import {IMultiOwnable} from "../interfaces/access-control/IMultiOwnable.sol";
  *
  * Contract module which provides a basic access control mechanism, where there is a list of
  * owner addresses those can be granted exclusive access to specific functions.
- * All owners are equal in their access, they can add new owners, also remove each other and themself.
+ *
+ * All owners are equal in their access, they can add new owners, also remove each other and themselves.
  *
  * By default, the owner account will be the one that deploys the contract.
  *
@@ -39,29 +40,51 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
         _addOwners(msg.sender.asSingletonArray());
     }
 
+    /**
+     * @notice The function to add equally rightful owners to the contract
+     * @param newOwners_ the owners to be added
+     */
     function addOwners(address[] memory newOwners_) public override onlyOwner {
         _addOwners(newOwners_);
     }
 
+    /**
+     * @notice The function to remove owners from the contract
+     * @param oldOwners_ the owners to be removed. Note that one can remove themself
+     */
     function removeOwners(address[] memory oldOwners_) public override onlyOwner {
         _removeOwners(oldOwners_);
     }
 
+    /**
+     * @notice The function to remove yourself from the owners list
+     *
+     * Note: renouncing ownership may leave the contract without an owner,
+     * thereby disabling any functionality that is only available to the owner.
+     */
     function renounceOwnership() public override onlyOwner {
         _removeOwners(msg.sender.asSingletonArray());
     }
 
+    /**
+     * @notice The function to get the list of current owners. Be careful, O(n) complexity
+     * @return the list of current owners
+     */
     function getOwners() public view override returns (address[] memory) {
         return _owners.values();
     }
 
+    /**
+     * @notice The function to check the ownership of a user
+     * @param address_ the user to check
+     * @return true if address_ is owner, false otherwise
+     */
     function isOwner(address address_) public view override returns (bool) {
         return _owners.contains(address_);
     }
 
     /**
-     * @notice Gives ownership of the contract to array of new owners.
-     * Null address will not be added and function will be reverted.
+     * @notice Gives ownership of the contract to array of new owners. Null address addition is not allowed.
      * @dev Internal function without access restriction.
      * @param newOwners_ the array of addresses to add to _owners
      */

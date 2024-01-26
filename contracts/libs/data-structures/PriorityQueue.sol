@@ -41,7 +41,7 @@ library PriorityQueue {
     }
 
     /**
-     * @notice The function to add an element to the queue. O(log(n)) complex
+     * @notice The function to add an element to the uint256 queue. O(log(n)) complex
      * @param queue self
      * @param value_ the element value
      * @param priority_ the element priority
@@ -120,30 +120,53 @@ library PriorityQueue {
         Queue _queue;
     }
 
+    /**
+     * @notice The function to add an element to the bytes32 queue. O(log(n)) complex
+     */
     function add(Bytes32Queue storage queue, bytes32 value_, uint256 priority_) internal {
         _add(queue._queue, value_, priority_);
     }
 
+    /**
+     * @notice The function to remove the element with the highest priority. O(log(n)) complex
+     */
     function removeTop(Bytes32Queue storage queue) internal {
         _removeTop(queue._queue);
     }
 
+    /**
+     * @notice The function to read the value of the element with the highest priority. O(1) complex
+     */
     function topValue(Bytes32Queue storage queue) internal view returns (bytes32) {
         return _topValue(queue._queue);
     }
 
+    /**
+     * @notice The function to read the element with the highest priority. O(1) complex
+     */
     function top(Bytes32Queue storage queue) internal view returns (bytes32, uint256) {
         return _top(queue._queue);
     }
 
+    /**
+     * @notice The function to read the size of the queue. O(1) complex
+     */
     function length(Bytes32Queue storage queue) internal view returns (uint256) {
         return _length(queue._queue);
     }
 
+    /**
+     * @notice The function to get the values stored in the queue. O(n) complex
+     * It is very expensive to call this function as it reads all the queue elements. Use cautiously
+     */
     function values(Bytes32Queue storage queue) internal view returns (bytes32[] memory values_) {
         values_ = _values(queue._queue);
     }
 
+    /**
+     * @notice The function to get the values and priorities stored in the queue. O(n) complex
+     * It is very expensive to call this function as it reads all the queue elements. Use cautiously
+     */
     function elements(
         Bytes32Queue storage queue
     ) internal view returns (bytes32[] memory values_, uint256[] memory priorities_) {
@@ -161,32 +184,55 @@ library PriorityQueue {
         Queue _queue;
     }
 
+    /**
+     * @notice The function to add an element to the address queue. O(log(n)) complex
+     */
     function add(AddressQueue storage queue, address value_, uint256 priority_) internal {
         _add(queue._queue, bytes32(uint256(uint160(value_))), priority_);
     }
 
+    /**
+     * @notice The function to remove the element with the highest priority. O(log(n)) complex
+     */
     function removeTop(AddressQueue storage queue) internal {
         _removeTop(queue._queue);
     }
 
+    /**
+     * @notice The function to read the value of the element with the highest priority. O(1) complex
+     */
     function topValue(AddressQueue storage queue) internal view returns (address) {
         return address(uint160(uint256(_topValue(queue._queue))));
     }
 
+    /**
+     * @notice The function to read the element with the highest priority. O(1) complex
+     */
     function top(AddressQueue storage queue) internal view returns (address, uint256) {
         (bytes32 value_, uint256 priority_) = _top(queue._queue);
 
         return (address(uint160(uint256(value_))), priority_);
     }
 
+    /**
+     * @notice The function to read the size of the queue. O(1) complex
+     */
     function length(AddressQueue storage queue) internal view returns (uint256) {
         return _length(queue._queue);
     }
 
+    /**
+     * @notice The function to get the values stored in the queue. O(n) complex
+     * It is very expensive to call this function as it reads all the queue elements. Use cautiously
+     */
     function values(AddressQueue storage queue) internal view returns (address[] memory values_) {
         return _values(queue._queue).asAddressArray();
     }
 
+    /**
+     * @notice The function to get the values and priorities stored in the queue. O(n) complex
+     * It is very expensive to call this function as it reads all the queue elements. Use cautiously
+     */
     function elements(
         AddressQueue storage queue
     ) internal view returns (address[] memory values_, uint256[] memory priorities_) {

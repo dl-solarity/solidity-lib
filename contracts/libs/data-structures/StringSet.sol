@@ -2,7 +2,9 @@
 pragma solidity ^0.8.4;
 
 /**
- * @notice ## Usage example:
+ * @notice The string extension to Openzeppelin sets
+ *
+ * ## Usage example:
  *
  * ```
  * using StringSet for StringSet.Set;

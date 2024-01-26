@@ -2,8 +2,8 @@
   "extends": "solhint:recommended",
   "plugins": ["prettier"],
   "rules": {
+    "prettier/prettier": "warn",
     "reentrancy": "off",
-    "prettier/prettier": "off",
     "modifier-name-mixedcase": "off",
     "no-empty-blocks": "off",
     "func-visibility": "off",

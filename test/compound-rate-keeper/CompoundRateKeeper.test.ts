@@ -32,20 +32,20 @@ describe("CompoundRateKeeper", () => {
   describe("access", () => {
     it("should not initialize twice", async () => {
       await expect(keeper.mockInit(precision(1), 31536000)).to.be.revertedWith(
-        "Initializable: contract is not initializing"
+        "Initializable: contract is not initializing",
       );
       await expect(keeper.__OwnableCompoundRateKeeper_init(precision(1), 31536000)).to.be.revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
     });
 
     it("only owner should call these functions", async () => {
       await expect(keeper.connect(SECOND).setCapitalizationRate(precision(1))).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
 
       await expect(keeper.connect(SECOND).setCapitalizationPeriod(31536000)).to.be.revertedWith(
-        "Ownable: caller is not the owner"
+        "Ownable: caller is not the owner",
       );
     });
   });
@@ -169,28 +169,28 @@ describe("CompoundRateKeeper", () => {
       await keeper.setCapitalizationRate(precision(1.5));
 
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 2628000)).to.equal(
-        precision("1.0416666666666666666666666")
+        precision("1.0416666666666666666666666"),
       );
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 8 * 2628000)).to.equal(
-        precision("1.3333333333333333333333333")
+        precision("1.3333333333333333333333333"),
       );
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 31536000)).to.equal(precision("1.5"));
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000)).to.equal(precision("2.25"));
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000 + 31536000 / 4)).to.equal(
-        precision("2.53125")
+        precision("2.53125"),
       );
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000 + 31536000 / 2)).to.equal(
-        precision("2.8125")
+        precision("2.8125"),
       );
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000 + (31536000 / 4) * 3)).to.equal(
-        precision("3.09375")
+        precision("3.09375"),
       );
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 5 * 31536000)).to.equal(precision("7.59375"));
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 10 * 31536000)).to.equal(
-        precision("57.6650390625")
+        precision("57.6650390625"),
       );
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 50 * 31536000)).to.equal(
-        precision("637621500.2140495869034078069148136")
+        precision("637621500.2140495869034078069148136"),
       );
     });
 
@@ -200,7 +200,7 @@ describe("CompoundRateKeeper", () => {
 
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 31536000)).to.be.closeTo(
         precision(23.42),
-        precision(0.01)
+        precision(0.01),
       );
 
       await time.setNextBlockTimestamp((await time.latest()) + 31536000);
@@ -208,7 +208,7 @@ describe("CompoundRateKeeper", () => {
 
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000)).to.be.closeTo(
         precision(33434.42),
-        precision(0.01)
+        precision(0.01),
       );
     });
 

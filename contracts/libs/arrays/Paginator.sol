@@ -16,17 +16,16 @@ library Paginator {
     using StringSet for StringSet.Set;
 
     /**
-     * @notice Returns part of an array.
-     * @dev All functions below have the same description.
+     * @notice Returns part of a uint256 array
      *
      * Examples:
      * - part([4, 5, 6, 7], 0, 4) will return [4, 5, 6, 7]
      * - part([4, 5, 6, 7], 2, 4) will return [6, 7]
      * - part([4, 5, 6, 7], 2, 1) will return [6]
      *
-     * @param arr Storage array.
-     * @param offset_ Offset, index in an array.
-     * @param limit_ Number of elements after the `offset`.
+     * @param arr the storage array
+     * @param offset_ the starting index in the array
+     * @param limit_ the number of elements after the `offset_`
      */
     function part(
         uint256[] storage arr,
@@ -42,6 +41,9 @@ library Paginator {
         }
     }
 
+    /**
+     * @notice Returns part of an address array
+     */
     function part(
         address[] storage arr,
         uint256 offset_,
@@ -56,6 +58,9 @@ library Paginator {
         }
     }
 
+    /**
+     * @notice Returns part of a bytes32 array
+     */
     function part(
         bytes32[] storage arr,
         uint256 offset_,
@@ -70,6 +75,12 @@ library Paginator {
         }
     }
 
+    /**
+     * @notice Returns part of a uint256 set
+     * @param set the storage set
+     * @param offset_ the starting index in the set
+     * @param limit_ the number of elements after the `offset`
+     */
     function part(
         EnumerableSet.UintSet storage set,
         uint256 offset_,
@@ -84,6 +95,9 @@ library Paginator {
         }
     }
 
+    /**
+     * @notice Returns part of an address set
+     */
     function part(
         EnumerableSet.AddressSet storage set,
         uint256 offset_,
@@ -98,6 +112,9 @@ library Paginator {
         }
     }
 
+    /**
+     * @notice Returns part of a bytes32 set
+     */
     function part(
         EnumerableSet.Bytes32Set storage set,
         uint256 offset_,
@@ -112,6 +129,9 @@ library Paginator {
         }
     }
 
+    /**
+     * @notice Returns part of a string set
+     */
     function part(
         StringSet.Set storage set,
         uint256 offset_,
@@ -126,6 +146,12 @@ library Paginator {
         }
     }
 
+    /**
+     * @notice Returns the exclusive index of the element to iterate to
+     * @param length_ the length of the array
+     * @param offset_ the starting index
+     * @param limit_ the number of elements
+     */
     function getTo(
         uint256 length_,
         uint256 offset_,

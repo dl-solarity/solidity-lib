@@ -2,24 +2,20 @@
 pragma solidity ^0.8.4;
 
 /**
- * @notice This is a modified version of the OpenZeppelin Initializable contract to be compatible
+ * @notice The Diamond standard module
+ *
+ * This is a modified version of the OpenZeppelin Initializable contract to be compatible
  * with the Diamond Standard.
  */
 abstract contract InitializableStorage {
     bytes32 internal constant INITIALIZABLE_STORAGE_SLOT =
         keccak256("diamond.standard.initializable.storage");
 
-    /**
-     * @param initializingStorage Indicates that the particular storage slot has been initialized.
-     */
     struct IStorage {
         // storage slot => { 0: not initialized, 1: initializing, 2: initialized }
         mapping(bytes32 => uint8) initializingStorage;
     }
 
-    /**
-     * @dev Triggered when the {storageSlot} in the Diamond has been initialized.
-     */
     event Initialized(bytes32 storageSlot);
 
     /**

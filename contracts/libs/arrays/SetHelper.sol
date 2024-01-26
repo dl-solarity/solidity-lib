@@ -6,7 +6,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {StringSet} from "../data-structures/StringSet.sol";
 
 /**
- * @notice A simple library to work with sets
+ * @notice A simple library to work with Openzeppelin sets
  */
 library SetHelper {
     using EnumerableSet for EnumerableSet.UintSet;
@@ -14,7 +14,7 @@ library SetHelper {
     using StringSet for StringSet.Set;
 
     /**
-     * @notice The function to insert an array of elements into the set
+     * @notice The function to insert an array of elements into the address set
      * @param set the set to insert the elements into
      * @param array_ the elements to be inserted
      */
@@ -24,12 +24,18 @@ library SetHelper {
         }
     }
 
+    /**
+     * @notice The function to insert an array of elements into the uint256 set
+     */
     function add(EnumerableSet.UintSet storage set, uint256[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {
             set.add(array_[i]);
         }
     }
 
+    /**
+     * @notice The function to insert an array of elements into the string set
+     */
     function add(StringSet.Set storage set, string[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {
             set.add(array_[i]);
@@ -37,7 +43,7 @@ library SetHelper {
     }
 
     /**
-     * @notice The function to remove an array of elements from the set
+     * @notice The function to remove an array of elements from the address set
      * @param set the set to remove the elements from
      * @param array_ the elements to be removed
      */
@@ -47,12 +53,18 @@ library SetHelper {
         }
     }
 
+    /**
+     * @notice The function to remove an array of elements from the uint256 set
+     */
     function remove(EnumerableSet.UintSet storage set, uint256[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {
             set.remove(array_[i]);
         }
     }
 
+    /**
+     * @notice The function to remove an array of elements from the string set
+     */
     function remove(StringSet.Set storage set, string[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {
             set.remove(array_[i]);
