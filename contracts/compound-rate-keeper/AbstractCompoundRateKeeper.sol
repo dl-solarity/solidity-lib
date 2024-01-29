@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "hardhat/console.sol";
+
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
@@ -93,6 +95,10 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
         uint64 capitalizationPeriod_ = _capitalizationPeriod;
         uint64 capitalizationPeriodsNum_ = secondsPassed_ / capitalizationPeriod_;
         uint64 secondsLeft_ = secondsPassed_ % capitalizationPeriod_;
+
+        // console.log("secondsPassed_: %s", secondsPassed_);
+        // console.log("Periods num: %s", capitalizationPeriodsNum_);
+        // console.log("Seconds left: %s", secondsLeft_);
 
         uint256 capitalizationRate_ = _capitalizationRate;
         uint256 rate_ = _currentRate;

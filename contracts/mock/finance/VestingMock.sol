@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {Vesting} from "../../finance/Vesting_2.sol";
+import {Vesting} from "../../finance/Vesting.sol";
 import {ERC20Mock} from "../tokens/ERC20Mock.sol";
 
 contract VestingMock is Vesting {
@@ -32,11 +32,7 @@ contract VestingMock is Vesting {
     }
 
     function withdrawFromVesting(uint256 vestingId_) public {
-        (uint256 _amountToPay, address _vestingToken) = _withdrawFromVesting(
-            vestingId_,
-            block.timestamp,
-            block.timestamp
-        );
+        (uint256 _amountToPay, address _vestingToken) = _withdrawFromVesting(vestingId_);
 
         ERC20Mock(_vestingToken).transferFrom(address(this), msg.sender, _amountToPay);
     }

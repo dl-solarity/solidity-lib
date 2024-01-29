@@ -5,7 +5,7 @@ import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { Reverter } from "@/test/helpers/reverter";
 import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
 import { ZERO_ADDR, MAX_UINT256 } from "@/scripts/utils/constants";
-import { wei } from "@/scripts/utils/utils";
+import { wei, precision } from "@/scripts/utils/utils";
 
 import { VestingMock, VestingMock__factory, ERC20Mock, ERC20Mock__factory, Vesting } from "@ethers-v6";
 
@@ -36,7 +36,7 @@ describe("Vesting", () => {
     const durationInPeriods = 25; // days
     const cliffInPeriods = 0;
     const vestingAmount = wei(100);
-    const exponent = 0;
+    const exponent = 3;
 
     let baseSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
     let schedule = { scheduleData: baseSchedule, exponent: exponent } as Schedule;
@@ -64,12 +64,12 @@ describe("Vesting", () => {
     let vestedAmount: bigint = BigInt(0);
     for (let day = 0; day <= durationInPeriods; day++) {
       let previousVestedAmount = vestedAmount;
-      vestedAmount = await vesting.getVestedAmount(1, await time.latest(), vestingData.vestingStartTime);
+      vestedAmount = await vesting.getVestedAmount(1);
 
       console.log(
         `Time: ${await time.latest()} Day: ${day} Amount per day: ${
           vestedAmount - previousVestedAmount
-        } Amount Total: ${vestedAmount.toString()}`
+        } Amount Total: ${vestedAmount.toString()}`,
       );
 
       await time.increase(secondsInPeriod);

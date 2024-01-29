@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "hardhat/console.sol";
-
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {MathUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
@@ -17,8 +15,8 @@ abstract contract Vesting is Initializable {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
 
-    event ScheduleCreated(uint256 vestingId);
-    event VestingCreated(uint256 vestingId);
+    event ScheduleCreated(uint256 indexed vestingId);
+    event VestingCreated(uint256 indexed vestingId);
     event WithdrawFromVesting(uint256 indexed vestingId, uint256 amount);
 
     struct BaseSchedule {
@@ -41,21 +39,20 @@ abstract contract Vesting is Initializable {
         uint256 scheduleId;
     }
 
-    uint256 public LINEAR_EXPONENT = 1;
+    uint256 public constant LINEAR_EXPONENT = 1;
 
     uint256 internal _scheduleId;
     uint256 internal _vestingId;
 
-    mapping(uint256 id => Schedule) internal _schedules;
-    mapping(uint256 id => VestingData) internal _vestings;
-    mapping(address beneficiary => EnumerableSet.UintSet) internal _beneficiaryIds;
+    // id => schedule
+    mapping(uint256 => Schedule) internal _schedules;
+    // id => vesting
+    mapping(uint256 => VestingData) internal _vestings;
+    // beneficiary => vesting ids
+    mapping(address => EnumerableSet.UintSet) internal _beneficiaryIds;
 
     // initialization
-    function __Vesting_init() internal onlyInitializing {
-        // for (uint256 i = 0; i < schedules_.length; i++) {
-        //     _createSchedule(schedules_[i]);
-        // }
-    }
+    function __Vesting_init() internal onlyInitializing {}
 
     function _createSchedule(Schedule memory schedule_) internal virtual returns (uint256) {
         _validateSchedule(schedule_.scheduleData);
@@ -113,35 +110,26 @@ abstract contract Vesting is Initializable {
     }
 
     // get available amount to withdraw
-    function getWithdrawableAmount(
-        uint256 vestingId_,
-        uint256 timestampUpTo_,
-        uint256 timestampCurrent_
-    ) public view virtual returns (uint256) {
+    function getWithdrawableAmount(uint256 vestingId_) public view virtual returns (uint256) {
         VestingData storage _vesting = _vestings[vestingId_];
         Schedule storage _schedule = _schedules[_vesting.scheduleId];
 
-        return _getWithdrawableAmount(_vesting, _schedule, timestampUpTo_, timestampCurrent_);
+        return _getWithdrawableAmount(_vesting, _schedule, block.timestamp);
     }
 
     // get vested amount at the moment
-    function getVestedAmount(
-        uint256 vestingId_,
-        uint256 timestampUpTo_,
-        uint256 timestampCurrent_
-    ) public view virtual returns (uint256) {
+    function getVestedAmount(uint256 vestingId_) public view virtual returns (uint256) {
         VestingData storage _vesting = _vestings[vestingId_];
         Schedule storage _schedule = _schedules[_vesting.scheduleId];
 
-        return _getVestedAmount(_vesting, _schedule, timestampUpTo_, timestampCurrent_);
+        return _getVestedAmount(_vesting, _schedule, block.timestamp);
     }
 
     // get available amount to withdraw
     function _getWithdrawableAmount(
         VestingData storage vesting_,
         Schedule storage schedule_,
-        uint256 timestampUpTo_,
-        uint256 timestampCurrent_
+        uint256 timestampUpTo_
     ) internal view virtual returns (uint256) {
         return
             _vestingCalculation(
@@ -149,7 +137,7 @@ abstract contract Vesting is Initializable {
                 vesting_.vestingAmount,
                 vesting_.vestingStartTime,
                 timestampUpTo_,
-                timestampCurrent_
+                block.timestamp
             ) - vesting_.paidAmount;
     }
 
@@ -157,8 +145,7 @@ abstract contract Vesting is Initializable {
     function _getVestedAmount(
         VestingData storage vesting_,
         Schedule storage schedule_,
-        uint256 timestampUpTo_,
-        uint256 timestampCurrent_
+        uint256 timestampUpTo_
     ) internal view virtual returns (uint256) {
         return
             _vestingCalculation(
@@ -166,7 +153,7 @@ abstract contract Vesting is Initializable {
                 vesting_.vestingAmount,
                 vesting_.vestingStartTime,
                 timestampUpTo_,
-                timestampCurrent_
+                block.timestamp
             );
     }
 
@@ -185,6 +172,11 @@ abstract contract Vesting is Initializable {
         );
 
         Schedule memory _schedule = _schedules[vesting_.scheduleId];
+
+        require(
+            _schedule.scheduleData.cliffInPeriods < _schedule.scheduleData.durationInPeriods,
+            "VestingWallet: cliff cannot be greater than duration"
+        );
 
         require(
             vesting_.vestingStartTime +
@@ -207,9 +199,7 @@ abstract contract Vesting is Initializable {
 
     // withdraw tokens from vesting and transfer to beneficiary
     function _withdrawFromVesting(
-        uint256 vestingId_,
-        uint256 timestampUpTo_,
-        uint256 timestampCurrent_
+        uint256 vestingId_
     ) internal virtual returns (uint256 _amountToPay, address _token) {
         VestingData storage _vesting = _vestings[vestingId_];
 
@@ -218,7 +208,7 @@ abstract contract Vesting is Initializable {
             "VestingWallet: only befeciary can withdraw from his vesting"
         );
 
-        _amountToPay = getWithdrawableAmount(vestingId_, timestampUpTo_, timestampCurrent_);
+        _amountToPay = getWithdrawableAmount(vestingId_);
         _token = _vesting.vestingToken;
 
         _vesting.paidAmount += _amountToPay;
@@ -244,17 +234,20 @@ abstract contract Vesting is Initializable {
             _baseData.secondsInPeriod
         );
 
-        if (_elapsedPeriods <= _baseData.cliffInPeriods) return 0;
-        if (_elapsedPeriods >= _baseData.durationInPeriods) return totalVestingAmount_;
+        if (_elapsedPeriods <= _baseData.cliffInPeriods) {
+            return 0;
+        }
+        if (_elapsedPeriods >= _baseData.durationInPeriods) {
+            return totalVestingAmount_;
+        }
 
-        uint256 _elapsedPeriodsPercentage = _elapsedPeriods.mulDiv(
-            PRECISION,
-            _baseData.durationInPeriods
-        );
+        uint256 _elapsedPeriodsPercentage = (_elapsedPeriods * PRECISION) /
+            _baseData.durationInPeriods;
 
         _vestedAmount =
-            (_elapsedPeriodsPercentage ** (schedule_.exponent) * (totalVestingAmount_)) /
-            (PRECISION ** schedule_.exponent);
+            (_raiseToPower(_elapsedPeriodsPercentage, schedule_.exponent) *
+                (totalVestingAmount_)) /
+            _raiseToPower(PRECISION, schedule_.exponent);
 
         return _vestedAmount.min(totalVestingAmount_);
     }
@@ -267,5 +260,20 @@ abstract contract Vesting is Initializable {
     ) internal view virtual returns (uint256) {
         return
             timestampUpTo_ > startTime_ ? (timestampUpTo_ - startTime_) / (secondsInPeriod_) : 0;
+    }
+
+    function _raiseToPower(
+        uint256 base_,
+        uint256 exponent_
+    ) private pure returns (uint256 result_) {
+        result_ = exponent_ & 1 == 0 ? PRECISION : base_;
+
+        while ((exponent_ >>= 1) > 0) {
+            base_ = (base_ * base_) / PRECISION;
+
+            if (exponent_ & 1 == 1) {
+                result_ = (result_ * base_) / PRECISION;
+            }
+        }
     }
 }
