@@ -141,30 +141,28 @@ abstract contract Vesting is Initializable {
     function _getWithdrawableAmount(
         VestingData storage vesting,
         Schedule storage schedule,
-        uint256 timestampUpTo_
+        uint256 timestamp_
     ) internal view virtual returns (uint256) {
         return
             _vestingCalculation(
                 schedule,
                 vesting.vestingAmount,
                 vesting.vestingStartTime,
-                timestampUpTo_,
-                block.timestamp
+                timestamp_
             ) - vesting.paidAmount;
     }
 
     function _getVestedAmount(
         VestingData storage vesting,
         Schedule storage schedule,
-        uint256 timestampUpTo_
+        uint256 timestamp_
     ) internal view virtual returns (uint256) {
         return
             _vestingCalculation(
                 schedule,
                 vesting.vestingAmount,
                 vesting.vestingStartTime,
-                timestampUpTo_,
-                block.timestamp
+                timestamp_
             );
     }
 
@@ -230,16 +228,15 @@ abstract contract Vesting is Initializable {
         Schedule memory schedule_,
         uint256 totalVestingAmount_,
         uint256 vestingStartTime_,
-        uint256 timestampUpTo_,
-        uint256 timestampCurrent_
+        uint256 timestamp_
     ) internal view virtual returns (uint256 _vestedAmount) {
         BaseSchedule memory baseData_ = schedule_.scheduleData;
 
-        if (vestingStartTime_ > timestampCurrent_) return _vestedAmount;
+        if (vestingStartTime_ > timestamp_) return _vestedAmount;
 
         uint256 elapsedPeriods_ = _calculateElapsedPeriods(
             vestingStartTime_,
-            timestampUpTo_,
+            timestamp_,
             baseData_.secondsInPeriod
         );
 
@@ -264,11 +261,10 @@ abstract contract Vesting is Initializable {
 
     function _calculateElapsedPeriods(
         uint256 startTime_,
-        uint256 timestampUpTo_,
+        uint256 timestamp_,
         uint256 secondsInPeriod_
     ) private pure returns (uint256) {
-        return
-            timestampUpTo_ > startTime_ ? (timestampUpTo_ - startTime_) / (secondsInPeriod_) : 0;
+        return timestamp_ > startTime_ ? (timestamp_ - startTime_) / (secondsInPeriod_) : 0;
     }
 
     function _raiseToPower(
