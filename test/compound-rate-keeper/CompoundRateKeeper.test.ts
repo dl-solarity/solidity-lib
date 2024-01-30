@@ -6,10 +6,8 @@ import { Reverter } from "@/test/helpers/reverter";
 import { precision } from "@/scripts/utils/utils";
 
 import { CompoundRateKeeperMock } from "@ethers-v6";
-import BigNumber from "bignumber.js";
 
 const maxRate = 2n ** 128n - 1n;
-const ONE_YEAR_IN_SECONDS = 31536000;
 
 describe("CompoundRateKeeper", () => {
   const reverter = new Reverter();
@@ -24,7 +22,7 @@ describe("CompoundRateKeeper", () => {
     const CompoundRateKeeperMock = await ethers.getContractFactory("CompoundRateKeeperMock");
     keeper = await CompoundRateKeeperMock.deploy();
 
-    await keeper.__OwnableCompoundRateKeeper_init(precision(1), ONE_YEAR_IN_SECONDS);
+    await keeper.__OwnableCompoundRateKeeper_init(precision(1), 31536000);
 
     await reverter.snapshot();
   });
@@ -33,10 +31,10 @@ describe("CompoundRateKeeper", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(keeper.mockInit(precision(1), ONE_YEAR_IN_SECONDS)).to.be.revertedWith(
+      await expect(keeper.mockInit(precision(1), 31536000)).to.be.revertedWith(
         "Initializable: contract is not initializing",
       );
-      await expect(keeper.__OwnableCompoundRateKeeper_init(precision(1), ONE_YEAR_IN_SECONDS)).to.be.revertedWith(
+      await expect(keeper.__OwnableCompoundRateKeeper_init(precision(1), 31536000)).to.be.revertedWith(
         "Initializable: contract is already initialized",
       );
     });
@@ -46,7 +44,7 @@ describe("CompoundRateKeeper", () => {
         "Ownable: caller is not the owner",
       );
 
-      await expect(keeper.connect(SECOND).setCapitalizationPeriod(ONE_YEAR_IN_SECONDS)).to.be.revertedWith(
+      await expect(keeper.connect(SECOND).setCapitalizationPeriod(31536000)).to.be.revertedWith(
         "Ownable: caller is not the owner",
       );
     });
@@ -64,7 +62,7 @@ describe("CompoundRateKeeper", () => {
       expect(await keeper.getCapitalizationRate()).to.equal(precision(1.1));
       expect(await keeper.getLastUpdate()).to.equal(BigInt(nextBlockTime));
 
-      nextBlockTime = (await time.latest()) + ONE_YEAR_IN_SECONDS;
+      nextBlockTime = (await time.latest()) + 31536000;
 
       await time.setNextBlockTimestamp(nextBlockTime);
       await keeper.setCapitalizationRate(precision(1.2));
@@ -82,7 +80,7 @@ describe("CompoundRateKeeper", () => {
       await time.setNextBlockTimestamp((await time.latest()) + 10);
       await keeper.setCapitalizationRate(precision(5));
 
-      await time.setNextBlockTimestamp((await time.latest()) + 100 * ONE_YEAR_IN_SECONDS);
+      await time.setNextBlockTimestamp((await time.latest()) + 100 * 31536000);
       await keeper.emergencyUpdateCompoundRate();
 
       await expect(keeper.setCapitalizationRate(precision(1.1))).to.be.revertedWith("CRK: max rate is reached");
@@ -91,7 +89,7 @@ describe("CompoundRateKeeper", () => {
 
   describe("setCapitalizationPeriod()", () => {
     it("should correctly set new capitalization period", async () => {
-      expect(await keeper.getCapitalizationPeriod()).to.equal(ONE_YEAR_IN_SECONDS);
+      expect(await keeper.getCapitalizationPeriod()).to.equal(31536000n);
 
       await keeper.setCapitalizationPeriod(10);
       expect(await keeper.getCapitalizationPeriod()).to.equal(10n);
@@ -108,7 +106,7 @@ describe("CompoundRateKeeper", () => {
       await time.setNextBlockTimestamp((await time.latest()) + 10);
       await keeper.setCapitalizationRate(precision(5));
 
-      await time.setNextBlockTimestamp((await time.latest()) + 100 * ONE_YEAR_IN_SECONDS);
+      await time.setNextBlockTimestamp((await time.latest()) + 100 * 31536000);
       await keeper.emergencyUpdateCompoundRate();
 
       await expect(keeper.setCapitalizationPeriod(1)).to.be.revertedWith("CRK: max rate is reached");
@@ -124,7 +122,7 @@ describe("CompoundRateKeeper", () => {
 
       expect(await keeper.getIsMaxRateReached()).to.be.false;
 
-      await time.setNextBlockTimestamp((await time.latest()) + 100 * ONE_YEAR_IN_SECONDS);
+      await time.setNextBlockTimestamp((await time.latest()) + 100 * 31536000);
       await keeper.emergencyUpdateCompoundRate();
 
       expect(await keeper.getIsMaxRateReached()).to.be.true;
@@ -176,30 +174,22 @@ describe("CompoundRateKeeper", () => {
       expect(await keeper.getFutureCompoundRate((await time.latest()) + 8 * 2628000)).to.equal(
         precision("1.3333333333333333333333333"),
       );
-      expect(await keeper.getFutureCompoundRate((await time.latest()) + ONE_YEAR_IN_SECONDS)).to.equal(
-        precision("1.5"),
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 31536000)).to.equal(precision("1.5"));
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000)).to.equal(precision("2.25"));
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000 + 31536000 / 4)).to.equal(
+        precision("2.53125"),
       );
-      expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * ONE_YEAR_IN_SECONDS)).to.equal(
-        precision("2.25"),
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000 + 31536000 / 2)).to.equal(
+        precision("2.8125"),
       );
-      expect(
-        await keeper.getFutureCompoundRate((await time.latest()) + 2 * ONE_YEAR_IN_SECONDS + ONE_YEAR_IN_SECONDS / 4),
-      ).to.equal(precision("2.53125"));
-      expect(
-        await keeper.getFutureCompoundRate((await time.latest()) + 2 * ONE_YEAR_IN_SECONDS + ONE_YEAR_IN_SECONDS / 2),
-      ).to.equal(precision("2.8125"));
-      expect(
-        await keeper.getFutureCompoundRate(
-          (await time.latest()) + 2 * ONE_YEAR_IN_SECONDS + (ONE_YEAR_IN_SECONDS / 4) * 3,
-        ),
-      ).to.equal(precision("3.09375"));
-      expect(await keeper.getFutureCompoundRate((await time.latest()) + 5 * ONE_YEAR_IN_SECONDS)).to.equal(
-        precision("7.59375"),
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000 + (31536000 / 4) * 3)).to.equal(
+        precision("3.09375"),
       );
-      expect(await keeper.getFutureCompoundRate((await time.latest()) + 10 * ONE_YEAR_IN_SECONDS)).to.equal(
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 5 * 31536000)).to.equal(precision("7.59375"));
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 10 * 31536000)).to.equal(
         precision("57.6650390625"),
       );
-      expect(await keeper.getFutureCompoundRate((await time.latest()) + 50 * ONE_YEAR_IN_SECONDS)).to.equal(
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 50 * 31536000)).to.equal(
         precision("637621500.2140495869034078069148136"),
       );
     });
@@ -208,15 +198,15 @@ describe("CompoundRateKeeper", () => {
       await time.setNextBlockTimestamp((await time.latest()) + 10);
       await keeper.setCapitalizationRateAndPeriod(precision(1.0000001), 1);
 
-      expect(await keeper.getFutureCompoundRate((await time.latest()) + ONE_YEAR_IN_SECONDS)).to.be.closeTo(
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 31536000)).to.be.closeTo(
         precision(23.42),
         precision(0.01),
       );
 
-      await time.setNextBlockTimestamp((await time.latest()) + ONE_YEAR_IN_SECONDS);
+      await time.setNextBlockTimestamp((await time.latest()) + 31536000);
       await keeper.setCapitalizationRateAndPeriod(precision(1.01), 86400);
 
-      expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * ONE_YEAR_IN_SECONDS)).to.be.closeTo(
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000)).to.be.closeTo(
         precision(33434.42),
         precision(0.01),
       );
@@ -226,30 +216,22 @@ describe("CompoundRateKeeper", () => {
       await time.setNextBlockTimestamp((await time.latest()) + 10);
       await keeper.setCapitalizationRate(precision(1.1));
 
-      expect(await keeper.getFutureCompoundRate((await time.latest()) + ONE_YEAR_IN_SECONDS)).to.equal(
-        precision("1.1"),
-      );
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 31536000)).to.equal(precision("1.1"));
 
-      await time.setNextBlockTimestamp((await time.latest()) + ONE_YEAR_IN_SECONDS);
+      await time.setNextBlockTimestamp((await time.latest()) + 31536000);
       await keeper.setCapitalizationRate(precision(1.2));
 
-      expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * ONE_YEAR_IN_SECONDS)).to.equal(
-        precision("1.584"),
-      );
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 2 * 31536000)).to.equal(precision("1.584"));
 
-      await time.setNextBlockTimestamp((await time.latest()) + 2 * ONE_YEAR_IN_SECONDS);
+      await time.setNextBlockTimestamp((await time.latest()) + 2 * 31536000);
       await keeper.setCapitalizationRate(precision(1.5));
 
-      expect(await keeper.getFutureCompoundRate((await time.latest()) + 3 * ONE_YEAR_IN_SECONDS)).to.equal(
-        precision("5.346"),
-      );
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 3 * 31536000)).to.equal(precision("5.346"));
 
-      await time.setNextBlockTimestamp((await time.latest()) + 3 * ONE_YEAR_IN_SECONDS);
+      await time.setNextBlockTimestamp((await time.latest()) + 3 * 31536000);
       await keeper.setCapitalizationRate(precision(1.05));
 
-      expect(await keeper.getFutureCompoundRate((await time.latest()) + ONE_YEAR_IN_SECONDS)).to.equal(
-        precision("5.6133"),
-      );
+      expect(await keeper.getFutureCompoundRate((await time.latest()) + 31536000)).to.equal(precision("5.6133"));
     });
 
     it("check max timestamp for 10%", async () => {
@@ -278,31 +260,6 @@ describe("CompoundRateKeeper", () => {
 
     it("check max timestamp for 1000%", async () => {
       await checkByParams(11);
-    });
-  });
-  describe.only("test with amounts", () => {
-    it("100 initially", async () => {
-      await keeper.setCapitalizationRate(precision(1.12));
-      await keeper.setCapitalizationPeriod(ONE_YEAR_IN_SECONDS);
-
-      let initialAmount = BigInt(100);
-
-      let maxYears = 10;
-
-      let rate = await keeper.getCompoundRate();
-      let expectedAmount = initialAmount * rate;
-
-      for (let year = 1; year <= maxYears; year++) {
-        await time.increaseTo(ONE_YEAR_IN_SECONDS * year + 4);
-
-        rate = await keeper.getCompoundRate();
-
-        expectedAmount = initialAmount * rate;
-
-        console.log("year: ", year);
-        console.log("rate:", new BigNumber(rate.toString()).div(precision(1).toString()).toString());
-        console.log("final amount:", new BigNumber(expectedAmount.toString()).div(precision(1).toString()).toString());
-      }
     });
   });
 });
