@@ -8,7 +8,7 @@ import { ethers } from "hardhat";
 
 import { ERC20Mock, ERC20Mock__factory, Vesting, VestingMock, VestingMock__factory } from "@ethers-v6";
 
-describe.only("Vesting", () => {
+describe("Vesting", () => {
   let reverter = new Reverter();
 
   let owner: SignerWithAddress;
