@@ -53,7 +53,6 @@ describe.only("Vesting", () => {
       await expect(vesting.vestingInit()).to.be.revertedWith("Initializable: contract is not initializing");
     });
   });
-
   describe("create schedule", () => {
     it("should correctly create linear schedule", async () => {
       let baseSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
@@ -117,6 +116,8 @@ describe.only("Vesting", () => {
     let exponentialSchedule: Schedule;
     let exponentialScheduleId: bigint;
 
+    let defaultVesting: Vesting;
+
     beforeEach(async () => {
       linearSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
       exponentialSchedule = { scheduleData: linearSchedule, exponent: exponent } as Schedule;
@@ -126,6 +127,15 @@ describe.only("Vesting", () => {
 
       tx = await vesting.createSchedule(exponentialSchedule);
       exponentialScheduleId = ethers.toBigInt((await tx.wait())?.logs[0].topics[1] as string);
+
+      defaultVesting = {
+        vestingStartTime: await time.latest(),
+        beneficiary: alice.address,
+        vestingToken: await erc20.getAddress(),
+        vestingAmount: vestingAmount,
+        paidAmount: 0,
+        scheduleId: linearScheduleId,
+      } as Vesting;
     });
 
     it("should correctly create vesting", async () => {
@@ -141,6 +151,7 @@ describe.only("Vesting", () => {
       let exponentialVesting = {
         ...linearVesting,
         scheduleId: exponentialScheduleId,
+        vestingAmount: vestingAmount * 2n,
       };
 
       const linearTx = vesting.createVesting(linearVesting);
@@ -163,9 +174,203 @@ describe.only("Vesting", () => {
         Object.values(linearVesting),
         Object.values(exponentialVesting),
       ]);
+
+      expect(await erc20.balanceOf(await vesting.getAddress())).changeTokenBalance(
+        erc20,
+        await vesting.getAddress(),
+        vestingAmount * 2n,
+      );
+    });
+
+    it("should revert if vesting start time is zero", async () => {
+      defaultVesting.vestingStartTime = 0;
+
+      await expect(vesting.createVesting(defaultVesting)).to.be.revertedWith(
+        "VestingWallet: cannot create vesting for zero time",
+      );
+    });
+
+    it("should revert if vesting amount is zero", async () => {
+      defaultVesting.vestingAmount = 0;
+
+      await expect(vesting.createVesting(defaultVesting)).to.be.revertedWith(
+        "VestingWallet: cannot create vesting for zero amount",
+      );
+    });
+
+    it("should revert if vesting beneficiary is zero address", async () => {
+      defaultVesting.beneficiary = ZERO_ADDR;
+
+      await expect(vesting.createVesting(defaultVesting)).to.be.revertedWith(
+        "VestingWallet: cannot create vesting for zero address",
+      );
+    });
+
+    it("should revert if vesting token is zero address", async () => {
+      defaultVesting.vestingToken = ZERO_ADDR;
+
+      await expect(vesting.createVesting(defaultVesting)).to.be.revertedWith(
+        "VestingWallet: vesting token cannot be zero address",
+      );
+    });
+
+    it("should revert if vesting created for a past date", async () => {
+      await time.increase(secondsInPeriod * durationInPeriods);
+
+      await expect(vesting.createVesting(defaultVesting)).to.be.revertedWith(
+        "VestingWallet: cannot create vesting for a past date",
+      );
     });
   });
-  describe("withdraw from vesting", () => {});
+  describe("withdraw from vesting", () => {
+    let linearVesting: Vesting;
+    let exponentialVesting: Vesting;
+
+    beforeEach(async () => {
+      let linearSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
+      let exponentialSchedule = { scheduleData: linearSchedule, exponent: exponent } as Schedule;
+
+      let tx = await vesting.createBaseSchedule(linearSchedule);
+      let linearScheduleId = ethers.toBigInt((await tx.wait())?.logs[0].topics[1] as string);
+
+      tx = await vesting.createSchedule(exponentialSchedule);
+      let exponentialScheduleId = ethers.toBigInt((await tx.wait())?.logs[0].topics[1] as string);
+
+      linearVesting = {
+        vestingStartTime: await time.latest(),
+        beneficiary: alice.address,
+        vestingToken: await erc20.getAddress(),
+        vestingAmount: vestingAmount,
+        paidAmount: 0,
+        scheduleId: linearScheduleId,
+      } as Vesting;
+
+      exponentialVesting = {
+        ...linearVesting,
+        scheduleId: exponentialScheduleId,
+        vestingAmount: vestingAmount * 2n,
+      };
+    });
+
+    it("should correctly withdraw from vesting after full duration", async () => {
+      let createTx = await vesting.createVesting(linearVesting);
+      let linearVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
+
+      createTx = await vesting.createVesting(exponentialVesting);
+      let exponentialVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
+
+      expect(await vesting.getVestedAmount(linearVestingId)).to.be.equal(0);
+      expect(await vesting.getVestedAmount(exponentialVestingId)).to.be.equal(0);
+
+      expect(await vesting.getWithdrawableAmount(linearVestingId)).to.be.equal(0);
+      expect(await vesting.getWithdrawableAmount(exponentialVestingId)).to.be.equal(0);
+
+      await time.increase(secondsInPeriod * durationInPeriods);
+
+      expect(await vesting.getVestedAmount(linearVestingId)).to.be.equal(linearVesting.vestingAmount);
+      expect(await vesting.getVestedAmount(exponentialVestingId)).to.be.equal(exponentialVesting.vestingAmount);
+
+      expect(await vesting.getWithdrawableAmount(linearVestingId)).to.be.equal(linearVesting.vestingAmount);
+      expect(await vesting.getWithdrawableAmount(exponentialVestingId)).to.be.equal(exponentialVesting.vestingAmount);
+
+      const linearTx = vesting.connect(alice).withdrawFromVesting(linearVestingId);
+      const exponentialTx = vesting.connect(alice).withdrawFromVesting(exponentialVestingId);
+
+      await expect(linearTx)
+        .to.emit(vesting, "WithdrawnFromVesting")
+        .withArgs(linearVestingId, linearVesting.vestingAmount);
+      await expect(exponentialTx)
+        .to.emit(vesting, "WithdrawnFromVesting")
+        .withArgs(exponentialVestingId, exponentialVesting.vestingAmount);
+
+      linearVesting.paidAmount = linearVesting.vestingAmount;
+      exponentialVesting.paidAmount = exponentialVesting.vestingAmount;
+
+      expect(await vesting.getVesting(linearVestingId)).to.deep.equal(Object.values(linearVesting));
+      expect(await vesting.getVesting(exponentialVestingId)).to.deep.equal(Object.values(exponentialVesting));
+
+      expect(await erc20.balanceOf(alice.address)).changeTokenBalance(
+        erc20,
+        alice.address,
+        BigInt(linearVesting.vestingAmount) + BigInt(exponentialVesting.vestingAmount),
+      );
+    });
+
+    it("should correctly withdraw from vesting after half duration", async () => {
+      let createTx = await vesting.createVesting(linearVesting);
+      let linearVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
+
+      createTx = await vesting.createVesting(exponentialVesting);
+      let exponentialVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
+
+      expect(await vesting.getVestedAmount(linearVestingId)).to.be.equal(0);
+      expect(await vesting.getVestedAmount(exponentialVestingId)).to.be.equal(0);
+
+      expect(await vesting.getWithdrawableAmount(linearVestingId)).to.be.equal(0);
+      expect(await vesting.getWithdrawableAmount(exponentialVestingId)).to.be.equal(0);
+
+      // 15 days out of 30
+      await time.increase((secondsInPeriod * durationInPeriods) / 2n);
+
+      expect(await vesting.getVestedAmount(linearVestingId)).to.be.equal(BigInt(linearVesting.vestingAmount) / 2n);
+
+      expect(await vesting.getWithdrawableAmount(linearVestingId)).to.be.equal(
+        BigInt(linearVesting.vestingAmount) / 2n,
+      );
+
+      let elapsedPeriods = (BigInt(await time.latest()) - BigInt(linearVesting.vestingStartTime)) / secondsInPeriod;
+      let elapsedPeriodsPercentage = Number(elapsedPeriods) / Number(durationInPeriods);
+      let exponentialVestedAmount = BigInt(
+        Math.pow(elapsedPeriodsPercentage, Number(exponent)) * Number(exponentialVesting.vestingAmount),
+      );
+
+      expect(await vesting.getVestedAmount(exponentialVestingId)).to.be.equal(exponentialVestedAmount);
+      expect(await vesting.getWithdrawableAmount(exponentialVestingId)).to.be.equal(exponentialVestedAmount);
+
+      const linearTx = vesting.connect(alice).withdrawFromVesting(linearVestingId);
+      const exponentialTx = vesting.connect(alice).withdrawFromVesting(exponentialVestingId);
+
+      // await expect(linearTx)
+      //   .to.emit(vesting, "WithdrawnFromVesting")
+      //   .withArgs(linearVestingId, linearVesting.vestingAmount);
+      // await expect(exponentialTx)
+      //   .to.emit(vesting, "WithdrawnFromVesting")
+      //   .withArgs(exponentialVestingId, exponentialVesting.vestingAmount);
+
+      // linearVesting.paidAmount = linearVesting.vestingAmount;
+      // exponentialVesting.paidAmount = exponentialVesting.vestingAmount;
+
+      // expect(await vesting.getVesting(linearVestingId)).to.deep.equal(Object.values(linearVesting));
+      // expect(await vesting.getVesting(exponentialVestingId)).to.deep.equal(Object.values(exponentialVesting));
+
+      // expect(await erc20.balanceOf(alice.address)).changeTokenBalance(
+      //   erc20,
+      //   alice.address,
+      //   BigInt(linearVesting.vestingAmount) + BigInt(exponentialVesting.vestingAmount),
+      // );
+    });
+
+    it("should revert if non beneficiary tries to withdraw from vesting", async () => {
+      await vesting.createVesting(linearVesting);
+
+      await expect(vesting.withdrawFromVesting(1)).to.be.revertedWith(
+        "VestingWallet: only beneficiary can withdraw from his vesting",
+      );
+    });
+
+    it("should revert if nothing to withdraw", async () => {
+      await vesting.createVesting(linearVesting);
+
+      await time.increase(secondsInPeriod * durationInPeriods);
+
+      await vesting.connect(alice).withdrawFromVesting(1);
+
+      await expect(vesting.connect(alice).withdrawFromVesting(1)).to.be.revertedWith(
+        "VestingWallet: nothing to withdraw",
+      );
+    });
+  });
+
   describe("check calculations", () => {});
 
   // it("test schedule", async () => {

@@ -401,7 +401,7 @@ abstract contract Vesting is Initializable {
     function _raiseToPower(
         uint256 base_,
         uint256 exponent_
-    ) private pure returns (uint256 result_) {
+    ) internal pure returns (uint256 result_) {
         result_ = exponent_ & 1 == 0 ? PRECISION : base_;
 
         while ((exponent_ >>= 1) > 0) {
