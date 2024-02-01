@@ -22,27 +22,6 @@ abstract contract Vesting is Initializable {
     using EnumerableSet for EnumerableSet.UintSet;
 
     /**
-     * @notice Emitted when a new schedule is created.
-     * @param scheduleId The ID of the created schedule.
-     */
-    event ScheduleCreated(uint256 indexed scheduleId);
-
-    /**
-     * @notice Emitted when a new vesting contract is created.
-     * @param vestingId The ID of the created vesting contract.
-     * @param beneficiary The beneficiary of the vesting contract.
-     * @param token The ERC20 token address used for the vesting.
-     */
-    event VestingCreated(uint256 indexed vestingId, address beneficiary, address token);
-
-    /**
-     * @notice Emitted when funds are withdrawn from a vesting contract.
-     * @param vestingId The ID of the vesting contract from which funds are withdrawn.
-     * @param amount The amount of funds withdrawn.
-     */
-    event WithdrawnFromVesting(uint256 indexed vestingId, uint256 amount);
-
-    /**
      * @notice Struct defining the base schedule parameters.
      */
     struct BaseSchedule {
@@ -84,9 +63,56 @@ abstract contract Vesting is Initializable {
     mapping(address => EnumerableSet.UintSet) private _beneficiaryIds;
 
     /**
+     * @notice Emitted when a new schedule is created.
+     * @param scheduleId The ID of the created schedule.
+     */
+    event ScheduleCreated(uint256 indexed scheduleId);
+
+    /**
+     * @notice Emitted when a new vesting contract is created.
+     * @param vestingId The ID of the created vesting contract.
+     * @param beneficiary The beneficiary of the vesting contract.
+     * @param token The ERC20 token address used for the vesting.
+     */
+    event VestingCreated(uint256 indexed vestingId, address beneficiary, address token);
+
+    /**
+     * @notice Emitted when funds are withdrawn from a vesting contract.
+     * @param vestingId The ID of the vesting contract from which funds are withdrawn.
+     * @param amount The amount of funds withdrawn.
+     */
+    event WithdrawnFromVesting(uint256 indexed vestingId, uint256 amount);
+
+    /**
      * @notice Constructor.
      */
     function __Vesting_init() internal onlyInitializing {}
+
+    /**
+     * @notice Withdraws funds from a vesting contract.
+     * @param vestingId_ The ID of the vesting contract.
+     */
+    function withdrawFromVesting(uint256 vestingId_) public virtual {
+        VestingData storage _vesting = _vestings[vestingId_];
+
+        require(
+            msg.sender == _vesting.beneficiary,
+            "VestingWallet: only beneficiary can withdraw from his vesting"
+        );
+        require(
+            _vesting.paidAmount < _vesting.vestingAmount,
+            "VestingWallet: nothing to withdraw"
+        );
+
+        uint256 amountToPay_ = getWithdrawableAmount(vestingId_);
+        address token_ = _vesting.vestingToken;
+
+        _vesting.paidAmount += amountToPay_;
+
+        IERC20(token_).safeTransfer(msg.sender, amountToPay_);
+
+        emit WithdrawnFromVesting(vestingId_, amountToPay_);
+    }
 
     /**
      * @notice Retrieves a schedule by ID.
@@ -156,50 +182,73 @@ abstract contract Vesting is Initializable {
     }
 
     /**
-     * @notice Withdraws funds from a vesting contract.
-     * @param vestingId_ The ID of the vesting contract.
+     * @notice Creates a new vesting schedule.
+     * @dev The exponent is set to 1, making the vesting linear.
+     * @param baseSchedule_ Base schedule data for the new schedule.
+     * @return The ID of the created schedule.
      */
-    function withdrawFromVesting(uint256 vestingId_) public virtual {
-        VestingData storage _vesting = _vestings[vestingId_];
+    function _createSchedule(
+        BaseSchedule memory baseSchedule_
+    ) internal virtual returns (uint256) {
+        _validateSchedule(baseSchedule_);
 
-        require(
-            msg.sender == _vesting.beneficiary,
-            "VestingWallet: only beneficiary can withdraw from his vesting"
-        );
-        require(_vesting.vestingAmount > 0, "VestingWallet: vesting amount is zero");
-        require(
-            _vesting.paidAmount < _vesting.vestingAmount,
-            "VestingWallet: nothing to withdraw"
-        );
-        require(
-            _vesting.vestingToken != address(0),
-            "VestingWallet: vesting token is zero address"
-        );
+        _schedules[++scheduleId] = Schedule({
+            scheduleData: baseSchedule_,
+            exponent: LINEAR_EXPONENT
+        });
 
-        uint256 amountToPay_ = getWithdrawableAmount(vestingId_);
-        address token_ = _vesting.vestingToken;
+        emit ScheduleCreated(scheduleId);
 
-        _vesting.paidAmount += amountToPay_;
-
-        IERC20(token_).safeTransfer(msg.sender, amountToPay_);
-
-        emit WithdrawnFromVesting(vestingId_, amountToPay_);
+        return scheduleId;
     }
 
     /**
-     * @notice Calculates the elapsed periods.
-     * @param startTime_ The starting time of the vesting.
-     * @param timestampUpTo_ The timestamp up to which the calculation is performed.
-     * @param secondsInPeriod_ The duration of each vesting period in seconds.
-     * @return The number of elapsed periods.
+     * @notice Creates a new vesting schedule with a custom exponent.
+     * @param schedule_ Schedule data for the new schedule.
+     * @return The ID of the created schedule.
      */
-    function _calculateElapsedPeriods(
-        uint256 startTime_,
-        uint256 timestampUpTo_,
-        uint256 secondsInPeriod_
-    ) internal pure returns (uint256) {
-        return
-            timestampUpTo_ > startTime_ ? (timestampUpTo_ - startTime_) / (secondsInPeriod_) : 0;
+    function _createSchedule(Schedule memory schedule_) internal virtual returns (uint256) {
+        require(
+            schedule_.exponent > 0,
+            "VestingWallet: cannot create schedule with zero exponent"
+        );
+
+        _validateSchedule(schedule_.scheduleData);
+
+        _schedules[++scheduleId] = schedule_;
+
+        emit ScheduleCreated(scheduleId);
+
+        return scheduleId;
+    }
+
+    /**
+     * @notice Creates a new vesting contract.
+     * @param vesting_ Vesting data for the new contract.
+     * @return The ID of the created vesting contract.
+     */
+    function _createVesting(VestingData memory vesting_) internal virtual returns (uint256) {
+        _validateVesting(vesting_);
+
+        Schedule storage _schedule = _schedules[vesting_.scheduleId];
+
+        require(
+            vesting_.vestingStartTime +
+                _schedule.scheduleData.durationInPeriods *
+                _schedule.scheduleData.secondsInPeriod >
+                block.timestamp,
+            "VestingWallet: cannot create vesting for a past date"
+        );
+
+        uint256 _currentVestingId = ++vestingId;
+
+        _beneficiaryIds[vesting_.beneficiary].add(_currentVestingId);
+
+        _vestings[_currentVestingId] = vesting_;
+
+        emit VestingCreated(_currentVestingId, vesting_.beneficiary, vesting_.vestingToken);
+
+        return _currentVestingId;
     }
 
     /**
@@ -260,7 +309,9 @@ abstract contract Vesting is Initializable {
     ) internal view virtual returns (uint256 vestedAmount_) {
         BaseSchedule memory baseData_ = schedule_.scheduleData;
 
-        if (vestingStartTime_ > timestampUpTo_) return vestedAmount_;
+        if (vestingStartTime_ > timestampUpTo_) {
+            return vestedAmount_;
+        }
 
         uint256 elapsedPeriods_ = _calculateElapsedPeriods(
             vestingStartTime_,
@@ -288,52 +339,25 @@ abstract contract Vesting is Initializable {
     }
 
     /**
-     * @notice Creates a new vesting schedule.
-     * @dev The exponent is set to 1, making the vesting linear.
-     * @param baseSchedule_ Base schedule data for the new schedule.
-     * @return The ID of the created schedule.
+     * @notice Validates the base schedule parameters.
+     * @param schedule_ Base schedule data to be validated.
      */
-    function _createSchedule(
-        BaseSchedule memory baseSchedule_
-    ) internal virtual returns (uint256) {
-        _validateSchedule(baseSchedule_);
-
-        _schedules[++scheduleId] = Schedule({
-            scheduleData: baseSchedule_,
-            exponent: LINEAR_EXPONENT
-        });
-
-        emit ScheduleCreated(scheduleId);
-
-        return scheduleId;
-    }
-
-    /**
-     * @notice Creates a new vesting schedule with a custom exponent.
-     * @param schedule_ Schedule data for the new schedule.
-     * @return The ID of the created schedule.
-     */
-    function _createSchedule(Schedule memory schedule_) internal virtual returns (uint256) {
+    function _validateSchedule(BaseSchedule memory schedule_) internal pure {
         require(
-            schedule_.exponent > 0,
-            "VestingWallet: cannot create schedule with zero exponent"
+            schedule_.durationInPeriods > 0 && schedule_.secondsInPeriod > 0,
+            "VestingWallet: cannot create schedule with zero duration or zero seconds in period"
         );
-
-        _validateSchedule(schedule_.scheduleData);
-
-        _schedules[++scheduleId] = schedule_;
-
-        emit ScheduleCreated(scheduleId);
-
-        return scheduleId;
+        require(
+            schedule_.cliffInPeriods < schedule_.durationInPeriods,
+            "VestingWallet: cliff cannot be greater than duration"
+        );
     }
 
     /**
-     * @notice Creates a new vesting contract.
-     * @param vesting_ Vesting data for the new contract.
-     * @return The ID of the created vesting contract.
+     * @notice Validates the vesting parameters.
+     * @param vesting_ Vesting data to be validated.
      */
-    function _createVesting(VestingData memory vesting_) internal virtual returns (uint256) {
+    function _validateVesting(VestingData memory vesting_) internal pure {
         require(
             vesting_.vestingStartTime > 0,
             "VestingWallet: cannot create vesting for zero time"
@@ -350,41 +374,22 @@ abstract contract Vesting is Initializable {
             vesting_.vestingToken != address(0),
             "VestingWallet: vesting token cannot be zero address"
         );
-
-        Schedule storage _schedule = _schedules[vesting_.scheduleId];
-
-        require(
-            vesting_.vestingStartTime +
-                _schedule.scheduleData.durationInPeriods *
-                _schedule.scheduleData.secondsInPeriod >
-                block.timestamp,
-            "VestingWallet: cannot create vesting for a past date"
-        );
-
-        uint256 _currentVestingId = ++vestingId;
-
-        _beneficiaryIds[vesting_.beneficiary].add(_currentVestingId);
-
-        _vestings[_currentVestingId] = vesting_;
-
-        emit VestingCreated(_currentVestingId, vesting_.beneficiary, vesting_.vestingToken);
-
-        return _currentVestingId;
     }
 
     /**
-     * @notice Validates the base schedule parameters.
-     * @param schedule_ Base schedule data to be validated.
+     * @notice Calculates the elapsed periods.
+     * @param startTime_ The starting time of the vesting.
+     * @param timestampUpTo_ The timestamp up to which the calculation is performed.
+     * @param secondsInPeriod_ The duration of each vesting period in seconds.
+     * @return The number of elapsed periods.
      */
-    function _validateSchedule(BaseSchedule memory schedule_) private pure {
-        require(
-            schedule_.durationInPeriods > 0 && schedule_.secondsInPeriod > 0,
-            "VestingWallet: cannot create schedule with zero duration or zero seconds in period"
-        );
-        require(
-            schedule_.cliffInPeriods < schedule_.durationInPeriods,
-            "VestingWallet: cliff cannot be greater than duration"
-        );
+    function _calculateElapsedPeriods(
+        uint256 startTime_,
+        uint256 timestampUpTo_,
+        uint256 secondsInPeriod_
+    ) internal pure returns (uint256) {
+        return
+            timestampUpTo_ > startTime_ ? (timestampUpTo_ - startTime_) / (secondsInPeriod_) : 0;
     }
 
     /**

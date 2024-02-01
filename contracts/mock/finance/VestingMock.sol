@@ -5,11 +5,11 @@ import {Vesting} from "../../finance/Vesting.sol";
 import {ERC20Mock} from "../tokens/ERC20Mock.sol";
 
 contract VestingMock is Vesting {
-    constructor() {
-        __VestingMock_init();
+    function __VestingMock_init() public initializer {
+        __Vesting_init();
     }
 
-    function __VestingMock_init() public initializer {
+    function vestingInit() public {
         __Vesting_init();
     }
 
