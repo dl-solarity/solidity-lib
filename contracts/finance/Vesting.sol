@@ -9,26 +9,59 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 
 import {PRECISION} from "../utils/Globals.sol";
 
+/**
+ * @title Vesting
+ * @notice The Abstract Vesting Contract serves as a robust module
+ * designed to seamlessly manage vestings and associated schedules for
+ * multiple beneficiaries and ERC20 tokens. This module stands out for its
+ * flexibility, offering support for both linear and exponential vesting calculations out of the box.
+ */
 abstract contract Vesting is Initializable {
     using MathUpgradeable for uint256;
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
 
+    /**
+     * @notice Emitted when a new schedule is created.
+     * @param scheduleId The ID of the created schedule.
+     */
     event ScheduleCreated(uint256 indexed scheduleId);
+
+    /**
+     * @notice Emitted when a new vesting contract is created.
+     * @param vestingId The ID of the created vesting contract.
+     * @param beneficiary The beneficiary of the vesting contract.
+     * @param token The ERC20 token address used for the vesting.
+     */
     event VestingCreated(uint256 indexed vestingId, address beneficiary, address token);
+
+    /**
+     * @notice Emitted when funds are withdrawn from a vesting contract.
+     * @param vestingId The ID of the vesting contract from which funds are withdrawn.
+     * @param amount The amount of funds withdrawn.
+     */
     event WithdrawnFromVesting(uint256 indexed vestingId, uint256 amount);
 
+    /**
+     * @notice Struct defining the base schedule parameters.
+     */
     struct BaseSchedule {
         uint256 secondsInPeriod;
         uint256 durationInPeriods;
         uint256 cliffInPeriods;
     }
 
+    /**
+     * @notice Struct defining a vesting schedule, extending BaseSchedule.
+     */
     struct Schedule {
         BaseSchedule scheduleData;
         uint256 exponent;
     }
 
+    /**
+     * @notice Struct defining vesting data for an individual beneficiary.
+     */
     struct VestingData {
         uint256 vestingStartTime;
         address beneficiary;
@@ -50,16 +83,34 @@ abstract contract Vesting is Initializable {
     // beneficiary => vesting ids
     mapping(address => EnumerableSet.UintSet) private _beneficiaryIds;
 
+    /**
+     * @notice Constructor.
+     */
     function __Vesting_init() internal onlyInitializing {}
 
+    /**
+     * @notice Retrieves a schedule by ID.
+     * @param scheduleId_ The ID of the schedule to retrieve.
+     * @return Schedule struct.
+     */
     function getSchedule(uint256 scheduleId_) public view virtual returns (Schedule memory) {
         return _schedules[scheduleId_];
     }
 
+    /**
+     * @notice Retrieves vesting data by ID.
+     * @param vestingId_ The ID of the vesting contract to retrieve.
+     * @return VestingData struct.
+     */
     function getVesting(uint256 vestingId_) public view virtual returns (VestingData memory) {
         return _vestings[vestingId_];
     }
 
+    /**
+     * @notice Retrieves all vesting data for a beneficiary.
+     * @param beneficiary_ The address of the beneficiary.
+     * @return An array of VestingData struct.
+     */
     function getVestings(address beneficiary_) public view virtual returns (VestingData[] memory) {
         uint256[] memory ids_ = _beneficiaryIds[beneficiary_].values();
         VestingData[] memory beneficiaryVestings_ = new VestingData[](ids_.length);
@@ -71,10 +122,20 @@ abstract contract Vesting is Initializable {
         return beneficiaryVestings_;
     }
 
+    /**
+     * @notice Retrieves all vesting IDs for a beneficiary.
+     * @param beneficiary_ The address of the beneficiary.
+     * @return An array of uint256 representing all vesting IDs for the beneficiary.
+     */
     function getVestingIds(address beneficiary_) public view virtual returns (uint256[] memory) {
         return _beneficiaryIds[beneficiary_].values();
     }
 
+    /**
+     * @notice Retrieves the vested amount for a vesting ID.
+     * @param vestingId_ The ID of the vesting contract.
+     * @return The amount of tokens vested.
+     */
     function getVestedAmount(uint256 vestingId_) public view virtual returns (uint256) {
         VestingData storage _vesting = _vestings[vestingId_];
         Schedule storage _schedule = _schedules[_vesting.scheduleId];
@@ -82,6 +143,11 @@ abstract contract Vesting is Initializable {
         return _getVestedAmount(_vesting, _schedule, block.timestamp);
     }
 
+    /**
+     * @notice Retrieves the withdrawable amount for a vesting ID.
+     * @param vestingId_ The ID of the vesting contract.
+     * @return The amount of tokens available to withdraw.
+     */
     function getWithdrawableAmount(uint256 vestingId_) public view virtual returns (uint256) {
         VestingData storage _vesting = _vestings[vestingId_];
         Schedule storage _schedule = _schedules[_vesting.scheduleId];
@@ -89,6 +155,10 @@ abstract contract Vesting is Initializable {
         return _getWithdrawableAmount(_vesting, _schedule, block.timestamp);
     }
 
+    /**
+     * @notice Withdraws funds from a vesting contract.
+     * @param vestingId_ The ID of the vesting contract.
+     */
     function withdrawFromVesting(uint256 vestingId_) public virtual {
         VestingData storage _vesting = _vestings[vestingId_];
 
@@ -116,6 +186,13 @@ abstract contract Vesting is Initializable {
         emit WithdrawnFromVesting(vestingId_, amountToPay_);
     }
 
+    /**
+     * @notice Calculates the elapsed periods.
+     * @param startTime_ The starting time of the vesting.
+     * @param timestampUpTo_ The timestamp up to which the calculation is performed.
+     * @param secondsInPeriod_ The duration of each vesting period in seconds.
+     * @return The number of elapsed periods.
+     */
     function _calculateElapsedPeriods(
         uint256 startTime_,
         uint256 timestampUpTo_,
@@ -125,6 +202,13 @@ abstract contract Vesting is Initializable {
             timestampUpTo_ > startTime_ ? (timestampUpTo_ - startTime_) / (secondsInPeriod_) : 0;
     }
 
+    /**
+     * @notice Retrieves the vested amount for a vesting ID.
+     * @param vesting Vesting data for the vesting contract.
+     * @param schedule Schedule data for the vesting contract.
+     * @param timestampUpTo_ The timestamp up to which the calculation is performed.
+     * @return The amount of tokens vested.
+     */
     function _getVestedAmount(
         VestingData storage vesting,
         Schedule storage schedule,
@@ -139,6 +223,13 @@ abstract contract Vesting is Initializable {
             );
     }
 
+    /**
+     * @notice Retrieves the withdrawable amount for a vesting ID.
+     * @param vesting Vesting data for the vesting contract.
+     * @param schedule Schedule data for the vesting contract.
+     * @param timestampUpTo_ The timestamp up to which the calculation is performed.
+     * @return The amount of tokens withdrawable.
+     */
     function _getWithdrawableAmount(
         VestingData storage vesting,
         Schedule storage schedule,
@@ -153,6 +244,14 @@ abstract contract Vesting is Initializable {
             ) - vesting.paidAmount;
     }
 
+    /**
+     * @notice Performs the vesting calculation.
+     * @param schedule_ Schedule data for the vesting contract.
+     * @param totalVestingAmount_ The total amount of tokens to be vested.
+     * @param vestingStartTime_ The starting time of the vesting.
+     * @param timestampUpTo_ The timestamp up to which the calculation is performed.
+     * @return vestedAmount_ The amount of tokens vested.
+     */
     function _vestingCalculation(
         Schedule memory schedule_,
         uint256 totalVestingAmount_,
@@ -188,6 +287,12 @@ abstract contract Vesting is Initializable {
         return vestedAmount_.min(totalVestingAmount_);
     }
 
+    /**
+     * @notice Creates a new vesting schedule.
+     * @dev The exponent is set to 1, making the vesting linear.
+     * @param baseSchedule_ Base schedule data for the new schedule.
+     * @return The ID of the created schedule.
+     */
     function _createSchedule(
         BaseSchedule memory baseSchedule_
     ) internal virtual returns (uint256) {
@@ -198,9 +303,16 @@ abstract contract Vesting is Initializable {
             exponent: LINEAR_EXPONENT
         });
 
+        emit ScheduleCreated(scheduleId);
+
         return scheduleId;
     }
 
+    /**
+     * @notice Creates a new vesting schedule with a custom exponent.
+     * @param schedule_ Schedule data for the new schedule.
+     * @return The ID of the created schedule.
+     */
     function _createSchedule(Schedule memory schedule_) internal virtual returns (uint256) {
         require(
             schedule_.exponent > 0,
@@ -216,6 +328,11 @@ abstract contract Vesting is Initializable {
         return scheduleId;
     }
 
+    /**
+     * @notice Creates a new vesting contract.
+     * @param vesting_ Vesting data for the new contract.
+     * @return The ID of the created vesting contract.
+     */
     function _createVesting(VestingData memory vesting_) internal virtual returns (uint256) {
         require(
             vesting_.vestingStartTime > 0,
@@ -241,7 +358,7 @@ abstract contract Vesting is Initializable {
                 _schedule.scheduleData.durationInPeriods *
                 _schedule.scheduleData.secondsInPeriod >
                 block.timestamp,
-            "VestingWallet: cannot create vesting for past date"
+            "VestingWallet: cannot create vesting for a past date"
         );
 
         uint256 _currentVestingId = ++vestingId;
@@ -255,6 +372,10 @@ abstract contract Vesting is Initializable {
         return _currentVestingId;
     }
 
+    /**
+     * @notice Validates the base schedule parameters.
+     * @param schedule_ Base schedule data to be validated.
+     */
     function _validateSchedule(BaseSchedule memory schedule_) private pure {
         require(
             schedule_.durationInPeriods > 0 && schedule_.secondsInPeriod > 0,
@@ -266,6 +387,12 @@ abstract contract Vesting is Initializable {
         );
     }
 
+    /**
+     * @notice Implementation of exponentiation by squaring with fixed precision.
+     * @param base_ The base value.
+     * @param exponent_ The exponent value.
+     * @return result_ The result of the base raised to the exponent.
+     */
     function _raiseToPower(
         uint256 base_,
         uint256 exponent_
