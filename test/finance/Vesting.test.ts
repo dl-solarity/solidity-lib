@@ -1,15 +1,12 @@
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { expect } from "chai";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { MAX_UINT256, ZERO_ADDR } from "@/scripts/utils/constants";
+import { precision, wei } from "@/scripts/utils/utils";
 import { Reverter } from "@/test/helpers/reverter";
-import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
-import { ZERO_ADDR, MAX_UINT256 } from "@/scripts/utils/constants";
-import { wei, precision } from "@/scripts/utils/utils";
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { expect } from "chai";
+import { ethers } from "hardhat";
 
-import { VestingMock, VestingMock__factory, ERC20Mock, ERC20Mock__factory, Vesting } from "@ethers-v6";
-import { scheduler } from "timers/promises";
-import exp from "constants";
+import { ERC20Mock, ERC20Mock__factory, Vesting, VestingMock, VestingMock__factory } from "@ethers-v6";
 
 describe.only("Vesting", () => {
   let reverter = new Reverter();
@@ -30,7 +27,7 @@ describe.only("Vesting", () => {
   const durationInPeriods = 30n; // days
   const cliffInPeriods = 0n;
   const vestingAmount = wei(100_000);
-  const exponent = 3n;
+  const exponent = 4n;
 
   before(async () => {
     [owner, alice] = await ethers.getSigners();
@@ -330,7 +327,7 @@ describe.only("Vesting", () => {
       let exponentialVestedAmount = await calculateVestedAmount(
         BigInt(exponentialVesting.vestingStartTime),
         BigInt(exponentialVesting.vestingAmount),
-        3n,
+        4n,
       );
 
       expect(await vesting.getVestedAmount(linearVestingId)).to.be.equal(linearVestedAmount);
@@ -378,6 +375,47 @@ describe.only("Vesting", () => {
       );
     });
   });
+  describe("check calculations", () => {
+    let defaultSchedule: Schedule;
 
-  describe("check calculations", () => {});
+    beforeEach(async () => {
+      defaultSchedule = {
+        scheduleData: {
+          secondsInPeriod,
+          durationInPeriods,
+          cliffInPeriods,
+        },
+        exponent: exponent,
+      };
+    });
+
+    it("should return 0 if vesting has not started", async () => {
+      let vestingStartTime = BigInt(await time.latest());
+      let timestampUpTo = 0n;
+
+      expect(
+        await vesting.vestingCalculation(defaultSchedule, vestingAmount, vestingStartTime, timestampUpTo),
+      ).to.be.equal(0);
+    });
+
+    it("should return 0 if cliff is active", async () => {
+      let vestingStartTime = BigInt(await time.latest());
+      let timestampUpTo = vestingStartTime + secondsInPeriod - 1n;
+
+      defaultSchedule.scheduleData.cliffInPeriods = 1n;
+
+      expect(
+        await vesting.vestingCalculation(defaultSchedule, vestingAmount, vestingStartTime, timestampUpTo),
+      ).to.be.equal(0);
+    });
+
+    it("should return 0 if start time the same as timestamp up to", async () => {
+      let vestingStartTime = BigInt(await time.latest());
+      let timestampUpTo = vestingStartTime;
+
+      expect(
+        await vesting.vestingCalculation(defaultSchedule, vestingAmount, vestingStartTime, timestampUpTo),
+      ).to.be.equal(0);
+    });
+  });
 });
