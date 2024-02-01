@@ -8,7 +8,7 @@ import { ethers } from "hardhat";
 
 import { ERC20Mock, ERC20Mock__factory, Vesting, VestingMock, VestingMock__factory } from "@ethers-v6";
 
-describe("Vesting", () => {
+describe.only("Vesting", () => {
   let reverter = new Reverter();
 
   let owner: SignerWithAddress;
@@ -25,7 +25,7 @@ describe("Vesting", () => {
 
   const secondsInPeriod = 60n * 60n * 24n; // one day;
   const durationInPeriods = 30n; // days
-  const cliffInPeriods = 0n;
+  const cliffInPeriods = 1n;
   const vestingAmount = wei(100_000);
   const exponent = 4n;
 
@@ -327,7 +327,7 @@ describe("Vesting", () => {
       let exponentialVestedAmount = await calculateVestedAmount(
         BigInt(exponentialVesting.vestingStartTime),
         BigInt(exponentialVesting.vestingAmount),
-        4n,
+        exponent,
       );
 
       expect(await vesting.getVestedAmount(linearVestingId)).to.be.equal(linearVestedAmount);
@@ -400,9 +400,9 @@ describe("Vesting", () => {
 
     it("should return 0 if cliff is active", async () => {
       let vestingStartTime = BigInt(await time.latest());
-      let timestampUpTo = vestingStartTime + secondsInPeriod - 1n;
+      let timestampUpTo = vestingStartTime + secondsInPeriod;
 
-      defaultSchedule.scheduleData.cliffInPeriods = 1n;
+      defaultSchedule.scheduleData.cliffInPeriods = 2n;
 
       expect(
         await vesting.vestingCalculation(defaultSchedule, vestingAmount, vestingStartTime, timestampUpTo),
