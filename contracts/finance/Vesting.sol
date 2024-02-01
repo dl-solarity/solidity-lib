@@ -6,7 +6,6 @@ import {MathUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/math/Ma
 
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
 import {PRECISION} from "../utils/Globals.sol";
 
@@ -16,17 +15,8 @@ abstract contract Vesting is Initializable {
     using EnumerableSet for EnumerableSet.UintSet;
 
     event ScheduleCreated(uint256 indexed scheduleId);
-    event VestingCreated(
-        uint256 indexed vestingId,
-        address indexed beneficiary,
-        address indexed token
-    );
-    event WithdrawnFromVesting(
-        uint256 indexed vestingId,
-        address indexed beneficiary,
-        address indexed token,
-        uint256 amount
-    );
+    event VestingCreated(uint256 indexed vestingId, address beneficiary, address token);
+    event WithdrawnFromVesting(uint256 indexed vestingId, uint256 amount);
 
     struct BaseSchedule {
         uint256 secondsInPeriod;
@@ -50,8 +40,8 @@ abstract contract Vesting is Initializable {
 
     uint256 public constant LINEAR_EXPONENT = 1;
 
-    uint256 private _scheduleId;
-    uint256 private _vestingId;
+    uint256 public scheduleId;
+    uint256 public vestingId;
 
     // id => schedule
     mapping(uint256 => Schedule) private _schedules;
@@ -61,45 +51,6 @@ abstract contract Vesting is Initializable {
     mapping(address => EnumerableSet.UintSet) private _beneficiaryIds;
 
     function __Vesting_init() internal onlyInitializing {}
-
-    function _createSchedule(Schedule memory schedule_) internal virtual returns (uint256) {
-        require(
-            schedule_.exponent > 0,
-            "VestingWallet: cannot create schedule with zero exponent"
-        );
-
-        _validateSchedule(schedule_.scheduleData);
-
-        _schedules[++_scheduleId] = schedule_;
-
-        emit ScheduleCreated(_scheduleId);
-
-        return _scheduleId;
-    }
-
-    function _createSchedule(
-        BaseSchedule memory baseSchedule_
-    ) internal virtual returns (uint256) {
-        _validateSchedule(baseSchedule_);
-
-        _schedules[++_scheduleId] = Schedule({
-            scheduleData: baseSchedule_,
-            exponent: LINEAR_EXPONENT
-        });
-
-        return _scheduleId;
-    }
-
-    function _validateSchedule(BaseSchedule memory schedule_) private pure {
-        require(
-            schedule_.durationInPeriods > 0 && schedule_.secondsInPeriod > 0,
-            "VestingWallet: cannot create schedule with zero duration or zero seconds in period"
-        );
-        require(
-            schedule_.cliffInPeriods < schedule_.durationInPeriods,
-            "VestingWallet: cliff cannot be greater than duration"
-        );
-    }
 
     function getSchedule(uint256 scheduleId_) public view virtual returns (Schedule memory) {
         return _schedules[scheduleId_];
@@ -124,13 +75,6 @@ abstract contract Vesting is Initializable {
         return _beneficiaryIds[beneficiary_].values();
     }
 
-    function getWithdrawableAmount(uint256 vestingId_) public view virtual returns (uint256) {
-        VestingData storage _vesting = _vestings[vestingId_];
-        Schedule storage _schedule = _schedules[_vesting.scheduleId];
-
-        return _getWithdrawableAmount(_vesting, _schedule, block.timestamp);
-    }
-
     function getVestedAmount(uint256 vestingId_) public view virtual returns (uint256) {
         VestingData storage _vesting = _vestings[vestingId_];
         Schedule storage _schedule = _schedules[_vesting.scheduleId];
@@ -138,32 +82,138 @@ abstract contract Vesting is Initializable {
         return _getVestedAmount(_vesting, _schedule, block.timestamp);
     }
 
-    function _getWithdrawableAmount(
-        VestingData storage vesting,
-        Schedule storage schedule,
-        uint256 timestamp_
-    ) internal view virtual returns (uint256) {
+    function getWithdrawableAmount(uint256 vestingId_) public view virtual returns (uint256) {
+        VestingData storage _vesting = _vestings[vestingId_];
+        Schedule storage _schedule = _schedules[_vesting.scheduleId];
+
+        return _getWithdrawableAmount(_vesting, _schedule, block.timestamp);
+    }
+
+    function withdrawFromVesting(uint256 vestingId_) public virtual {
+        VestingData storage _vesting = _vestings[vestingId_];
+
+        require(
+            msg.sender == _vesting.beneficiary,
+            "VestingWallet: only beneficiary can withdraw from his vesting"
+        );
+        require(_vesting.vestingAmount > 0, "VestingWallet: vesting amount is zero");
+        require(
+            _vesting.paidAmount < _vesting.vestingAmount,
+            "VestingWallet: nothing to withdraw"
+        );
+        require(
+            _vesting.vestingToken != address(0),
+            "VestingWallet: vesting token is zero address"
+        );
+
+        uint256 amountToPay_ = getWithdrawableAmount(vestingId_);
+        address token_ = _vesting.vestingToken;
+
+        _vesting.paidAmount += amountToPay_;
+
+        IERC20(token_).safeTransfer(msg.sender, amountToPay_);
+
+        emit WithdrawnFromVesting(vestingId_, amountToPay_);
+    }
+
+    function _calculateElapsedPeriods(
+        uint256 startTime_,
+        uint256 timestampUpTo_,
+        uint256 secondsInPeriod_
+    ) internal pure returns (uint256) {
         return
-            _vestingCalculation(
-                schedule,
-                vesting.vestingAmount,
-                vesting.vestingStartTime,
-                timestamp_
-            ) - vesting.paidAmount;
+            timestampUpTo_ > startTime_ ? (timestampUpTo_ - startTime_) / (secondsInPeriod_) : 0;
     }
 
     function _getVestedAmount(
         VestingData storage vesting,
         Schedule storage schedule,
-        uint256 timestamp_
+        uint256 timestampUpTo_
     ) internal view virtual returns (uint256) {
         return
             _vestingCalculation(
                 schedule,
                 vesting.vestingAmount,
                 vesting.vestingStartTime,
-                timestamp_
+                timestampUpTo_
             );
+    }
+
+    function _getWithdrawableAmount(
+        VestingData storage vesting,
+        Schedule storage schedule,
+        uint256 timestampUpTo_
+    ) internal view virtual returns (uint256) {
+        return
+            _vestingCalculation(
+                schedule,
+                vesting.vestingAmount,
+                vesting.vestingStartTime,
+                timestampUpTo_
+            ) - vesting.paidAmount;
+    }
+
+    function _vestingCalculation(
+        Schedule memory schedule_,
+        uint256 totalVestingAmount_,
+        uint256 vestingStartTime_,
+        uint256 timestampUpTo_
+    ) internal view virtual returns (uint256 vestedAmount_) {
+        BaseSchedule memory baseData_ = schedule_.scheduleData;
+
+        if (vestingStartTime_ > timestampUpTo_) return vestedAmount_;
+
+        uint256 elapsedPeriods_ = _calculateElapsedPeriods(
+            vestingStartTime_,
+            timestampUpTo_,
+            baseData_.secondsInPeriod
+        );
+
+        if (elapsedPeriods_ <= baseData_.cliffInPeriods) {
+            return 0;
+        }
+
+        if (elapsedPeriods_ >= baseData_.durationInPeriods) {
+            return totalVestingAmount_;
+        }
+
+        uint256 elapsedPeriodsPercentage_ = (elapsedPeriods_ * PRECISION) /
+            baseData_.durationInPeriods;
+
+        vestedAmount_ =
+            (_raiseToPower(elapsedPeriodsPercentage_, schedule_.exponent) *
+                (totalVestingAmount_)) /
+            _raiseToPower(PRECISION, schedule_.exponent);
+
+        return vestedAmount_.min(totalVestingAmount_);
+    }
+
+    function _createSchedule(
+        BaseSchedule memory baseSchedule_
+    ) internal virtual returns (uint256) {
+        _validateSchedule(baseSchedule_);
+
+        _schedules[++scheduleId] = Schedule({
+            scheduleData: baseSchedule_,
+            exponent: LINEAR_EXPONENT
+        });
+
+        return scheduleId;
+    }
+
+    function _createSchedule(Schedule memory schedule_) internal virtual returns (uint256) {
+        require(
+            schedule_.exponent > 0,
+            "VestingWallet: cannot create schedule with zero exponent"
+        );
+
+        _validateSchedule(schedule_.scheduleData);
+
+        _schedules[++scheduleId] = schedule_;
+
+        emit ScheduleCreated(scheduleId);
+
+        return scheduleId;
     }
 
     function _createVesting(VestingData memory vesting_) internal virtual returns (uint256) {
@@ -179,6 +229,10 @@ abstract contract Vesting is Initializable {
             vesting_.beneficiary != address(0),
             "VestingWallet: cannot create vesting for zero address"
         );
+        require(
+            vesting_.vestingToken != address(0),
+            "VestingWallet: vesting token cannot be zero address"
+        );
 
         Schedule storage _schedule = _schedules[vesting_.scheduleId];
 
@@ -190,81 +244,26 @@ abstract contract Vesting is Initializable {
             "VestingWallet: cannot create vesting for past date"
         );
 
-        _vestingId++;
+        uint256 _currentVestingId = ++vestingId;
 
-        _beneficiaryIds[vesting_.beneficiary].add(_vestingId);
+        _beneficiaryIds[vesting_.beneficiary].add(_currentVestingId);
 
-        _vestings[_vestingId] = vesting_;
+        _vestings[_currentVestingId] = vesting_;
 
-        emit VestingCreated(_vestingId, vesting_.beneficiary, vesting_.vestingToken);
+        emit VestingCreated(_currentVestingId, vesting_.beneficiary, vesting_.vestingToken);
 
-        return _vestingId;
+        return _currentVestingId;
     }
 
-    function _withdrawFromVesting(
-        uint256 vestingId_
-    ) internal virtual returns (uint256 _amountToPay, address _token) {
-        VestingData storage _vesting = _vestings[vestingId_];
-
+    function _validateSchedule(BaseSchedule memory schedule_) private pure {
         require(
-            msg.sender == _vesting.beneficiary,
-            "VestingWallet: only beneficiary can withdraw from his vesting"
+            schedule_.durationInPeriods > 0 && schedule_.secondsInPeriod > 0,
+            "VestingWallet: cannot create schedule with zero duration or zero seconds in period"
         );
-
-        _amountToPay = getWithdrawableAmount(vestingId_);
-        _token = _vesting.vestingToken;
-
-        _vesting.paidAmount += _amountToPay;
-
-        emit WithdrawnFromVesting(
-            vestingId_,
-            _vesting.beneficiary,
-            _vesting.vestingToken,
-            _amountToPay
+        require(
+            schedule_.cliffInPeriods < schedule_.durationInPeriods,
+            "VestingWallet: cliff cannot be greater than duration"
         );
-    }
-
-    function _vestingCalculation(
-        Schedule memory schedule_,
-        uint256 totalVestingAmount_,
-        uint256 vestingStartTime_,
-        uint256 timestamp_
-    ) internal view virtual returns (uint256 _vestedAmount) {
-        BaseSchedule memory baseData_ = schedule_.scheduleData;
-
-        if (vestingStartTime_ > timestamp_) return _vestedAmount;
-
-        uint256 elapsedPeriods_ = _calculateElapsedPeriods(
-            vestingStartTime_,
-            timestamp_,
-            baseData_.secondsInPeriod
-        );
-
-        if (elapsedPeriods_ <= baseData_.cliffInPeriods) {
-            return 0;
-        }
-
-        if (elapsedPeriods_ >= baseData_.durationInPeriods) {
-            return totalVestingAmount_;
-        }
-
-        uint256 elapsedPeriodsPercentage_ = (elapsedPeriods_ * PRECISION) /
-            baseData_.durationInPeriods;
-
-        _vestedAmount =
-            (_raiseToPower(elapsedPeriodsPercentage_, schedule_.exponent) *
-                (totalVestingAmount_)) /
-            _raiseToPower(PRECISION, schedule_.exponent);
-
-        return _vestedAmount.min(totalVestingAmount_);
-    }
-
-    function _calculateElapsedPeriods(
-        uint256 startTime_,
-        uint256 timestamp_,
-        uint256 secondsInPeriod_
-    ) private pure returns (uint256) {
-        return timestamp_ > startTime_ ? (timestamp_ - startTime_) / (secondsInPeriod_) : 0;
     }
 
     function _raiseToPower(

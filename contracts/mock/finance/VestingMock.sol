@@ -30,10 +30,4 @@ contract VestingMock is Vesting {
             vestingData_.vestingAmount
         );
     }
-
-    function withdrawFromVesting(uint256 vestingId_) public {
-        (uint256 _amountToPay, address _vestingToken) = _withdrawFromVesting(vestingId_);
-
-        ERC20Mock(_vestingToken).transferFrom(address(this), msg.sender, _amountToPay);
-    }
 }
