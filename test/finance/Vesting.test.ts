@@ -59,6 +59,7 @@ describe("Vesting", () => {
       await expect(vesting.vestingInit()).to.be.revertedWith("Initializable: contract is not initializing");
     });
   });
+
   describe("create schedule", () => {
     it("should correctly create linear schedule", async () => {
       let baseSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
@@ -116,6 +117,7 @@ describe("Vesting", () => {
       );
     });
   });
+
   describe("create vesting", () => {
     let linearSchedule: BaseSchedule;
     let linearScheduleId: bigint;
@@ -228,6 +230,7 @@ describe("Vesting", () => {
       );
     });
   });
+
   describe("withdraw from vesting", () => {
     let linearVesting: Vesting;
     let exponentialVesting: Vesting;
@@ -375,6 +378,7 @@ describe("Vesting", () => {
       );
     });
   });
+
   describe("check calculations", () => {
     let defaultSchedule: Schedule;
 
