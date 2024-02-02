@@ -32,12 +32,17 @@ contract VestingMock is Vesting {
     }
 
     function vestingCalculation(
-        Schedule memory schedule_,
+        uint256 scheduleId_,
         uint256 totalVestingAmount_,
         uint256 vestingStartTime_,
         uint256 timestampUpTo_
     ) public view returns (uint256 vestedAmount_) {
         return
-            _vestingCalculation(schedule_, totalVestingAmount_, vestingStartTime_, timestampUpTo_);
+            _vestingCalculation(
+                scheduleId_,
+                totalVestingAmount_,
+                vestingStartTime_,
+                timestampUpTo_
+            );
     }
 }

@@ -15,6 +15,59 @@ import {PRECISION} from "../utils/Globals.sol";
  * designed to seamlessly manage vestings and associated schedules for
  * multiple beneficiaries and ERC20 tokens. This module stands out for its
  * flexibility, offering support for both linear and exponential vesting calculations out of the box.
+ *
+ * Linear and Exponential Vesting:
+ *
+ * Linear vesting has a constant release rate over time (exponent = 1), resulting in a linear graph.
+ * Exponential vesting allows for a more flexible release rate, defined by the exponent.
+ * Higher exponents result in a steeper release curve.
+ *
+ * Vesting formula:
+ *
+ * vestedAmount = elapsedPeriodsPercentage ** exponent * (totalVestingAmount_)).
+ *
+ * Key concepts:
+ *
+ * Vesting contract contains two main components: Schedule struct and Vesting struct.
+ * Each vesting contains scheduleId, which is associated with a schedule struct.
+ *
+ * You can create as much Schedules as needed with different parameters with an associated scheduleId.
+ * Then a schedule can be assigned to vestings. So it's possible to create multiple vestings with the same schedule.
+ *
+ * Schedule defines the base structure for the vesting and how the vested amount will be calculated,
+ * with the following parameters such as the duration, cliff, period, and exponent.
+ *
+ * Schedule parameters description:
+ *  - secondsInPeriod: The duration of each vesting period in seconds. (i.e. 86,400 sec for 1 day)
+ *  - durationInPeriods: The total number of periods for the vesting. (i.e. 20 for 20 days)
+ *  - cliffInPeriods: The number of periods before the vesting starts. (i.e. 3 for 3 days).
+ *  - exponent: The exponent for the vesting calculation. (i.e. 1 for linear vesting, 5 for exponential)
+ *
+ * Example of schedule:
+ * Let's define a schedule with the following parameters:
+ * - secondsInPeriod = 86,400 (1 day)
+ * - durationInPeriods = 20 (20 days)
+ * - cliffInPeriods = 3 (3 days)
+ * - exponent = 1 (linear vesting)
+ *
+ * Using the provided schedule, you can create a vesting that will release vested amount linearly over 20 days with a 3-day cliff.
+ * Let's say you have 1000 tokens to vest; then the vested amount will be released as follows:
+ * - 1 day: 0 tokens
+ * - 2 days: 0 tokens
+ * - 3 days: 0 tokens
+ * - 4 days: 200 tokens
+ * - 5 days: 250 tokens
+ * ...
+ * - 20 days: 1000 tokens
+ *
+ * P.S.
+ * For defining linear vesting, the exponent should be set to 1,
+ * or there is an option to create a linear schedule just by defining the baseSchedule struct
+ * and the exponent will be automatically set to 1.
+ *
+ * For the creation of exponential vesting, the exponent should be set to a value greater than 1.
+ *
+ * It's not possible to create a schedule with an exponent equal to 0.
  */
 abstract contract Vesting is Initializable {
     using MathUpgradeable for uint256;
@@ -164,9 +217,8 @@ abstract contract Vesting is Initializable {
      */
     function getVestedAmount(uint256 vestingId_) public view virtual returns (uint256) {
         VestingData storage _vesting = _vestings[vestingId_];
-        Schedule storage _schedule = _schedules[_vesting.scheduleId];
 
-        return _getVestedAmount(_vesting, _schedule, block.timestamp);
+        return _getVestedAmount(_vesting, _vesting.scheduleId, block.timestamp);
     }
 
     /**
@@ -176,9 +228,8 @@ abstract contract Vesting is Initializable {
      */
     function getWithdrawableAmount(uint256 vestingId_) public view virtual returns (uint256) {
         VestingData storage _vesting = _vestings[vestingId_];
-        Schedule storage _schedule = _schedules[_vesting.scheduleId];
 
-        return _getWithdrawableAmount(_vesting, _schedule, block.timestamp);
+        return _getWithdrawableAmount(_vesting, _vesting.scheduleId, block.timestamp);
     }
 
     /**
@@ -254,18 +305,18 @@ abstract contract Vesting is Initializable {
     /**
      * @notice Retrieves the vested amount for a vesting ID.
      * @param vesting Vesting data for the vesting contract.
-     * @param schedule Schedule data for the vesting contract.
+     * @param scheduleId_ Id for the associated schedule.
      * @param timestampUpTo_ The timestamp up to which the calculation is performed.
      * @return The amount of tokens vested.
      */
     function _getVestedAmount(
         VestingData storage vesting,
-        Schedule storage schedule,
+        uint256 scheduleId_,
         uint256 timestampUpTo_
     ) internal view virtual returns (uint256) {
         return
             _vestingCalculation(
-                schedule,
+                scheduleId_,
                 vesting.vestingAmount,
                 vesting.vestingStartTime,
                 timestampUpTo_
@@ -275,18 +326,18 @@ abstract contract Vesting is Initializable {
     /**
      * @notice Retrieves the withdrawable amount for a vesting ID.
      * @param vesting Vesting data for the vesting contract.
-     * @param schedule Schedule data for the vesting contract.
+     * @param scheduleId_ Id for the associated schedule.
      * @param timestampUpTo_ The timestamp up to which the calculation is performed.
      * @return The amount of tokens withdrawable.
      */
     function _getWithdrawableAmount(
         VestingData storage vesting,
-        Schedule storage schedule,
+        uint256 scheduleId_,
         uint256 timestampUpTo_
     ) internal view virtual returns (uint256) {
         return
             _vestingCalculation(
-                schedule,
+                scheduleId_,
                 vesting.vestingAmount,
                 vesting.vestingStartTime,
                 timestampUpTo_
@@ -295,19 +346,20 @@ abstract contract Vesting is Initializable {
 
     /**
      * @notice Performs the vesting calculation.
-     * @param schedule_ Schedule data for the vesting contract.
+     * @param scheduleId_ Id for the associated schedule.
      * @param totalVestingAmount_ The total amount of tokens to be vested.
      * @param vestingStartTime_ The starting time of the vesting.
      * @param timestampUpTo_ The timestamp up to which the calculation is performed.
      * @return vestedAmount_ The amount of tokens vested.
      */
     function _vestingCalculation(
-        Schedule memory schedule_,
+        uint256 scheduleId_,
         uint256 totalVestingAmount_,
         uint256 vestingStartTime_,
         uint256 timestampUpTo_
     ) internal view virtual returns (uint256 vestedAmount_) {
-        BaseSchedule memory baseData_ = schedule_.scheduleData;
+        Schedule storage _schedule = _schedules[scheduleId_];
+        BaseSchedule storage _baseData = _schedule.scheduleData;
 
         if (vestingStartTime_ > timestampUpTo_) {
             return vestedAmount_;
@@ -316,24 +368,24 @@ abstract contract Vesting is Initializable {
         uint256 elapsedPeriods_ = _calculateElapsedPeriods(
             vestingStartTime_,
             timestampUpTo_,
-            baseData_.secondsInPeriod
+            _baseData.secondsInPeriod
         );
 
-        if (elapsedPeriods_ <= baseData_.cliffInPeriods) {
+        if (elapsedPeriods_ <= _baseData.cliffInPeriods) {
             return 0;
         }
 
-        if (elapsedPeriods_ >= baseData_.durationInPeriods) {
+        if (elapsedPeriods_ >= _baseData.durationInPeriods) {
             return totalVestingAmount_;
         }
 
         uint256 elapsedPeriodsPercentage_ = (elapsedPeriods_ * PRECISION) /
-            baseData_.durationInPeriods;
+            _baseData.durationInPeriods;
 
         vestedAmount_ =
-            (_raiseToPower(elapsedPeriodsPercentage_, schedule_.exponent) *
+            (_raiseToPower(elapsedPeriodsPercentage_, _schedule.exponent) *
                 (totalVestingAmount_)) /
-            _raiseToPower(PRECISION, schedule_.exponent);
+            _raiseToPower(PRECISION, _schedule.exponent);
 
         return vestedAmount_.min(totalVestingAmount_);
     }

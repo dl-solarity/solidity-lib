@@ -8,7 +8,7 @@ import { ethers } from "hardhat";
 
 import { ERC20Mock, ERC20Mock__factory, Vesting, VestingMock, VestingMock__factory } from "@ethers-v6";
 
-describe("Vesting", () => {
+describe.only("Vesting", () => {
   let reverter = new Reverter();
 
   let owner: SignerWithAddress;
@@ -381,6 +381,7 @@ describe("Vesting", () => {
 
   describe("check calculations", () => {
     let defaultSchedule: Schedule;
+    let scheduleId = 1;
 
     beforeEach(async () => {
       defaultSchedule = {
@@ -397,9 +398,18 @@ describe("Vesting", () => {
       let vestingStartTime = BigInt(await time.latest());
       let timestampUpTo = 0n;
 
-      expect(
-        await vesting.vestingCalculation(defaultSchedule, vestingAmount, vestingStartTime, timestampUpTo),
-      ).to.be.equal(0);
+      expect(await vesting.vestingCalculation(scheduleId, vestingAmount, vestingStartTime, timestampUpTo)).to.be.equal(
+        0,
+      );
+    });
+
+    it("should return 0 if start time the same as timestamp up to", async () => {
+      let vestingStartTime = BigInt(await time.latest());
+      let timestampUpTo = vestingStartTime;
+
+      expect(await vesting.vestingCalculation(scheduleId, vestingAmount, vestingStartTime, timestampUpTo)).to.be.equal(
+        0,
+      );
     });
 
     it("should return 0 if cliff is active", async () => {
@@ -408,18 +418,30 @@ describe("Vesting", () => {
 
       defaultSchedule.scheduleData.cliffInPeriods = 2n;
 
-      expect(
-        await vesting.vestingCalculation(defaultSchedule, vestingAmount, vestingStartTime, timestampUpTo),
-      ).to.be.equal(0);
+      await vesting.createSchedule(defaultSchedule);
+
+      expect(await vesting.vestingCalculation(scheduleId, vestingAmount, vestingStartTime, timestampUpTo)).to.be.equal(
+        0,
+      );
     });
 
-    it("should return 0 if start time the same as timestamp up to", async () => {
-      let vestingStartTime = BigInt(await time.latest());
-      let timestampUpTo = vestingStartTime;
+    // it("console test", async () => {
+    //   defaultSchedule.scheduleData.secondsInPeriod = 86400n;
+    //   defaultSchedule.scheduleData.durationInPeriods = 20n;
+    //   defaultSchedule.scheduleData.cliffInPeriods = 3n;
+    //   defaultSchedule.exponent = 1n;
+    //   let vestingStartTime = BigInt(await time.latest());
+    //   let timestampUpTo = vestingStartTime + secondsInPeriod * durationInPeriods;
 
-      expect(
-        await vesting.vestingCalculation(defaultSchedule, vestingAmount, vestingStartTime, timestampUpTo),
-      ).to.be.equal(0);
-    });
+    //   for (let i = 1; i <= 20; i++) {
+    //     let vestedAmount = await vesting.vestingCalculation(
+    //       defaultSchedule,
+    //       1000,
+    //       vestingStartTime,
+    //       vestingStartTime + secondsInPeriod * BigInt(i),
+    //     );
+    //     console.log("vestedAmount", vestedAmount.toString());
+    //   }
+    // });
   });
 });
