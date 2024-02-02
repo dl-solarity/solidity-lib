@@ -8,7 +8,7 @@ import { ethers } from "hardhat";
 
 import { ERC20Mock, ERC20Mock__factory, Vesting, VestingMock, VestingMock__factory } from "@ethers-v6";
 
-describe.only("Vesting", () => {
+describe("Vesting", () => {
   let reverter = new Reverter();
 
   let owner: SignerWithAddress;
@@ -424,24 +424,5 @@ describe.only("Vesting", () => {
         0,
       );
     });
-
-    // it("console test", async () => {
-    //   defaultSchedule.scheduleData.secondsInPeriod = 86400n;
-    //   defaultSchedule.scheduleData.durationInPeriods = 20n;
-    //   defaultSchedule.scheduleData.cliffInPeriods = 3n;
-    //   defaultSchedule.exponent = 1n;
-    //   let vestingStartTime = BigInt(await time.latest());
-    //   let timestampUpTo = vestingStartTime + secondsInPeriod * durationInPeriods;
-
-    //   for (let i = 1; i <= 20; i++) {
-    //     let vestedAmount = await vesting.vestingCalculation(
-    //       defaultSchedule,
-    //       1000,
-    //       vestingStartTime,
-    //       vestingStartTime + secondsInPeriod * BigInt(i),
-    //     );
-    //     console.log("vestedAmount", vestedAmount.toString());
-    //   }
-    // });
   });
 });
