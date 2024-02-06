@@ -10,14 +10,12 @@
 The library consists of modules and utilities that are built with a help of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (4.9.5) and **go far beyond mediocre solidity**.
 
 - Implementation of [**Contracts Registry**](https://eips.ethereum.org/EIPS/eip-6224) pattern
-- Versatile **RBAC** and **MultiOwnable** smart contracts
+- Versatile access control smart contracts (Merkle whitelists, RBAC)
 - Enhanced and simplified [**Diamond**](https://eips.ethereum.org/EIPS/eip-2535) pattern
-- Heap based priority queue library
-- Memory data structures (Vector)
-- Optimized [**Incremental Merkle Tree**](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf) data structure
-- Novel **ReturnDataProxy** contract
-- Lightweight **SBT** implementation
-- Flexible UniswapV2 and UniswapV3 oracles
+- Advanced data structures (**Vector**, **PriorityQueue**)
+- ZK-friendly [**Incremental Merkle Tree**](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf) implementation
+- Flexible finance primitives (**Staking**, **Vesting**)
+- Easy UniswapV2 and UniswapV3 oracles
 - Utilities to ease work with ERC20 decimals, arrays, sets and ZK proofs
 
 ## Overview
@@ -30,9 +28,13 @@ $ npm install @solarity/solidity-lib
 
 The latest stable version is always in the `master` branch.
 
+### Documentation
+
+Check out the project's [documentation](https://docs.solarity.dev) with broad explanations and usage examples of every module. Full `natspec` guides are also available in the source code.
+
 ## Usage
 
-You will find the smart contracts in the `/contracts` directory. Feel free to play around and check the source code, it is rather descriptive.
+You will find the smart contracts in the `/contracts` directory. Feel free to play around and check the project's structure.
 
 Once the [npm package](https://www.npmjs.com/package/@solarity/solidity-lib) is installed, one can use the library just like that:
 
@@ -48,6 +50,10 @@ contract ContractsRegistry is OwnableContractsRegistry {
 
 > [!IMPORTANT]
 > It is important to use the library as it is shipped and not copy-paste the code from untrusted sources.
+
+## Contribution
+
+We are open to any mind-blowing ideas! Please take a look at our [contribution guidelines](https://docs.solarity.dev/docs/getting-started/contribution/how-to-contribute) to get involved.
 
 ## License
 
