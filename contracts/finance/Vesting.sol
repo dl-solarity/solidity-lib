@@ -60,7 +60,6 @@ import {PRECISION} from "../utils/Globals.sol";
  * ...
  * - 20 days: 1000 tokens
  *
- * P.S.
  * For defining linear vesting, the exponent should be set to 1,
  * or there is an option to create a linear schedule just by defining the baseSchedule struct
  * and the exponent will be automatically set to 1.
