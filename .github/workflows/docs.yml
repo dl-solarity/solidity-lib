@@ -1,0 +1,41 @@
+name: "docs"
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Checkout Docs Repository
+        uses: actions/checkout@v3
+        with:
+          repository: solarity/docs
+          ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
+          path: docs
+      - name: Generate and Copy Docs
+        run: |
+          npx hardhat markup --outdir markups
+          rm -rf markups/contracts/mock
+          rm -rf markups/contracts/interfaces
+          rm -rf docs/docs/reference/contracts
+          mkdir -p docs/docs/reference
+          cp -r markups/contracts docs/docs/reference
+      - name: Push Docs
+        run: |
+          git fetch --unshallow
+          latest_tag=$(git describe --tags --abbrev=0)
+          cd docs
+          git config user.name "Docs Syncer"
+          git add -f .
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "CI: \`$latest_tag\`"
+            git push
+          fi
