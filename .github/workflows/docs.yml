@@ -17,7 +17,7 @@ jobs:
       - name: Checkout Docs Repository
         uses: actions/checkout@v3
         with:
-          repository: solarity/docs
+          repository: dl-solarity/docs
           ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
           path: docs
       - name: Generate and Copy Docs
