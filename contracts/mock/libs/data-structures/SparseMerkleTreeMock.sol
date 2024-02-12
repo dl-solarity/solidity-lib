@@ -54,32 +54,28 @@ contract SparseMerkleTreeMock {
         _addressTree.setHashers(_hash2, _hash3);
     }
 
-    function addUint(uint256 index_, uint256 value_) external {
-        _uintTree.add(index_, value_);
+    function addUint(uint256 key_, uint256 value_) external {
+        _uintTree.add(key_, value_);
     }
 
-    function addBytes32(bytes32 index_, bytes32 value_) external {
-        _bytes32Tree.add(index_, value_);
+    function addBytes32(bytes32 key_, bytes32 value_) external {
+        _bytes32Tree.add(key_, value_);
     }
 
-    function addAddress(bytes32 index_, address value_) external {
-        _addressTree.add(index_, value_);
+    function addAddress(bytes32 key_, address value_) external {
+        _addressTree.add(key_, value_);
     }
 
-    function getUintProof(uint256 index_) external view returns (SparseMerkleTree.Proof memory) {
-        return _uintTree.getProof(index_);
+    function getUintProof(uint256 key_) external view returns (SparseMerkleTree.Proof memory) {
+        return _uintTree.getProof(key_);
     }
 
-    function getBytes32Proof(
-        bytes32 index_
-    ) external view returns (SparseMerkleTree.Proof memory) {
-        return _bytes32Tree.getProof(index_);
+    function getBytes32Proof(bytes32 key_) external view returns (SparseMerkleTree.Proof memory) {
+        return _bytes32Tree.getProof(key_);
     }
 
-    function getAddressProof(
-        bytes32 index_
-    ) external view returns (SparseMerkleTree.Proof memory) {
-        return _addressTree.getProof(index_);
+    function getAddressProof(bytes32 key_) external view returns (SparseMerkleTree.Proof memory) {
+        return _addressTree.getProof(key_);
     }
 
     function getUintRoot() external view returns (bytes32) {
@@ -106,22 +102,20 @@ contract SparseMerkleTreeMock {
         return _addressTree.getNode(nodeId_);
     }
 
-    function getUintNodeByIndex(
-        uint256 index_
-    ) external view returns (SparseMerkleTree.Node memory) {
-        return _uintTree.getNodeByIndex(index_);
+    function getUintNodeByKey(uint256 key_) external view returns (SparseMerkleTree.Node memory) {
+        return _uintTree.getNodeByKey(key_);
     }
 
-    function getBytes32NodeByIndex(
-        bytes32 index_
+    function getBytes32NodeByKey(
+        bytes32 key_
     ) external view returns (SparseMerkleTree.Node memory) {
-        return _bytes32Tree.getNodeByIndex(index_);
+        return _bytes32Tree.getNodeByKey(key_);
     }
 
-    function getAddressNodeByIndex(
-        bytes32 index_
+    function getAddressNodeByKey(
+        bytes32 key_
     ) external view returns (SparseMerkleTree.Node memory) {
-        return _addressTree.getNodeByIndex(index_);
+        return _addressTree.getNodeByKey(key_);
     }
 
     function getUintMaxDepth() external view returns (uint256) {

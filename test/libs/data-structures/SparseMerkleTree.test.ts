@@ -56,22 +56,33 @@ describe("SparseMerkleTree", () => {
 
   function getOnchainProof(onchainProof: SparseMerkleTree.ProofStructOutput): Proof {
     const modifiableArray = JSON.parse(JSON.stringify(onchainProof.siblings)).reverse() as string[];
-    const reversedIndex = modifiableArray.findIndex((value) => value !== ethers.ZeroHash);
-    const lastIndex = reversedIndex !== -1 ? onchainProof.siblings.length - 1 - reversedIndex : -1;
+    const reversedKey = modifiableArray.findIndex((value) => value !== ethers.ZeroHash);
+    const lastKey = reversedKey !== -1 ? onchainProof.siblings.length - 1 - reversedKey : -1;
+
+    const siblings = onchainProof.siblings
+      .filter((value, key) => value != ethers.ZeroHash || key <= lastKey)
+      .map((sibling: string) => new Hash(Hash.fromHex(sibling.slice(2)).value.reverse()));
+
+    let nodeAux: { key: Hash; value: Hash } | undefined = undefined;
+
+    if (onchainProof.auxExistence) {
+      nodeAux = {
+        key: new Hash(Hash.fromHex(onchainProof.auxKey.slice(2)).value.reverse()),
+        value: new Hash(Hash.fromHex(onchainProof.auxValue.slice(2)).value.reverse()),
+      };
+    }
 
     return new Proof({
-      siblings: onchainProof.siblings
-        .filter((value, index) => value != ethers.ZeroHash || index <= lastIndex)
-        .map((sibling: string) => new Hash(Hash.fromHex(sibling.replace("0x", "")).value.reverse())),
+      siblings,
       existence: onchainProof.existence,
-      nodeAux: undefined,
+      nodeAux,
     });
   }
 
-  async function compareNodes(node: SparseMerkleTree.NodeStructOutput, index: bigint) {
-    const localNode = await localMerkleTree.get(index);
+  async function compareNodes(node: SparseMerkleTree.NodeStructOutput, key: bigint) {
+    const localNode = await localMerkleTree.get(key);
 
-    expect(node.index).to.equal(ethers.toBeHex(localNode.key, 32));
+    expect(node.key).to.equal(ethers.toBeHex(localNode.key, 32));
     expect(node.value).to.equal(ethers.toBeHex(localNode.value, 32));
   }
 
@@ -107,7 +118,7 @@ describe("SparseMerkleTree", () => {
       expect(await merkleTree.getUintMaxDepth()).to.equal(21);
     });
 
-    it("should revert if trying to call add or root function on non-initialized tree", async () => {
+    it("should revert if trying to call add function on non-initialized tree", async () => {
       const SparseMerkleTreeMock = await ethers.getContractFactory("SparseMerkleTreeMock", {
         libraries: {
           PoseidonUnit2L: await (await getPoseidon(2)).getAddress(),
@@ -116,46 +127,47 @@ describe("SparseMerkleTree", () => {
       });
       const newMerkleTree = await SparseMerkleTreeMock.deploy();
 
-      await expect(newMerkleTree.getUintRoot()).to.be.rejectedWith("SparseMerkleTree: tree is not initialized");
       await expect(newMerkleTree.addUint(1n, 1n)).to.be.rejectedWith("SparseMerkleTree: tree is not initialized");
     });
 
     it("should build a Merkle Tree of a predefined size with correct initial values", async () => {
       const value = 2341n;
-      const index = BigInt(poseidonHash(ethers.toBeHex(value)));
+      const key = BigInt(poseidonHash(ethers.toBeHex(value)));
 
-      await merkleTree.addUint(index, value);
+      expect(await merkleTree.getUintRoot()).to.equal(await getRoot(localMerkleTree));
 
-      await localMerkleTree.add(index, value);
+      await merkleTree.addUint(key, value);
+
+      await localMerkleTree.add(key, value);
 
       expect(await merkleTree.getUintRoot()).to.equal(await getRoot(localMerkleTree));
 
       expect(await merkleTree.getUintMaxDepth()).to.equal(20);
       expect(await merkleTree.getUintNodesCount()).to.equal(1);
 
-      await compareNodes(await merkleTree.getUintNode(1), index);
-      await compareNodes(await merkleTree.getUintNodeByIndex(index), index);
+      await compareNodes(await merkleTree.getUintNode(1), key);
+      await compareNodes(await merkleTree.getUintNodeByKey(key), key);
 
-      const onchainProof = getOnchainProof(await merkleTree.getUintProof(index));
+      const onchainProof = getOnchainProof(await merkleTree.getUintProof(key));
 
-      expect(await verifyProof(await localMerkleTree.root(), onchainProof, index, value)).to.be.true;
+      expect(await verifyProof(await localMerkleTree.root(), onchainProof, key, value)).to.be.true;
     });
 
     it("should build a Merkle Tree correctly with multiple elements", async () => {
       for (let i = 1n; i < 20n; i++) {
         const value = BigInt(ethers.toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32));
-        const index = BigInt(poseidonHash(ethers.toBeHex(`0x` + value.toString(16), 32)));
+        const key = BigInt(poseidonHash(ethers.toBeHex(`0x` + value.toString(16), 32)));
 
-        await merkleTree.addUint(index, value);
+        await merkleTree.addUint(key, value);
 
-        await localMerkleTree.add(index, value);
+        await localMerkleTree.add(key, value);
 
         expect(await merkleTree.getUintRoot()).to.equal(await getRoot(localMerkleTree));
 
-        await compareNodes(await merkleTree.getUintNodeByIndex(index), index);
+        await compareNodes(await merkleTree.getUintNodeByKey(key), key);
 
-        const onchainProof = getOnchainProof(await merkleTree.getUintProof(index));
-        expect(await verifyProof(await localMerkleTree.root(), onchainProof, index, value)).to.be.true;
+        const onchainProof = getOnchainProof(await merkleTree.getUintProof(key));
+        expect(await verifyProof(await localMerkleTree.root(), onchainProof, key, value)).to.be.true;
       }
 
       expect(await merkleTree.isUintCustomHasherSet()).to.be.true;
@@ -174,29 +186,33 @@ describe("SparseMerkleTree", () => {
 
       const onchainProof = await merkleTree.getUintProof(5n);
 
-      expect(onchainProof.auxIndex).to.equal(7n);
+      expect(onchainProof.auxKey).to.equal(7n);
       expect(onchainProof.auxValue).to.equal(1n);
       expect(onchainProof.auxExistence).to.equal(true);
       expect(onchainProof.existence).to.equal(false);
     });
 
-    it("should reset the value of the node", async () => {
+    it("should generate non-membership proof (empty node and different node)", async () => {
+      await localMerkleTree.add(3n, 15n); // key -> 0b011
+      await localMerkleTree.add(7n, 15n); // key -> 0b111
+
+      await merkleTree.addUint(3n, 15n);
+      await merkleTree.addUint(7n, 15n);
+
+      let onchainProof = getOnchainProof(await merkleTree.getUintProof(5n));
+      expect(await verifyProof(await localMerkleTree.root(), onchainProof, 5n, 0n)).to.be.true;
+
+      onchainProof = getOnchainProof(await merkleTree.getUintProof(15n));
+      expect(await verifyProof(await localMerkleTree.root(), onchainProof, 15n, 15n)).to.be.true;
+    });
+
+    it("should revert if trying to add a node with the same key", async () => {
       const value = 2341n;
-      const index = BigInt(poseidonHash(ethers.toBeHex(value)));
+      const key = BigInt(poseidonHash(ethers.toBeHex(value)));
 
-      await merkleTree.addUint(index, value);
+      await merkleTree.addUint(key, value);
 
-      const oldRoot = await merkleTree.getUintRoot();
-
-      expect((await merkleTree.getUintNodeByIndex(index)).value).to.be.equal(ethers.toBeHex(value, 32));
-
-      const newValue = 1234n;
-
-      await merkleTree.addUint(index, newValue);
-
-      expect((await merkleTree.getUintNodeByIndex(index)).value).to.be.equal(ethers.toBeHex(newValue, 32));
-
-      expect(await merkleTree.getUintRoot()).to.not.equal(oldRoot);
+      await expect(merkleTree.addUint(key, value)).to.be.rejectedWith("SparseMerkleTree: the key already exists");
     });
 
     it("should revert if max depth is reached", async () => {
@@ -216,12 +232,12 @@ describe("SparseMerkleTree", () => {
       await expect(newMerkleTree.addUint(3n, 1n)).to.be.rejectedWith("SparseMerkleTree: max depth reached");
     });
 
-    it("should get empty Node by non-existing index", async () => {
-      expect((await merkleTree.getUintNodeByIndex(1n)).nodeType).to.be.equal(0);
+    it("should get empty Node by non-existing key", async () => {
+      expect((await merkleTree.getUintNodeByKey(1n)).nodeType).to.be.equal(0);
 
       await merkleTree.addUint(7n, 1n);
 
-      expect((await merkleTree.getUintNodeByIndex(5n)).nodeType).to.be.equal(0);
+      expect((await merkleTree.getUintNodeByKey(5n)).nodeType).to.be.equal(0);
     });
   });
 
@@ -241,40 +257,40 @@ describe("SparseMerkleTree", () => {
 
     it("should build a Merkle Tree of a predefined size with correct initial values", async () => {
       const value = ethers.toBeHex("0x1235", 32);
-      const index = poseidonHash(value);
+      const key = poseidonHash(value);
 
-      await merkleTree.addBytes32(index, value);
+      await merkleTree.addBytes32(key, value);
 
-      await localMerkleTree.add(BigInt(index), BigInt(value));
+      await localMerkleTree.add(BigInt(key), BigInt(value));
 
       expect(await merkleTree.getBytes32Root()).to.equal(await getRoot(localMerkleTree));
 
       expect(await merkleTree.getBytes32MaxDepth()).to.equal(20);
       expect(await merkleTree.getBytes32NodesCount()).to.equal(1);
 
-      await compareNodes(await merkleTree.getBytes32Node(1), BigInt(index));
-      await compareNodes(await merkleTree.getBytes32NodeByIndex(index), BigInt(index));
+      await compareNodes(await merkleTree.getBytes32Node(1), BigInt(key));
+      await compareNodes(await merkleTree.getBytes32NodeByKey(key), BigInt(key));
 
-      const onchainProof = getOnchainProof(await merkleTree.getBytes32Proof(index));
+      const onchainProof = getOnchainProof(await merkleTree.getBytes32Proof(key));
 
-      expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(index), BigInt(value))).to.be.true;
+      expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(key), BigInt(value))).to.be.true;
     });
 
     it("should build a Merkle Tree correctly with multiple elements", async () => {
       for (let i = 1n; i < 20n; i++) {
         const value = ethers.toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32);
-        const index = poseidonHash(value);
+        const key = poseidonHash(value);
 
-        await merkleTree.addBytes32(index, value);
+        await merkleTree.addBytes32(key, value);
 
-        await localMerkleTree.add(BigInt(index), BigInt(value));
+        await localMerkleTree.add(BigInt(key), BigInt(value));
 
         expect(await merkleTree.getBytes32Root()).to.equal(await getRoot(localMerkleTree));
 
-        await compareNodes(await merkleTree.getBytes32NodeByIndex(index), BigInt(index));
+        await compareNodes(await merkleTree.getBytes32NodeByKey(key), BigInt(key));
 
-        const onchainProof = getOnchainProof(await merkleTree.getBytes32Proof(index));
-        expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(index), BigInt(value))).to.be.true;
+        const onchainProof = getOnchainProof(await merkleTree.getBytes32Proof(key));
+        expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(key), BigInt(value))).to.be.true;
       }
 
       expect(await merkleTree.isBytes32CustomHasherSet()).to.be.true;
@@ -299,40 +315,40 @@ describe("SparseMerkleTree", () => {
 
     it("should build a Merkle Tree of a predefined size with correct initial values", async () => {
       const value = await USER1.getAddress();
-      const index = poseidonHash(value);
+      const key = poseidonHash(value);
 
-      await merkleTree.addAddress(index, value);
+      await merkleTree.addAddress(key, value);
 
-      await localMerkleTree.add(BigInt(index), BigInt(value));
+      await localMerkleTree.add(BigInt(key), BigInt(value));
 
       expect(await merkleTree.getAddressRoot()).to.equal(await getRoot(localMerkleTree));
 
       expect(await merkleTree.getAddressMaxDepth()).to.equal(20);
       expect(await merkleTree.getAddressNodesCount()).to.equal(1);
 
-      await compareNodes(await merkleTree.getAddressNode(1), BigInt(index));
-      await compareNodes(await merkleTree.getAddressNodeByIndex(index), BigInt(index));
+      await compareNodes(await merkleTree.getAddressNode(1), BigInt(key));
+      await compareNodes(await merkleTree.getAddressNodeByKey(key), BigInt(key));
 
-      const onchainProof = getOnchainProof(await merkleTree.getAddressProof(index));
+      const onchainProof = getOnchainProof(await merkleTree.getAddressProof(key));
 
-      expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(index), BigInt(value))).to.be.true;
+      expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(key), BigInt(value))).to.be.true;
     });
 
     it("should build a Merkle Tree correctly with multiple elements", async () => {
       for (let i = 1n; i < 20n; i++) {
         const value = ethers.toBeHex(BigInt(await USER1.getAddress()) + i);
-        const index = poseidonHash(value);
+        const key = poseidonHash(value);
 
-        await merkleTree.addAddress(index, value);
+        await merkleTree.addAddress(key, value);
 
-        await localMerkleTree.add(BigInt(index), BigInt(value));
+        await localMerkleTree.add(BigInt(key), BigInt(value));
 
         expect(await merkleTree.getAddressRoot()).to.equal(await getRoot(localMerkleTree));
 
-        await compareNodes(await merkleTree.getAddressNodeByIndex(index), BigInt(index));
+        await compareNodes(await merkleTree.getAddressNodeByKey(key), BigInt(key));
 
-        const onchainProof = getOnchainProof(await merkleTree.getAddressProof(index));
-        expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(index), BigInt(value))).to.be.true;
+        const onchainProof = getOnchainProof(await merkleTree.getAddressProof(key));
+        expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(key), BigInt(value))).to.be.true;
       }
 
       expect(await merkleTree.isAddressCustomHasherSet()).to.be.true;
