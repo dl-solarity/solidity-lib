@@ -819,6 +819,9 @@ library SparseMerkleTree {
         return _setNode(tree, newNodeMiddle_);
     }
 
+    /**
+     * @dev The function used to add only new nodes.
+     */
     function _setNode(SMT storage tree, Node memory node_) private returns (uint256) {
         node_.nodeHash = _getNodeHash(tree, node_);
 
