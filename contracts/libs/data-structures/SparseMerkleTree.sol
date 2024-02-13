@@ -16,7 +16,7 @@ pragma solidity ^0.8.4;
  * - Added the ability to set custom hash functions.
  * - Removed methods and associated storage for managing the tree root's history.
  *
- * Gas usage for adding (addBytes32) 16,001 leaves is detailed below:
+ * Gas usage for adding (addBytes32) 16,001 leaves to a tree of size 80 is detailed below:
  *
  * | Statistic |     Value     |
  * |-----------|-------------- |
@@ -40,6 +40,8 @@ pragma solidity ^0.8.4;
  * using SparseMerkleTree for SparseMerkleTree.UintSMT;
  *
  * SparseMerkleTree.UintSMT internal uintTree;
+ * ...
+ * uintTree.initialize(80);
  *
  * uintTree.add(100, 500);
  *
@@ -66,8 +68,11 @@ library SparseMerkleTree {
      * Under the hood it sets the maximum depth of the Merkle tree, therefore can be considered
      * alias function for the `setMaxDepth`.
      *
+     * Requirements:
+     * - The current tree depth must be 0.
+     *
      * @param tree self.
-     * @param maxDepth_ The max depth of the Merkle tree. Depth must be 0.
+     * @param maxDepth_ The max depth of the Merkle tree.
      */
     function initialize(UintSMT storage tree, uint64 maxDepth_) internal {
         _initialize(tree._tree, maxDepth_);
@@ -210,8 +215,11 @@ library SparseMerkleTree {
      * Under the hood it sets the maximum depth of the Merkle tree, therefore can be considered
      * alias function for the `setMaxDepth`.
      *
+     * Requirements:
+     * - The current tree depth must be 0.
+     *
      * @param tree self.
-     * @param maxDepth_ The max depth of the Merkle tree. Depth must be 0.
+     * @param maxDepth_ The max depth of the Merkle tree.
      */
     function initialize(Bytes32SMT storage tree, uint64 maxDepth_) internal {
         _initialize(tree._tree, maxDepth_);
@@ -360,8 +368,11 @@ library SparseMerkleTree {
      * Under the hood it sets the maximum depth of the Merkle tree, therefore can be considered
      * alias function for the `setMaxDepth`.
      *
+     * Requirements:
+     * - The current tree depth must be 0.
+     *
      * @param tree self.
-     * @param maxDepth_ The max depth of the Merkle tree. Depth must be 0.
+     * @param maxDepth_ The max depth of the Merkle tree.
      */
     function initialize(AddressSMT storage tree, uint64 maxDepth_) internal {
         _initialize(tree._tree, maxDepth_);
@@ -853,9 +864,9 @@ library SparseMerkleTree {
     function _hash2(bytes32 a, bytes32 b) private pure returns (bytes32 result) {
         assembly {
             mstore(0, a)
-            mstore(0x20, b)
+            mstore(32, b)
 
-            result := keccak256(0, 0x40)
+            result := keccak256(0, 64)
         }
     }
 
@@ -864,13 +875,13 @@ library SparseMerkleTree {
      */
     function _hash3(bytes32 a, bytes32 b, bytes32 c) private pure returns (bytes32 result) {
         assembly {
-            let free_ptr := mload(0x40)
+            let free_ptr := mload(64)
 
             mstore(free_ptr, a)
-            mstore(add(free_ptr, 0x20), b)
-            mstore(add(free_ptr, 0x40), c)
+            mstore(add(free_ptr, 32), b)
+            mstore(add(free_ptr, 64), c)
 
-            result := keccak256(free_ptr, 0x60)
+            result := keccak256(free_ptr, 96)
         }
     }
 
