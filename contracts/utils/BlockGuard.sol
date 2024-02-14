@@ -46,7 +46,7 @@ abstract contract BlockGuard {
      * @param key_ the key of the resource (the caller)
      */
     function _lockBlock(string memory resource_, address key_) internal {
-        _lockedInBlocks[resource_][key_] = block.number;
+        _lockedInBlocks[resource_][key_] = _getBlockNumber();
     }
 
     /**
@@ -55,7 +55,7 @@ abstract contract BlockGuard {
      * @param key_ the key of the resource (the caller)
      */
     function _checkBlock(string memory resource_, address key_) internal view {
-        require(_lockedInBlocks[resource_][key_] != block.number, "BlockGuard: locked");
+        require(_lockedInBlocks[resource_][key_] != _getBlockNumber(), "BlockGuard: locked");
     }
 
     /**
@@ -69,5 +69,15 @@ abstract contract BlockGuard {
         address key_
     ) internal view returns (uint256 block_) {
         return _lockedInBlocks[resource_][key_];
+    }
+
+    /**
+     * @notice The function to fetch the actual block number
+     * @dev In L2 chains, `block.number` may be synced with the L1 block number, potentially causing delays.
+     * If custom sources are required, override this function
+     * @return block_ the actual block number
+     */
+    function _getBlockNumber() internal view virtual returns (uint256 block_) {
+        return block.number;
     }
 }
