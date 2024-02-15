@@ -15,7 +15,7 @@ The library consists of modules and utilities that are built with a help of [Ope
 - Advanced data structures (**Vector**, **PriorityQueue**)
 - ZK-friendly [**Sparse Merkle Tree**](https://docs.iden3.io/publications/pdfs/Merkle-Tree.pdf) and [**Incremental Merkle Tree**](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf) implementations
 - Flexible finance primitives (**Staking**, **Vesting**)
-- Easy UniswapV2 and UniswapV3 oracles
+- Robust UniswapV2 and UniswapV3 oracles
 - Utilities to ease work with ERC20 decimals, arrays, sets and ZK proofs
 
 ## Overview
