@@ -71,7 +71,9 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      */
     function _setRoleAdmin(bytes32 role_, bytes32 adminRole_) internal virtual {
         bytes32 previousAdminRole_ = getRoleAdmin(role_);
+
         _getAccessControlStorage().roles[role_].adminRole = adminRole_;
+
         emit RoleAdminChanged(role_, previousAdminRole_, adminRole_);
     }
 
