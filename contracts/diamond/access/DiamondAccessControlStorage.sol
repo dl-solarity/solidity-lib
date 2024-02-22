@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/access/IAccessControl.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
+
+import {InitializableStorage} from "../utils/InitializableStorage.sol";
 
 /**
  * @notice The Diamond standard module
  *
  * This is an AccessControl Storage contract with Diamond Standard support
  */
-abstract contract DiamondAccessControlStorage is IAccessControl {
+abstract contract DiamondAccessControlStorage is IAccessControl, InitializableStorage {
     bytes32 public constant DIAMOND_ACCESS_CONTROL_STORAGE_SLOT =
         keccak256("diamond.standard.diamond.access.control.storage");
 
@@ -34,14 +36,14 @@ abstract contract DiamondAccessControlStorage is IAccessControl {
     /**
      * @inheritdoc IAccessControl
      */
-    function hasRole(bytes32 role, address account) public view virtual override returns (bool) {
-        return _getAccessControlStorage().roles[role].members[account];
+    function hasRole(bytes32 role_, address account_) public view virtual override returns (bool) {
+        return _getAccessControlStorage().roles[role_].members[account_];
     }
 
     /**
      * @inheritdoc IAccessControl
      */
-    function getRoleAdmin(bytes32 role) public view virtual override returns (bytes32) {
-        return _getAccessControlStorage().roles[role].adminRole;
+    function getRoleAdmin(bytes32 role_) public view virtual override returns (bytes32) {
+        return _getAccessControlStorage().roles[role_].adminRole;
     }
 }
