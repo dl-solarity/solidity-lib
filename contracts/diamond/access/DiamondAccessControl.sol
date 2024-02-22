@@ -83,10 +83,11 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      * May emit a {RoleGranted} event.
      */
     function _grantRole(bytes32 role_, address account_) internal virtual {
-        if (!hasRole(role_, account_)) {
-            _getAccessControlStorage().roles[role_].members[account_] = true;
-            emit RoleGranted(role_, account_, msg.sender);
-        }
+        require(!hasRole(role_, account_), "AccessControl: role is granted");
+
+        _getAccessControlStorage().roles[role_].members[account_] = true;
+
+        emit RoleGranted(role_, account_, msg.sender);
     }
 
     /**
@@ -97,10 +98,11 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      * May emit a {RoleRevoked} event.
      */
     function _revokeRole(bytes32 role_, address account_) internal virtual {
-        if (hasRole(role_, account_)) {
-            _getAccessControlStorage().roles[role_].members[account_] = false;
-            emit RoleRevoked(role_, account_, msg.sender);
-        }
+        require(hasRole(role_, account_), "AccessControl: role is not granted");
+
+        _getAccessControlStorage().roles[role_].members[account_] = false;
+
+        emit RoleRevoked(role_, account_, msg.sender);
     }
 
     /**

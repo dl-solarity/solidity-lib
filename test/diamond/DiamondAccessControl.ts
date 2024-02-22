@@ -74,11 +74,13 @@ describe("DiamondAccessControl", () => {
         );
       });
 
-      it("should grant role if all conditions are met", async () => {
+      it("should not grant role if it's granted", async () => {
         await access.grantRole(AGENT_ROLE, SECOND);
 
-        expect(await access.hasRole(AGENT_ROLE, SECOND)).to.be.true;
+        await expect(access.grantRole(AGENT_ROLE, SECOND)).to.be.revertedWith("AccessControl: role is granted");
+      });
 
+      it("should grant role if all conditions are met", async () => {
         await access.grantRole(AGENT_ROLE, SECOND);
 
         expect(await access.hasRole(AGENT_ROLE, SECOND)).to.be.true;
@@ -96,11 +98,13 @@ describe("DiamondAccessControl", () => {
         );
       });
 
-      it("should revoke role if all conditions are met", async () => {
+      it("should not revoke role if it's not granted", async () => {
         await access.revokeRole(AGENT_ROLE, SECOND);
 
-        expect(await access.hasRole(AGENT_ROLE, SECOND)).to.be.false;
+        await expect(access.revokeRole(AGENT_ROLE, SECOND)).to.be.revertedWith("AccessControl: role is not granted");
+      });
 
+      it("should revoke role if all conditions are met", async () => {
         await access.revokeRole(AGENT_ROLE, SECOND);
 
         expect(await access.hasRole(AGENT_ROLE, SECOND)).to.be.false;
