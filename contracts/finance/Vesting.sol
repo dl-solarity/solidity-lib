@@ -161,7 +161,7 @@ abstract contract Vesting is Initializable {
 
         _vesting.paidAmount += amountToPay_;
 
-        IERC20(token_).safeTransfer(msg.sender, amountToPay_);
+        _releaseTokens(token_, msg.sender, amountToPay_);
 
         emit WithdrawnFromVesting(vestingId_, amountToPay_);
     }
@@ -299,6 +299,21 @@ abstract contract Vesting is Initializable {
         emit VestingCreated(_currentVestingId, vesting_.beneficiary, vesting_.vestingToken);
 
         return _currentVestingId;
+    }
+
+    /**
+     * @notice Releases tokens from vesting.
+     * @dev By default, tokens are transferred to the beneficiary. Override this function if custom logic is required.
+     * @param token_ The ERC20 token address used for the vesting.
+     * @param beneficiary_ The address of the beneficiary.
+     * @param amountToPay_ The amount of tokens to be released.
+     */
+    function _releaseTokens(
+        address token_,
+        address beneficiary_,
+        uint256 amountToPay_
+    ) internal virtual {
+        IERC20(token_).safeTransfer(beneficiary_, amountToPay_);
     }
 
     /**

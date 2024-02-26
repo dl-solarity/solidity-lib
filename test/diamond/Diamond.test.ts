@@ -91,7 +91,7 @@ describe("Diamond", () => {
 
         const tx = await diamond.diamondCutLong(facets, dummyInit.getAddress(), init);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, addr, init);
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), addr, init);
 
         const dimondInitMock = <DummyInitMock>dummyInit.attach(await diamond.getAddress());
         await expect(tx).to.emit(dimondInitMock, "Initialized");
@@ -136,7 +136,7 @@ describe("Diamond", () => {
       it("should add facet correctly", async () => {
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZERO_ADDR, "0x");
 
         expect(await diamond.facets()).to.deep.equal([[await dummyFacet.getAddress(), selectors]]);
         expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal(selectors);
@@ -194,7 +194,7 @@ describe("Diamond", () => {
         facets[0].functionSelectors = selectors.slice(1);
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZERO_ADDR, "0x");
 
         expect(await diamond.facets()).to.deep.equal([[await dummyFacet.getAddress(), [selectors[0]]]]);
         expect(await diamond.facetAddresses()).to.deep.equal([await dummyFacet.getAddress()]);
@@ -210,7 +210,7 @@ describe("Diamond", () => {
         facets[0].action = FacetAction.Remove;
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZERO_ADDR, "0x");
 
         expect(await diamond.facets()).to.deep.equal([]);
         expect(await diamond.facetAddresses()).to.deep.equal([]);
@@ -271,7 +271,7 @@ describe("Diamond", () => {
 
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZERO_ADDR, "0x");
 
         expect(await diamond.facets()).to.deep.equal([
           [await dummyFacet.getAddress(), [selectors[0]]],
@@ -294,7 +294,7 @@ describe("Diamond", () => {
 
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZERO_ADDR, "0x");
 
         expect(await diamond.facets()).to.deep.equal([[await dummyFacet2.getAddress(), selectors]]);
         expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
