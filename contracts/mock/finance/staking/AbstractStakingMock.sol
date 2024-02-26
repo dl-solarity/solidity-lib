@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AbstractStaking} from "../../staking/AbstractStaking.sol";
+import {AbstractStaking} from "../../../finance/staking/AbstractStaking.sol";
 
 contract AbstractStakingMock is AbstractStaking, Multicall {
     function __AbstractStakingMock_init(

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {PRECISION} from "../utils/Globals.sol";
+import {PRECISION} from "../../utils/Globals.sol";
 
 /**
  * @notice The AbstractValueDistributor module

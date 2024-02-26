@@ -3,8 +3,8 @@ pragma solidity ^0.8.4;
 
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 
-import {AbstractValueDistributor} from "../../staking/AbstractValueDistributor.sol";
-import {DECIMAL} from "../../utils/Globals.sol";
+import {AbstractValueDistributor} from "../../../finance/staking/AbstractValueDistributor.sol";
+import {DECIMAL} from "../../../utils/Globals.sol";
 
 contract AbstractValueDistributorMock is AbstractValueDistributor, Multicall {
     function addShares(address user_, uint256 amount_) external {
