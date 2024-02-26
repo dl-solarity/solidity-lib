@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {MultiOwnable} from "./../../access-control/MultiOwnable.sol";
+import {MultiOwnable} from "./../../access/MultiOwnable.sol";
 
 contract MultiOwnableMock is MultiOwnable {
     function __MultiOwnableMock_init() external initializer {

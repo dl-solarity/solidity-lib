@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
-import {PermanentOwnable} from "../../access-control/PermanentOwnable.sol";
+import {PermanentOwnable} from "../../access/PermanentOwnable.sol";
 
 /**
  * @notice The proxies module

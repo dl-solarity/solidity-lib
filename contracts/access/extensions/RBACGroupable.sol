@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {IRBACGroupable} from "../../interfaces/access-control/extensions/IRBACGroupable.sol";
+import {IRBACGroupable} from "../../interfaces/access/extensions/IRBACGroupable.sol";
 
 import {StringSet} from "../../libs/data-structures/StringSet.sol";
 import {SetHelper} from "../../libs/arrays/SetHelper.sol";
