@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-
 import {DiamondAccessControlStorage, IAccessControl} from "./DiamondAccessControlStorage.sol";
 
 /**
@@ -12,19 +10,6 @@ import {DiamondAccessControlStorage, IAccessControl} from "./DiamondAccessContro
  * by the Diamond Standard.
  */
 abstract contract DiamondAccessControl is DiamondAccessControlStorage {
-    /**
-     * @dev Modifier that checks that an account has a specific role. Reverts
-     * with a standardized message including the required role.
-     *
-     * The format of the revert reason is given by the following regular expression:
-     *
-     *  /^AccessControl: account (0x[0-9a-f]{40}) is missing role (0x[0-9a-f]{64})$/
-     */
-    modifier onlyRole(bytes32 role_) {
-        _checkRole(role_);
-        _;
-    }
-
     /**
      * @notice Sets `DEFAULT_ADMIN_ROLE` to `msg.sender`
      */
@@ -105,37 +90,5 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
         _getAccessControlStorage().roles[role_].members[account_] = false;
 
         emit RoleRevoked(role_, account_, msg.sender);
-    }
-
-    /**
-     * @dev Revert with a standard message if `_msgSender()` is missing `role`.
-     * Overriding this function changes the behavior of the {onlyRole} modifier.
-     *
-     * Format of the revert message is described in {_checkRole}.
-     */
-    function _checkRole(bytes32 role_) internal view virtual {
-        _checkRole(role_, msg.sender);
-    }
-
-    /**_
-     * @dev Revert with a standard message if `account` is missing `role`.
-     *
-     * The format of the revert reason is given by the following regular expression:
-     *
-     *  /^AccessControl: account (0x[0-9a-f]{40}) is missing role (0x[0-9a-f]{64})$/
-     */
-    function _checkRole(bytes32 role_, address account_) internal view virtual {
-        if (!hasRole(role_, account_)) {
-            revert(
-                string(
-                    abi.encodePacked(
-                        "AccessControl: account ",
-                        Strings.toHexString(account_),
-                        " is missing role ",
-                        Strings.toHexString(uint256(role_), 32)
-                    )
-                )
-            );
-        }
     }
 }
