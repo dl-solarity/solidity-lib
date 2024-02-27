@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {Vesting} from "../../finance/Vesting.sol";
-import {ERC20Mock} from "../tokens/ERC20Mock.sol";
+import {Vesting} from "../../../finance/vesting/Vesting.sol";
+import {ERC20Mock} from "../../tokens/ERC20Mock.sol";
 
 contract VestingMock is Vesting {
     function __VestingMock_init() public initializer {

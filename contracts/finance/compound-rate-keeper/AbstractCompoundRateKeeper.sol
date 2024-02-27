@@ -4,9 +4,9 @@ pragma solidity ^0.8.4;
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import {ICompoundRateKeeper} from "../interfaces/compound-rate-keeper/ICompoundRateKeeper.sol";
+import {ICompoundRateKeeper} from "../../interfaces/compound-rate-keeper/ICompoundRateKeeper.sol";
 
-import {PRECISION} from "../utils/Globals.sol";
+import {PRECISION} from "../../utils/Globals.sol";
 
 /**
  * @notice The Compound Rate Keeper module

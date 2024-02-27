@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {DiamondAccessControl} from "../../../diamond/access/DiamondAccessControl.sol";
+import {DiamondAccessControl} from "../../../diamond/access/access-control/DiamondAccessControl.sol";
 
 contract DiamondAccessControlMock is DiamondAccessControl {
     bytes32 public constant AGENT_ROLE = bytes32(uint256(0x01));

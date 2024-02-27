@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {PermanentOwnable} from "../../access-control/PermanentOwnable.sol";
+import {PermanentOwnable} from "../../access/PermanentOwnable.sol";
 
 contract PermanentOwnableMock is PermanentOwnable {
     event ValidOwner();

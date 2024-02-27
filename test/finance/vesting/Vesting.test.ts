@@ -40,7 +40,7 @@ describe("Vesting", () => {
     await erc20.mint(owner.address, wei(1_000_000));
     await erc20.approve(await vesting.getAddress(), MAX_UINT256);
 
-    reverter.snapshot();
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

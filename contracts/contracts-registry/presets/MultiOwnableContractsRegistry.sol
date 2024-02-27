@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {AbstractContractsRegistry} from "../AbstractContractsRegistry.sol";
-import {MultiOwnable} from "../../access-control/MultiOwnable.sol";
+import {MultiOwnable} from "../../access/MultiOwnable.sol";
 
 /**
  * @notice The MultiOwnable preset of ContractsRegistry

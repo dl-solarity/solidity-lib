@@ -6,7 +6,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 
 import {SetHelper} from "../libs/arrays/SetHelper.sol";
 import {TypeCaster} from "../libs/utils/TypeCaster.sol";
-import {IMultiOwnable} from "../interfaces/access-control/IMultiOwnable.sol";
+import {IMultiOwnable} from "../interfaces/access/IMultiOwnable.sol";
 
 /**
  * @notice The MultiOwnable module

@@ -33,6 +33,8 @@ describe("DiamondAccessControl", () => {
     diamond = await OwnableDiamond.deploy();
     access = await DiamondAccessControlMock.deploy();
 
+    await diamond.__OwnableDiamondMock_init();
+
     const facets: Diamond.FacetStruct[] = [
       {
         facetAddress: await access.getAddress(),

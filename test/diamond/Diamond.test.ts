@@ -22,10 +22,26 @@ describe("Diamond", () => {
     const OwnableDiamond = await ethers.getContractFactory("OwnableDiamondMock");
     diamond = await OwnableDiamond.deploy();
 
+    await diamond.__OwnableDiamondMock_init();
+
     await reverter.snapshot();
   });
 
   afterEach(reverter.revert);
+
+  describe("access", () => {
+    it("should initialize only once", async () => {
+      await expect(diamond.__OwnableDiamondMock_init()).to.be.revertedWith(
+        "Initializable: contract is already initialized",
+      );
+    });
+
+    it("should initialize only by top level contract", async () => {
+      await expect(diamond.__OwnableDiamondDirect_init()).to.be.revertedWith(
+        "Initializable: contract is not initializing",
+      );
+    });
+  });
 
   describe("ownable diamond functions", () => {
     it("should set owner correctly", async () => {
@@ -38,14 +54,24 @@ describe("Diamond", () => {
       expect(await diamond.owner()).to.equal(SECOND.address);
     });
 
+    it("should renounce ownership", async () => {
+      await diamond.renounceOwnership();
+
+      expect(await diamond.owner()).to.equal(ZERO_ADDR);
+    });
+
     it("should not transfer ownership from non-owner", async () => {
       await expect(diamond.connect(SECOND).transferOwnership(SECOND.address)).to.be.revertedWith(
-        "ODStorage: not an owner",
+        "DiamondOwnable: not an owner",
       );
     });
 
+    it("should not renounce ownership from non-owner", async () => {
+      await expect(diamond.connect(SECOND).renounceOwnership()).to.be.revertedWith("DiamondOwnable: not an owner");
+    });
+
     it("should not transfer ownership to zero address", async () => {
-      await expect(diamond.transferOwnership(ZERO_ADDR)).to.be.revertedWith("OwnableDiamond: zero address owner");
+      await expect(diamond.transferOwnership(ZERO_ADDR)).to.be.revertedWith("DiamondOwnable: zero address owner");
     });
   });
 
@@ -91,7 +117,7 @@ describe("Diamond", () => {
 
         const tx = await diamond.diamondCutLong(facets, dummyInit.getAddress(), init);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, addr, init);
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), addr, init);
 
         const dimondInitMock = <DummyInitMock>dummyInit.attach(await diamond.getAddress());
         await expect(tx).to.emit(dimondInitMock, "Initialized");
@@ -136,7 +162,7 @@ describe("Diamond", () => {
       it("should add facet correctly", async () => {
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZERO_ADDR, "0x");
 
         expect(await diamond.facets()).to.deep.equal([[await dummyFacet.getAddress(), selectors]]);
         expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal(selectors);
@@ -161,10 +187,12 @@ describe("Diamond", () => {
       });
 
       it("only owner should add facets", async () => {
-        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
+        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith(
+          "DiamondOwnable: not an owner",
+        );
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "ODStorage: not an owner",
+          "DiamondOwnable: not an owner",
         );
       });
 
@@ -194,7 +222,7 @@ describe("Diamond", () => {
         facets[0].functionSelectors = selectors.slice(1);
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZERO_ADDR, "0x");
 
         expect(await diamond.facets()).to.deep.equal([[await dummyFacet.getAddress(), [selectors[0]]]]);
         expect(await diamond.facetAddresses()).to.deep.equal([await dummyFacet.getAddress()]);
@@ -210,7 +238,7 @@ describe("Diamond", () => {
         facets[0].action = FacetAction.Remove;
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZERO_ADDR, "0x");
 
         expect(await diamond.facets()).to.deep.equal([]);
         expect(await diamond.facetAddresses()).to.deep.equal([]);
@@ -239,10 +267,12 @@ describe("Diamond", () => {
       });
 
       it("only owner should remove facets", async () => {
-        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
+        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith(
+          "DiamondOwnable: not an owner",
+        );
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "ODStorage: not an owner",
+          "DiamondOwnable: not an owner",
         );
       });
     });
@@ -271,7 +301,7 @@ describe("Diamond", () => {
 
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZERO_ADDR, "0x");
 
         expect(await diamond.facets()).to.deep.equal([
           [await dummyFacet.getAddress(), [selectors[0]]],
@@ -294,7 +324,7 @@ describe("Diamond", () => {
 
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.values, ZERO_ADDR, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZERO_ADDR, "0x");
 
         expect(await diamond.facets()).to.deep.equal([[await dummyFacet2.getAddress(), selectors]]);
         expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
@@ -336,10 +366,12 @@ describe("Diamond", () => {
       });
 
       it("only owner should replace facets", async () => {
-        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith("ODStorage: not an owner");
+        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith(
+          "DiamondOwnable: not an owner",
+        );
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "ODStorage: not an owner",
+          "DiamondOwnable: not an owner",
         );
       });
     });

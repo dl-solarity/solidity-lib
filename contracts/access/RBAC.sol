@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import {IRBAC} from "../interfaces/access-control/IRBAC.sol";
+import {IRBAC} from "../interfaces/access/IRBAC.sol";
 
 import {TypeCaster} from "../libs/utils/TypeCaster.sol";
 import {SetHelper} from "../libs/arrays/SetHelper.sol";

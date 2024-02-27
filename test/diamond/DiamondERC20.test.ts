@@ -34,6 +34,7 @@ describe("DiamondERC20 and InitializableStorage", () => {
       },
     ];
 
+    await diamond.__OwnableDiamondMock_init();
     await diamond.diamondCutShort(facets);
 
     erc20 = <DiamondERC20Mock>DiamondERC20Mock.attach(await diamond.getAddress());

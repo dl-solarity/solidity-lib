@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import {TypeCaster} from "../../libs/utils/TypeCaster.sol";
 
-import {RBAC} from "../../access-control/RBAC.sol";
+import {RBAC} from "../../access/RBAC.sol";
 
 contract RBACMock is RBAC {
     using TypeCaster for string;
