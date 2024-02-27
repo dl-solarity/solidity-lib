@@ -54,10 +54,20 @@ describe("Diamond", () => {
       expect(await diamond.owner()).to.equal(SECOND.address);
     });
 
+    it("should renounce ownership", async () => {
+      await diamond.renounceOwnership();
+
+      expect(await diamond.owner()).to.equal(ZERO_ADDR);
+    });
+
     it("should not transfer ownership from non-owner", async () => {
       await expect(diamond.connect(SECOND).transferOwnership(SECOND.address)).to.be.revertedWith(
         "DiamondOwnable: not an owner",
       );
+    });
+
+    it("should not renounce ownership from non-owner", async () => {
+      await expect(diamond.connect(SECOND).renounceOwnership()).to.be.revertedWith("DiamondOwnable: not an owner");
     });
 
     it("should not transfer ownership to zero address", async () => {

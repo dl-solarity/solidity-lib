@@ -28,6 +28,13 @@ contract DiamondOwnable is DiamondOwnableStorage {
     }
 
     /**
+     * @notice The function to leave Diamond without an owner
+     */
+    function renounceOwnership() public onlyOwner {
+        _transferOwnership(address(0));
+    }
+
+    /**
      * @notice The function to appoint a new Diamond owner
      */
     function _transferOwnership(address newOwner_) internal {
