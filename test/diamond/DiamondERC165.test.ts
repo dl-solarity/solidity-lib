@@ -30,6 +30,7 @@ describe("DiamondERC165", () => {
       },
     ];
 
+    await diamond.__OwnableDiamondMock_init();
     await diamond.diamondCutShort(facets);
 
     erc165 = <DiamondERC165>DiamondERC165.attach(await diamond.getAddress());

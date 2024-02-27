@@ -14,7 +14,7 @@ contract DiamondOwnable is DiamondOwnableStorage {
      * @notice Transfers ownership to `msg.sender`
      */
     function __DiamondOwnable_init() internal onlyInitializing(DIAMOND_OWNABLE_STORAGE_SLOT) {
-        transferOwnership(msg.sender);
+        _transferOwnership(msg.sender);
     }
 
     /**
@@ -24,6 +24,13 @@ contract DiamondOwnable is DiamondOwnableStorage {
     function transferOwnership(address newOwner_) public onlyOwner {
         require(newOwner_ != address(0), "DiamondOwnable: zero address owner");
 
+        _transferOwnership(newOwner_);
+    }
+
+    /**
+     * @notice The function to appoint a new Diamond owner
+     */
+    function _transferOwnership(address newOwner_) internal {
         _getDiamondOwnableStorage().owner = newOwner_;
     }
 }

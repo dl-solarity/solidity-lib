@@ -34,6 +34,7 @@ describe("DiamondERC721 and InitializableStorage", () => {
       },
     ];
 
+    await diamond.__OwnableDiamondMock_init();
     await diamond.diamondCutShort(facets);
 
     erc721 = <DiamondERC721Mock>DiamondERC721Mock.attach(await diamond.getAddress());
