@@ -10,6 +10,8 @@ import {DiamondOwnableStorage} from "./DiamondOwnableStorage.sol";
  * by the Diamond Standard.
  */
 contract DiamondOwnable is DiamondOwnableStorage {
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
     /**
      * @notice Transfers ownership to `msg.sender`
      */
@@ -21,7 +23,7 @@ contract DiamondOwnable is DiamondOwnableStorage {
      * @notice The function to transfer the Diamond ownership
      * @param newOwner_ the new owner of the Diamond
      */
-    function transferOwnership(address newOwner_) public onlyOwner {
+    function transferOwnership(address newOwner_) public virtual onlyOwner {
         require(newOwner_ != address(0), "DiamondOwnable: zero address owner");
 
         _transferOwnership(newOwner_);
@@ -30,14 +32,18 @@ contract DiamondOwnable is DiamondOwnableStorage {
     /**
      * @notice The function to leave Diamond without an owner
      */
-    function renounceOwnership() public onlyOwner {
+    function renounceOwnership() public virtual onlyOwner {
         _transferOwnership(address(0));
     }
 
     /**
      * @notice The function to appoint a new Diamond owner
      */
-    function _transferOwnership(address newOwner_) internal {
+    function _transferOwnership(address newOwner_) internal virtual {
+        address previousOwner_ = _getDiamondOwnableStorage().owner;
+
         _getDiamondOwnableStorage().owner = newOwner_;
+
+        emit OwnershipTransferred(previousOwner_, newOwner_);
     }
 }

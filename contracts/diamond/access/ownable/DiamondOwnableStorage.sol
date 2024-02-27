@@ -33,14 +33,14 @@ abstract contract DiamondOwnableStorage is InitializableStorage {
      * @notice The function to get the Diamond owner
      * @return the owner of the Diamond
      */
-    function owner() public view returns (address) {
+    function owner() public view virtual returns (address) {
         return _getDiamondOwnableStorage().owner;
     }
 
     /**
      * @notice The function to check if `msg.sender` is the owner
      */
-    function _onlyOwner() internal view {
+    function _onlyOwner() internal view virtual {
         require(owner() == msg.sender, "DiamondOwnable: not an owner");
     }
 }
