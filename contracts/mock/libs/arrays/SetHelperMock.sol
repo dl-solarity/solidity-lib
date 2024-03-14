@@ -30,6 +30,18 @@ contract SetHelperMock {
         stringSet.add(arr_);
     }
 
+    function strictAddToAddressSet(address[] memory arr_) external {
+        addressSet.strictAdd(arr_);
+    }
+
+    function strictAddToUintSet(uint256[] memory arr_) external {
+        uintSet.strictAdd(arr_);
+    }
+
+    function strictAddToStringSet(string[] memory arr_) external {
+        stringSet.strictAdd(arr_);
+    }
+
     function removeFromAddressSet(address[] memory arr_) external {
         addressSet.remove(arr_);
     }
@@ -40,6 +52,18 @@ contract SetHelperMock {
 
     function removeFromStringSet(string[] memory arr_) external {
         stringSet.remove(arr_);
+    }
+
+    function strictRemoveFromAddressSet(address[] memory arr_) external {
+        addressSet.strictRemove(arr_);
+    }
+
+    function strictRemoveFromUintSet(uint256[] memory arr_) external {
+        uintSet.strictRemove(arr_);
+    }
+
+    function strictRemoveFromStringSet(string[] memory arr_) external {
+        stringSet.strictRemove(arr_);
     }
 
     function getAddressSet() external view returns (address[] memory) {
