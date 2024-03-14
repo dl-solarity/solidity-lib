@@ -407,6 +407,8 @@ describe("Vesting", () => {
       let vestingStartTime = BigInt(await time.latest());
       let timestampUpTo = vestingStartTime;
 
+      await vesting.createSchedule(defaultSchedule);
+
       expect(await vesting.vestingCalculation(scheduleId, vestingAmount, vestingStartTime, timestampUpTo)).to.be.equal(
         0,
       );
@@ -414,15 +416,33 @@ describe("Vesting", () => {
 
     it("should return 0 if cliff is active", async () => {
       let vestingStartTime = BigInt(await time.latest());
-      let timestampUpTo = vestingStartTime + secondsInPeriod;
+      let timestampUpTo = vestingStartTime + secondsInPeriod * 2n;
 
-      defaultSchedule.scheduleData.cliffInPeriods = 2n;
+      defaultSchedule.scheduleData.cliffInPeriods = 3n;
 
       await vesting.createSchedule(defaultSchedule);
 
       expect(await vesting.vestingCalculation(scheduleId, vestingAmount, vestingStartTime, timestampUpTo)).to.be.equal(
         0,
       );
+    });
+
+    it("should return correct tokens amount right after cliff period is over", async () => {
+      let vestingStartTime = BigInt(await time.latest());
+      let timestampUpTo = vestingStartTime + secondsInPeriod * 3n + 1n;
+
+      const newCliffInPeriods = 3n;
+      const someVestingAmount = wei(120_000);
+      const expectedAmount = (someVestingAmount / durationInPeriods) * newCliffInPeriods;
+
+      defaultSchedule.scheduleData.cliffInPeriods = newCliffInPeriods;
+      defaultSchedule.exponent = 1;
+
+      await vesting.createSchedule(defaultSchedule);
+
+      expect(
+        await vesting.vestingCalculation(scheduleId, someVestingAmount, vestingStartTime, timestampUpTo),
+      ).to.be.equal(expectedAmount);
     });
   });
 });
