@@ -4,6 +4,7 @@ import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
 
 import { SetHelperMock } from "@ethers-v6";
+import { ZERO_BYTES32 } from "@/scripts/utils/constants";
 
 describe("SetHelper", () => {
   const reverter = new Reverter();
@@ -38,6 +39,12 @@ describe("SetHelper", () => {
       expect(await mock.getUintSet()).to.deep.equal([1n]);
     });
 
+    it("should add to bytes32 set", async () => {
+      await mock.addToBytes32Set([ZERO_BYTES32]);
+
+      expect(await mock.getBytes32Set()).to.deep.equal([ZERO_BYTES32]);
+    });
+
     it("should add to string set", async () => {
       await mock.addToStringSet(["1", "2", "3"]);
 
@@ -56,7 +63,13 @@ describe("SetHelper", () => {
       await expect(mock.strictAddToUintSet([1, 1])).to.be.revertedWith("SetHelper: element already exists");
     });
 
-    it("should strict add to string set if element already exists", async () => {
+    it("should not strict add to bytes32 set if element already exists", async () => {
+      await expect(mock.strictAddToBytes32Set([ZERO_BYTES32, ZERO_BYTES32])).to.be.revertedWith(
+        "SetHelper: element already exists",
+      );
+    });
+
+    it("should not strict add to string set if element already exists", async () => {
       await expect(mock.strictAddToStringSet(["1", "1"])).to.be.revertedWith("SetHelper: element already exists");
     });
 
@@ -70,6 +83,12 @@ describe("SetHelper", () => {
       await mock.strictAddToUintSet([1]);
 
       expect(await mock.getUintSet()).to.deep.equal([1n]);
+    });
+
+    it("should strict add to bytes32 set", async () => {
+      await mock.strictAddToBytes32Set([ZERO_BYTES32]);
+
+      expect(await mock.getBytes32Set()).to.deep.equal([ZERO_BYTES32]);
     });
 
     it("should strict add to string set", async () => {
@@ -92,6 +111,13 @@ describe("SetHelper", () => {
       await mock.removeFromUintSet([1]);
 
       expect(await mock.getUintSet()).to.deep.equal([]);
+    });
+
+    it("should remove from bytes32 set", async () => {
+      await mock.addToBytes32Set([ZERO_BYTES32]);
+      await mock.removeFromBytes32Set([ZERO_BYTES32]);
+
+      expect(await mock.getBytes32Set()).to.deep.equal([]);
     });
 
     it("should remove from string set", async () => {
@@ -117,6 +143,14 @@ describe("SetHelper", () => {
       await expect(mock.strictRemoveFromUintSet([1, 1])).to.be.revertedWith("SetHelper: no such element");
     });
 
+    it("should not strict remove from bytes32 set if no such element", async () => {
+      await mock.strictAddToBytes32Set([ZERO_BYTES32]);
+
+      await expect(mock.strictRemoveFromBytes32Set([ZERO_BYTES32, ZERO_BYTES32])).to.be.revertedWith(
+        "SetHelper: no such element",
+      );
+    });
+
     it("should not strict remove from string set if no such element", async () => {
       await mock.strictAddToStringSet(["1", "2", "3"]);
 
@@ -135,6 +169,13 @@ describe("SetHelper", () => {
       await mock.strictRemoveFromUintSet([1]);
 
       expect(await mock.getUintSet()).to.deep.equal([]);
+    });
+
+    it("should strict remove from bytes32 set", async () => {
+      await mock.strictAddToBytes32Set([ZERO_BYTES32]);
+      await mock.strictRemoveFromBytes32Set([ZERO_BYTES32]);
+
+      expect(await mock.getBytes32Set()).to.deep.equal([]);
     });
 
     it("should strict remove from string set", async () => {

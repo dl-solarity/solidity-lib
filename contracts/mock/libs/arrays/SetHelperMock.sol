@@ -9,13 +9,16 @@ import {SetHelper} from "../../../libs/arrays/SetHelper.sol";
 contract SetHelperMock {
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
     using StringSet for StringSet.Set;
     using SetHelper for StringSet.Set;
     using SetHelper for EnumerableSet.UintSet;
     using SetHelper for EnumerableSet.AddressSet;
+    using SetHelper for EnumerableSet.Bytes32Set;
 
     EnumerableSet.AddressSet internal addressSet;
     EnumerableSet.UintSet internal uintSet;
+    EnumerableSet.Bytes32Set internal bytes32Set;
     StringSet.Set internal stringSet;
 
     function addToAddressSet(address[] memory arr_) external {
@@ -24,6 +27,10 @@ contract SetHelperMock {
 
     function addToUintSet(uint256[] memory arr_) external {
         uintSet.add(arr_);
+    }
+
+    function addToBytes32Set(bytes32[] memory arr_) external {
+        bytes32Set.add(arr_);
     }
 
     function addToStringSet(string[] memory arr_) external {
@@ -38,6 +45,10 @@ contract SetHelperMock {
         uintSet.strictAdd(arr_);
     }
 
+    function strictAddToBytes32Set(bytes32[] memory arr_) external {
+        bytes32Set.strictAdd(arr_);
+    }
+
     function strictAddToStringSet(string[] memory arr_) external {
         stringSet.strictAdd(arr_);
     }
@@ -48,6 +59,10 @@ contract SetHelperMock {
 
     function removeFromUintSet(uint256[] memory arr_) external {
         uintSet.remove(arr_);
+    }
+
+    function removeFromBytes32Set(bytes32[] memory arr_) external {
+        bytes32Set.remove(arr_);
     }
 
     function removeFromStringSet(string[] memory arr_) external {
@@ -62,6 +77,10 @@ contract SetHelperMock {
         uintSet.strictRemove(arr_);
     }
 
+    function strictRemoveFromBytes32Set(bytes32[] memory arr_) external {
+        bytes32Set.strictRemove(arr_);
+    }
+
     function strictRemoveFromStringSet(string[] memory arr_) external {
         stringSet.strictRemove(arr_);
     }
@@ -72,6 +91,10 @@ contract SetHelperMock {
 
     function getUintSet() external view returns (uint256[] memory) {
         return uintSet.values();
+    }
+
+    function getBytes32Set() external view returns (bytes32[] memory) {
+        return bytes32Set.values();
     }
 
     function getStringSet() external view returns (string[] memory) {
