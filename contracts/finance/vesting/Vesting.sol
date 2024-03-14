@@ -385,7 +385,7 @@ abstract contract Vesting is Initializable {
             _baseData.secondsInPeriod
         );
 
-        if (elapsedPeriods_ <= _baseData.cliffInPeriods) {
+        if (elapsedPeriods_ < _baseData.cliffInPeriods) {
             return 0;
         }
 
