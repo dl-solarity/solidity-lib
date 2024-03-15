@@ -36,6 +36,10 @@ contract ArrayHelperMock {
         return arr_.reverse();
     }
 
+    function reverseBool(bool[] memory arr_) external pure returns (bool[] memory) {
+        return arr_.reverse();
+    }
+
     function reverseString(string[] memory arr_) external pure returns (string[] memory) {
         return arr_.reverse();
     }
@@ -57,6 +61,14 @@ contract ArrayHelperMock {
         uint256 index_,
         address[] memory what_
     ) external pure returns (uint256, address[] memory) {
+        return (to_.insert(index_, what_), to_);
+    }
+
+    function insertBool(
+        bool[] memory to_,
+        uint256 index_,
+        bool[] memory what_
+    ) external pure returns (uint256, bool[] memory) {
         return (to_.insert(index_, what_), to_);
     }
 

@@ -174,6 +174,15 @@ describe("ArrayHelper", () => {
       expect(arr[2]).to.equal(FIRST.address);
     });
 
+    it("should reverse bool array", async () => {
+      const arr = await mock.reverseBool([true, true, false]);
+
+      expect(arr.length).to.equal(3);
+      expect(arr[0]).to.equal(false);
+      expect(arr[1]).to.equal(true);
+      expect(arr[2]).to.equal(true);
+    });
+
     it("should reverse string array", async () => {
       const arr = await mock.reverseString(["1", "2", "3"]);
 
@@ -234,6 +243,17 @@ describe("ArrayHelper", () => {
 
       expect(res[0]).to.equal(2n);
       expect(res[1]).to.deep.equal([FIRST.address, THIRD.address]);
+    });
+
+    it("should insert bool array", async () => {
+      const base = [true, false];
+      const index = 1;
+      const what = [true];
+
+      const res = await mock.insertBool(base, index, what);
+
+      expect(res[0]).to.equal(2n);
+      expect(res[1]).to.deep.equal([true, true]);
     });
 
     it("should insert string array", async () => {
