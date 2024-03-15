@@ -30,8 +30,8 @@ jobs:
           cp -r markups/contracts docs/docs/reference
       - name: Push Docs
         run: |
-          git config user.name "Docs Syncer"
-          git config user.email "contact@distributedlab.com"
+          git config --global user.name "Docs Syncer"
+          git config --global user.email "contact@distributedlab.com"
           git fetch --unshallow
           latest_tag=$(git describe --tags --abbrev=0)
           cd docs
