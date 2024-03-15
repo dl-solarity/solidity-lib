@@ -6,7 +6,7 @@ import {ERC20, IERC20, IERC20Metadata} from "@openzeppelin/contracts/token/ERC20
 /**
  * @notice This library is used to convert numbers that use token's N decimals to M decimals.
  * Comes extremely handy with standardizing the business logic that is intended to work with many different ERC20 tokens
- * that have different precision (decimals). One can perform calculations with 18 decimals only and resort to convertion
+ * that have different precision (decimals). One can perform calculations with 18 decimals only and resort to conversion
  * only when the payouts (or interactions) with the actual tokes have to be made.
  *
  * The best usage scenario involves accepting and calculating values with 18 decimals throughout the project, despite the tokens decimals.
@@ -168,7 +168,7 @@ library DecimalsConverter {
     }
 
     /**
-     * @notice The function to do the token precision convertion
+     * @notice The function to do the token precision conversion
      * @param amount_ the amount to convert
      * @param baseToken_ current token
      * @param destToken_ desired token
@@ -183,7 +183,7 @@ library DecimalsConverter {
     }
 
     /**
-     * @notice The function to do the precision convertion
+     * @notice The function to do the precision conversion
      * @param amount_ the amount to covert
      * @param baseDecimals_ current number precision
      * @param destDecimals_ desired number precision

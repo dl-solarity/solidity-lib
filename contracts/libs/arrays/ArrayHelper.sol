@@ -129,6 +129,19 @@ library ArrayHelper {
     }
 
     /**
+     * @notice The function to reverse a bool array
+     */
+    function reverse(bool[] memory arr_) internal pure returns (bool[] memory reversed_) {
+        reversed_ = new bool[](arr_.length);
+        uint256 i = arr_.length;
+
+        while (i > 0) {
+            i--;
+            reversed_[arr_.length - 1 - i] = arr_[i];
+        }
+    }
+
+    /**
      * @notice The function to reverse a string array
      */
     function reverse(string[] memory arr_) internal pure returns (string[] memory reversed_) {
@@ -180,6 +193,21 @@ library ArrayHelper {
         address[] memory to_,
         uint256 index_,
         address[] memory what_
+    ) internal pure returns (uint256) {
+        for (uint256 i = 0; i < what_.length; i++) {
+            to_[index_ + i] = what_[i];
+        }
+
+        return index_ + what_.length;
+    }
+
+    /**
+     * @notice The function to insert a bool array into the other array
+     */
+    function insert(
+        bool[] memory to_,
+        uint256 index_,
+        bool[] memory what_
     ) internal pure returns (uint256) {
         for (uint256 i = 0; i < what_.length; i++) {
             to_[index_ + i] = what_[i];

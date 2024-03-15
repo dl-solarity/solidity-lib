@@ -11,6 +11,7 @@ import {StringSet} from "../data-structures/StringSet.sol";
 library SetHelper {
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
     using StringSet for StringSet.Set;
 
     /**
@@ -28,6 +29,15 @@ library SetHelper {
      * @notice The function to insert an array of elements into the uint256 set
      */
     function add(EnumerableSet.UintSet storage set, uint256[] memory array_) internal {
+        for (uint256 i = 0; i < array_.length; i++) {
+            set.add(array_[i]);
+        }
+    }
+
+    /**
+     * @notice The function to insert an array of elements into the bytes32 set
+     */
+    function add(EnumerableSet.Bytes32Set storage set, bytes32[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {
             set.add(array_[i]);
         }
@@ -63,6 +73,15 @@ library SetHelper {
     }
 
     /**
+     * @notice The function for the strict insertion of an array of elements into the bytes32 set
+     */
+    function strictAdd(EnumerableSet.Bytes32Set storage set, bytes32[] memory array_) internal {
+        for (uint256 i = 0; i < array_.length; i++) {
+            require(set.add(array_[i]), "SetHelper: element already exists");
+        }
+    }
+
+    /**
      * @notice The function for the strict insertion of an array of elements into the string set
      */
     function strictAdd(StringSet.Set storage set, string[] memory array_) internal {
@@ -92,6 +111,15 @@ library SetHelper {
     }
 
     /**
+     * @notice The function to remove an array of elements from the bytes32 set
+     */
+    function remove(EnumerableSet.Bytes32Set storage set, bytes32[] memory array_) internal {
+        for (uint256 i = 0; i < array_.length; i++) {
+            set.remove(array_[i]);
+        }
+    }
+
+    /**
      * @notice The function to remove an array of elements from the string set
      */
     function remove(StringSet.Set storage set, string[] memory array_) internal {
@@ -115,6 +143,15 @@ library SetHelper {
      * @notice The function for the strict removal of an array of elements from the uint256 set
      */
     function strictRemove(EnumerableSet.UintSet storage set, uint256[] memory array_) internal {
+        for (uint256 i = 0; i < array_.length; i++) {
+            require(set.remove(array_[i]), "SetHelper: no such element");
+        }
+    }
+
+    /**
+     * @notice The function for the strict removal of an array of elements from the bytes32 set
+     */
+    function strictRemove(EnumerableSet.Bytes32Set storage set, bytes32[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {
             require(set.remove(array_[i]), "SetHelper: no such element");
         }
