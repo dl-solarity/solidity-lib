@@ -54,19 +54,43 @@ contract SparseMerkleTreeMock {
         _addressTree.setHashers(_hash2, _hash3);
     }
 
-    function addUint(uint256 key_, uint256 value_) external {
+    function addUint(bytes32 key_, uint256 value_) external {
         _uintTree.add(key_, value_);
+    }
+
+    function removeUint(bytes32 key_) external {
+        _uintTree.remove(key_);
+    }
+
+    function updateUint(bytes32 key_, uint256 newValue_) external {
+        _uintTree.update(key_, newValue_);
     }
 
     function addBytes32(bytes32 key_, bytes32 value_) external {
         _bytes32Tree.add(key_, value_);
     }
 
+    function removeBytes32(bytes32 key_) external {
+        _bytes32Tree.remove(key_);
+    }
+
+    function updateBytes32(bytes32 key_, bytes32 newValue_) external {
+        _bytes32Tree.update(key_, newValue_);
+    }
+
     function addAddress(bytes32 key_, address value_) external {
         _addressTree.add(key_, value_);
     }
 
-    function getUintProof(uint256 key_) external view returns (SparseMerkleTree.Proof memory) {
+    function removeAddress(bytes32 key_) external {
+        _addressTree.remove(key_);
+    }
+
+    function updateAddress(bytes32 key_, address newValue_) external {
+        _addressTree.update(key_, newValue_);
+    }
+
+    function getUintProof(bytes32 key_) external view returns (SparseMerkleTree.Proof memory) {
         return _uintTree.getProof(key_);
     }
 

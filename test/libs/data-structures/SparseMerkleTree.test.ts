@@ -127,47 +127,49 @@ describe("SparseMerkleTree", () => {
       });
       const newMerkleTree = await SparseMerkleTreeMock.deploy();
 
-      await expect(newMerkleTree.addUint(1n, 1n)).to.be.rejectedWith("SparseMerkleTree: tree is not initialized");
+      await expect(newMerkleTree.addUint(ethers.toBeHex(1n, 32), 1n)).to.be.rejectedWith(
+        "SparseMerkleTree: tree is not initialized",
+      );
     });
 
     it("should build a Merkle Tree of a predefined size with correct initial values", async () => {
       const value = 2341n;
-      const key = BigInt(poseidonHash(ethers.toBeHex(value)));
+      const key = poseidonHash(ethers.toBeHex(value));
 
       expect(await merkleTree.getUintRoot()).to.equal(await getRoot(localMerkleTree));
 
       await merkleTree.addUint(key, value);
 
-      await localMerkleTree.add(key, value);
+      await localMerkleTree.add(BigInt(key), value);
 
       expect(await merkleTree.getUintRoot()).to.equal(await getRoot(localMerkleTree));
 
       expect(await merkleTree.getUintMaxDepth()).to.equal(20);
       expect(await merkleTree.getUintNodesCount()).to.equal(1);
 
-      await compareNodes(await merkleTree.getUintNode(1), key);
-      await compareNodes(await merkleTree.getUintNodeByKey(key), key);
+      await compareNodes(await merkleTree.getUintNode(1), BigInt(key));
+      await compareNodes(await merkleTree.getUintNodeByKey(key), BigInt(key));
 
       const onchainProof = getOnchainProof(await merkleTree.getUintProof(key));
 
-      expect(await verifyProof(await localMerkleTree.root(), onchainProof, key, value)).to.be.true;
+      expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(key), value)).to.be.true;
     });
 
     it("should build a Merkle Tree correctly with multiple elements", async () => {
       for (let i = 1n; i < 20n; i++) {
         const value = BigInt(ethers.toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32));
-        const key = BigInt(poseidonHash(ethers.toBeHex(`0x` + value.toString(16), 32)));
+        const key = poseidonHash(ethers.toBeHex(`0x` + value.toString(16), 32));
 
         await merkleTree.addUint(key, value);
 
-        await localMerkleTree.add(key, value);
+        await localMerkleTree.add(BigInt(key), value);
 
         expect(await merkleTree.getUintRoot()).to.equal(await getRoot(localMerkleTree));
 
-        await compareNodes(await merkleTree.getUintNodeByKey(key), key);
+        await compareNodes(await merkleTree.getUintNodeByKey(key), BigInt(key));
 
         const onchainProof = getOnchainProof(await merkleTree.getUintProof(key));
-        expect(await verifyProof(await localMerkleTree.root(), onchainProof, key, value)).to.be.true;
+        expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(key), value)).to.be.true;
       }
 
       expect(await merkleTree.isUintCustomHasherSet()).to.be.true;
@@ -176,15 +178,15 @@ describe("SparseMerkleTree", () => {
     });
 
     it("should generate empty proof on empty tree", async () => {
-      const onchainProof = getOnchainProof(await merkleTree.getUintProof(1n));
+      const onchainProof = getOnchainProof(await merkleTree.getUintProof(ethers.toBeHex(1n, 32)));
 
       expect(onchainProof.allSiblings()).to.have.length(0);
     });
 
     it("should generate an empty proof for but with aux fields", async () => {
-      await merkleTree.addUint(7n, 1n);
+      await merkleTree.addUint(ethers.toBeHex(7n, 32), 1n);
 
-      const onchainProof = await merkleTree.getUintProof(5n);
+      const onchainProof = await merkleTree.getUintProof(ethers.toBeHex(5n, 32));
 
       expect(onchainProof.auxKey).to.equal(7n);
       expect(onchainProof.auxValue).to.equal(1n);
@@ -196,19 +198,19 @@ describe("SparseMerkleTree", () => {
       await localMerkleTree.add(3n, 15n); // key -> 0b011
       await localMerkleTree.add(7n, 15n); // key -> 0b111
 
-      await merkleTree.addUint(3n, 15n);
-      await merkleTree.addUint(7n, 15n);
+      await merkleTree.addUint(ethers.toBeHex(3n, 32), 15n);
+      await merkleTree.addUint(ethers.toBeHex(7n, 32), 15n);
 
-      let onchainProof = getOnchainProof(await merkleTree.getUintProof(5n));
+      let onchainProof = getOnchainProof(await merkleTree.getUintProof(ethers.toBeHex(5n, 32)));
       expect(await verifyProof(await localMerkleTree.root(), onchainProof, 5n, 0n)).to.be.true;
 
-      onchainProof = getOnchainProof(await merkleTree.getUintProof(15n));
+      onchainProof = getOnchainProof(await merkleTree.getUintProof(ethers.toBeHex(15n, 32)));
       expect(await verifyProof(await localMerkleTree.root(), onchainProof, 15n, 15n)).to.be.true;
     });
 
     it("should revert if trying to add a node with the same key", async () => {
       const value = 2341n;
-      const key = BigInt(poseidonHash(ethers.toBeHex(value)));
+      const key = poseidonHash(ethers.toBeHex(value));
 
       await merkleTree.addUint(key, value);
 
@@ -226,16 +228,18 @@ describe("SparseMerkleTree", () => {
 
       await newMerkleTree.initializeUintTree(1);
 
-      await newMerkleTree.addUint(1n, 1n);
-      await newMerkleTree.addUint(2n, 1n);
+      await newMerkleTree.addUint(ethers.toBeHex(1n, 32), 1n);
+      await newMerkleTree.addUint(ethers.toBeHex(2n, 32), 1n);
 
-      await expect(newMerkleTree.addUint(3n, 1n)).to.be.rejectedWith("SparseMerkleTree: max depth reached");
+      await expect(newMerkleTree.addUint(ethers.toBeHex(3n, 32), 1n)).to.be.rejectedWith(
+        "SparseMerkleTree: max depth reached",
+      );
     });
 
     it("should get empty Node by non-existing key", async () => {
       expect((await merkleTree.getUintNodeByKey(1n)).nodeType).to.be.equal(0);
 
-      await merkleTree.addUint(7n, 1n);
+      await merkleTree.addUint(ethers.toBeHex(7n, 32), 1n);
 
       expect((await merkleTree.getUintNodeByKey(5n)).nodeType).to.be.equal(0);
     });

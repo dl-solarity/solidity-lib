@@ -119,8 +119,31 @@ library SparseMerkleTree {
      * @param key_ The key of the element.
      * @param value_ The value of the element.
      */
-    function add(UintSMT storage tree, uint256 key_, uint256 value_) internal {
+    function add(UintSMT storage tree, bytes32 key_, uint256 value_) internal {
         _add(tree._tree, bytes32(key_), bytes32(value_));
+    }
+
+    /**
+     * @notice The function to remove a (leaf) element from the uint256 tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     */
+    function remove(UintSMT storage tree, bytes32 key_) internal {
+        _remove(tree._tree, key_);
+    }
+
+    /**
+     * @notice The function to update a (leaf) element in the uint256 tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     * @param newValue_ The new value of the element.
+     */
+    function update(UintSMT storage tree, bytes32 key_, uint256 newValue_) internal {
+        _update(tree._tree, key_, bytes32(newValue_));
     }
 
     /**
@@ -131,7 +154,7 @@ library SparseMerkleTree {
      * @param key_ The key of the element.
      * @return SMT proof struct.
      */
-    function getProof(UintSMT storage tree, uint256 key_) internal view returns (Proof memory) {
+    function getProof(UintSMT storage tree, bytes32 key_) internal view returns (Proof memory) {
         return _proof(tree._tree, bytes32(key_));
     }
 
@@ -268,6 +291,29 @@ library SparseMerkleTree {
      */
     function add(Bytes32SMT storage tree, bytes32 key_, bytes32 value_) internal {
         _add(tree._tree, key_, value_);
+    }
+
+    /**
+     * @notice The function to remove a (leaf) element from the bytes32 tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     */
+    function remove(Bytes32SMT storage tree, bytes32 key_) internal {
+        _remove(tree._tree, key_);
+    }
+
+    /**
+     * @notice The function to update a (leaf) element in the bytes32 tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     * @param newValue_ The new value of the element.
+     */
+    function update(Bytes32SMT storage tree, bytes32 key_, bytes32 newValue_) internal {
+        _update(tree._tree, key_, newValue_);
     }
 
     /**
@@ -421,6 +467,29 @@ library SparseMerkleTree {
      */
     function add(AddressSMT storage tree, bytes32 key_, address value_) internal {
         _add(tree._tree, key_, bytes32(uint256(uint160(value_))));
+    }
+
+    /**
+     * @notice The function to remove a (leaf) element from the address tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     */
+    function remove(AddressSMT storage tree, bytes32 key_) internal {
+        _remove(tree._tree, key_);
+    }
+
+    /**
+     * @notice The function to update a (leaf) element in the address tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     * @param newValue_ The new value of the element.
+     */
+    function update(AddressSMT storage tree, bytes32 key_, address newValue_) internal {
+        _update(tree._tree, key_, bytes32(uint256(uint160(newValue_))));
     }
 
     /**
