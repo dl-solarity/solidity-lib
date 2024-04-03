@@ -648,56 +648,25 @@ library SparseMerkleTree {
         tree.merkleRootId = uint64(_add(tree, node_, tree.merkleRootId, 0));
     }
 
-    function _proof(SMT storage tree, bytes32 key_) private view returns (Proof memory) {
-        uint256 maxDepth_ = _maxDepth(tree);
+    function _remove(SMT storage tree, bytes32 key_) private onlyInitialized(tree) {
+        _remove(tree, key_, tree.merkleRootId, 0);
+    }
 
-        Proof memory proof_ = Proof({
-            root: _root(tree),
-            siblings: new bytes32[](maxDepth_),
-            existence: false,
+    function _update(
+        SMT storage tree,
+        bytes32 key_,
+        bytes32 newValue_
+    ) private onlyInitialized(tree) {
+        Node memory node_ = Node({
+            nodeType: NodeType.LEAF,
+            childLeft: ZERO_IDX,
+            childRight: ZERO_IDX,
+            nodeHash: ZERO_HASH,
             key: key_,
-            value: ZERO_HASH,
-            auxExistence: false,
-            auxKey: ZERO_HASH,
-            auxValue: ZERO_HASH
+            value: newValue_
         });
 
-        Node memory node_;
-        uint256 nextNodeId_ = tree.merkleRootId;
-
-        for (uint256 i = 0; i <= maxDepth_; i++) {
-            node_ = _node(tree, nextNodeId_);
-
-            if (node_.nodeType == NodeType.EMPTY) {
-                break;
-            } else if (node_.nodeType == NodeType.LEAF) {
-                if (node_.key == proof_.key) {
-                    proof_.existence = true;
-                    proof_.value = node_.value;
-
-                    break;
-                } else {
-                    proof_.auxExistence = true;
-                    proof_.auxKey = node_.key;
-                    proof_.auxValue = node_.value;
-                    proof_.value = node_.value;
-
-                    break;
-                }
-            } else {
-                if ((uint256(proof_.key) >> i) & 1 == 1) {
-                    nextNodeId_ = node_.childRight;
-
-                    proof_.siblings[i] = tree.nodes[node_.childLeft].nodeHash;
-                } else {
-                    nextNodeId_ = node_.childLeft;
-
-                    proof_.siblings[i] = tree.nodes[node_.childRight].nodeHash;
-                }
-            }
-        }
-
-        return proof_;
+        _update(tree, node_, tree.merkleRootId, 0);
     }
 
     /**
@@ -755,6 +724,75 @@ library SparseMerkleTree {
         }
 
         return leafId_;
+    }
+
+    function _remove(
+        SMT storage tree,
+        bytes32 key_,
+        uint256 nodeId_,
+        uint16 currentDepth_
+    ) private {
+        Node memory currentNode_ = tree.nodes[nodeId_];
+
+        if (currentNode_.nodeType == NodeType.EMPTY) {
+            revert("SparseMerkleTree: the node does not exist");
+        } else if (currentNode_.nodeType == NodeType.LEAF) {
+            if (currentNode_.key != key_) {
+                revert("SparseMerkleTree: the leaf does not match");
+            }
+
+            delete tree.nodes[nodeId_];
+        } else {
+            if ((uint256(key_) >> currentDepth_) & 1 == 1) {
+                _remove(tree, key_, currentNode_.childRight, currentDepth_ + 1);
+            } else {
+                _remove(tree, key_, currentNode_.childLeft, currentDepth_ + 1);
+            }
+
+            NodeType rightType_ = tree.nodes[currentNode_.childRight].nodeType;
+            NodeType leftType_ = tree.nodes[currentNode_.childLeft].nodeType;
+
+            if (rightType_ == NodeType.EMPTY && leftType_ == NodeType.EMPTY) {
+                delete tree.nodes[nodeId_];
+            } else {
+                if (rightType_ == NodeType.EMPTY) {
+                    tree.nodes[nodeId_].childRight = ZERO_IDX;
+                } else if (leftType_ == NodeType.EMPTY) {
+                    tree.nodes[nodeId_].childLeft = ZERO_IDX;
+                }
+
+                /// @dev should be the same as passing tree.nodes[nodeId_]
+                tree.nodes[nodeId_].nodeHash = _getNodeHash(tree, currentNode_);
+            }
+        }
+    }
+
+    function _update(
+        SMT storage tree,
+        Node memory newLeaf_,
+        uint256 nodeId_,
+        uint16 currentDepth_
+    ) private {
+        Node memory currentNode_ = tree.nodes[nodeId_];
+
+        if (currentNode_.nodeType == NodeType.EMPTY) {
+            revert("SparseMerkleTree: the node does not exist");
+        } else if (currentNode_.nodeType == NodeType.LEAF) {
+            if (currentNode_.key != newLeaf_.key) {
+                revert("SparseMerkleTree: the leaf does not match");
+            }
+
+            tree.nodes[nodeId_] = newLeaf_;
+            currentNode_ = newLeaf_;
+        } else {
+            if ((uint256(newLeaf_.key) >> currentDepth_) & 1 == 1) {
+                _update(tree, newLeaf_, currentNode_.childRight, currentDepth_ + 1);
+            } else {
+                _update(tree, newLeaf_, currentNode_.childLeft, currentDepth_ + 1);
+            }
+        }
+
+        tree.nodes[nodeId_].nodeHash = _getNodeHash(tree, currentNode_);
     }
 
     function _pushLeaf(
@@ -859,6 +897,58 @@ library SparseMerkleTree {
         }
 
         return hash2_(tree.nodes[node_.childLeft].nodeHash, tree.nodes[node_.childRight].nodeHash);
+    }
+
+    function _proof(SMT storage tree, bytes32 key_) private view returns (Proof memory) {
+        uint256 maxDepth_ = _maxDepth(tree);
+
+        Proof memory proof_ = Proof({
+            root: _root(tree),
+            siblings: new bytes32[](maxDepth_),
+            existence: false,
+            key: key_,
+            value: ZERO_HASH,
+            auxExistence: false,
+            auxKey: ZERO_HASH,
+            auxValue: ZERO_HASH
+        });
+
+        Node memory node_;
+        uint256 nextNodeId_ = tree.merkleRootId;
+
+        for (uint256 i = 0; i <= maxDepth_; i++) {
+            node_ = _node(tree, nextNodeId_);
+
+            if (node_.nodeType == NodeType.EMPTY) {
+                break;
+            } else if (node_.nodeType == NodeType.LEAF) {
+                if (node_.key == proof_.key) {
+                    proof_.existence = true;
+                    proof_.value = node_.value;
+
+                    break;
+                } else {
+                    proof_.auxExistence = true;
+                    proof_.auxKey = node_.key;
+                    proof_.auxValue = node_.value;
+                    proof_.value = node_.value;
+
+                    break;
+                }
+            } else {
+                if ((uint256(proof_.key) >> i) & 1 == 1) {
+                    nextNodeId_ = node_.childRight;
+
+                    proof_.siblings[i] = tree.nodes[node_.childLeft].nodeHash;
+                } else {
+                    nextNodeId_ = node_.childLeft;
+
+                    proof_.siblings[i] = tree.nodes[node_.childRight].nodeHash;
+                }
+            }
+        }
+
+        return proof_;
     }
 
     function _hash2(bytes32 a, bytes32 b) private pure returns (bytes32 result) {
