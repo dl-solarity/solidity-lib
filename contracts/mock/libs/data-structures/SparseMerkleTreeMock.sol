@@ -18,27 +18,27 @@ contract SparseMerkleTreeMock {
     SparseMerkleTree.Bytes32SMT internal _bytes32Tree;
     SparseMerkleTree.AddressSMT internal _addressTree;
 
-    function initializeUintTree(uint64 maxDepth_) external {
+    function initializeUintTree(uint32 maxDepth_) external {
         _uintTree.initialize(maxDepth_);
     }
 
-    function initializeBytes32Tree(uint64 maxDepth_) external {
+    function initializeBytes32Tree(uint32 maxDepth_) external {
         _bytes32Tree.initialize(maxDepth_);
     }
 
-    function initializeAddressTree(uint64 maxDepth_) external {
+    function initializeAddressTree(uint32 maxDepth_) external {
         _addressTree.initialize(maxDepth_);
     }
 
-    function setMaxDepthUintTree(uint64 maxDepth_) external {
+    function setMaxDepthUintTree(uint32 maxDepth_) external {
         _uintTree.setMaxDepth(maxDepth_);
     }
 
-    function setMaxDepthBytes32Tree(uint64 maxDepth_) external {
+    function setMaxDepthBytes32Tree(uint32 maxDepth_) external {
         _bytes32Tree.setMaxDepth(maxDepth_);
     }
 
-    function setMaxDepthAddressTree(uint64 maxDepth_) external {
+    function setMaxDepthAddressTree(uint32 maxDepth_) external {
         _addressTree.setMaxDepth(maxDepth_);
     }
 

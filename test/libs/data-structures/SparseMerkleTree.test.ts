@@ -9,6 +9,7 @@ import { SparseMerkleTree } from "@/generated-types/ethers/contracts/mock/libs/d
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 import { Reverter } from "@/test/helpers/reverter";
+import { ZERO_BYTES32 } from "@/scripts/utils/constants";
 import { getPoseidon, poseidonHash } from "@/test/helpers/poseidon-hash";
 
 import "mock-local-storage";
@@ -118,7 +119,7 @@ describe("SparseMerkleTree", () => {
       expect(await merkleTree.getUintMaxDepth()).to.equal(21);
     });
 
-    it("should revert if trying to call add function on non-initialized tree", async () => {
+    it("should revert if trying to call add/remove/update functions on non-initialized tree", async () => {
       const SparseMerkleTreeMock = await ethers.getContractFactory("SparseMerkleTreeMock", {
         libraries: {
           PoseidonUnit2L: await (await getPoseidon(2)).getAddress(),
@@ -128,6 +129,12 @@ describe("SparseMerkleTree", () => {
       const newMerkleTree = await SparseMerkleTreeMock.deploy();
 
       await expect(newMerkleTree.addUint(ethers.toBeHex(1n, 32), 1n)).to.be.rejectedWith(
+        "SparseMerkleTree: tree is not initialized",
+      );
+      await expect(newMerkleTree.removeUint(ethers.toBeHex(1n, 32))).to.be.rejectedWith(
+        "SparseMerkleTree: tree is not initialized",
+      );
+      await expect(newMerkleTree.updateUint(ethers.toBeHex(1n, 32), 1n)).to.be.rejectedWith(
         "SparseMerkleTree: tree is not initialized",
       );
     });
@@ -175,6 +182,121 @@ describe("SparseMerkleTree", () => {
       expect(await merkleTree.isUintCustomHasherSet()).to.be.true;
 
       await expect(merkleTree.setUintPoseidonHasher()).to.be.rejectedWith("SparseMerkleTree: tree is not empty");
+    });
+
+    it("should add and full remove elements from Merkle Tree correctly", async () => {
+      const keys: string[] = [];
+
+      for (let i = 1n; i < 20n; i++) {
+        const value = BigInt(ethers.toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32));
+        const key = poseidonHash(ethers.toBeHex(`0x` + value.toString(16), 32));
+
+        await merkleTree.addUint(key, value);
+
+        keys.push(key);
+      }
+
+      for (let i = 1n; i < 20n; i++) {
+        const key = ethers.toBeHex(keys[Number(i) - 1], 32);
+
+        await merkleTree.removeUint(key);
+      }
+
+      expect(await merkleTree.getUintRoot()).to.equal(ZERO_BYTES32);
+
+      expect(await merkleTree.getUintNodesCount()).to.equal(0);
+
+      expect(await merkleTree.isUintCustomHasherSet()).to.be.true;
+      expect(merkleTree.setUintPoseidonHasher()).to.not.be.rejected;
+    });
+
+    it("should rebalance elements in Merkle Tree correctly", async () => {
+      const expectedRoot = "0x2f9bbaa7ab83da6e8d1d8dd05bac16e65fa40b4f6455c1d2ee77e968dfc382dc";
+      const keys = [7n, 1n, 5n];
+
+      for (let key of keys) {
+        const hexKey = ethers.toBeHex(key, 32);
+
+        await merkleTree.addUint(hexKey, key);
+      }
+
+      const oldRoot = await merkleTree.getUintRoot();
+
+      expect(oldRoot).to.equal(expectedRoot);
+      expect(await merkleTree.getUintNodesCount()).to.equal(6);
+
+      for (let key of keys) {
+        const hexKey = ethers.toBeHex(key, 32);
+
+        await merkleTree.removeUint(hexKey);
+        await merkleTree.addUint(hexKey, key);
+      }
+
+      expect(await merkleTree.getUintRoot()).to.equal(oldRoot);
+      expect(await merkleTree.getUintNodesCount()).to.equal(6);
+    });
+
+    it("should not remove non-existant leaves", async () => {
+      const keys = [7n, 1n, 5n];
+
+      for (let key of keys) {
+        const hexKey = ethers.toBeHex(key, 32);
+
+        await merkleTree.addUint(hexKey, key);
+      }
+
+      expect(merkleTree.removeUint(ethers.toBeHex(8, 32))).to.be.revertedWith(
+        "SparseMerkleTree: the node does not exist",
+      );
+      expect(merkleTree.removeUint(ethers.toBeHex(9, 32))).to.be.revertedWith(
+        "SparseMerkleTree: the leaf does not match",
+      );
+    });
+
+    it("should update existing leaves", async () => {
+      const keys: string[] = [];
+
+      for (let i = 1n; i < 20n; i++) {
+        const value = BigInt(ethers.toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32));
+        const key = poseidonHash(ethers.toBeHex(`0x` + value.toString(16), 32));
+
+        await merkleTree.addUint(key, value);
+        await localMerkleTree.add(BigInt(key), value);
+
+        keys.push(key);
+      }
+
+      for (let i = 1n; i < 20n; i++) {
+        const key = ethers.toBeHex(keys[Number(i) - 1], 32);
+        const value = BigInt(ethers.toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32));
+
+        await merkleTree.updateUint(key, value);
+        await localMerkleTree.update(BigInt(key), value);
+
+        expect(await merkleTree.getUintRoot()).to.equal(await getRoot(localMerkleTree));
+
+        await compareNodes(await merkleTree.getUintNodeByKey(key), BigInt(key));
+
+        const onchainProof = getOnchainProof(await merkleTree.getUintProof(key));
+        expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(key), value)).to.be.true;
+      }
+    });
+
+    it("should not update non-existant leaves", async () => {
+      const keys = [7n, 1n, 5n];
+
+      for (let key of keys) {
+        const hexKey = ethers.toBeHex(key, 32);
+
+        await merkleTree.addUint(hexKey, key);
+      }
+
+      expect(merkleTree.updateUint(ethers.toBeHex(8, 32), 1n)).to.be.revertedWith(
+        "SparseMerkleTree: the node does not exist",
+      );
+      expect(merkleTree.updateUint(ethers.toBeHex(9, 32), 1n)).to.be.revertedWith(
+        "SparseMerkleTree: the leaf does not match",
+      );
     });
 
     it("should generate empty proof on empty tree", async () => {
@@ -301,6 +423,61 @@ describe("SparseMerkleTree", () => {
 
       await expect(merkleTree.setBytes32PoseidonHasher()).to.be.rejectedWith("SparseMerkleTree: tree is not empty");
     });
+
+    it("should add and full remove elements from Merkle Tree correctly", async () => {
+      const keys: string[] = [];
+
+      for (let i = 1n; i < 20n; i++) {
+        const value = ethers.toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32);
+        const key = poseidonHash(value);
+
+        await merkleTree.addBytes32(key, value);
+
+        keys.push(key);
+      }
+
+      for (let i = 1n; i < 20n; i++) {
+        const key = ethers.toBeHex(keys[Number(i) - 1], 32);
+
+        await merkleTree.removeBytes32(key);
+      }
+
+      expect(await merkleTree.getBytes32Root()).to.equal(ZERO_BYTES32);
+
+      expect(await merkleTree.getBytes32NodesCount()).to.equal(0);
+
+      expect(await merkleTree.isBytes32CustomHasherSet()).to.be.true;
+      expect(merkleTree.setBytes32PoseidonHasher()).to.not.be.rejected;
+    });
+
+    it("should update existing leaves", async () => {
+      const keys: string[] = [];
+
+      for (let i = 1n; i < 20n; i++) {
+        const value = ethers.toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32);
+        const key = poseidonHash(value);
+
+        await merkleTree.addBytes32(key, value);
+        await localMerkleTree.add(BigInt(key), BigInt(value));
+
+        keys.push(key);
+      }
+
+      for (let i = 1n; i < 20n; i++) {
+        const key = ethers.toBeHex(keys[Number(i) - 1], 32);
+        const value = BigInt(ethers.toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32));
+
+        await merkleTree.updateBytes32(key, ethers.toBeHex(value, 32));
+        await localMerkleTree.update(BigInt(key), BigInt(value));
+
+        expect(await merkleTree.getBytes32Root()).to.equal(await getRoot(localMerkleTree));
+
+        await compareNodes(await merkleTree.getBytes32NodeByKey(key), BigInt(key));
+
+        const onchainProof = getOnchainProof(await merkleTree.getBytes32Proof(key));
+        expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(key), BigInt(value))).to.be.true;
+      }
+    });
   });
 
   describe("Address SMT", () => {
@@ -358,6 +535,61 @@ describe("SparseMerkleTree", () => {
       expect(await merkleTree.isAddressCustomHasherSet()).to.be.true;
 
       await expect(merkleTree.setAddressPoseidonHasher()).to.be.rejectedWith("SparseMerkleTree: tree is not empty");
+    });
+
+    it("should add and full remove elements from Merkle Tree correctly", async () => {
+      const keys: string[] = [];
+
+      for (let i = 1n; i < 20n; i++) {
+        const value = ethers.toBeHex(BigInt(await USER1.getAddress()) + i);
+        const key = poseidonHash(value);
+
+        await merkleTree.addAddress(key, value);
+
+        keys.push(key);
+      }
+
+      for (let i = 1n; i < 20n; i++) {
+        const key = ethers.toBeHex(keys[Number(i) - 1], 32);
+
+        await merkleTree.removeAddress(key);
+      }
+
+      expect(await merkleTree.getAddressRoot()).to.equal(ZERO_BYTES32);
+
+      expect(await merkleTree.getAddressNodesCount()).to.equal(0);
+
+      expect(await merkleTree.isAddressCustomHasherSet()).to.be.true;
+      expect(merkleTree.setAddressPoseidonHasher()).to.not.be.rejected;
+    });
+
+    it("should update existing leaves", async () => {
+      const keys: string[] = [];
+
+      for (let i = 1n; i < 20n; i++) {
+        const value = ethers.toBeHex(BigInt(await USER1.getAddress()) + i);
+        const key = poseidonHash(value);
+
+        await merkleTree.addAddress(key, value);
+        await localMerkleTree.add(BigInt(key), BigInt(value));
+
+        keys.push(key);
+      }
+
+      for (let i = 1n; i < 20n; i++) {
+        const key = ethers.toBeHex(keys[Number(i) - 1], 32);
+        const value = BigInt(ethers.toBeHex(ethers.hexlify(ethers.randomBytes(20)), 32));
+
+        await merkleTree.updateAddress(key, ethers.toBeHex(value));
+        await localMerkleTree.update(BigInt(key), BigInt(value));
+
+        expect(await merkleTree.getAddressRoot()).to.equal(await getRoot(localMerkleTree));
+
+        await compareNodes(await merkleTree.getAddressNodeByKey(key), BigInt(key));
+
+        const onchainProof = getOnchainProof(await merkleTree.getAddressProof(key));
+        expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(key), BigInt(value))).to.be.true;
+      }
     });
   });
 });
