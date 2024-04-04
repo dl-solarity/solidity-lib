@@ -961,7 +961,7 @@ library SparseMerkleTree {
     }
 
     /**
-     * @dev The function used to add delete removed nodes.
+     * @dev The function used to delete removed nodes.
      */
     function _deleteNode(SMT storage tree, uint256 nodeId_) private {
         delete tree.nodes[nodeId_];
