@@ -615,7 +615,7 @@ describe("SparseMerkleTree", () => {
 
       for (let i = 1n; i < 20n; i++) {
         const key = ethers.toBeHex(keys[Number(i) - 1], 32);
-        const value = BigInt(ethers.toBeHex(ethers.hexlify(ethers.randomBytes(20)), 32));
+        const value = ethers.toBeHex(ethers.hexlify(ethers.randomBytes(20)));
 
         await merkleTree.updateAddress(key, ethers.toBeHex(value));
         await localMerkleTree.update(BigInt(key), BigInt(value));
