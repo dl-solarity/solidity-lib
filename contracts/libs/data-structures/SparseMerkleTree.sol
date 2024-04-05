@@ -12,27 +12,33 @@ pragma solidity ^0.8.4;
  * in using different types of keys and values.
  *
  * The main differences from the original implementation include:
+ * - Added the ability to remove or update nodes in the tree.
  * - Optimized storage usage to reduce the number of storage slots.
  * - Added the ability to set custom hash functions.
  * - Removed methods and associated storage for managing the tree root's history.
  *
- * Gas usage for adding (addBytes32) 16,001 leaves to a tree of size 80 is detailed below:
+ * Gas usage for adding (addUint) 20,000 leaves to a tree of size 80 "based" on the Poseidon Hash function is detailed below:
  *
- * | Statistic |     Value     |
+ * | Statistic |     Add       |
  * |-----------|-------------- |
- * | Count     | 16,001        |
- * | Mean      | 1,444,220 gas |
- * | Std Dev   | 209,147.6 gas |
- * | Min       | 177,853   gas |
- * | 25%       | 1,317,555 gas |
- * | 50%       | 1,461,562 gas |
- * | 75%       | 1,554,030 gas |
- * | Max       | 2,723,812 gas |
+ * | Count     | 20,000        |
+ * | Mean      | 890,446 gas |
+ * | Std Dev   | 147,775 gas |
+ * | Min       | 177,797 gas   |
+ * | 25%       | 784,961 gas   |
+ * | 50%       | 866,482 gas   |
+ * | 75%       | 959,075 gas   |
+ * | Max       | 1,937,554 gas |
  *
  * The gas cost increases linearly with the depth of the leaves added. This growth can be approximated by the following formula:
- * Linear regression formula: y = 92,457x + 255,689
+ * Linear regression formula: y = 46,377x + 215,088
  *
- * This implies that adding an element at depth 80 would approximately cost 7.5M gas.
+ * This implies that adding an element at depth 80 would approximately cost 3.93M gas.
+ *
+ * On the other hand, the growth of the gas cost for removing leaves can be approximated by the following formula:
+ * Linear regression formula: y = 44840*x + 88821
+ *
+ * This implies that removing an element at depth 80 would approximately cost 3.68M gas.
  *
  * ## Usage Example:
  *
@@ -50,6 +56,8 @@ pragma solidity ^0.8.4;
  * SparseMerkleTree.Proof memory proof = uintTree.getProof(100);
  *
  * uintTree.getNodeByKey(100);
+ *
+ * uintTree.remove(100);
  * ```
  */
 library SparseMerkleTree {
