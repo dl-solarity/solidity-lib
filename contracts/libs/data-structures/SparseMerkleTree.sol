@@ -809,13 +809,14 @@ library SparseMerkleTree {
 
             NodeType rightType_ = tree.nodes[currentNode_.childRight].nodeType;
             NodeType leftType_ = tree.nodes[currentNode_.childLeft].nodeType;
-            NodeType nextType_ = tree.nodes[nextNodeId_].nodeType;
 
             if (rightType_ == NodeType.EMPTY && leftType_ == NodeType.EMPTY) {
                 _deleteNode(tree, nodeId_);
 
                 return nextNodeId_;
             }
+
+            NodeType nextType_ = tree.nodes[nextNodeId_].nodeType;
 
             if (
                 (rightType_ == NodeType.EMPTY || leftType_ == NodeType.EMPTY) &&
