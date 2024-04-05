@@ -210,6 +210,43 @@ describe("SparseMerkleTree", () => {
       expect(merkleTree.setUintPoseidonHasher()).to.not.be.rejected;
     });
 
+    it("should maintain idempotence", async () => {
+      const keys: string[] = [];
+      let proof;
+
+      for (let i = 1n; i < 20n; i++) {
+        const value = BigInt(ethers.toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32));
+        const key = poseidonHash(ethers.toBeHex(`0x` + value.toString(16), 32));
+
+        await merkleTree.addUint(key, value);
+
+        if (i > 1n) {
+          await merkleTree.removeUint(key);
+
+          const hexKey = ethers.toBeHex(keys[Number(i - 2n)], 32);
+          expect(await merkleTree.getUintProof(hexKey)).to.deep.equal(proof);
+
+          await merkleTree.addUint(key, value);
+        }
+
+        proof = await merkleTree.getUintProof(key);
+
+        keys.push(key);
+      }
+
+      for (let key of keys) {
+        const hexKey = ethers.toBeHex(key, 32);
+        const value = (await merkleTree.getUintNodeByKey(hexKey)).value;
+
+        proof = await merkleTree.getUintProof(hexKey);
+
+        await merkleTree.removeUint(hexKey);
+        await merkleTree.addUint(hexKey, value);
+
+        expect(await merkleTree.getUintProof(hexKey)).to.deep.equal(proof);
+      }
+    });
+
     it("should rebalance elements in Merkle Tree correctly", async () => {
       const expectedRoot = "0x2f9bbaa7ab83da6e8d1d8dd05bac16e65fa40b4f6455c1d2ee77e968dfc382dc";
       const keys = [7n, 1n, 5n];
