@@ -1,6 +1,6 @@
 {
   "name": "@solarity/solidity-lib",
-  "version": "2.7.2",
+  "version": "2.7.3",
   "license": "MIT",
   "author": "Distributed Lab",
   "readme": "README.md",
@@ -42,8 +42,8 @@
     "@uniswap/v3-periphery": "1.4.4"
   },
   "devDependencies": {
-    "@iden3/js-crypto": "^1.0.3",
-    "@iden3/js-merkletree": "^1.1.2",
+    "@iden3/js-crypto": "^1.1.0",
+    "@iden3/js-merkletree": "^1.2.0",
     "@metamask/eth-sig-util": "^7.0.1",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.6",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",

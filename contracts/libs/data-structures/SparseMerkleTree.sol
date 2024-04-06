@@ -12,27 +12,33 @@ pragma solidity ^0.8.4;
  * in using different types of keys and values.
  *
  * The main differences from the original implementation include:
+ * - Added the ability to remove or update nodes in the tree.
  * - Optimized storage usage to reduce the number of storage slots.
  * - Added the ability to set custom hash functions.
  * - Removed methods and associated storage for managing the tree root's history.
  *
- * Gas usage for adding (addBytes32) 16,001 leaves to a tree of size 80 is detailed below:
+ * Gas usage for adding (addUint) 20,000 leaves to a tree of size 80 "based" on the Poseidon Hash function is detailed below:
  *
- * | Statistic |     Value     |
+ * | Statistic |     Add       |
  * |-----------|-------------- |
- * | Count     | 16,001        |
- * | Mean      | 1,444,220 gas |
- * | Std Dev   | 209,147.6 gas |
- * | Min       | 177,853   gas |
- * | 25%       | 1,317,555 gas |
- * | 50%       | 1,461,562 gas |
- * | 75%       | 1,554,030 gas |
- * | Max       | 2,723,812 gas |
+ * | Count     | 20,000        |
+ * | Mean      | 890,446 gas |
+ * | Std Dev   | 147,775 gas |
+ * | Min       | 177,797 gas   |
+ * | 25%       | 784,961 gas   |
+ * | 50%       | 866,482 gas   |
+ * | 75%       | 959,075 gas   |
+ * | Max       | 1,937,554 gas |
  *
  * The gas cost increases linearly with the depth of the leaves added. This growth can be approximated by the following formula:
- * Linear regression formula: y = 92,457x + 255,689
+ * Linear regression formula: y = 46,377x + 215,088
  *
- * This implies that adding an element at depth 80 would approximately cost 7.5M gas.
+ * This implies that adding an element at depth 80 would approximately cost 3.93M gas.
+ *
+ * On the other hand, the growth of the gas cost for removing leaves can be approximated by the following formula:
+ * Linear regression formula: y = 44840*x + 88821
+ *
+ * This implies that removing an element at depth 80 would approximately cost 3.68M gas.
  *
  * ## Usage Example:
  *
@@ -50,6 +56,8 @@ pragma solidity ^0.8.4;
  * SparseMerkleTree.Proof memory proof = uintTree.getProof(100);
  *
  * uintTree.getNodeByKey(100);
+ *
+ * uintTree.remove(100);
  * ```
  */
 library SparseMerkleTree {
@@ -74,7 +82,7 @@ library SparseMerkleTree {
      * @param tree self.
      * @param maxDepth_ The max depth of the Merkle tree.
      */
-    function initialize(UintSMT storage tree, uint64 maxDepth_) internal {
+    function initialize(UintSMT storage tree, uint32 maxDepth_) internal {
         _initialize(tree._tree, maxDepth_);
     }
 
@@ -89,7 +97,7 @@ library SparseMerkleTree {
      * @param tree self.
      * @param maxDepth_ The max depth of the Merkle tree.
      */
-    function setMaxDepth(UintSMT storage tree, uint64 maxDepth_) internal {
+    function setMaxDepth(UintSMT storage tree, uint32 maxDepth_) internal {
         _setMaxDepth(tree._tree, maxDepth_);
     }
 
@@ -119,8 +127,31 @@ library SparseMerkleTree {
      * @param key_ The key of the element.
      * @param value_ The value of the element.
      */
-    function add(UintSMT storage tree, uint256 key_, uint256 value_) internal {
+    function add(UintSMT storage tree, bytes32 key_, uint256 value_) internal {
         _add(tree._tree, bytes32(key_), bytes32(value_));
+    }
+
+    /**
+     * @notice The function to remove a (leaf) element from the uint256 tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     */
+    function remove(UintSMT storage tree, bytes32 key_) internal {
+        _remove(tree._tree, key_);
+    }
+
+    /**
+     * @notice The function to update a (leaf) element in the uint256 tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     * @param newValue_ The new value of the element.
+     */
+    function update(UintSMT storage tree, bytes32 key_, uint256 newValue_) internal {
+        _update(tree._tree, key_, bytes32(newValue_));
     }
 
     /**
@@ -131,7 +162,7 @@ library SparseMerkleTree {
      * @param key_ The key of the element.
      * @return SMT proof struct.
      */
-    function getProof(UintSMT storage tree, uint256 key_) internal view returns (Proof memory) {
+    function getProof(UintSMT storage tree, bytes32 key_) internal view returns (Proof memory) {
         return _proof(tree._tree, bytes32(key_));
     }
 
@@ -221,7 +252,7 @@ library SparseMerkleTree {
      * @param tree self.
      * @param maxDepth_ The max depth of the Merkle tree.
      */
-    function initialize(Bytes32SMT storage tree, uint64 maxDepth_) internal {
+    function initialize(Bytes32SMT storage tree, uint32 maxDepth_) internal {
         _initialize(tree._tree, maxDepth_);
     }
 
@@ -236,7 +267,7 @@ library SparseMerkleTree {
      * @param tree self.
      * @param maxDepth_ The max depth of the Merkle tree.
      */
-    function setMaxDepth(Bytes32SMT storage tree, uint64 maxDepth_) internal {
+    function setMaxDepth(Bytes32SMT storage tree, uint32 maxDepth_) internal {
         _setMaxDepth(tree._tree, maxDepth_);
     }
 
@@ -268,6 +299,29 @@ library SparseMerkleTree {
      */
     function add(Bytes32SMT storage tree, bytes32 key_, bytes32 value_) internal {
         _add(tree._tree, key_, value_);
+    }
+
+    /**
+     * @notice The function to remove a (leaf) element from the bytes32 tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     */
+    function remove(Bytes32SMT storage tree, bytes32 key_) internal {
+        _remove(tree._tree, key_);
+    }
+
+    /**
+     * @notice The function to update a (leaf) element in the bytes32 tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     * @param newValue_ The new value of the element.
+     */
+    function update(Bytes32SMT storage tree, bytes32 key_, bytes32 newValue_) internal {
+        _update(tree._tree, key_, newValue_);
     }
 
     /**
@@ -374,7 +428,7 @@ library SparseMerkleTree {
      * @param tree self.
      * @param maxDepth_ The max depth of the Merkle tree.
      */
-    function initialize(AddressSMT storage tree, uint64 maxDepth_) internal {
+    function initialize(AddressSMT storage tree, uint32 maxDepth_) internal {
         _initialize(tree._tree, maxDepth_);
     }
 
@@ -389,7 +443,7 @@ library SparseMerkleTree {
      * @param tree self.
      * @param maxDepth_ The max depth of the Merkle tree.
      */
-    function setMaxDepth(AddressSMT storage tree, uint64 maxDepth_) internal {
+    function setMaxDepth(AddressSMT storage tree, uint32 maxDepth_) internal {
         _setMaxDepth(tree._tree, maxDepth_);
     }
 
@@ -421,6 +475,29 @@ library SparseMerkleTree {
      */
     function add(AddressSMT storage tree, bytes32 key_, address value_) internal {
         _add(tree._tree, key_, bytes32(uint256(uint160(value_))));
+    }
+
+    /**
+     * @notice The function to remove a (leaf) element from the address tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     */
+    function remove(AddressSMT storage tree, bytes32 key_) internal {
+        _remove(tree._tree, key_);
+    }
+
+    /**
+     * @notice The function to update a (leaf) element in the address tree.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param key_ The key of the element.
+     * @param newValue_ The new value of the element.
+     */
+    function update(AddressSMT storage tree, bytes32 key_, address newValue_) internal {
+        _update(tree._tree, key_, bytes32(uint256(uint160(newValue_))));
     }
 
     /**
@@ -548,8 +625,9 @@ library SparseMerkleTree {
     struct SMT {
         mapping(uint256 => Node) nodes;
         uint64 merkleRootId;
-        uint64 maxDepth;
         uint64 nodesCount;
+        uint64 deletedNodesCount;
+        uint32 maxDepth;
         bool isCustomHasherSet;
         function(bytes32, bytes32) view returns (bytes32) hash2;
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3;
@@ -605,13 +683,13 @@ library SparseMerkleTree {
         _;
     }
 
-    function _initialize(SMT storage tree, uint64 maxDepth_) private {
+    function _initialize(SMT storage tree, uint32 maxDepth_) private {
         require(!_isInitialized(tree), "SparseMerkleTree: tree is already initialized");
 
         _setMaxDepth(tree, maxDepth_);
     }
 
-    function _setMaxDepth(SMT storage tree, uint64 maxDepth_) private {
+    function _setMaxDepth(SMT storage tree, uint32 maxDepth_) private {
         require(maxDepth_ > 0, "SparseMerkleTree: max depth must be greater than zero");
         require(maxDepth_ > tree.maxDepth, "SparseMerkleTree: max depth can only be increased");
         require(
@@ -648,56 +726,25 @@ library SparseMerkleTree {
         tree.merkleRootId = uint64(_add(tree, node_, tree.merkleRootId, 0));
     }
 
-    function _proof(SMT storage tree, bytes32 key_) private view returns (Proof memory) {
-        uint256 maxDepth_ = _maxDepth(tree);
+    function _remove(SMT storage tree, bytes32 key_) private onlyInitialized(tree) {
+        tree.merkleRootId = uint64(_remove(tree, key_, tree.merkleRootId, 0));
+    }
 
-        Proof memory proof_ = Proof({
-            root: _root(tree),
-            siblings: new bytes32[](maxDepth_),
-            existence: false,
+    function _update(
+        SMT storage tree,
+        bytes32 key_,
+        bytes32 newValue_
+    ) private onlyInitialized(tree) {
+        Node memory node_ = Node({
+            nodeType: NodeType.LEAF,
+            childLeft: ZERO_IDX,
+            childRight: ZERO_IDX,
+            nodeHash: ZERO_HASH,
             key: key_,
-            value: ZERO_HASH,
-            auxExistence: false,
-            auxKey: ZERO_HASH,
-            auxValue: ZERO_HASH
+            value: newValue_
         });
 
-        Node memory node_;
-        uint256 nextNodeId_ = tree.merkleRootId;
-
-        for (uint256 i = 0; i <= maxDepth_; i++) {
-            node_ = _node(tree, nextNodeId_);
-
-            if (node_.nodeType == NodeType.EMPTY) {
-                break;
-            } else if (node_.nodeType == NodeType.LEAF) {
-                if (node_.key == proof_.key) {
-                    proof_.existence = true;
-                    proof_.value = node_.value;
-
-                    break;
-                } else {
-                    proof_.auxExistence = true;
-                    proof_.auxKey = node_.key;
-                    proof_.auxValue = node_.value;
-                    proof_.value = node_.value;
-
-                    break;
-                }
-            } else {
-                if ((uint256(proof_.key) >> i) & 1 == 1) {
-                    nextNodeId_ = node_.childRight;
-
-                    proof_.siblings[i] = tree.nodes[node_.childLeft].nodeHash;
-                } else {
-                    nextNodeId_ = node_.childLeft;
-
-                    proof_.siblings[i] = tree.nodes[node_.childRight].nodeHash;
-                }
-            }
-        }
-
-        return proof_;
+        _update(tree, node_, tree.merkleRootId, 0);
     }
 
     /**
@@ -713,48 +760,128 @@ library SparseMerkleTree {
         uint16 currentDepth_
     ) private returns (uint256) {
         Node memory currentNode_ = tree.nodes[nodeId_];
-        uint256 leafId_;
 
         if (currentNode_.nodeType == NodeType.EMPTY) {
-            leafId_ = _setNode(tree, newLeaf_);
+            return _setNode(tree, newLeaf_);
         } else if (currentNode_.nodeType == NodeType.LEAF) {
             if (currentNode_.key == newLeaf_.key) {
                 revert("SparseMerkleTree: the key already exists");
             }
 
-            leafId_ = _pushLeaf(tree, newLeaf_, currentNode_, nodeId_, currentDepth_);
+            return _pushLeaf(tree, newLeaf_, currentNode_, nodeId_, currentDepth_);
         } else {
-            Node memory newNodeMiddle_;
             uint256 nextNodeId_;
 
             if ((uint256(newLeaf_.key) >> currentDepth_) & 1 == 1) {
                 nextNodeId_ = _add(tree, newLeaf_, currentNode_.childRight, currentDepth_ + 1);
 
-                newNodeMiddle_ = Node({
-                    nodeType: NodeType.MIDDLE,
-                    childLeft: currentNode_.childLeft,
-                    childRight: uint64(nextNodeId_),
-                    nodeHash: ZERO_HASH,
-                    key: ZERO_HASH,
-                    value: ZERO_HASH
-                });
+                tree.nodes[nodeId_].childRight = uint64(nextNodeId_);
             } else {
                 nextNodeId_ = _add(tree, newLeaf_, currentNode_.childLeft, currentDepth_ + 1);
 
-                newNodeMiddle_ = Node({
-                    nodeType: NodeType.MIDDLE,
-                    childLeft: uint64(nextNodeId_),
-                    childRight: currentNode_.childRight,
-                    nodeHash: ZERO_HASH,
-                    key: ZERO_HASH,
-                    value: ZERO_HASH
-                });
+                tree.nodes[nodeId_].childLeft = uint64(nextNodeId_);
             }
 
-            leafId_ = _setNode(tree, newNodeMiddle_);
+            tree.nodes[nodeId_].nodeHash = _getNodeHash(tree, tree.nodes[nodeId_]);
+
+            return nodeId_;
+        }
+    }
+
+    function _remove(
+        SMT storage tree,
+        bytes32 key_,
+        uint256 nodeId_,
+        uint16 currentDepth_
+    ) private returns (uint256) {
+        Node memory currentNode_ = tree.nodes[nodeId_];
+
+        if (currentNode_.nodeType == NodeType.EMPTY) {
+            revert("SparseMerkleTree: the node does not exist");
+        } else if (currentNode_.nodeType == NodeType.LEAF) {
+            if (currentNode_.key != key_) {
+                revert("SparseMerkleTree: the leaf does not match");
+            }
+
+            _deleteNode(tree, nodeId_);
+
+            return ZERO_IDX;
+        } else {
+            uint256 nextNodeId_;
+
+            if ((uint256(key_) >> currentDepth_) & 1 == 1) {
+                nextNodeId_ = _remove(tree, key_, currentNode_.childRight, currentDepth_ + 1);
+            } else {
+                nextNodeId_ = _remove(tree, key_, currentNode_.childLeft, currentDepth_ + 1);
+            }
+
+            NodeType rightType_ = tree.nodes[currentNode_.childRight].nodeType;
+            NodeType leftType_ = tree.nodes[currentNode_.childLeft].nodeType;
+
+            if (rightType_ == NodeType.EMPTY && leftType_ == NodeType.EMPTY) {
+                _deleteNode(tree, nodeId_);
+
+                return nextNodeId_;
+            }
+
+            NodeType nextType_ = tree.nodes[nextNodeId_].nodeType;
+
+            if (
+                (rightType_ == NodeType.EMPTY || leftType_ == NodeType.EMPTY) &&
+                nextType_ != NodeType.MIDDLE
+            ) {
+                if (
+                    nextType_ == NodeType.EMPTY &&
+                    (leftType_ == NodeType.LEAF || rightType_ == NodeType.LEAF)
+                ) {
+                    _deleteNode(tree, nodeId_);
+
+                    if (rightType_ == NodeType.LEAF) {
+                        return currentNode_.childRight;
+                    }
+
+                    return currentNode_.childLeft;
+                }
+
+                if (rightType_ == NodeType.EMPTY) {
+                    tree.nodes[nodeId_].childRight = uint64(nextNodeId_);
+                } else {
+                    tree.nodes[nodeId_].childLeft = uint64(nextNodeId_);
+                }
+            }
+
+            tree.nodes[nodeId_].nodeHash = _getNodeHash(tree, tree.nodes[nodeId_]);
+
+            return nodeId_;
+        }
+    }
+
+    function _update(
+        SMT storage tree,
+        Node memory newLeaf_,
+        uint256 nodeId_,
+        uint16 currentDepth_
+    ) private {
+        Node memory currentNode_ = tree.nodes[nodeId_];
+
+        if (currentNode_.nodeType == NodeType.EMPTY) {
+            revert("SparseMerkleTree: the node does not exist");
+        } else if (currentNode_.nodeType == NodeType.LEAF) {
+            if (currentNode_.key != newLeaf_.key) {
+                revert("SparseMerkleTree: the leaf does not match");
+            }
+
+            tree.nodes[nodeId_] = newLeaf_;
+            currentNode_ = newLeaf_;
+        } else {
+            if ((uint256(newLeaf_.key) >> currentDepth_) & 1 == 1) {
+                _update(tree, newLeaf_, currentNode_.childRight, currentDepth_ + 1);
+            } else {
+                _update(tree, newLeaf_, currentNode_.childLeft, currentDepth_ + 1);
+            }
         }
 
-        return leafId_;
+        tree.nodes[nodeId_].nodeHash = _getNodeHash(tree, currentNode_);
     }
 
     function _pushLeaf(
@@ -831,15 +958,23 @@ library SparseMerkleTree {
     }
 
     /**
-     * @dev The function used to add only new nodes.
+     * @dev The function used to add new nodes.
      */
     function _setNode(SMT storage tree, Node memory node_) private returns (uint256) {
         node_.nodeHash = _getNodeHash(tree, node_);
 
-        uint256 newSize_ = ++tree.nodesCount;
-        tree.nodes[newSize_] = node_;
+        uint256 newCount_ = ++tree.nodesCount;
+        tree.nodes[newCount_] = node_;
 
-        return newSize_;
+        return newCount_;
+    }
+
+    /**
+     * @dev The function used to delete removed nodes.
+     */
+    function _deleteNode(SMT storage tree, uint256 nodeId_) private {
+        delete tree.nodes[nodeId_];
+        ++tree.deletedNodesCount;
     }
 
     /**
@@ -859,6 +994,58 @@ library SparseMerkleTree {
         }
 
         return hash2_(tree.nodes[node_.childLeft].nodeHash, tree.nodes[node_.childRight].nodeHash);
+    }
+
+    function _proof(SMT storage tree, bytes32 key_) private view returns (Proof memory) {
+        uint256 maxDepth_ = _maxDepth(tree);
+
+        Proof memory proof_ = Proof({
+            root: _root(tree),
+            siblings: new bytes32[](maxDepth_),
+            existence: false,
+            key: key_,
+            value: ZERO_HASH,
+            auxExistence: false,
+            auxKey: ZERO_HASH,
+            auxValue: ZERO_HASH
+        });
+
+        Node memory node_;
+        uint256 nextNodeId_ = tree.merkleRootId;
+
+        for (uint256 i = 0; i <= maxDepth_; i++) {
+            node_ = _node(tree, nextNodeId_);
+
+            if (node_.nodeType == NodeType.EMPTY) {
+                break;
+            } else if (node_.nodeType == NodeType.LEAF) {
+                if (node_.key == proof_.key) {
+                    proof_.existence = true;
+                    proof_.value = node_.value;
+
+                    break;
+                } else {
+                    proof_.auxExistence = true;
+                    proof_.auxKey = node_.key;
+                    proof_.auxValue = node_.value;
+                    proof_.value = node_.value;
+
+                    break;
+                }
+            } else {
+                if ((uint256(proof_.key) >> i) & 1 == 1) {
+                    nextNodeId_ = node_.childRight;
+
+                    proof_.siblings[i] = tree.nodes[node_.childLeft].nodeHash;
+                } else {
+                    nextNodeId_ = node_.childLeft;
+
+                    proof_.siblings[i] = tree.nodes[node_.childRight].nodeHash;
+                }
+            }
+        }
+
+        return proof_;
     }
 
     function _hash2(bytes32 a, bytes32 b) private pure returns (bytes32 result) {
@@ -933,7 +1120,7 @@ library SparseMerkleTree {
     }
 
     function _nodesCount(SMT storage tree) private view returns (uint256) {
-        return tree.nodesCount;
+        return tree.nodesCount - tree.deletedNodesCount;
     }
 
     function _isInitialized(SMT storage tree) private view returns (bool) {
