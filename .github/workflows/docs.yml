@@ -2,13 +2,18 @@ name: "docs"
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+  workflow_run:
+    workflows:
+      - tests
+    types:
+      - completed
+    branches:
+      - master
 
 jobs:
   docs:
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3
@@ -33,10 +38,10 @@ jobs:
           git config --global user.name "Docs Syncer"
           git config --global user.email "contact@distributedlab.com"
           git fetch --unshallow
-          latest_tag=$(git describe --tags --abbrev=0)
+          latest_commit_hash=$(git rev-parse --short HEAD)
           cd docs
           git add -f .
           if ! git diff-index --quiet HEAD; then
-            git commit -m "CI: \`$latest_tag\`"
+            git commit -m "CI: \`$latest_commit_hash\`"
             git push
           fi
