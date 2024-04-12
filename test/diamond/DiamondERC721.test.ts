@@ -136,7 +136,7 @@ describe("DiamondERC721 and InitializableStorage", () => {
         await expect(erc721.mint(OWNER.address, 1)).to.be.revertedWith("ERC721: token already minted");
       });
 
-      it("should not mint token if the reciever is a contract and doesn't implement onERC721Received correctly", async () => {
+      it("should not mint token if the receiver is a contract and doesn't implement onERC721Received correctly", async () => {
         const contract1 = await (await ethers.getContractFactory("DiamondERC721Mock")).deploy();
 
         await expect(erc721.mint(await contract1.getAddress(), 1)).to.be.revertedWith(
@@ -265,7 +265,7 @@ describe("DiamondERC721 and InitializableStorage", () => {
         );
       });
 
-      it("should not transfer token if the reciever is a contract and doesn't implement onERC721Received", async () => {
+      it("should not transfer token if the receiver is a contract and doesn't implement onERC721Received", async () => {
         await erc721.mint(OWNER.address, 1);
 
         const contract = await (await ethers.getContractFactory("DiamondERC721Mock")).deploy();
