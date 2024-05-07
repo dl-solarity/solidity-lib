@@ -15,6 +15,10 @@ describe("SetHelper", () => {
 
   let mock: SetHelperMock;
 
+  function stringToBytes(strToConvert: string) {
+    return ethers.hexlify(ethers.toUtf8Bytes(strToConvert));
+  }
+
   before("setup", async () => {
     [FIRST, SECOND, THIRD] = await ethers.getSigners();
 
@@ -45,6 +49,12 @@ describe("SetHelper", () => {
       expect(await mock.getBytes32Set()).to.deep.equal([ZERO_BYTES32]);
     });
 
+    it("should add to bytes set", async () => {
+      await mock.addToBytesSet([ethers.toUtf8Bytes("1"), ethers.toUtf8Bytes("2"), ethers.toUtf8Bytes("3")]);
+
+      expect(await mock.getBytesSet()).to.deep.equal([stringToBytes("1"), stringToBytes("2"), stringToBytes("3")]);
+    });
+
     it("should add to string set", async () => {
       await mock.addToStringSet(["1", "2", "3"]);
 
@@ -69,6 +79,14 @@ describe("SetHelper", () => {
       );
     });
 
+    it("should not strict add to bytes set if element already exists", async () => {
+      const bytesToAdd = ethers.toUtf8Bytes("1");
+
+      await expect(mock.strictAddToBytesSet([bytesToAdd, bytesToAdd])).to.be.revertedWith(
+        "SetHelper: element already exists",
+      );
+    });
+
     it("should not strict add to string set if element already exists", async () => {
       await expect(mock.strictAddToStringSet(["1", "1"])).to.be.revertedWith("SetHelper: element already exists");
     });
@@ -89,6 +107,12 @@ describe("SetHelper", () => {
       await mock.strictAddToBytes32Set([ZERO_BYTES32]);
 
       expect(await mock.getBytes32Set()).to.deep.equal([ZERO_BYTES32]);
+    });
+
+    it("should strict add to bytes set", async () => {
+      await mock.strictAddToBytesSet([ethers.toUtf8Bytes("1"), ethers.toUtf8Bytes("2"), ethers.toUtf8Bytes("3")]);
+
+      expect(await mock.getBytesSet()).to.deep.equal([stringToBytes("1"), stringToBytes("2"), stringToBytes("3")]);
     });
 
     it("should strict add to string set", async () => {
@@ -120,6 +144,16 @@ describe("SetHelper", () => {
       expect(await mock.getBytes32Set()).to.deep.equal([]);
     });
 
+    it("should remove from bytes set", async () => {
+      const valuesToAdd: Uint8Array[] = [ethers.toUtf8Bytes("1"), ethers.toUtf8Bytes("2"), ethers.toUtf8Bytes("3")];
+
+      await mock.strictAddToBytesSet(valuesToAdd);
+
+      await mock.removeFromBytesSet([valuesToAdd[0], ethers.toUtf8Bytes("4")]);
+
+      expect(await mock.getBytesSet()).to.deep.equal([stringToBytes("3"), stringToBytes("2")]);
+    });
+
     it("should remove from string set", async () => {
       await mock.addToStringSet(["1", "2", "3"]);
       await mock.removeFromStringSet(["1", "4"]);
@@ -128,7 +162,7 @@ describe("SetHelper", () => {
     });
   });
 
-  describe("remove", () => {
+  describe("strictRemove", () => {
     it("should not strict remove from address set if no such element", async () => {
       await mock.strictAddToAddressSet([FIRST.address, SECOND.address]);
 
@@ -157,6 +191,14 @@ describe("SetHelper", () => {
       await expect(mock.strictRemoveFromStringSet(["1", "1"])).to.be.revertedWith("SetHelper: no such element");
     });
 
+    it("should not strict remove from bytes set if no such element", async () => {
+      await mock.strictAddToBytesSet([ethers.toUtf8Bytes("1"), ethers.toUtf8Bytes("2"), ethers.toUtf8Bytes("3")]);
+
+      await expect(mock.strictRemoveFromBytesSet([ethers.toUtf8Bytes("5")])).to.be.revertedWith(
+        "SetHelper: no such element",
+      );
+    });
+
     it("should strict remove from address set", async () => {
       await mock.strictAddToAddressSet([FIRST.address, SECOND.address]);
       await mock.strictRemoveFromAddressSet([SECOND.address]);
@@ -176,6 +218,16 @@ describe("SetHelper", () => {
       await mock.strictRemoveFromBytes32Set([ZERO_BYTES32]);
 
       expect(await mock.getBytes32Set()).to.deep.equal([]);
+    });
+
+    it("should strict remove from bytes set", async () => {
+      const valuesToAdd: Uint8Array[] = [ethers.toUtf8Bytes("1"), ethers.toUtf8Bytes("2"), ethers.toUtf8Bytes("3")];
+
+      await mock.strictAddToBytesSet(valuesToAdd);
+
+      await mock.strictRemoveFromBytesSet([valuesToAdd[0]]);
+
+      expect(await mock.getBytesSet()).to.deep.equal([stringToBytes("3"), stringToBytes("2")]);
     });
 
     it("should strict remove from string set", async () => {

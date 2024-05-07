@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import {IRBACGroupable} from "../../interfaces/access/extensions/IRBACGroupable.sol";
 
-import {StringSet} from "../../libs/data-structures/StringSet.sol";
+import {DynamicSet} from "../../libs/data-structures/DynamicSet.sol";
 import {SetHelper} from "../../libs/arrays/SetHelper.sol";
 
 import {RBAC} from "../RBAC.sol";
@@ -23,13 +23,13 @@ import {RBAC} from "../RBAC.sol";
  * Where ROLE and GROUP are assignable to users
  */
 abstract contract RBACGroupable is IRBACGroupable, RBAC {
-    using StringSet for StringSet.Set;
-    using SetHelper for StringSet.Set;
+    using DynamicSet for DynamicSet.StringSet;
+    using SetHelper for DynamicSet.StringSet;
 
     uint256 private _defaultGroupEnabled;
 
-    mapping(address => StringSet.Set) private _userGroups;
-    mapping(string => StringSet.Set) private _groupRoles;
+    mapping(address => DynamicSet.StringSet) private _userGroups;
+    mapping(string => DynamicSet.StringSet) private _groupRoles;
 
     /**
      * @notice The initialization function
@@ -115,7 +115,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
      * @return groups_ the list of user groups
      */
     function getUserGroups(address who_) public view override returns (string[] memory groups_) {
-        StringSet.Set storage userGroups = _userGroups[who_];
+        DynamicSet.StringSet storage userGroups = _userGroups[who_];
 
         uint256 userGroupsLength_ = userGroups.length();
 
