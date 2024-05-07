@@ -9,7 +9,10 @@ library MemoryUtils {
      * @notice The function to copy memory from one location to another
      * @param destinationOffset_ offset in the memory where the result will be copied.
      * @param offset_ offset in the memory from which to copy.
-     * @param size_ size to copy
+     * @param size_ size to copy (must be % 32 == 0).
+     *
+     * TODO: check identity precompile
+     * TODO: handle non-%32 size
      *
      * IMPORTANT: This function does not account for free memory pointer and should be used with caution.
      */
