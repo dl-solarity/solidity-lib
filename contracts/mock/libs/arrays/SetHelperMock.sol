@@ -3,23 +3,19 @@ pragma solidity ^0.8.4;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {StringSet} from "../../../libs/data-structures/StringSet.sol";
+import {DynamicSet} from "../../../libs/data-structures/DynamicSet.sol";
 import {SetHelper} from "../../../libs/arrays/SetHelper.sol";
 
 contract SetHelperMock {
-    using EnumerableSet for EnumerableSet.UintSet;
-    using EnumerableSet for EnumerableSet.AddressSet;
-    using EnumerableSet for EnumerableSet.Bytes32Set;
-    using StringSet for StringSet.Set;
-    using SetHelper for StringSet.Set;
-    using SetHelper for EnumerableSet.UintSet;
-    using SetHelper for EnumerableSet.AddressSet;
-    using SetHelper for EnumerableSet.Bytes32Set;
+    using EnumerableSet for *;
+    using DynamicSet for *;
+    using SetHelper for *;
 
     EnumerableSet.AddressSet internal addressSet;
     EnumerableSet.UintSet internal uintSet;
     EnumerableSet.Bytes32Set internal bytes32Set;
-    StringSet.Set internal stringSet;
+    DynamicSet.BytesSet internal bytesSet;
+    DynamicSet.StringSet internal stringSet;
 
     function addToAddressSet(address[] memory arr_) external {
         addressSet.add(arr_);
@@ -31,6 +27,10 @@ contract SetHelperMock {
 
     function addToBytes32Set(bytes32[] memory arr_) external {
         bytes32Set.add(arr_);
+    }
+
+    function addToBytesSet(bytes[] memory arr_) external {
+        bytesSet.add(arr_);
     }
 
     function addToStringSet(string[] memory arr_) external {
@@ -49,6 +49,10 @@ contract SetHelperMock {
         bytes32Set.strictAdd(arr_);
     }
 
+    function strictAddToBytesSet(bytes[] memory arr_) external {
+        bytesSet.strictAdd(arr_);
+    }
+
     function strictAddToStringSet(string[] memory arr_) external {
         stringSet.strictAdd(arr_);
     }
@@ -63,6 +67,10 @@ contract SetHelperMock {
 
     function removeFromBytes32Set(bytes32[] memory arr_) external {
         bytes32Set.remove(arr_);
+    }
+
+    function removeFromBytesSet(bytes[] memory arr_) external {
+        bytesSet.remove(arr_);
     }
 
     function removeFromStringSet(string[] memory arr_) external {
@@ -81,6 +89,10 @@ contract SetHelperMock {
         bytes32Set.strictRemove(arr_);
     }
 
+    function strictRemoveFromBytesSet(bytes[] memory arr_) external {
+        bytesSet.strictRemove(arr_);
+    }
+
     function strictRemoveFromStringSet(string[] memory arr_) external {
         stringSet.strictRemove(arr_);
     }
@@ -95,6 +107,10 @@ contract SetHelperMock {
 
     function getBytes32Set() external view returns (bytes32[] memory) {
         return bytes32Set.values();
+    }
+
+    function getBytesSet() external view returns (bytes[] memory) {
+        return bytesSet.values();
     }
 
     function getStringSet() external view returns (string[] memory) {

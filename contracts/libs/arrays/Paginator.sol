@@ -3,17 +3,17 @@ pragma solidity ^0.8.4;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {StringSet} from "../data-structures/StringSet.sol";
+import {DynamicSet} from "../data-structures/DynamicSet.sol";
 
 /**
  * @notice Library for pagination.
  *
- * Supports the following data types `uin256[]`, `address[]`, `bytes32[]`, `UintSet`,
- * `AddressSet`, `BytesSet`, `StringSet`.
+ * Supports the following data types `uint256[]`, `address[]`, `bytes32[]`, `UintSet`,
+ * `AddressSet`, `Bytes32Set`, `BytesSet`, `StringSet`.
  */
 library Paginator {
     using EnumerableSet for *;
-    using StringSet for StringSet.Set;
+    using DynamicSet for *;
 
     /**
      * @notice Returns part of a uint256 array
@@ -130,10 +130,27 @@ library Paginator {
     }
 
     /**
+     * @notice Returns part of a bytes set
+     */
+    function part(
+        DynamicSet.BytesSet storage set,
+        uint256 offset_,
+        uint256 limit_
+    ) internal view returns (bytes[] memory list_) {
+        uint256 to_ = getTo(set.length(), offset_, limit_);
+
+        list_ = new bytes[](to_ - offset_);
+
+        for (uint256 i = offset_; i < to_; i++) {
+            list_[i - offset_] = set.at(i);
+        }
+    }
+
+    /**
      * @notice Returns part of a string set
      */
     function part(
-        StringSet.Set storage set,
+        DynamicSet.StringSet storage set,
         uint256 offset_,
         uint256 limit_
     ) internal view returns (string[] memory list_) {

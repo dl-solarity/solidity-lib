@@ -7,7 +7,7 @@ import {IRBAC} from "../interfaces/access/IRBAC.sol";
 
 import {TypeCaster} from "../libs/utils/TypeCaster.sol";
 import {SetHelper} from "../libs/arrays/SetHelper.sol";
-import {StringSet} from "../libs/data-structures/StringSet.sol";
+import {DynamicSet} from "../libs/data-structures/DynamicSet.sol";
 
 /**
  * @notice The Role Based Access Control (RBAC) module
@@ -31,8 +31,8 @@ import {StringSet} from "../libs/data-structures/StringSet.sol";
  * Where ROLE is assignable to users
  */
 abstract contract RBAC is IRBAC, Initializable {
-    using StringSet for StringSet.Set;
-    using SetHelper for StringSet.Set;
+    using DynamicSet for DynamicSet.StringSet;
+    using SetHelper for DynamicSet.StringSet;
     using TypeCaster for string;
 
     string public constant MASTER_ROLE = "MASTER";
@@ -47,10 +47,11 @@ abstract contract RBAC is IRBAC, Initializable {
 
     string public constant RBAC_RESOURCE = "RBAC_RESOURCE";
 
-    mapping(string => mapping(bool => mapping(string => StringSet.Set))) private _rolePermissions;
-    mapping(string => mapping(bool => StringSet.Set)) private _roleResources;
+    mapping(string => mapping(bool => mapping(string => DynamicSet.StringSet)))
+        private _rolePermissions;
+    mapping(string => mapping(bool => DynamicSet.StringSet)) private _roleResources;
 
-    mapping(address => StringSet.Set) private _userRoles;
+    mapping(address => DynamicSet.StringSet) private _userRoles;
 
     modifier onlyPermission(string memory resource_, string memory permission_) {
         require(
@@ -165,15 +166,15 @@ abstract contract RBAC is IRBAC, Initializable {
             ResourceWithPermissions[] memory disallowed_
         )
     {
-        StringSet.Set storage _allowedResources = _roleResources[role_][true];
-        StringSet.Set storage _disallowedResources = _roleResources[role_][false];
+        DynamicSet.StringSet storage _allowedResources = _roleResources[role_][true];
+        DynamicSet.StringSet storage _disallowedResources = _roleResources[role_][false];
 
-        mapping(string => StringSet.Set) storage _allowedPermissions = _rolePermissions[role_][
-            true
-        ];
-        mapping(string => StringSet.Set) storage _disallowedPermissions = _rolePermissions[role_][
-            false
-        ];
+        mapping(string => DynamicSet.StringSet) storage _allowedPermissions = _rolePermissions[
+            role_
+        ][true];
+        mapping(string => DynamicSet.StringSet) storage _disallowedPermissions = _rolePermissions[
+            role_
+        ][false];
 
         allowed_ = new ResourceWithPermissions[](_allowedResources.length());
         disallowed_ = new ResourceWithPermissions[](_disallowedResources.length());
@@ -253,8 +254,10 @@ abstract contract RBAC is IRBAC, Initializable {
         string[] memory permissionsToAdd_,
         bool allowed_
     ) internal {
-        StringSet.Set storage _resources = _roleResources[role_][allowed_];
-        StringSet.Set storage _permissions = _rolePermissions[role_][allowed_][resourceToAdd_];
+        DynamicSet.StringSet storage _resources = _roleResources[role_][allowed_];
+        DynamicSet.StringSet storage _permissions = _rolePermissions[role_][allowed_][
+            resourceToAdd_
+        ];
 
         _permissions.add(permissionsToAdd_);
         _resources.add(resourceToAdd_);
@@ -275,8 +278,10 @@ abstract contract RBAC is IRBAC, Initializable {
         string[] memory permissionsToRemove_,
         bool allowed_
     ) internal {
-        StringSet.Set storage _resources = _roleResources[role_][allowed_];
-        StringSet.Set storage _permissions = _rolePermissions[role_][allowed_][resourceToRemove_];
+        DynamicSet.StringSet storage _resources = _roleResources[role_][allowed_];
+        DynamicSet.StringSet storage _permissions = _rolePermissions[role_][allowed_][
+            resourceToRemove_
+        ];
 
         _permissions.remove(permissionsToRemove_);
 
@@ -299,10 +304,10 @@ abstract contract RBAC is IRBAC, Initializable {
         string memory resource_,
         string memory permission_
     ) internal view returns (bool) {
-        mapping(string => StringSet.Set) storage _resources = _rolePermissions[role_][true];
+        mapping(string => DynamicSet.StringSet) storage _resources = _rolePermissions[role_][true];
 
-        StringSet.Set storage _allAllowed = _resources[ALL_RESOURCE];
-        StringSet.Set storage _allowed = _resources[resource_];
+        DynamicSet.StringSet storage _allAllowed = _resources[ALL_RESOURCE];
+        DynamicSet.StringSet storage _allowed = _resources[resource_];
 
         return (_allAllowed.contains(ALL_PERMISSION) ||
             _allAllowed.contains(permission_) ||
@@ -322,10 +327,12 @@ abstract contract RBAC is IRBAC, Initializable {
         string memory resource_,
         string memory permission_
     ) internal view returns (bool) {
-        mapping(string => StringSet.Set) storage _resources = _rolePermissions[role_][false];
+        mapping(string => DynamicSet.StringSet) storage _resources = _rolePermissions[role_][
+            false
+        ];
 
-        StringSet.Set storage _allDisallowed = _resources[ALL_RESOURCE];
-        StringSet.Set storage _disallowed = _resources[resource_];
+        DynamicSet.StringSet storage _allDisallowed = _resources[ALL_RESOURCE];
+        DynamicSet.StringSet storage _disallowed = _resources[resource_];
 
         return (_allDisallowed.contains(ALL_PERMISSION) ||
             _allDisallowed.contains(permission_) ||

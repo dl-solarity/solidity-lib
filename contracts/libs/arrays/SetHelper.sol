@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {StringSet} from "../data-structures/StringSet.sol";
+import {DynamicSet} from "../data-structures/DynamicSet.sol";
 
 /**
  * @notice A simple library to work with Openzeppelin sets
@@ -12,7 +12,7 @@ library SetHelper {
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
-    using StringSet for StringSet.Set;
+    using DynamicSet for *;
 
     /**
      * @notice The function to insert an array of elements into the address set
@@ -44,9 +44,18 @@ library SetHelper {
     }
 
     /**
+     * @notice The function to insert an array of elements into the bytes set
+     */
+    function add(DynamicSet.BytesSet storage set, bytes[] memory array_) internal {
+        for (uint256 i = 0; i < array_.length; i++) {
+            set.add(array_[i]);
+        }
+    }
+
+    /**
      * @notice The function to insert an array of elements into the string set
      */
-    function add(StringSet.Set storage set, string[] memory array_) internal {
+    function add(DynamicSet.StringSet storage set, string[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {
             set.add(array_[i]);
         }
@@ -82,9 +91,18 @@ library SetHelper {
     }
 
     /**
+     * @notice The function for the strict insertion of an array of elements into the bytes set
+     */
+    function strictAdd(DynamicSet.BytesSet storage set, bytes[] memory array_) internal {
+        for (uint256 i = 0; i < array_.length; i++) {
+            require(set.add(array_[i]), "SetHelper: element already exists");
+        }
+    }
+
+    /**
      * @notice The function for the strict insertion of an array of elements into the string set
      */
-    function strictAdd(StringSet.Set storage set, string[] memory array_) internal {
+    function strictAdd(DynamicSet.StringSet storage set, string[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {
             require(set.add(array_[i]), "SetHelper: element already exists");
         }
@@ -120,9 +138,18 @@ library SetHelper {
     }
 
     /**
+     * @notice The function to remove an array of elements from the bytes set
+     */
+    function remove(DynamicSet.BytesSet storage set, bytes[] memory array_) internal {
+        for (uint256 i = 0; i < array_.length; i++) {
+            set.remove(array_[i]);
+        }
+    }
+
+    /**
      * @notice The function to remove an array of elements from the string set
      */
-    function remove(StringSet.Set storage set, string[] memory array_) internal {
+    function remove(DynamicSet.StringSet storage set, string[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {
             set.remove(array_[i]);
         }
@@ -158,9 +185,18 @@ library SetHelper {
     }
 
     /**
+     * @notice The function for the strict removal of an array of elements from the bytes set
+     */
+    function strictRemove(DynamicSet.BytesSet storage set, bytes[] memory array_) internal {
+        for (uint256 i = 0; i < array_.length; i++) {
+            require(set.remove(array_[i]), "SetHelper: no such element");
+        }
+    }
+
+    /**
      * @notice The function for the strict removal of an array of elements from the string set
      */
-    function strictRemove(StringSet.Set storage set, string[] memory array_) internal {
+    function strictRemove(DynamicSet.StringSet storage set, string[] memory array_) internal {
         for (uint256 i = 0; i < array_.length; i++) {
             require(set.remove(array_[i]), "SetHelper: no such element");
         }

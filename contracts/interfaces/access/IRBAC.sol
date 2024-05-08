@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {StringSet} from "../../libs/data-structures/StringSet.sol";
-
 /**
  * @notice The RBAC module
  */
