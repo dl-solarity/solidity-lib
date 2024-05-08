@@ -8,7 +8,7 @@ import {DynamicSet} from "../data-structures/DynamicSet.sol";
 /**
  * @notice Library for pagination.
  *
- * Supports the following data types `uin256[]`, `address[]`, `bytes32[]`, `UintSet`,
+ * Supports the following data types `uint256[]`, `address[]`, `bytes32[]`, `UintSet`,
  * `AddressSet`, `Bytes32Set`, `BytesSet`, `StringSet`.
  */
 library Paginator {

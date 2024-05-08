@@ -5,14 +5,14 @@ pragma solidity ^0.8.4;
  * @notice Dynamic Set Library
  *
  * This library provides implementation of two sets with dynamic data types: `BytesSet` and `StingSet`.
- * Also, using this library you can create sets that can store any custom structures.
+ * The library can also be used to create sets that store custom structures via ABI encoding.
  *
  * ## Usage example:
  *
  * ```
  * using DynamicSet for DynamicSet.BytesSet;
  *
- * DynamicSet.BytesSet internal set;
+ * DynamicSet.BytesSet internal _set;
  * ```
  */
 library DynamicSet {
