@@ -8,9 +8,9 @@ pragma solidity ^0.8.4;
 library MemoryUtils {
     /**
      * @notice Copies the contents of the source string to the destination string.
-     * @dev This function reverts if the source string size is greater than the destination string size.
      *
      * @param source_ The source string to copy from.
+     * @return destination_ The newly allocated string.
      */
     function copy(string memory source_) internal view returns (string memory destination_) {
         destination_ = new string(getSize(source_));
@@ -20,9 +20,9 @@ library MemoryUtils {
 
     /**
      * @notice Copies the contents of the source bytes to the destination bytes.
-     * @dev This function reverts if the source bytes length is greater than the destination bytes length.
      *
      * @param source_ The source bytes to copy from.
+     * @return destination_ The newly allocated bytes.
      */
     function copy(bytes memory source_) internal view returns (bytes memory destination_) {
         destination_ = new bytes(source_.length);
