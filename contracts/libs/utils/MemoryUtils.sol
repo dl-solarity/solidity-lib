@@ -13,9 +13,9 @@ library MemoryUtils {
      * @return destination_ The newly allocated string.
      */
     function copy(string memory source_) internal view returns (string memory destination_) {
-        destination_ = new string(getSize(source_));
+        destination_ = new string(bytes(source_).length);
 
-        unsafeMemoryCopy(getPointer(source_), getPointer(destination_), getSize(source_));
+        unsafeMemoryCopy(getPointer(source_), getPointer(destination_), bytes(source_).length);
     }
 
     /**
@@ -75,15 +75,6 @@ library MemoryUtils {
     function getPointer(string memory data) internal pure returns (uint256 pointer) {
         assembly {
             pointer := data
-        }
-    }
-
-    /**
-     * @notice Returns the size of the given string data.
-     */
-    function getSize(string memory data) internal pure returns (uint256 size) {
-        assembly {
-            size := mload(data)
         }
     }
 }

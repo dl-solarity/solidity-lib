@@ -7,7 +7,7 @@ contract MemoryUtilsMock {
     using MemoryUtils for *;
 
     function testStringMemoryCopy(string memory data_) external view {
-        string memory someString = new string(data_.getSize());
+        string memory someString = new string(bytes(data_).length);
 
         require(
             keccak256(bytes(data_)) != keccak256(bytes(someString)),
