@@ -47,14 +47,5 @@ describe("MemoryUtils", () => {
     it("should copy partial chunks of memory", async () => {
       await expect(mock.testPartialCopy(ethers.randomBytes(15))).to.be.eventually.fulfilled;
     });
-
-    it("should revert if trying to copy to the destination that is less in size than the source", async () => {
-      await expect(mock.testBytesMemoryCopyRevert(ethers.randomBytes(20))).to.be.eventually.rejectedWith(
-        "MemoryUtils: destination bytes length is too small",
-      );
-      await expect(mock.testStringMemoryCopyRevert("Hello, world!")).to.be.eventually.rejectedWith(
-        "MemoryUtils: destination string size is too small",
-      );
-    });
   });
 });

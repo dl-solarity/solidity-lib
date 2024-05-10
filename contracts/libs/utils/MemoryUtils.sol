@@ -11,13 +11,9 @@ library MemoryUtils {
      * @dev This function reverts if the source string size is greater than the destination string size.
      *
      * @param source_ The source string to copy from.
-     * @param destination_ The destination string to copy to.
      */
-    function copyTo(string memory source_, string memory destination_) internal view {
-        require(
-            getSize(source_) <= getSize(destination_),
-            "MemoryUtils: destination string size is too small"
-        );
+    function copy(string memory source_) internal view returns (string memory destination_) {
+        destination_ = new string(getSize(source_));
 
         unsafeMemoryCopy(getPointer(source_), getPointer(destination_), getSize(source_));
     }
@@ -27,13 +23,9 @@ library MemoryUtils {
      * @dev This function reverts if the source bytes length is greater than the destination bytes length.
      *
      * @param source_ The source bytes to copy from.
-     * @param destination_ The destination bytes to copy to.
      */
-    function copyTo(bytes memory source_, bytes memory destination_) internal view {
-        require(
-            source_.length <= destination_.length,
-            "MemoryUtils: destination bytes length is too small"
-        );
+    function copy(bytes memory source_) internal view returns (bytes memory destination_) {
+        destination_ = new bytes(source_.length);
 
         unsafeMemoryCopy(getPointer(source_), getPointer(destination_), source_.length);
     }

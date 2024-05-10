@@ -14,7 +14,7 @@ contract MemoryUtilsMock {
             "MemoryUtilsMock: testStringMemoryCopy failed. Initial data and someString are equal"
         );
 
-        data_.copyTo(someString);
+        someString = data_.copy();
 
         require(
             keccak256(bytes(data_)) == keccak256(bytes(someString)),
@@ -30,7 +30,7 @@ contract MemoryUtilsMock {
             "MemoryUtilsMock: testBytesMemoryCopy failed. Initial data and someBytes are equal"
         );
 
-        data_.copyTo(someBytes);
+        someBytes = data_.copy();
 
         require(
             keccak256(data_) == keccak256(someBytes),
@@ -78,13 +78,5 @@ contract MemoryUtilsMock {
                 "MemoryUtilsMock: testPartialCopy failed. Initial data and someBytes are not equal"
             );
         }
-    }
-
-    function testStringMemoryCopyRevert(string memory data_) external view {
-        data_.copyTo(new string(data_.getSize() - 1));
-    }
-
-    function testBytesMemoryCopyRevert(bytes memory data_) external view {
-        data_.copyTo(new bytes(data_.length - 1));
     }
 }
