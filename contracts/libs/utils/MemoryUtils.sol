@@ -15,7 +15,7 @@ library MemoryUtils {
     function copy(string memory source_) internal view returns (string memory destination_) {
         destination_ = new string(bytes(source_).length);
 
-        unsafeMemoryCopy(getPointer(source_), getPointer(destination_), bytes(source_).length);
+        unsafeCopy(getDataPointer(source_), getDataPointer(destination_), bytes(source_).length);
     }
 
     /**
@@ -27,7 +27,7 @@ library MemoryUtils {
     function copy(bytes memory source_) internal view returns (bytes memory destination_) {
         destination_ = new bytes(source_.length);
 
-        unsafeMemoryCopy(getPointer(source_), getPointer(destination_), source_.length);
+        unsafeCopy(getDataPointer(source_), getDataPointer(destination_), source_.length);
     }
 
     /**
@@ -41,40 +41,121 @@ library MemoryUtils {
      * This signature of calling identity precompile is:
      * staticcall(gas(), address(0x04), argsOffset, argsSize, retOffset, retSize)
      */
-    function unsafeMemoryCopy(
+    function unsafeCopy(
         uint256 sourcePointer_,
         uint256 destinationPointer_,
         uint256 size_
     ) internal view {
         assembly {
-            pop(
-                staticcall(
-                    gas(),
-                    4,
-                    add(sourcePointer_, 32),
-                    size_,
-                    add(destinationPointer_, 32),
-                    size_
-                )
-            )
+            pop(staticcall(gas(), 4, sourcePointer_, size_, destinationPointer_, size_))
         }
     }
 
     /**
-     * @notice Returns the memory pointer of the given bytes data.
+     * @notice Returns the memory pointer to the given bytes starting position including the length.
      */
-    function getPointer(bytes memory data) internal pure returns (uint256 pointer) {
+    function getPointer(bytes memory data_) internal pure returns (uint256 pointer_) {
         assembly {
-            pointer := data
+            pointer_ := data_
         }
     }
 
     /**
-     * @notice Returns the memory pointer of the given string data.
+     * @notice Returns the memory pointer to the given bytes starting position including the length.
      */
-    function getPointer(string memory data) internal pure returns (uint256 pointer) {
+    function getPointer(string memory data_) internal pure returns (uint256 pointer_) {
         assembly {
-            pointer := data
+            pointer_ := data_
+        }
+    }
+
+    /**
+     * @notice Returns the memory pointer to the given bytes starting position including the length.
+     */
+    function getPointer(bytes[] memory data_) internal pure returns (uint256 pointer_) {
+        assembly {
+            pointer_ := data_
+        }
+    }
+
+    /**
+     * @notice Returns the memory pointer to the given bytes starting position including the length.
+     */
+    function getPointer(string[] memory data_) internal pure returns (uint256 pointer_) {
+        assembly {
+            pointer_ := data_
+        }
+    }
+
+    /**
+     * @notice Returns the memory pointer to the given bytes starting position including the length.
+     */
+    function getPointer(uint256[] memory data_) internal pure returns (uint256 pointer_) {
+        assembly {
+            pointer_ := data_
+        }
+    }
+
+    /**
+     * @notice Returns the memory pointer to the given bytes starting position including the length.
+     */
+    function getPointer(address[] memory data_) internal pure returns (uint256 pointer_) {
+        assembly {
+            pointer_ := data_
+        }
+    }
+
+    /**
+     * @notice Returns the memory pointer to the given bytes data starting position skipping the length.
+     */
+    function getDataPointer(string memory data_) internal pure returns (uint256 pointer_) {
+        assembly {
+            pointer_ := add(data_, 32)
+        }
+    }
+
+    /**
+     * @notice Returns the memory pointer to the given bytes data starting position skipping the length.
+     */
+    function getDataPointer(bytes memory data_) internal pure returns (uint256 pointer_) {
+        assembly {
+            pointer_ := add(data_, 32)
+        }
+    }
+
+    /**
+     * @notice Returns the memory pointer to the given bytes data starting position skipping the length.
+     */
+    function getDataPointer(bytes[] memory data_) internal pure returns (uint256 pointer_) {
+        assembly {
+            pointer_ := add(data_, 32)
+        }
+    }
+
+    /**
+     * @notice Returns the memory pointer to the given bytes data starting position skipping the length.
+     */
+    function getDataPointer(string[] memory data_) internal pure returns (uint256 pointer_) {
+        assembly {
+            pointer_ := add(data_, 32)
+        }
+    }
+
+    /**
+     * @notice Returns the memory pointer to the given bytes data starting position skipping the length.
+     */
+    function getDataPointer(uint256[] memory data_) internal pure returns (uint256 pointer_) {
+        assembly {
+            pointer_ := add(data_, 32)
+        }
+    }
+
+    /**
+     * @notice Returns the memory pointer to the given bytes data starting position skipping the length.
+     */
+    function getDataPointer(address[] memory data_) internal pure returns (uint256 pointer_) {
+        assembly {
+            pointer_ := add(data_, 32)
         }
     }
 }

@@ -46,9 +46,9 @@ contract MemoryUtilsMock {
             "MemoryUtilsMock: testBigMemory failed. Initial data and someBytes are equal"
         );
 
-        MemoryUtils.unsafeMemoryCopy(
-            MemoryUtils.getPointer(someBytes),
-            MemoryUtils.getPointer(data_),
+        MemoryUtils.unsafeCopy(
+            MemoryUtils.getDataPointer(someBytes),
+            MemoryUtils.getDataPointer(data_),
             someBytes.length
         );
 
@@ -66,9 +66,9 @@ contract MemoryUtilsMock {
             "MemoryUtilsMock: testPartialCopy failed. Initial data and someBytes are equal"
         );
 
-        MemoryUtils.unsafeMemoryCopy(
-            MemoryUtils.getPointer(someBytes),
-            MemoryUtils.getPointer(data_),
+        MemoryUtils.unsafeCopy(
+            MemoryUtils.getDataPointer(someBytes),
+            MemoryUtils.getDataPointer(data_),
             someBytes.length
         );
 
@@ -78,5 +78,25 @@ contract MemoryUtilsMock {
                 "MemoryUtilsMock: testPartialCopy failed. Initial data and someBytes are not equal"
             );
         }
+    }
+
+    /**
+     * @dev Since the underlying logic of `getPointer()/getDataPointer()` is only specific to EVMs,
+     * we only do a simple mock test for coverage.
+     */
+    function testForCoverage() external pure {
+        MemoryUtils.getPointer(new string(1));
+        MemoryUtils.getPointer(new bytes(1));
+        MemoryUtils.getPointer(new bytes[](1));
+        MemoryUtils.getPointer(new string[](1));
+        MemoryUtils.getPointer(new uint256[](1));
+        MemoryUtils.getPointer(new address[](1));
+
+        MemoryUtils.getDataPointer(new string(1));
+        MemoryUtils.getDataPointer(new bytes(1));
+        MemoryUtils.getDataPointer(new bytes[](1));
+        MemoryUtils.getDataPointer(new string[](1));
+        MemoryUtils.getDataPointer(new uint256[](1));
+        MemoryUtils.getDataPointer(new address[](1));
     }
 }

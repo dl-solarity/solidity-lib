@@ -47,5 +47,9 @@ describe("MemoryUtils", () => {
     it("should copy partial chunks of memory", async () => {
       await expect(mock.testPartialCopy(ethers.randomBytes(15))).to.be.eventually.fulfilled;
     });
+
+    it("should cover getter functions", async () => {
+      await expect(mock.testForCoverage()).to.be.eventually.fulfilled;
+    });
   });
 });
