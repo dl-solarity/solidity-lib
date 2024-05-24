@@ -2,11 +2,53 @@
 pragma solidity ^0.8.4;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {TypeCaster} from "../utils/TypeCaster.sol";
 
 /**
- * @notice The implementation of AVL tree.
+ * @notice AVL Tree module
+ *
+ * This library provides implementation of three sets with dynamic key types:
+ * `UintAVL`, `Bytes32AVL` and `Bytes32AVL`.
+ *
+ * Each element in the tree contains a bytes `value` field to allow storing different types
+ * of values including structs
+ *
+ * The implementation supports setting custom comparator function
+ *
+ * Gas usage for _insert and _remove functions (where count is the number of elements added to the tree):
+ *
+ * | Statistic | _insert      | _remove          |
+ * | --------- | ------------ | ---------------- |
+ * | count     | 1000         | 1000             |
+ * | mean      | 309,851 gas  | 164,735 gas      |
+ * | min       | 162,211 gas  | 48,691 gas       |
+ * | max       | 340,416 gas  | 220,653 gas      |
+ *
+ * ## Usage example:
+ *
+ * ```
+ * using AvlTree for AvlTree.UintAVL;
+ *
+ * AvlTree.UintAVL internal uintTree;
+ *
+ * ................................................
+ *
+ * uintTree.setComparator(comparatorFunction);
+ *
+ * uintTree.insert(1, abi.encode(1234));
+ *
+ * uintTree.remove(1);
+ *
+ * uintTree.root();
+ *
+ * uintTree.treeSize();
+ *
+ * uintTree.inOrderTraversal();
+ * ```
  */
 library AvlTree {
+    using TypeCaster for *;
+
     /**
      *********************
      *      UintAVL      *
@@ -17,106 +59,141 @@ library AvlTree {
         Tree _tree;
     }
 
+    /**
+     * @notice The function to set a custom comparator function, that will be used to build the uint256 tree.
+     * @param tree self.
+     * @param comparator_ The function that accepts keys and values of the nodes to compare.
+     */
     function setComparator(
         UintAVL storage tree,
-        function(mapping(bytes32 => Node) storage, bytes32, bytes32)
-            view
-            returns (int8) comparator_
+        function(bytes32, bytes32, bytes memory, bytes memory) view returns (int8) comparator_
     ) internal {
         _setComparator(tree._tree, comparator_);
     }
 
-    function insert(UintAVL storage tree, uint256 key_, bytes calldata value_) internal {
+    /**
+     * @notice The function to insert a node into the uint256 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @param key_ the key to insert.
+     * @param value_ the value to insert.
+     */
+    function insert(UintAVL storage tree, uint256 key_, bytes memory value_) internal {
         _insert(tree._tree, bytes32(key_), value_);
     }
 
+    /**
+     * @notice The function to remove a node from the uint256 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @param key_ the key of the node to remove.
+     */
     function remove(UintAVL storage tree, uint256 key_) internal {
         _remove(tree._tree, bytes32(key_));
     }
 
+    /**
+     * @notice The function to search for a node in the uint256 tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param key_ the key of the node to search for.
+     * @return True if the node exists, false otherwise.
+     */
     function search(UintAVL storage tree, uint256 key_) internal view returns (bool) {
         return _search(tree._tree, bytes32(key_));
     }
 
+    /**
+     * @notice The function to retrieve the value associated with a key in the uint256 tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param key_ the key to get the value for.
+     * @return The value associated with the key.
+     */
     function getValue(UintAVL storage tree, uint256 key_) internal view returns (bytes storage) {
+        require(_search(tree._tree, bytes32(key_)), "AvlTree: node with such key doesn't exist");
+
         return tree._tree.tree[bytes32(key_)].value;
     }
 
-    function rangeQuery(
-        UintAVL storage tree,
-        uint256 min_,
-        uint256 max_
-    ) internal view returns (uint256[] memory) {
-        require(min_ <= max_, "AvlTree: min should be less than or equal to max");
-
-        bytes32[] memory bytesResult_ = new bytes32[](tree._tree.treeSize);
-        uint256 count_ = _rangeQuery(
-            tree._tree.tree,
-            tree._tree.root,
-            bytes32(min_),
-            bytes32(max_),
-            bytesResult_,
-            0,
-            _getComparator(tree._tree)
-        );
-
-        uint256[] memory uintResult_ = new uint256[](count_);
-        for (uint256 i = 0; i < count_; i++) {
-            uintResult_[i] = uint256(bytesResult_[i]);
-        }
-
-        return uintResult_;
-    }
-
+    /**
+     * @notice The function to retrieve the minimum key in the uint256 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @return The minimum key in the tree.
+     */
     function getMin(UintAVL storage tree) internal view returns (uint256) {
         return uint256(_getMin(tree._tree.tree, tree._tree.root));
     }
 
+    /**
+     * @notice The function to retrieve the maximum key in the uint256 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @return The maximum key in the tree.
+     */
     function getMax(UintAVL storage tree) internal view returns (uint256) {
         return uint256(_getMax(tree._tree.tree, tree._tree.root));
     }
 
+    /**
+     * @notice The function to return the key of the root element of the uint256 tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @return The key of the root element of the uint256 tree.
+     */
     function root(UintAVL storage tree) internal view returns (uint256) {
         return uint256(tree._tree.root);
     }
 
+    /**
+     * @notice The function to retrieve the size of the uint256 tree.
+     * @param tree self.
+     * @return The size of the tree.
+     */
     function treeSize(UintAVL storage tree) internal view returns (uint256) {
         return tree._tree.treeSize;
     }
 
+    /**
+     * @notice The function to perform an in-order traversal of the uint256 tree.
+     * @param tree self.
+     * @return An array of keys in in-order traversal.
+     */
     function inOrderTraversal(UintAVL storage tree) internal view returns (uint256[] memory) {
-        bytes32[] memory bytesTraversal_ = _getTraversal(tree._tree, _inOrderTraversal);
-        uint256[] memory uintTraversal_ = new uint256[](bytesTraversal_.length);
-
-        for (uint256 i = 0; i < bytesTraversal_.length; i++) {
-            uintTraversal_[i] = uint256(bytesTraversal_[i]);
-        }
-
-        return uintTraversal_;
+        return _getTraversal(tree._tree, _inOrderTraversal).asUint256Array();
     }
 
+    /**
+     * @notice The function to perform an pre-order traversal of the uint256 tree.
+     * @param tree self.
+     * @return An array of keys in pre-order traversal.
+     */
     function preOrderTraversal(UintAVL storage tree) internal view returns (uint256[] memory) {
-        bytes32[] memory bytesTraversal_ = _getTraversal(tree._tree, _preOrderTraversal);
-        uint256[] memory uintTraversal_ = new uint256[](bytesTraversal_.length);
-
-        for (uint256 i = 0; i < bytesTraversal_.length; i++) {
-            uintTraversal_[i] = uint256(bytesTraversal_[i]);
-        }
-
-        return uintTraversal_;
+        return _getTraversal(tree._tree, _preOrderTraversal).asUint256Array();
     }
 
+    /**
+     * @notice The function to perform an post-order traversal of the uint256 tree.
+     * @param tree self.
+     * @return An array of keys in post-order traversal.
+     */
     function postOrderTraversal(UintAVL storage tree) internal view returns (uint256[] memory) {
-        bytes32[] memory bytesTraversal_ = _getTraversal(tree._tree, _postOrderTraversal);
-        uint256[] memory uintTraversal_ = new uint256[](bytesTraversal_.length);
-
-        for (uint256 i = 0; i < bytesTraversal_.length; i++) {
-            uintTraversal_[i] = uint256(bytesTraversal_[i]);
-        }
-
-        return uintTraversal_;
+        return _getTraversal(tree._tree, _postOrderTraversal).asUint256Array();
     }
 
+    /**
+     * @notice The function to check whether the custom comparator function is set for the uint256 tree.
+     * @param tree self.
+     * @return True if the custom comparator function is set, false otherwise.
+     */
     function isCustomComparatorSet(UintAVL storage tree) internal view returns (bool) {
         return tree._tree.isCustomComparatorSet;
     }
@@ -131,88 +208,143 @@ library AvlTree {
         Tree _tree;
     }
 
+    /**
+     * @notice The function to set a custom comparator function, that will be used to build the byte32 tree.
+     * @param tree self.
+     * @param comparator_ The function that accepts keys and values of the nodes to compare.
+     */
     function setComparator(
         Bytes32AVL storage tree,
-        function(mapping(bytes32 => Node) storage, bytes32, bytes32)
-            view
-            returns (int8) comparator_
+        function(bytes32, bytes32, bytes memory, bytes memory) view returns (int8) comparator_
     ) internal {
         _setComparator(tree._tree, comparator_);
     }
 
-    function insert(Bytes32AVL storage tree, bytes32 key_, bytes calldata value_) internal {
+    /**
+     * @notice The function to insert a node into the bytes32 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @param key_ the key to insert.
+     * @param value_ the value to insert.
+     */
+    function insert(Bytes32AVL storage tree, bytes32 key_, bytes memory value_) internal {
         _insert(tree._tree, key_, value_);
     }
 
+    /**
+     * @notice The function to remove a node from the bytes32 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @param key_ the key of the node to remove.
+     */
     function remove(Bytes32AVL storage tree, bytes32 key_) internal {
         _remove(tree._tree, key_);
     }
 
+    /**
+     * @notice The function to search for a node in the bytes32 tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param key_ the key of the node to search for.
+     * @return True if the node exists, false otherwise.
+     */
     function search(Bytes32AVL storage tree, bytes32 key_) internal view returns (bool) {
         return _search(tree._tree, key_);
     }
 
+    /**
+     * @notice The function to retrieve the value associated with a key in the bytes32 tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param key_ the key to get the value for.
+     * @return The value associated with the key.
+     */
     function getValue(
         Bytes32AVL storage tree,
         bytes32 key_
     ) internal view returns (bytes storage) {
+        require(_search(tree._tree, key_), "AvlTree: node with such key doesn't exist");
         return tree._tree.tree[key_].value;
     }
 
-    function rangeQuery(
-        Bytes32AVL storage tree,
-        bytes32 min_,
-        bytes32 max_
-    ) internal view returns (bytes32[] memory) {
-        require(min_ <= max_, "AvlTree: min should be less than or equal to max");
-
-        bytes32[] memory bytesResult_ = new bytes32[](tree._tree.treeSize);
-        uint256 count_ = _rangeQuery(
-            tree._tree.tree,
-            tree._tree.root,
-            min_,
-            max_,
-            bytesResult_,
-            0,
-            _getComparator(tree._tree)
-        );
-
-        bytes32[] memory rangeResult_ = new bytes32[](count_);
-        for (uint256 i = 0; i < count_; i++) {
-            rangeResult_[i] = bytesResult_[i];
-        }
-
-        return rangeResult_;
-    }
-
+    /**
+     * @notice The function to retrieve the minimum key in the bytes32 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @return The minimum key in the tree.
+     */
     function getMin(Bytes32AVL storage tree) internal view returns (bytes32) {
         return _getMin(tree._tree.tree, tree._tree.root);
     }
 
+    /**
+     * @notice The function to retrieve the maximum key in the bytes32 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @return The maximum key in the tree.
+     */
     function getMax(Bytes32AVL storage tree) internal view returns (bytes32) {
         return _getMax(tree._tree.tree, tree._tree.root);
     }
 
+    /**
+     * @notice The function to return the key of the root element of the bytes32 tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @return The key of the root element of the uint256 tree.
+     */
     function root(Bytes32AVL storage tree) internal view returns (bytes32) {
         return tree._tree.root;
     }
 
+    /**
+     * @notice The function to retrieve the size of the bytes32 tree.
+     * @param tree self.
+     * @return The size of the tree.
+     */
     function treeSize(Bytes32AVL storage tree) internal view returns (uint256) {
         return tree._tree.treeSize;
     }
 
+    /**
+     * @notice The function to perform an in-order traversal of the bytes32 tree.
+     * @param tree self.
+     * @return An array of keys in in-order traversal.
+     */
     function inOrderTraversal(Bytes32AVL storage tree) internal view returns (bytes32[] memory) {
         return _getTraversal(tree._tree, _inOrderTraversal);
     }
 
+    /**
+     * @notice The function to perform an pre-order traversal of the bytes32 tree.
+     * @param tree self.
+     * @return An array of keys in pre-order traversal.
+     */
     function preOrderTraversal(Bytes32AVL storage tree) internal view returns (bytes32[] memory) {
         return _getTraversal(tree._tree, _preOrderTraversal);
     }
 
+    /**
+     * @notice The function to perform an post-order traversal of the bytes32 tree.
+     * @param tree self.
+     * @return An array of keys in post-order traversal.
+     */
     function postOrderTraversal(Bytes32AVL storage tree) internal view returns (bytes32[] memory) {
         return _getTraversal(tree._tree, _postOrderTraversal);
     }
 
+    /**
+     * @notice The function to check whether the custom comparator function is set for the bytes32 tree.
+     * @param tree self.
+     * @return True if the custom comparator function is set, false otherwise.
+     */
     function isCustomComparatorSet(Bytes32AVL storage tree) internal view returns (bool) {
         return tree._tree.isCustomComparatorSet;
     }
@@ -227,109 +359,146 @@ library AvlTree {
         Tree _tree;
     }
 
+    /**
+     * @notice The function to set a custom comparator function, that will be used to build the address tree.
+     * @param tree self.
+     * @param comparator_ The function that accepts keys and values of the nodes to compare.
+     */
     function setComparator(
         AddressAVL storage tree,
-        function(mapping(bytes32 => Node) storage, bytes32, bytes32)
-            view
-            returns (int8) comparator_
+        function(bytes32, bytes32, bytes memory, bytes memory) view returns (int8) comparator_
     ) internal {
         _setComparator(tree._tree, comparator_);
     }
 
-    function insert(AddressAVL storage tree, address key_, bytes calldata value_) internal {
-        _insert(tree._tree, bytes32(uint256(uint160(key_))), value_);
+    /**
+     * @notice The function to insert a node into the address tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @param key_ The key to insert.
+     * @param value_ The value to insert.
+     */
+    function insert(AddressAVL storage tree, address key_, bytes memory value_) internal {
+        _insert(tree._tree, _asBytes32(key_), value_);
     }
 
+    /**
+     * @notice The function to remove a node from the address tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @param key_ the key of the node to remove.
+     */
     function remove(AddressAVL storage tree, address key_) internal {
-        _remove(tree._tree, bytes32(uint256(uint160(key_))));
+        _remove(tree._tree, _asBytes32(key_));
     }
 
+    /**
+     * @notice The function to search for a node in the address tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param key_ the key of the node to search for.
+     * @return True if the node exists, false otherwise.
+     */
     function search(AddressAVL storage tree, address key_) internal view returns (bool) {
-        return _search(tree._tree, bytes32(uint256(uint160(key_))));
+        return _search(tree._tree, _asBytes32(key_));
     }
 
+    /**
+     * @notice The function to retrieve the value associated with a key in the address tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @param key_ the key to get the value for.
+     * @return The value associated with the key.
+     */
     function getValue(
         AddressAVL storage tree,
         address key_
     ) internal view returns (bytes storage) {
-        return tree._tree.tree[bytes32(uint256(uint160(key_)))].value;
-    }
-
-    function rangeQuery(
-        AddressAVL storage tree,
-        address min_,
-        address max_
-    ) internal view returns (address[] memory) {
-        require(min_ <= max_, "AvlTree: min should be less than or equal to max");
-
-        bytes32[] memory bytesResult_ = new bytes32[](tree._tree.treeSize);
-        uint256 count_ = _rangeQuery(
-            tree._tree.tree,
-            tree._tree.root,
-            bytes32(uint256(uint160(min_))),
-            bytes32(uint256(uint160(max_))),
-            bytesResult_,
-            0,
-            _getComparator(tree._tree)
+        require(
+            _search(tree._tree, _asBytes32(key_)),
+            "AvlTree: node with such key doesn't exist"
         );
-
-        address[] memory addressResult_ = new address[](count_);
-        for (uint256 i = 0; i < count_; i++) {
-            addressResult_[i] = address(uint160(uint256(bytesResult_[i])));
-        }
-
-        return addressResult_;
+        return tree._tree.tree[_asBytes32(key_)].value;
     }
 
+    /**
+     * @notice The function to retrieve the minimum key in the address tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @return The minimum key in the tree.
+     */
     function getMin(AddressAVL storage tree) internal view returns (address) {
-        return address(uint160(uint256(_getMin(tree._tree.tree, tree._tree.root))));
+        return _asAddress(_getMin(tree._tree.tree, tree._tree.root));
     }
 
+    /**
+     * @notice The function to retrieve the maximum key in the address tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param tree self.
+     * @return The maximum key in the tree.
+     */
     function getMax(AddressAVL storage tree) internal view returns (address) {
-        return address(uint160(uint256(_getMax(tree._tree.tree, tree._tree.root))));
+        return _asAddress(_getMax(tree._tree.tree, tree._tree.root));
     }
 
+    /**
+     * @notice The function to return the key of the root element of the address tree.
+     * Complexity is O(1).
+     *
+     * @param tree self.
+     * @return The key of the root element of the uint256 tree.
+     */
     function root(AddressAVL storage tree) internal view returns (address) {
-        return address(uint160(uint256(tree._tree.root)));
+        return _asAddress(tree._tree.root);
     }
 
+    /**
+     * @notice The function to retrieve the size of the address tree.
+     * @param tree self.
+     * @return The size of the tree.
+     */
     function treeSize(AddressAVL storage tree) internal view returns (uint256) {
         return tree._tree.treeSize;
     }
 
+    /**
+     * @notice The function to perform an in-order traversal of the address tree.
+     * @param tree self.
+     * @return An array of keys in in-order traversal.
+     */
     function inOrderTraversal(AddressAVL storage tree) internal view returns (address[] memory) {
-        bytes32[] memory bytesTraversal_ = _getTraversal(tree._tree, _inOrderTraversal);
-        address[] memory addressTraversal_ = new address[](bytesTraversal_.length);
-
-        for (uint256 i = 0; i < bytesTraversal_.length; i++) {
-            addressTraversal_[i] = address(uint160(uint256(bytesTraversal_[i])));
-        }
-
-        return addressTraversal_;
+        return _getTraversal(tree._tree, _inOrderTraversal).asAddressArray();
     }
 
+    /**
+     * @notice The function to perform an pre-order traversal of the address tree.
+     * @param tree self.
+     * @return An array of keys in pre-order traversal.
+     */
     function preOrderTraversal(AddressAVL storage tree) internal view returns (address[] memory) {
-        bytes32[] memory bytesTraversal_ = _getTraversal(tree._tree, _preOrderTraversal);
-        address[] memory addressTraversal_ = new address[](bytesTraversal_.length);
-
-        for (uint256 i = 0; i < bytesTraversal_.length; i++) {
-            addressTraversal_[i] = address(uint160(uint256(bytesTraversal_[i])));
-        }
-
-        return addressTraversal_;
+        return _getTraversal(tree._tree, _preOrderTraversal).asAddressArray();
     }
 
+    /**
+     * @notice The function to perform an post-order traversal of the address tree.
+     * @param tree self.
+     * @return An array of keys in post-order traversal.
+     */
     function postOrderTraversal(AddressAVL storage tree) internal view returns (address[] memory) {
-        bytes32[] memory bytesTraversal_ = _getTraversal(tree._tree, _postOrderTraversal);
-        address[] memory addressTraversal_ = new address[](bytesTraversal_.length);
-
-        for (uint256 i = 0; i < bytesTraversal_.length; i++) {
-            addressTraversal_[i] = address(uint160(uint256(bytesTraversal_[i])));
-        }
-
-        return addressTraversal_;
+        return _getTraversal(tree._tree, _postOrderTraversal).asAddressArray();
     }
 
+    /**
+     * @notice The function to check whether the custom comparator function is set for the address tree.
+     * @param tree self.
+     * @return True if the custom comparator function is set, false otherwise.
+     */
     function isCustomComparatorSet(AddressAVL storage tree) internal view returns (bool) {
         return tree._tree.isCustomComparatorSet;
     }
@@ -353,16 +522,12 @@ library AvlTree {
         uint256 treeSize;
         bool isCustomComparatorSet;
         mapping(bytes32 => Node) tree;
-        function(mapping(bytes32 => Node) storage, bytes32, bytes32)
-            view
-            returns (int8) comparator;
+        function(bytes32, bytes32, bytes memory, bytes memory) view returns (int8) comparator;
     }
 
     function _setComparator(
         Tree storage tree,
-        function(mapping(bytes32 => Node) storage, bytes32, bytes32)
-            view
-            returns (int8) comparator_
+        function(bytes32, bytes32, bytes memory, bytes memory) view returns (int8) comparator_
     ) private {
         require(tree.treeSize == 0, "AvlTree: the tree must be empty");
 
@@ -371,9 +536,9 @@ library AvlTree {
         tree.comparator = comparator_;
     }
 
-    function _insert(Tree storage tree, bytes32 key_, bytes calldata value_) private {
+    function _insert(Tree storage tree, bytes32 key_, bytes memory value_) private {
         require(key_ != 0, "AvlTree: key is not allowed to be 0");
-        require(tree.tree[key_].key != key_, "AvlSegmentTree: the node already exists");
+        require(tree.tree[key_].key != key_, "AvlTree: the node already exists");
 
         tree.root = _insertNode(tree.tree, tree.root, key_, value_, _getComparator(tree));
 
@@ -382,9 +547,7 @@ library AvlTree {
 
     function _remove(Tree storage tree, bytes32 key_) private {
         require(key_ != 0, "AvlTree: key is not allowed to be 0");
-        require(tree.treeSize != 0, "AvlSegmentTree: tree is empty");
-
-        require(tree.tree[key_].key == key_, "AvlSegmentTree: the node doesn't exist");
+        require(tree.tree[key_].key == key_, "AvlTree: the node doesn't exist");
 
         tree.root = _removeNode(tree.tree, tree.root, key_, _getComparator(tree));
 
@@ -395,10 +558,8 @@ library AvlTree {
         mapping(bytes32 => Node) storage _tree,
         bytes32 node_,
         bytes32 key_,
-        bytes calldata value_,
-        function(mapping(bytes32 => Node) storage, bytes32, bytes32)
-            view
-            returns (int8) comparator_
+        bytes memory value_,
+        function(bytes32, bytes32, bytes memory, bytes memory) view returns (int8) comparator_
     ) private returns (bytes32) {
         if (node_ == 0) {
             _tree[key_] = Node({key: key_, value: value_, left: 0, right: 0, height: 1});
@@ -406,7 +567,7 @@ library AvlTree {
             return key_;
         }
 
-        if (comparator_(_tree, key_, node_) <= 0) {
+        if (comparator_(key_, node_, value_, _tree[node_].value) <= 0) {
             _tree[node_].left = _insertNode(_tree, _tree[node_].left, key_, value_, comparator_);
         } else {
             _tree[node_].right = _insertNode(_tree, _tree[node_].right, key_, value_, comparator_);
@@ -419,11 +580,9 @@ library AvlTree {
         mapping(bytes32 => Node) storage _tree,
         bytes32 node_,
         bytes32 key_,
-        function(mapping(bytes32 => Node) storage, bytes32, bytes32)
-            view
-            returns (int8) comparator_
+        function(bytes32, bytes32, bytes memory, bytes memory) view returns (int8) comparator_
     ) private returns (bytes32) {
-        if (comparator_(_tree, key_, node_) == 0) {
+        if (comparator_(key_, node_, _tree[key_].value, _tree[node_].value) == 0) {
             bytes32 left_ = _tree[node_].left;
             bytes32 right_ = _tree[node_].right;
 
@@ -441,7 +600,7 @@ library AvlTree {
             _tree[temp_].left = left_;
 
             return _balance(_tree, temp_);
-        } else if (comparator_(_tree, key_, node_) < 0) {
+        } else if (comparator_(key_, node_, _tree[key_].value, _tree[node_].value) < 0) {
             _tree[node_].left = _removeNode(_tree, _tree[node_].left, key_, comparator_);
         } else {
             _tree[node_].right = _removeNode(_tree, _tree[node_].right, key_, comparator_);
@@ -531,66 +690,6 @@ library AvlTree {
 
     function _search(Tree storage tree, bytes32 key_) private view returns (bool) {
         return key_ != 0 && tree.tree[key_].key == key_;
-    }
-
-    function _rangeQuery(
-        mapping(bytes32 => Node) storage _tree,
-        bytes32 node_,
-        bytes32 min_,
-        bytes32 max_,
-        bytes32[] memory result_,
-        uint256 index_,
-        function(mapping(bytes32 => Node) storage, bytes32, bytes32)
-            view
-            returns (int8) comparator_
-    ) private view returns (uint256) {
-        if (node_ == 0) {
-            return index_;
-        }
-
-        if (comparator_(_tree, node_, min_) >= 0 && comparator_(_tree, node_, max_) <= 0) {
-            index_ = _rangeQuery(
-                _tree,
-                _tree[node_].left,
-                min_,
-                max_,
-                result_,
-                index_,
-                comparator_
-            );
-            result_[index_++] = node_;
-            index_ = _rangeQuery(
-                _tree,
-                _tree[node_].right,
-                min_,
-                max_,
-                result_,
-                index_,
-                comparator_
-            );
-        } else if (comparator_(_tree, node_, min_) < 0) {
-            index_ = _rangeQuery(
-                _tree,
-                _tree[node_].right,
-                min_,
-                max_,
-                result_,
-                index_,
-                comparator_
-            );
-        } else {
-            index_ = _rangeQuery(
-                _tree,
-                _tree[node_].left,
-                min_,
-                max_,
-                result_,
-                index_,
-                comparator_
-            );
-        }
-
-        return index_;
     }
 
     function _getMin(
@@ -694,18 +793,31 @@ library AvlTree {
     )
         private
         view
-        returns (function(mapping(bytes32 => Node) storage, bytes32, bytes32) view returns (int8))
+        returns (function(bytes32, bytes32, bytes memory, bytes memory) view returns (int8))
     {
         return tree.isCustomComparatorSet ? tree.comparator : _defaultComparator;
     }
 
     function _defaultComparator(
-        mapping(bytes32 => Node) storage,
-        bytes32 a,
-        bytes32 b
+        bytes32 key1_,
+        bytes32 key2_,
+        bytes memory,
+        bytes memory
     ) private pure returns (int8) {
-        if (a < b) return -1;
-        if (a > b) return 1;
+        if (key1_ < key2_) return -1;
+        if (key1_ > key2_) return 1;
         return 0;
+    }
+
+    function _asAddress(bytes32 from_) private pure returns (address to_) {
+        assembly {
+            to_ := from_
+        }
+    }
+
+    function _asBytes32(address from_) private pure returns (bytes32 to_) {
+        assembly {
+            to_ := from_
+        }
     }
 }
