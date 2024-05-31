@@ -75,6 +75,15 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
     }
 
     /**
+     * @notice The function to get the address of the primary owner.
+     * @dev The function ensures compatibility with protocols like OpenSea where a single owner is required
+     * @return the address of the primary owner
+     */
+    function owner() public view virtual returns (address) {
+        return _owners.at(0);
+    }
+
+    /**
      * @notice The function to check the ownership of a user
      * @param address_ the user to check
      * @return true if address_ is owner, false otherwise
@@ -89,9 +98,14 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
      * @param newOwners_ the array of addresses to add to _owners
      */
     function _addOwners(address[] memory newOwners_) private {
+        bool isSetEmpty_ = _owners.length() == 0;
         _owners.add(newOwners_);
 
         require(!_owners.contains(address(0)), "MultiOwnable: zero address can not be added");
+
+        if (isSetEmpty_) {
+            emit OwnershipTransferred(address(0), _owners.at(0));
+        }
 
         emit OwnersAdded(newOwners_);
     }
@@ -106,7 +120,14 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
      * @param oldOwners_ the array of addresses to remove from _owners
      */
     function _removeOwners(address[] memory oldOwners_) private {
+        address previousOwner_ = _owners.at(0);
+
         _owners.remove(oldOwners_);
+
+        address newOwner_ = _owners.length() > 0 ? _owners.at(0) : address(0);
+        if (newOwner_ != previousOwner_) {
+            emit OwnershipTransferred(previousOwner_, newOwner_);
+        }
 
         emit OwnersRemoved(oldOwners_);
     }

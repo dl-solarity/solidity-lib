@@ -5,6 +5,7 @@ import { Reverter } from "@/test/helpers/reverter";
 import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 import { MultiOwnableMock } from "@ethers-v6";
+import { EventLog } from "ethers";
 
 describe("MultiOwnable", () => {
   const reverter = new Reverter();
@@ -60,6 +61,30 @@ describe("MultiOwnable", () => {
       expect(await multiOwnable.isOwner(THIRD.address)).to.be.true;
     });
 
+    it("should emit OwnershipTransferred event when init function is called", async () => {
+      const MultiOwnableMock = await ethers.getContractFactory("MultiOwnableMock");
+      const multiOwnable = await MultiOwnableMock.deploy();
+
+      const transactionInit = await multiOwnable.connect(SECOND).__MultiOwnableMock_init();
+      const receiptInit = await transactionInit.wait();
+      const eventInit = receiptInit?.logs.find((log) => {
+        const eventLog = log as EventLog;
+        return eventLog?.fragment?.name === "OwnershipTransferred";
+      });
+
+      expect((eventInit as EventLog).args[0]).to.equal(ZERO_ADDR);
+      expect((eventInit as EventLog).args[1]).to.equal(SECOND);
+
+      const transactionAdd = await multiOwnable.connect(SECOND).addOwners([SECOND.address, THIRD.address]);
+      const receiptAdd = await transactionAdd.wait();
+      const eventAdd = receiptAdd?.logs.find((log) => {
+        const eventLog = log as EventLog;
+        return eventLog?.fragment?.name === "OwnershipTransferred";
+      });
+
+      expect(eventAdd).to.be.undefined;
+    });
+
     it("should not add null address", async () => {
       await expect(multiOwnable.addOwners([ZERO_ADDR])).to.be.revertedWith(
         "MultiOwnable: zero address can not be added",
@@ -74,6 +99,41 @@ describe("MultiOwnable", () => {
 
       expect(await multiOwnable.isOwner(SECOND.address)).to.be.false;
       expect(await multiOwnable.isOwner(FIRST.address)).to.be.true;
+    });
+
+    it("should emit OwnershipTransferred event only when primary owner is changed", async () => {
+      await multiOwnable.addOwners([SECOND.address]);
+      const transactionChanged = await multiOwnable.connect(SECOND).removeOwners([FIRST.address]);
+
+      const receiptChanged = await transactionChanged.wait();
+      const eventChanged = receiptChanged?.logs.find((log) => {
+        const eventLog = log as EventLog;
+        return eventLog?.fragment?.name === "OwnershipTransferred";
+      });
+
+      expect((eventChanged as EventLog).args[0]).to.equal(FIRST.address);
+      expect((eventChanged as EventLog).args[1]).to.equal(SECOND.address);
+
+      await multiOwnable.connect(SECOND).addOwners([FIRST.address]);
+
+      const transactionNoChange = await multiOwnable.removeOwners([FIRST.address]);
+      const receiptNoChange = await transactionNoChange.wait();
+      const eventNoChange = receiptNoChange?.logs.find((log) => {
+        const eventLog = log as EventLog;
+        return eventLog?.fragment?.name === "OwnershipTransferred";
+      });
+
+      expect(eventNoChange).to.be.undefined;
+
+      const transactionEmpty = await multiOwnable.connect(SECOND).removeOwners([SECOND.address]);
+      const receiptEmpty = await transactionEmpty.wait();
+      const eventEmpty = receiptEmpty?.logs.find((log) => {
+        const eventLog = log as EventLog;
+        return eventLog?.fragment?.name === "OwnershipTransferred";
+      });
+
+      expect((eventEmpty as EventLog).args[0]).to.equal(SECOND.address);
+      expect((eventEmpty as EventLog).args[1]).to.equal(ZERO_ADDR);
     });
   });
 
@@ -90,6 +150,12 @@ describe("MultiOwnable", () => {
   describe("getOwners()", () => {
     it("should correctly set the owner after initialization", async () => {
       expect(await multiOwnable.getOwners()).to.deep.equal([FIRST.address]);
+    });
+  });
+
+  describe("owner()", () => {
+    it("should correctly get the primary owner", async () => {
+      expect(await multiOwnable.owner()).to.be.equal(FIRST.address);
     });
   });
 

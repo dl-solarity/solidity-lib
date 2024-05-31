@@ -7,6 +7,7 @@ pragma solidity ^0.8.4;
 interface IMultiOwnable {
     event OwnersAdded(address[] newOwners);
     event OwnersRemoved(address[] removedOwners);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /**
      * @notice The function to add equally rightful owners to the contract
