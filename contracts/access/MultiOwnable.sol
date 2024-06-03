@@ -99,6 +99,7 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
      */
     function _addOwners(address[] memory newOwners_) private {
         bool isSetEmpty_ = _owners.length() == 0;
+
         _owners.add(newOwners_);
 
         require(!_owners.contains(address(0)), "MultiOwnable: zero address can not be added");
@@ -125,6 +126,7 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
         _owners.remove(oldOwners_);
 
         address newOwner_ = _owners.length() > 0 ? _owners.at(0) : address(0);
+
         if (newOwner_ != previousOwner_) {
             emit OwnershipTransferred(previousOwner_, newOwner_);
         }
