@@ -51,52 +51,56 @@ contract AvlTreeMock {
         _addressTree.remove(key_);
     }
 
-    function searchUint(uint256 key_) external view returns (uint64) {
-        return _uintTree.search(key_);
+    function getUintFromUint(uint256 key_) external view returns (uint256) {
+        return uint256(_uintTree.get(key_));
     }
 
-    function searchBytes32(bytes32 key_) external view returns (uint64) {
-        return _bytes32Tree.search(key_);
+    function getAddressFromUint(uint256 key_) external view returns (address) {
+        return address(uint160(uint256(_uintTree.get(key_))));
     }
 
-    function searchAddress(address key_) external view returns (uint64) {
-        return _addressTree.search(key_);
+    function getUintFromBytes32(bytes32 key_) external view returns (uint256) {
+        return uint256(_bytes32Tree.get(key_));
     }
 
-    function getUintValueUint(uint256 key_) external view returns (bool, uint256) {
-        (bool exists_, bytes32 value_) = _uintTree.getValue(key_);
+    function getUintFromAddress(address key_) external view returns (uint256) {
+        return uint256(_addressTree.get(key_));
+    }
+
+    function tryGetUintFromUint(uint256 key_) external view returns (bool, uint256) {
+        (bool exists_, bytes32 value_) = _uintTree.tryGet(key_);
 
         return (exists_, uint256(value_));
     }
 
-    function getAddressValueUint(uint256 key_) external view returns (bool, address) {
-        (bool exists_, bytes32 value_) = _uintTree.getValue(key_);
+    function tryGetAddressFromUint(uint256 key_) external view returns (bool, address) {
+        (bool exists_, bytes32 value_) = _uintTree.tryGet(key_);
 
         return (exists_, address(uint160(uint256(value_))));
     }
 
-    function getUintValueBytes32(bytes32 key_) external view returns (bool, uint256) {
-        (bool exists_, bytes32 value_) = _bytes32Tree.getValue(key_);
+    function tryGetUintFromBytes32(bytes32 key_) external view returns (bool, uint256) {
+        (bool exists_, bytes32 value_) = _bytes32Tree.tryGet(key_);
 
         return (exists_, uint256(value_));
     }
 
-    function getUintValueAddress(address key_) external view returns (bool, uint256) {
-        (bool exists_, bytes32 value_) = _addressTree.getValue(key_);
+    function tryGetUintFromAddress(address key_) external view returns (bool, uint256) {
+        (bool exists_, bytes32 value_) = _addressTree.tryGet(key_);
 
         return (exists_, uint256(value_));
     }
 
-    function treeSizeUint() external view returns (uint64) {
-        return _uintTree.treeSize();
+    function sizeUint() external view returns (uint64) {
+        return _uintTree.size();
     }
 
-    function treeSizeBytes32() external view returns (uint64) {
-        return _bytes32Tree.treeSize();
+    function sizeBytes32() external view returns (uint64) {
+        return _bytes32Tree.size();
     }
 
-    function treeSizeAddress() external view returns (uint64) {
-        return _addressTree.treeSize();
+    function sizeAddress() external view returns (uint64) {
+        return _addressTree.size();
     }
 
     function rootUint() external view returns (uint256) {
@@ -112,10 +116,10 @@ contract AvlTreeMock {
     }
 
     function traverseUint() external view returns (uint256[] memory, uint256[] memory) {
-        Traversal.Iterator memory iterator_ = _uintTree.beginTraversal();
+        Traversal.Iterator memory iterator_ = _uintTree.first();
 
-        uint256[] memory keys_ = new uint256[](_uintTree.treeSize());
-        uint256[] memory values_ = new uint256[](_uintTree.treeSize());
+        uint256[] memory keys_ = new uint256[](_uintTree.size());
+        uint256[] memory values_ = new uint256[](_uintTree.size());
 
         if (keys_.length != 0) {
             (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.value();
@@ -139,7 +143,7 @@ contract AvlTreeMock {
     }
 
     function traverseFirstThreeUint() external view returns (uint256[] memory, uint256[] memory) {
-        Traversal.Iterator memory iterator_ = _uintTree.beginTraversal();
+        Traversal.Iterator memory iterator_ = _uintTree.first();
 
         uint256[] memory keys_ = new uint256[](3);
         uint256[] memory values_ = new uint256[](3);
@@ -160,7 +164,7 @@ contract AvlTreeMock {
             values_[index_] = uint256(bytesValue_);
 
             if (index_++ == 2) {
-                iterator_ = _uintTree.endTraversal();
+                iterator_ = _uintTree.last();
             }
         }
 
@@ -168,10 +172,10 @@ contract AvlTreeMock {
     }
 
     function brokenTraversalUint() external view {
-        Traversal.Iterator memory iterator_ = _uintTree.beginTraversal();
+        Traversal.Iterator memory iterator_ = _uintTree.first();
 
-        uint256[] memory keys_ = new uint256[](_uintTree.treeSize());
-        uint256[] memory values_ = new uint256[](_uintTree.treeSize());
+        uint256[] memory keys_ = new uint256[](_uintTree.size());
+        uint256[] memory values_ = new uint256[](_uintTree.size());
 
         (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.value();
 
@@ -191,10 +195,10 @@ contract AvlTreeMock {
     }
 
     function traverseBytes32() external view returns (bytes32[] memory, bytes32[] memory) {
-        Traversal.Iterator memory iterator_ = _bytes32Tree.beginTraversal();
+        Traversal.Iterator memory iterator_ = _bytes32Tree.first();
 
-        bytes32[] memory keys_ = new bytes32[](_bytes32Tree.treeSize());
-        bytes32[] memory values_ = new bytes32[](_bytes32Tree.treeSize());
+        bytes32[] memory keys_ = new bytes32[](_bytes32Tree.size());
+        bytes32[] memory values_ = new bytes32[](_bytes32Tree.size());
 
         if (keys_.length != 0) {
             (keys_[0], values_[0]) = iterator_.value();
@@ -216,7 +220,7 @@ contract AvlTreeMock {
         view
         returns (bytes32[] memory, bytes32[] memory)
     {
-        Traversal.Iterator memory iterator_ = _bytes32Tree.beginTraversal();
+        Traversal.Iterator memory iterator_ = _bytes32Tree.first();
 
         bytes32[] memory keys_ = new bytes32[](3);
         bytes32[] memory values_ = new bytes32[](3);
@@ -231,7 +235,7 @@ contract AvlTreeMock {
             (keys_[index_], values_[index_]) = iterator_.next();
 
             if (index_++ == 2) {
-                iterator_ = _bytes32Tree.endTraversal();
+                iterator_ = _bytes32Tree.last();
             }
         }
 
@@ -239,10 +243,10 @@ contract AvlTreeMock {
     }
 
     function traverseAddress() external view returns (address[] memory, address[] memory) {
-        Traversal.Iterator memory iterator_ = _addressTree.beginTraversal();
+        Traversal.Iterator memory iterator_ = _addressTree.first();
 
-        address[] memory keys_ = new address[](_addressTree.treeSize());
-        address[] memory values_ = new address[](_addressTree.treeSize());
+        address[] memory keys_ = new address[](_addressTree.size());
+        address[] memory values_ = new address[](_addressTree.size());
 
         if (keys_.length != 0) {
             (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.value();
@@ -270,7 +274,7 @@ contract AvlTreeMock {
         view
         returns (address[] memory, address[] memory)
     {
-        Traversal.Iterator memory iterator_ = _addressTree.beginTraversal();
+        Traversal.Iterator memory iterator_ = _addressTree.first();
 
         address[] memory keys_ = new address[](3);
         address[] memory values_ = new address[](3);
@@ -291,7 +295,7 @@ contract AvlTreeMock {
             values_[index_] = address(uint160(uint256(bytesValue_)));
 
             if (index_++ == 2) {
-                iterator_ = _addressTree.endTraversal();
+                iterator_ = _addressTree.last();
             }
         }
 
@@ -310,7 +314,7 @@ contract AvlTreeMock {
         return _addressTree.isCustomComparatorSet();
     }
 
-    function _descComparator(bytes32 key1_, bytes32 key2_) private pure returns (int8) {
+    function _descComparator(bytes32 key1_, bytes32 key2_) private pure returns (int256) {
         if (key1_ > key2_) {
             return -1;
         }
