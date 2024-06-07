@@ -101,20 +101,15 @@ contract AvlTreeMock {
         uint256[] memory keys_ = new uint256[](_uintTree.size());
         uint256[] memory values_ = new uint256[](_uintTree.size());
 
-        if (keys_.length != 0) {
+        uint256 index_ = 0;
+
+        while (iterator_.isValid()) {
             (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.value();
-
-            keys_[0] = uint256(bytesKey_);
-            values_[0] = uint256(bytesValue_);
-        }
-
-        uint256 index_ = 1;
-
-        while (iterator_.hasNext()) {
-            (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.next();
 
             keys_[index_] = uint256(bytesKey_);
             values_[index_] = uint256(bytesValue_);
+
+            iterator_.next();
 
             index_++;
         }
@@ -128,24 +123,21 @@ contract AvlTreeMock {
         uint256[] memory keys_ = new uint256[](3);
         uint256[] memory values_ = new uint256[](3);
 
-        if (keys_.length != 0) {
+        uint256 index_ = 0;
+
+        while (iterator_.isValid()) {
             (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.value();
-
-            keys_[0] = uint256(bytesKey_);
-            values_[0] = uint256(bytesValue_);
-        }
-
-        uint256 index_ = 1;
-
-        while (iterator_.hasNext()) {
-            (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.next();
 
             keys_[index_] = uint256(bytesKey_);
             values_[index_] = uint256(bytesValue_);
 
-            if (index_++ == 2) {
-                iterator_ = _uintTree.last();
+            if (index_ == 2) {
+                break;
             }
+
+            iterator_.next();
+
+            index_++;
         }
 
         return (keys_, values_);
@@ -157,20 +149,19 @@ contract AvlTreeMock {
         uint256[] memory keys_ = new uint256[](_uintTree.size());
         uint256[] memory values_ = new uint256[](_uintTree.size());
 
-        (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.value();
+        uint256 index_ = 0;
 
-        keys_[0] = uint256(bytesKey_);
-        values_[0] = uint256(bytesValue_);
-
-        uint256 index_ = 1;
-
-        while (iterator_.hasNext()) {
+        while (iterator_.isValid()) {
             iterator_.currentNode = 0;
 
-            (bytesKey_, bytesValue_) = iterator_.next();
+            (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.value();
 
             keys_[index_] = uint256(bytesKey_);
             values_[index_] = uint256(bytesValue_);
+
+            iterator_.next();
+
+            index_++;
         }
     }
 
@@ -180,25 +171,76 @@ contract AvlTreeMock {
         uint256[] memory keys_ = new uint256[](_uintTree.size());
         uint256[] memory values_ = new uint256[](_uintTree.size());
 
-        if (keys_.length != 0) {
+        uint256 index_ = 0;
+
+        while (iterator_.isValid()) {
             (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.value();
-
-            keys_[0] = uint256(bytesKey_);
-            values_[0] = uint256(bytesValue_);
-        }
-
-        uint256 index_ = 1;
-
-        while (iterator_.hasPrev()) {
-            (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.prev();
 
             keys_[index_] = uint256(bytesKey_);
             values_[index_] = uint256(bytesValue_);
+
+            iterator_.prev();
 
             index_++;
         }
 
         return (keys_, values_);
+    }
+
+    function backAndForthTraverseUint()
+        external
+        view
+        returns (uint256[] memory, uint256[] memory)
+    {
+        Traversal.Iterator memory iterator_ = _uintTree.first();
+
+        uint256[] memory keys_ = new uint256[](12);
+        uint256[] memory values_ = new uint256[](12);
+
+        bool[12] memory directions_ = [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+        ];
+
+        bytes32 bytesKey_;
+        bytes32 bytesValue_;
+
+        for (uint256 i = 0; i < 12; i++) {
+            (bytesKey_, bytesValue_) = iterator_.value();
+
+            keys_[i] = uint256(bytesKey_);
+            values_[i] = uint256(bytesValue_);
+
+            directions_[i] ? iterator_.next() : iterator_.prev();
+        }
+
+        return (keys_, values_);
+    }
+
+    function nextOnLast() external view returns (uint256, uint256) {
+        Traversal.Iterator memory iterator_ = _uintTree.last();
+
+        (bytes32 key_, bytes32 value_) = iterator_.next();
+
+        return (uint256(key_), uint256(value_));
+    }
+
+    function prevOnFirst() external view returns (uint256, uint256) {
+        Traversal.Iterator memory iterator_ = _uintTree.first();
+
+        (bytes32 key_, bytes32 value_) = iterator_.prev();
+
+        return (uint256(key_), uint256(value_));
     }
 
     function traverseBytes32() external view returns (uint256[] memory, bytes32[] memory) {
@@ -207,20 +249,15 @@ contract AvlTreeMock {
         uint256[] memory keys_ = new uint256[](_bytes32Tree.size());
         bytes32[] memory values_ = new bytes32[](_bytes32Tree.size());
 
-        if (keys_.length != 0) {
+        uint256 index_ = 0;
+
+        while (iterator_.isValid()) {
             (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.value();
-
-            keys_[0] = uint256(bytesKey_);
-            values_[0] = bytesValue_;
-        }
-
-        uint256 index_ = 1;
-
-        while (iterator_.hasNext()) {
-            (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.next();
 
             keys_[index_] = uint256(bytesKey_);
             values_[index_] = bytesValue_;
+
+            iterator_.next();
 
             index_++;
         }
@@ -228,34 +265,27 @@ contract AvlTreeMock {
         return (keys_, values_);
     }
 
-    function traverseFirstThreeBytes32()
+    function backwardsTraversalBytes32()
         external
         view
         returns (uint256[] memory, bytes32[] memory)
     {
-        Traversal.Iterator memory iterator_ = _bytes32Tree.first();
+        Traversal.Iterator memory iterator_ = _bytes32Tree.last();
 
-        uint256[] memory keys_ = new uint256[](3);
-        bytes32[] memory values_ = new bytes32[](3);
+        uint256[] memory keys_ = new uint256[](_bytes32Tree.size());
+        bytes32[] memory values_ = new bytes32[](_bytes32Tree.size());
 
-        if (keys_.length != 0) {
+        uint256 index_ = 0;
+
+        while (iterator_.isValid()) {
             (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.value();
-
-            keys_[0] = uint256(bytesKey_);
-            values_[0] = bytesValue_;
-        }
-
-        uint256 index_ = 1;
-
-        while (iterator_.hasNext()) {
-            (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.next();
 
             keys_[index_] = uint256(bytesKey_);
             values_[index_] = bytesValue_;
 
-            if (index_++ == 2) {
-                iterator_ = _bytes32Tree.last();
-            }
+            iterator_.prev();
+
+            index_++;
         }
 
         return (keys_, values_);
@@ -288,15 +318,15 @@ contract AvlTreeMock {
         return (keys_, values_);
     }
 
-    function traverseFirstThreeAddress()
+    function backwardsTraversalAddress()
         external
         view
         returns (uint256[] memory, address[] memory)
     {
-        Traversal.Iterator memory iterator_ = _addressTree.first();
+        Traversal.Iterator memory iterator_ = _addressTree.last();
 
-        uint256[] memory keys_ = new uint256[](3);
-        address[] memory values_ = new address[](3);
+        uint256[] memory keys_ = new uint256[](_addressTree.size());
+        address[] memory values_ = new address[](_addressTree.size());
 
         if (keys_.length != 0) {
             (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.value();
@@ -307,15 +337,13 @@ contract AvlTreeMock {
 
         uint256 index_ = 1;
 
-        while (iterator_.hasNext()) {
-            (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.next();
+        while (iterator_.hasPrev()) {
+            (bytes32 bytesKey_, bytes32 bytesValue_) = iterator_.prev();
 
             keys_[index_] = uint256(bytesKey_);
             values_[index_] = address(uint160(uint256(bytesValue_)));
 
-            if (index_++ == 2) {
-                iterator_ = _addressTree.last();
-            }
+            index_++;
         }
 
         return (keys_, values_);

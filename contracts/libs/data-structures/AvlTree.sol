@@ -7,7 +7,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
  * @notice AVL Tree module
  *
  * This library provides implementation of three sets with dynamic `value` types:
- * `UintAVL`, `Bytes32AVL` and `Bytes32AVL`.
+ * `UintAVL`, `Bytes32AVL` and `AddressAVL`.
  *
  * Each element in the tree has a bytes32 `key` field to allow storing values
  * associated with different types of keys
@@ -27,6 +27,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
  *
  * ```
  * using AvlTree for AvlTree.UintAVL;
+ * using Traversal for Traversal.Iterator;
  *
  * AvlTree.UintAVL internal uintTree;
  *
@@ -34,13 +35,24 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
  *
  * uintTree.setComparator(comparatorFunction);
  *
- * uintTree.insert(1, bytes32(1234));
+ * uintTree.insert(bytes32(1), 1234);
+ * uintTree.insert(bytes32(3), 100);
  *
- * uintTree.tryGet(1);
+ * uintTree.tryGet(bytes32(1));
  *
- * uintTree.remove(1);
+ * uintTree.remove(bytes32(1));
  *
- * uintTree.size();
+ * ................................................
+ *
+ * Traversal.Iterator memory iterator_ = uintTree.first();
+ *
+ * bytes32[] memory keys_ = new bytes32[](_uintTree.size());
+ * bytes32[] memory values_ = new bytes32[](_uintTree.size());
+ *
+ * while (iterator_.isValid()) {
+ *      (keys_[i], values_[i]) = iterator_.value();
+ *      iterator_.next();
+ * }
  * ```
  */
 library AvlTree {
@@ -169,7 +181,7 @@ library AvlTree {
     }
 
     /**
-     * @notice The function to set a custom comparator function, that will be used to build the byte32 tree.
+     * @notice The function to set a custom comparator function, that will be used to build the bytes32 tree.
      * @param tree self.
      * @param comparator_ The function that accepts keys and values of the nodes to compare.
      */
@@ -523,11 +535,17 @@ library AvlTree {
 
             for (temp_ = right_; _tree[temp_].left != 0; temp_ = _tree[temp_].left) {}
 
-            _tree[temp_].right = _removeMin(_tree, right_);
+            right_ = _removeMin(_tree, right_);
+
             _tree[temp_].left = left_;
+            _tree[temp_].right = right_;
 
             if (left_ != 0) {
                 _tree[left_].parent = temp_;
+            }
+
+            if (right_ != 0) {
+                _tree[right_].parent = temp_;
             }
 
             _tree[temp_].parent = parent_;
@@ -745,6 +763,15 @@ library Traversal {
     struct Iterator {
         uint256 treeMappingSlot;
         uint64 currentNode;
+    }
+
+    /**
+     * @notice The function to check if the iterator is currently valid (has not reached the end of the traversal).
+     * @param iterator_ self.
+     * @return True if the iterator is valid, false otherwise.
+     */
+    function isValid(Iterator memory iterator_) internal pure returns (bool) {
+        return iterator_.currentNode != 0;
     }
 
     /**
