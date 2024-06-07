@@ -5,112 +5,13 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {TypeCaster} from "../utils/TypeCaster.sol";
 
-library Traversal {
-    struct Iterator {
-        uint256 treeMappingSlot;
-        uint64 currentNode;
-    }
-
-    function hasNext(Iterator memory iterator_) internal view returns (bool) {
-        AvlTree.Node memory node_ = _getNode(iterator_.treeMappingSlot, iterator_.currentNode);
-
-        if (node_.right != 0) {
-            return true;
-        }
-
-        uint64 currentNodeIndex_ = iterator_.currentNode;
-
-        while (currentNodeIndex_ != 0) {
-            AvlTree.Node memory parent_ = _getNode(iterator_.treeMappingSlot, node_.parent);
-
-            if (currentNodeIndex_ == parent_.left) {
-                return true;
-            }
-
-            currentNodeIndex_ = node_.parent;
-            node_ = parent_;
-        }
-
-        return false;
-    }
-
-    function next(Iterator memory iterator_) internal view returns (bytes32, bytes32) {
-        uint64 currentNodeIndex_ = iterator_.currentNode;
-
-        require(currentNodeIndex_ != 0, "Traversal: No more nodes");
-
-        AvlTree.Node memory node_ = _getNode(iterator_.treeMappingSlot, currentNodeIndex_);
-
-        if (node_.right != 0) {
-            currentNodeIndex_ = node_.right;
-
-            AvlTree.Node memory childNode_ = _getNode(
-                iterator_.treeMappingSlot,
-                currentNodeIndex_
-            );
-
-            while (childNode_.left != 0) {
-                currentNodeIndex_ = childNode_.left;
-                childNode_ = _getNode(iterator_.treeMappingSlot, currentNodeIndex_);
-            }
-        } else {
-            uint64 parentIndex_ = node_.parent;
-
-            AvlTree.Node memory parentNode_ = _getNode(iterator_.treeMappingSlot, parentIndex_);
-
-            while (parentIndex_ != 0 && currentNodeIndex_ == parentNode_.right) {
-                currentNodeIndex_ = parentIndex_;
-
-                parentIndex_ = parentNode_.parent;
-                parentNode_ = _getNode(iterator_.treeMappingSlot, parentIndex_);
-            }
-
-            currentNodeIndex_ = parentIndex_;
-        }
-
-        iterator_.currentNode = currentNodeIndex_;
-
-        return value(iterator_);
-    }
-
-    function value(Iterator memory iterator_) internal view returns (bytes32, bytes32) {
-        AvlTree.Node memory node_ = _getNode(iterator_.treeMappingSlot, iterator_.currentNode);
-
-        return (node_.key, node_.value);
-    }
-
-    function _getNode(
-        uint256 slot_,
-        uint64 index_
-    ) private view returns (AvlTree.Node memory node_) {
-        bytes32 baseSlot_ = keccak256(abi.encode(index_, slot_));
-
-        assembly {
-            let valueSlot_ := add(baseSlot_, 1)
-            let packedSlot_ := add(baseSlot_, 2)
-
-            let packedData_ := sload(packedSlot_)
-
-            mstore(node_, sload(baseSlot_))
-            mstore(add(node_, 0x20), sload(valueSlot_))
-            mstore(add(node_, 0x40), and(packedData_, 0xFFFFFFFFFFFFFFFF))
-            mstore(add(node_, 0x60), and(shr(64, packedData_), 0xFFFFFFFFFFFFFFFF))
-            mstore(add(node_, 0x80), and(shr(128, packedData_), 0xFFFFFFFFFFFFFFFF))
-            mstore(add(node_, 0xa0), and(shr(192, packedData_), 0xFFFFFFFFFFFFFFFF))
-        }
-
-        return node_;
-    }
-}
-
 /**
  * @notice AVL Tree module
  *
  * This library provides implementation of three sets with dynamic key types:
  * `UintAVL`, `Bytes32AVL` and `Bytes32AVL`.
  *
- * Each element in the tree contains a bytes `value` field to allow storing different types
- * of values including structs
+ * Each element in the tree contains a bytes32 `value` field to allow storing different types of values
  *
  * The implementation supports setting custom comparator function
  *
@@ -118,10 +19,10 @@ library Traversal {
  *
  * | Statistic | _insert      | _remove          |
  * | --------- | ------------ | ---------------- |
- * | count     | 1000         | 1000             |
- * | mean      | 309,851 gas  | 164,735 gas      |
- * | min       | 162,211 gas  | 48,691 gas       |
- * | max       | 340,416 gas  | 220,653 gas      |
+ * | count     | 5000         | 5000             |
+ * | mean      | 222,578 gas  | 115,744 gas      |
+ * | min       | 110,520 gas  | 34,461 gas       |
+ * | max       | 263,275 gas  | 171,815 gas      |
  *
  * ## Usage example:
  *
@@ -134,15 +35,13 @@ library Traversal {
  *
  * uintTree.setComparator(comparatorFunction);
  *
- * uintTree.insert(1, abi.encode(1234));
+ * uintTree.insert(1, bytes32(1234));
+ *
+ * uintTree.tryGet(1);
  *
  * uintTree.remove(1);
  *
- * uintTree.root();
- *
- * uintTree.treeSize();
- *
- * uintTree.inOrderTraversal();
+ * uintTree.size();
  * ```
  */
 library AvlTree {
@@ -161,7 +60,7 @@ library AvlTree {
     /**
      * @notice The function to set a custom comparator function, that will be used to build the uint256 tree.
      * @param tree self.
-     * @param comparator_ The function that accepts keys and values of the nodes to compare.
+     * @param comparator_ The function that accepts keys of the nodes to compare.
      */
     function setComparator(
         UintAVL storage tree,
@@ -178,8 +77,8 @@ library AvlTree {
      * @param key_ the key to insert.
      * @param value_ the value to insert.
      */
-    function insert(UintAVL storage tree, uint256 key_, bytes32 value_) internal {
-        _insert(tree._tree, bytes32(key_), value_);
+    function insert(UintAVL storage tree, bytes32 key_, uint256 value_) internal {
+        _insert(tree._tree, key_, bytes32(value_));
     }
 
     /**
@@ -189,32 +88,39 @@ library AvlTree {
      * @param tree self.
      * @param key_ the key of the node to remove.
      */
-    function remove(UintAVL storage tree, uint256 key_) internal {
-        _remove(tree._tree, bytes32(key_));
-    }
-
-    /**
-     * @notice The function to search for a node in the uint256 tree.
-     * Complexity is O(1).
-     *
-     * @param tree self.
-     * @param key_ the key of the node to search for.
-     * @return True if the node exists, false otherwise.
-     */
-    function get(UintAVL storage tree, uint256 key_) internal view returns (bytes32) {
-        return _get(tree._tree, bytes32(key_));
+    function remove(UintAVL storage tree, bytes32 key_) internal {
+        _remove(tree._tree, key_);
     }
 
     /**
      * @notice The function to retrieve the value associated with a key in the uint256 tree.
-     * Complexity is O(1).
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * Note: Reverts if the node with the specified key doesn't exist.
      *
      * @param tree self.
-     * @param key_ the key to get the value for.
+     * @param key_ the key to retrieve the value for.
      * @return The value associated with the key.
      */
-    function tryGet(UintAVL storage tree, uint256 key_) internal view returns (bool, bytes32) {
-        return _tryGet(tree._tree, bytes32(key_));
+    function get(UintAVL storage tree, bytes32 key_) internal view returns (uint256) {
+        return uint256(_get(tree._tree, key_));
+    }
+
+    /**
+     * @notice The function to try to retrieve the value associated with a key in the uint256 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @dev Does not revert if the node with the specified key doesn't exist.
+     *
+     * @param tree self.
+     * @param key_ the key of the node to try to retrieve the value for.
+     * @return True if the node with the specified key exists, false otherwise.
+     * @return The value associated with the key.
+     */
+    function tryGet(UintAVL storage tree, bytes32 key_) internal view returns (bool, uint256) {
+        (bool exists_, bytes32 value_) = _tryGet(tree._tree, key_);
+
+        return (exists_, uint256(value_));
     }
 
     /**
@@ -226,10 +132,22 @@ library AvlTree {
         return uint64(_size(tree._tree));
     }
 
+    /**
+     * @notice The function to get the iterator pointing to the first (leftmost) node in the uint256 tree.
+     * @dev The functions can be utilized for an in-order traversal of the tree.
+     * @param tree self.
+     * @return The iterator pointing to the first node.
+     */
     function first(UintAVL storage tree) internal view returns (Traversal.Iterator memory) {
         return _first(tree._tree);
     }
 
+    /**
+     * @notice The function to get the iterator pointing to the last (rightmost) node in the uint256 tree.
+     * @dev The functions can be utilized for an in-order backwards traversal of the tree.
+     * @param tree self.
+     * @return The iterator pointing to the last node.
+     */
     function last(UintAVL storage tree) internal view returns (Traversal.Iterator memory) {
         return _last(tree._tree);
     }
@@ -289,23 +207,28 @@ library AvlTree {
     }
 
     /**
-     * @notice The function to search for a node in the bytes32 tree.
-     * Complexity is O(1).
+     * @notice The function to retrieve the value associated with a key in the bytes32 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * Note: Reverts if the node with the specified key doesn't exist.
      *
      * @param tree self.
-     * @param key_ the key of the node to search for.
-     * @return True if the node exists, false otherwise.
+     * @param key_ the key to retrieve the value for.
+     * @return The value associated with the key.
      */
     function get(Bytes32AVL storage tree, bytes32 key_) internal view returns (bytes32) {
         return _get(tree._tree, key_);
     }
 
     /**
-     * @notice The function to retrieve the value associated with a key in the bytes32 tree.
-     * Complexity is O(1).
+     * @notice The function to try to retrieve the value associated with a key in the bytes32 tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @dev Does not revert if the node with the specified key doesn't exist.
      *
      * @param tree self.
-     * @param key_ the key to get the value for.
+     * @param key_ the key of the node to try to retrieve the value for.
+     * @return True if the node with the specified key exists, false otherwise.
      * @return The value associated with the key.
      */
     function tryGet(Bytes32AVL storage tree, bytes32 key_) internal view returns (bool, bytes32) {
@@ -321,10 +244,22 @@ library AvlTree {
         return uint64(_size(tree._tree));
     }
 
+    /**
+     * @notice The function to get the iterator pointing to the first (leftmost) node in the bytes32 tree.
+     * @dev The functions can be utilized for an in-order traversal of the tree.
+     * @param tree self.
+     * @return The iterator pointing to the first node.
+     */
     function first(Bytes32AVL storage tree) internal view returns (Traversal.Iterator memory) {
         return _first(tree._tree);
     }
 
+    /**
+     * @notice The function to get the iterator pointing to the last (rightmost) node in the bytes32 tree.
+     * @dev The functions can be utilized for an in-order backwards traversal of the tree.
+     * @param tree self.
+     * @return The iterator pointing to the last node.
+     */
     function last(Bytes32AVL storage tree) internal view returns (Traversal.Iterator memory) {
         return _last(tree._tree);
     }
@@ -368,8 +303,8 @@ library AvlTree {
      * @param key_ The key to insert.
      * @param value_ The value to insert.
      */
-    function insert(AddressAVL storage tree, address key_, bytes32 value_) internal {
-        _insert(tree._tree, bytes32(uint256(uint160(key_))), value_);
+    function insert(AddressAVL storage tree, bytes32 key_, address value_) internal {
+        _insert(tree._tree, key_, bytes32(uint256(uint160(value_))));
     }
 
     /**
@@ -379,32 +314,39 @@ library AvlTree {
      * @param tree self.
      * @param key_ the key of the node to remove.
      */
-    function remove(AddressAVL storage tree, address key_) internal {
-        _remove(tree._tree, bytes32(uint256(uint160(key_))));
-    }
-
-    /**
-     * @notice The function to search for a node in the address tree.
-     * Complexity is O(1).
-     *
-     * @param tree self.
-     * @param key_ the key of the node to search for.
-     * @return True if the node exists, false otherwise.
-     */
-    function get(AddressAVL storage tree, address key_) internal view returns (bytes32) {
-        return _get(tree._tree, bytes32(uint256(uint160(key_))));
+    function remove(AddressAVL storage tree, bytes32 key_) internal {
+        _remove(tree._tree, key_);
     }
 
     /**
      * @notice The function to retrieve the value associated with a key in the address tree.
-     * Complexity is O(1).
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * Note: Reverts if the node with the specified key doesn't exist.
      *
      * @param tree self.
-     * @param key_ the key to get the value for.
+     * @param key_ the key to retrieve the value for.
      * @return The value associated with the key.
      */
-    function tryGet(AddressAVL storage tree, address key_) internal view returns (bool, bytes32) {
-        return _tryGet(tree._tree, bytes32(uint256(uint160(key_))));
+    function get(AddressAVL storage tree, bytes32 key_) internal view returns (address) {
+        return address(uint160(uint256(_get(tree._tree, key_))));
+    }
+
+    /**
+     * @notice The function to try to retrieve the value associated with a key in the address tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @dev Does not revert if the node with the specified key doesn't exist.
+     *
+     * @param tree self.
+     * @param key_ the key of the node to try to retrieve the value for.
+     * @return True if the node with the specified key exists, false otherwise.
+     * @return The value associated with the key.
+     */
+    function tryGet(AddressAVL storage tree, bytes32 key_) internal view returns (bool, address) {
+        (bool exists_, bytes32 value_) = _tryGet(tree._tree, key_);
+
+        return (exists_, address(uint160(uint256(value_))));
     }
 
     /**
@@ -416,10 +358,22 @@ library AvlTree {
         return uint64(_size(tree._tree));
     }
 
+    /**
+     * @notice The function to get the iterator pointing to the first (leftmost) node in the address tree.
+     * @dev The functions can be utilized for an in-order traversal of the tree.
+     * @param tree self.
+     * @return The iterator pointing to the first node.
+     */
     function first(AddressAVL storage tree) internal view returns (Traversal.Iterator memory) {
         return _first(tree._tree);
     }
 
+    /**
+     * @notice The function to get the iterator pointing to the last (rightmost) node in the address tree.
+     * @dev The functions can be utilized for an in-order backwards traversal of the tree.
+     * @param tree self.
+     * @return The iterator pointing to the last node.
+     */
     function last(AddressAVL storage tree) internal view returns (Traversal.Iterator memory) {
         return _last(tree._tree);
     }
@@ -578,6 +532,8 @@ library AvlTree {
             if (left_ != 0) {
                 _tree[left_].parent = temp_;
             }
+
+            _tree[temp_].parent = parent_;
 
             return _balance(_tree, temp_);
         } else if (comparison_ < 0) {
@@ -775,5 +731,164 @@ library AvlTree {
         }
 
         return 0;
+    }
+}
+
+/**
+ * @notice Traversal module
+ *
+ * This library provides functions to perform an in-order traversal of the AVL Tree
+ */
+library Traversal {
+    /**
+     * @notice Iterator struct to keep track of the current position in the tree.
+     * @param treeMappingSlot The storage slot of the tree mapping.
+     * @param currentNode The index of the current node in the traversal.
+     */
+    struct Iterator {
+        uint256 treeMappingSlot;
+        uint64 currentNode;
+    }
+
+    /**
+     * @notice The function to check if there is a next node in the traversal.
+     * @param iterator_ self.
+     * @return True if there is a next node, false otherwise.
+     */
+    function hasNext(Iterator memory iterator_) internal view returns (bool) {
+        return _has(iterator_, true);
+    }
+
+    /**
+     * @notice The function to check if there is a previous node in the traversal.
+     * @param iterator_ self.
+     * @return True if there is a previous node, false otherwise.
+     */
+    function hasPrev(Iterator memory iterator_) internal view returns (bool) {
+        return _has(iterator_, false);
+    }
+
+    /**
+     * @notice The function to move the iterator to the next node and retrieve its key and value.
+     * @param iterator_ self.
+     * @return The key of the next node.
+     * @return The value of the next node.
+     */
+    function next(Iterator memory iterator_) internal view returns (bytes32, bytes32) {
+        return _moveToAdjacent(iterator_, true);
+    }
+
+    /**
+     * @notice The function to move the iterator to the previous node and retrieve its key and value.
+     * @param iterator_ self.
+     * @return The key of the previous node.
+     * @return The value of the previous node.
+     */
+    function prev(Iterator memory iterator_) internal view returns (bytes32, bytes32) {
+        return _moveToAdjacent(iterator_, false);
+    }
+
+    /**
+     * @notice The function to retrieve the key and value of the current node.
+     * @param iterator_ self.
+     * @return The key of the current node.
+     * @return The value of the current node.
+     */
+    function value(Iterator memory iterator_) internal view returns (bytes32, bytes32) {
+        AvlTree.Node memory node_ = _getNode(iterator_.treeMappingSlot, iterator_.currentNode);
+
+        return (node_.key, node_.value);
+    }
+
+    function _has(Iterator memory iterator_, bool next_) private view returns (bool) {
+        AvlTree.Node memory node_ = _getNode(iterator_.treeMappingSlot, iterator_.currentNode);
+
+        if (_adjacent(node_, next_) != 0) {
+            return true;
+        }
+
+        uint64 currentNodeIndex_ = iterator_.currentNode;
+
+        while (currentNodeIndex_ != 0) {
+            AvlTree.Node memory parent_ = _getNode(iterator_.treeMappingSlot, node_.parent);
+
+            if (currentNodeIndex_ == _adjacent(parent_, !next_)) {
+                return true;
+            }
+
+            currentNodeIndex_ = node_.parent;
+            node_ = parent_;
+        }
+
+        return false;
+    }
+
+    function _moveToAdjacent(
+        Iterator memory iterator_,
+        bool next_
+    ) internal view returns (bytes32, bytes32) {
+        uint64 currentNodeIndex_ = iterator_.currentNode;
+
+        require(currentNodeIndex_ != 0, "Traversal: no more nodes");
+
+        AvlTree.Node memory node_ = _getNode(iterator_.treeMappingSlot, currentNodeIndex_);
+
+        if (_adjacent(node_, next_) != 0) {
+            currentNodeIndex_ = _adjacent(node_, next_);
+
+            AvlTree.Node memory childNode_ = _getNode(
+                iterator_.treeMappingSlot,
+                currentNodeIndex_
+            );
+
+            while (_adjacent(childNode_, !next_) != 0) {
+                currentNodeIndex_ = _adjacent(childNode_, !next_);
+                childNode_ = _getNode(iterator_.treeMappingSlot, currentNodeIndex_);
+            }
+        } else {
+            uint64 parentIndex_ = node_.parent;
+
+            AvlTree.Node memory parentNode_ = _getNode(iterator_.treeMappingSlot, parentIndex_);
+
+            while (parentIndex_ != 0 && currentNodeIndex_ == _adjacent(parentNode_, next_)) {
+                currentNodeIndex_ = parentIndex_;
+
+                parentIndex_ = parentNode_.parent;
+                parentNode_ = _getNode(iterator_.treeMappingSlot, parentIndex_);
+            }
+
+            currentNodeIndex_ = parentIndex_;
+        }
+
+        iterator_.currentNode = currentNodeIndex_;
+
+        return value(iterator_);
+    }
+
+    function _adjacent(AvlTree.Node memory node_, bool next_) private pure returns (uint64) {
+        return next_ ? node_.right : node_.left;
+    }
+
+    function _getNode(
+        uint256 slot_,
+        uint64 index_
+    ) private view returns (AvlTree.Node memory node_) {
+        bytes32 baseSlot_ = keccak256(abi.encode(index_, slot_));
+
+        assembly {
+            let valueSlot_ := add(baseSlot_, 1)
+            let packedSlot_ := add(baseSlot_, 2)
+
+            let packedData_ := sload(packedSlot_)
+
+            mstore(node_, sload(baseSlot_))
+            mstore(add(node_, 0x20), sload(valueSlot_))
+            mstore(add(node_, 0x40), and(packedData_, 0xFFFFFFFFFFFFFFFF))
+            mstore(add(node_, 0x60), and(shr(64, packedData_), 0xFFFFFFFFFFFFFFFF))
+            mstore(add(node_, 0x80), and(shr(128, packedData_), 0xFFFFFFFFFFFFFFFF))
+            mstore(add(node_, 0xa0), and(shr(192, packedData_), 0xFFFFFFFFFFFFFFFF))
+        }
+
+        return node_;
     }
 }

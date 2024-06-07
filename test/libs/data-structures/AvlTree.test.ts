@@ -13,13 +13,11 @@ describe("AvlTree", () => {
   let USER2: SignerWithAddress;
   let USER3: SignerWithAddress;
   let USER4: SignerWithAddress;
-  let USER5: SignerWithAddress;
-  let USER6: SignerWithAddress;
 
   let avlTree: AvlTreeMock;
 
   before(async () => {
-    [USER1, USER2, USER3, USER4, USER5, USER6] = await ethers.getSigners();
+    [USER1, USER2, USER3, USER4] = await ethers.getSigners();
     const AvlTreeMock = await ethers.getContractFactory("AvlTreeMock");
 
     avlTree = await AvlTreeMock.deploy();
@@ -41,10 +39,10 @@ describe("AvlTree", () => {
 
   describe("Uint Tree", () => {
     describe("insert", () => {
-      it("should insert uint values to the uint tree correctly", async () => {
-        await avlTree.insertUintToUint(4, 1);
-        await avlTree.insertUintToUint(12, 2);
-        await avlTree.insertUintToUint(1, 3);
+      it("should insert values to the uint tree correctly", async () => {
+        await avlTree.insertUint(4, 1);
+        await avlTree.insertUint(12, 2);
+        await avlTree.insertUint(1, 3);
 
         expect(await avlTree.rootUint()).to.equal(4);
         expect(await avlTree.sizeUint()).to.equal(3);
@@ -53,9 +51,9 @@ describe("AvlTree", () => {
         expect(traversal[0]).to.deep.equal([1, 4, 12]);
         expect(traversal[1]).to.deep.equal([3, 1, 2]);
 
-        await avlTree.insertUintToUint(200, 4);
-        await avlTree.insertUintToUint(10, 5);
-        await avlTree.insertUintToUint(5, 6);
+        await avlTree.insertUint(200, 4);
+        await avlTree.insertUint(10, 5);
+        await avlTree.insertUint(5, 6);
 
         expect(await avlTree.rootUint()).to.equal(10);
         expect(await avlTree.sizeUint()).to.equal(6);
@@ -64,7 +62,7 @@ describe("AvlTree", () => {
         expect(traversal[0]).to.deep.equal([1, 4, 5, 10, 12, 200]);
         expect(traversal[1]).to.deep.equal([3, 1, 6, 5, 2, 4]);
 
-        await avlTree.insertUintToUint(15, 7);
+        await avlTree.insertUint(15, 7);
 
         expect(await avlTree.rootUint()).to.equal(10);
         expect(await avlTree.sizeUint()).to.equal(7);
@@ -73,8 +71,8 @@ describe("AvlTree", () => {
         expect(traversal[0]).to.deep.equal([1, 4, 5, 10, 12, 15, 200]);
         expect(traversal[1]).to.deep.equal([3, 1, 6, 5, 2, 7, 4]);
 
-        await avlTree.insertUintToUint(2, 8);
-        await avlTree.insertUintToUint(3, 9);
+        await avlTree.insertUint(2, 8);
+        await avlTree.insertUint(3, 9);
 
         expect(await avlTree.rootUint()).to.equal(10);
         expect(await avlTree.sizeUint()).to.equal(9);
@@ -84,66 +82,33 @@ describe("AvlTree", () => {
         expect(traversal[1]).to.deep.equal([3, 8, 9, 1, 6, 5, 2, 7, 4]);
       });
 
-      it("should insert address values to the uint tree correctly", async () => {
-        await avlTree.insertAddressToUint(2, USER2);
-        await avlTree.insertAddressToUint(6, USER1);
-        await avlTree.insertAddressToUint(4, USER2);
-
-        expect(await avlTree.rootUint()).to.equal(4);
-        expect(await avlTree.sizeUint()).to.equal(3);
-
-        let traversal = await avlTree.traverseUint();
-        expect(traversal[0]).to.deep.equal([2, 4, 6]);
-        expect(traversal[1]).to.deep.equal([USER2.address, USER2.address, USER1.address]);
-
-        await avlTree.insertAddressToUint(1, USER2);
-        await avlTree.insertAddressToUint(13, USER4);
-        await avlTree.insertAddressToUint(7, USER1);
-        await avlTree.insertAddressToUint(5, USER3);
-
-        expect(await avlTree.rootUint()).to.equal(4);
-        expect(await avlTree.sizeUint()).to.equal(7);
-
-        traversal = await avlTree.traverseUint();
-        expect(traversal[0]).to.deep.equal([1, 2, 4, 5, 6, 7, 13]);
-        expect(traversal[1]).to.deep.equal([
-          USER2.address,
-          USER2.address,
-          USER2.address,
-          USER3.address,
-          USER1.address,
-          USER1.address,
-          USER4.address,
-        ]);
-      });
-
       it("should handle complex operations on the uint tree", async () => {
-        await avlTree.insertUintToUint(2, 10);
-        await avlTree.insertUintToUint(3, 1);
-        await avlTree.insertUintToUint(10, 18);
+        await avlTree.insertUint(2, 10);
+        await avlTree.insertUint(3, 1);
+        await avlTree.insertUint(10, 18);
 
         await avlTree.removeUint(3);
 
-        await avlTree.insertUintToUint(4, 20);
-        await avlTree.insertUintToUint(5, 10);
+        await avlTree.insertUint(4, 20);
+        await avlTree.insertUint(5, 10);
 
         await avlTree.removeUint(2);
         await avlTree.removeUint(10);
         await avlTree.removeUint(4);
 
-        await avlTree.insertUintToUint(4, 7);
-        await avlTree.insertUintToUint(1, 20);
-        await avlTree.insertUintToUint(2, 10);
-        await avlTree.insertUintToUint(20, 20);
-        await avlTree.insertUintToUint(111, 10);
+        await avlTree.insertUint(4, 7);
+        await avlTree.insertUint(1, 20);
+        await avlTree.insertUint(2, 10);
+        await avlTree.insertUint(20, 20);
+        await avlTree.insertUint(111, 10);
 
         await avlTree.removeUint(20);
 
-        await avlTree.insertUintToUint(16, 20);
-        await avlTree.insertUintToUint(17, 100);
-        await avlTree.insertUintToUint(18, 20);
-        await avlTree.insertUintToUint(19, 250);
-        await avlTree.insertUintToUint(20, 4);
+        await avlTree.insertUint(16, 20);
+        await avlTree.insertUint(17, 100);
+        await avlTree.insertUint(18, 20);
+        await avlTree.insertUint(19, 250);
+        await avlTree.insertUint(20, 4);
 
         expect(await avlTree.rootUint()).to.equal(4);
         expect(await avlTree.sizeUint()).to.equal(10);
@@ -154,24 +119,24 @@ describe("AvlTree", () => {
       });
 
       it("should not allow to insert 0 as key to the uint tree", async () => {
-        await expect(avlTree.insertUintToUint(0, 100)).to.be.revertedWith("AvlTree: key is not allowed to be 0");
+        await expect(avlTree.insertUint(0, 100)).to.be.revertedWith("AvlTree: key is not allowed to be 0");
       });
 
       it("should not allow to insert node with duplicate key to the uint tree", async () => {
-        await avlTree.insertUintToUint(2, 10);
-        await expect(avlTree.insertUintToUint(2, 4)).to.be.revertedWith("AvlTree: the node already exists");
+        await avlTree.insertUint(2, 10);
+        await expect(avlTree.insertUint(2, 4)).to.be.revertedWith("AvlTree: the node already exists");
       });
     });
 
     describe("remove", () => {
       it("should remove a node in the uint tree correctly", async () => {
-        await avlTree.insertUintToUint(2, 4);
-        await avlTree.insertUintToUint(3, 8);
-        await avlTree.insertUintToUint(6, 10);
-        await avlTree.insertUintToUint(1, 2);
-        await avlTree.insertUintToUint(4, 10);
-        await avlTree.insertUintToUint(7, 10);
-        await avlTree.insertUintToUint(10, 10);
+        await avlTree.insertUint(2, 4);
+        await avlTree.insertUint(3, 8);
+        await avlTree.insertUint(6, 10);
+        await avlTree.insertUint(1, 2);
+        await avlTree.insertUint(4, 10);
+        await avlTree.insertUint(7, 10);
+        await avlTree.insertUint(10, 10);
 
         expect(await avlTree.rootUint()).to.equal(3);
         expect(await avlTree.sizeUint()).to.equal(7);
@@ -186,15 +151,36 @@ describe("AvlTree", () => {
         expect(traversal[1]).to.deep.equal([2, 4, 10, 10, 10, 10]);
       });
 
+      it("should handle removing root node in the uint tree correctly", async () => {
+        await avlTree.setUintDescComparator();
+
+        await avlTree.insertUint(4, 2);
+        await avlTree.insertUint(6, 3);
+        await avlTree.insertUint(2, 22);
+        await avlTree.insertUint(1, 12);
+        await avlTree.insertUint(8, 4);
+
+        expect(await avlTree.rootUint()).to.be.equal(4);
+
+        await avlTree.removeUint(4);
+
+        expect(await avlTree.rootUint()).to.be.equal(2);
+        expect(await avlTree.sizeUint()).to.be.equal(4);
+
+        const traversal = await avlTree.traverseUint();
+        expect(traversal[0]).to.deep.equal([8, 6, 2, 1]);
+        expect(traversal[1]).to.deep.equal([4, 3, 22, 12]);
+      });
+
       it("should remove multiple nodes in the uint tree correctly", async () => {
-        await avlTree.insertUintToUint(1, 2);
-        await avlTree.insertUintToUint(4, 20);
-        await avlTree.insertUintToUint(3, 4);
-        await avlTree.insertUintToUint(7, 1);
-        await avlTree.insertUintToUint(8, 10);
-        await avlTree.insertUintToUint(9, 1);
-        await avlTree.insertUintToUint(5, 12);
-        await avlTree.insertUintToUint(6, 11);
+        await avlTree.insertUint(1, 2);
+        await avlTree.insertUint(4, 20);
+        await avlTree.insertUint(3, 4);
+        await avlTree.insertUint(7, 1);
+        await avlTree.insertUint(8, 10);
+        await avlTree.insertUint(9, 1);
+        await avlTree.insertUint(5, 12);
+        await avlTree.insertUint(6, 11);
 
         await avlTree.removeUint(8);
         await avlTree.removeUint(3);
@@ -209,13 +195,13 @@ describe("AvlTree", () => {
       });
 
       it("should handle removing all the nodes in the uint tree correctly", async () => {
-        await avlTree.insertUintToUint(2, 1);
-        await avlTree.insertUintToUint(4, 10);
-        await avlTree.insertUintToUint(3, 2);
+        await avlTree.insertUint(2, 1);
+        await avlTree.insertUint(4, 10);
+        await avlTree.insertUint(3, 2);
         await avlTree.removeUint(4);
         await avlTree.removeUint(2);
-        await avlTree.insertUintToUint(2, 2);
-        await avlTree.insertUintToUint(1, 2);
+        await avlTree.insertUint(2, 2);
+        await avlTree.insertUint(1, 2);
         await avlTree.removeUint(2);
         await avlTree.removeUint(1);
         await avlTree.removeUint(3);
@@ -229,15 +215,15 @@ describe("AvlTree", () => {
       });
 
       it("should not allow to remove a node that doesn't exist in the uint tree", async () => {
-        await avlTree.insertUintToUint(1, 10);
+        await avlTree.insertUint(1, 10);
 
         await expect(avlTree.removeUint(2)).to.be.revertedWith("AvlTree: the node doesn't exist");
         await expect(avlTree.removeUint(0)).to.be.revertedWith("AvlTree: key is not allowed to be 0");
       });
 
       it("should not allow to remove a node twice in the uint tree", async () => {
-        await avlTree.insertUintToUint(1, 10);
-        await avlTree.insertUintToUint(2, 20);
+        await avlTree.insertUint(1, 10);
+        await avlTree.insertUint(2, 20);
 
         await avlTree.removeUint(2);
 
@@ -253,12 +239,12 @@ describe("AvlTree", () => {
       it("should set a comparator for the uint tree correctly", async () => {
         await avlTree.setUintDescComparator();
 
-        await avlTree.insertUintToUint(2, 3);
-        await avlTree.insertUintToUint(4, 10);
-        await avlTree.insertUintToUint(1, 4);
-        await avlTree.insertUintToUint(6, 4);
-        await avlTree.insertUintToUint(3, 200);
-        await avlTree.insertUintToUint(5, 1);
+        await avlTree.insertUint(2, 3);
+        await avlTree.insertUint(4, 10);
+        await avlTree.insertUint(1, 4);
+        await avlTree.insertUint(6, 4);
+        await avlTree.insertUint(3, 200);
+        await avlTree.insertUint(5, 1);
 
         expect(await avlTree.rootUint()).to.equal(4);
         expect(await avlTree.sizeUint()).to.equal(6);
@@ -269,7 +255,7 @@ describe("AvlTree", () => {
       });
 
       it("should not allow to set comparator for the uint tree if the tree is not empty", async () => {
-        await avlTree.insertUintToUint(1, 10);
+        await avlTree.insertUint(1, 10);
 
         await expect(avlTree.setUintDescComparator()).to.be.revertedWith("AvlTree: the tree must be empty");
       });
@@ -277,52 +263,47 @@ describe("AvlTree", () => {
 
     describe("getters", () => {
       it("should get value for the existing node in the uint tree correctly", async () => {
-        await avlTree.insertUintToUint(1, 4);
-        await avlTree.insertUintToUint(2, 2);
+        await avlTree.insertUint(1, 4);
+        await avlTree.insertUint(2, 2);
+        await avlTree.insertUint(3, 1);
 
-        await avlTree.insertAddressToUint(3, USER1);
-        await avlTree.insertAddressToUint(4, USER2);
+        expect(await avlTree.getUint(1)).to.be.equal(4);
+        expect(await avlTree.tryGetUint(1)).to.deep.equal([true, 4]);
 
-        expect(await avlTree.getUintFromUint(1)).to.be.equal(4);
-        expect(await avlTree.tryGetUintFromUint(1)).to.deep.equal([true, 4]);
+        expect(await avlTree.getUint(2)).to.deep.equal(2);
+        expect(await avlTree.tryGetUint(2)).to.deep.equal([true, 2]);
 
-        expect(await avlTree.getUintFromUint(2)).to.deep.equal(2);
-        expect(await avlTree.tryGetUintFromUint(2)).to.deep.equal([true, 2]);
+        expect(await avlTree.getUint(3)).to.be.equal(1);
+        expect(await avlTree.tryGetUint(3)).to.deep.equal([true, 1]);
 
-        await expect(avlTree.getUintFromUint(5)).to.be.revertedWith("AvlTree: the node doesn't exist");
-        expect(await avlTree.tryGetUintFromUint(5)).to.deep.equal([false, 0]);
+        await expect(avlTree.getUint(4)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        expect(await avlTree.tryGetUint(4)).to.deep.equal([false, 0]);
 
-        expect(await avlTree.getAddressFromUint(3)).to.be.equal(USER1.address);
-        expect(await avlTree.tryGetAddressFromUint(3)).to.deep.equal([true, USER1.address]);
-
-        expect(await avlTree.getAddressFromUint(4)).to.be.equal(USER2.address);
-        expect(await avlTree.tryGetAddressFromUint(4)).to.deep.equal([true, USER2.address]);
-
-        await expect(avlTree.getAddressFromUint(6)).to.be.revertedWith("AvlTree: the node doesn't exist");
-        expect(await avlTree.tryGetAddressFromUint(6)).to.deep.equal([false, ZERO_ADDR]);
+        await expect(avlTree.getUint(6)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        expect(await avlTree.tryGetUint(6)).to.deep.equal([false, 0]);
       });
 
       it("should handle getting value for the non-existing node in the uint tree correctly", async () => {
-        await expect(avlTree.getUintFromUint(1)).to.be.revertedWith("AvlTree: the node doesn't exist");
-        expect(await avlTree.tryGetUintFromUint(1)).to.deep.equal([false, 0]);
+        await expect(avlTree.getUint(1)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        expect(await avlTree.tryGetUint(1)).to.deep.equal([false, 0]);
 
-        await avlTree.insertUintToUint(1, 30);
+        await avlTree.insertUint(1, 30);
 
-        await expect(avlTree.getUintFromUint(2)).to.be.revertedWith("AvlTree: the node doesn't exist");
-        expect(await avlTree.tryGetUintFromUint(2)).to.deep.equal([false, 0]);
+        await expect(avlTree.getUint(2)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        expect(await avlTree.tryGetUint(2)).to.deep.equal([false, 0]);
 
-        await expect(avlTree.getUintFromUint(0)).to.be.revertedWith("AvlTree: the node doesn't exist");
-        expect(await avlTree.tryGetUintFromUint(0)).to.deep.equal([false, 0]);
+        await expect(avlTree.getUint(0)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        expect(await avlTree.tryGetUint(0)).to.deep.equal([false, 0]);
       });
 
       it("should get the treeSize correctly for the uint tree", async () => {
         expect(await avlTree.sizeUint()).to.be.equal(0);
 
-        await avlTree.insertUintToUint(1, 10);
-        await avlTree.insertUintToUint(2, 10);
+        await avlTree.insertUint(1, 10);
+        await avlTree.insertUint(2, 10);
         await avlTree.removeUint(1);
-        await avlTree.insertUintToUint(3, 4);
-        await avlTree.insertUintToUint(7, 90);
+        await avlTree.insertUint(3, 4);
+        await avlTree.insertUint(7, 90);
 
         expect(await avlTree.sizeUint()).to.be.equal(3);
       });
@@ -336,11 +317,11 @@ describe("AvlTree", () => {
       });
 
       it("should traverse the uint tree correctly", async () => {
-        await avlTree.insertUintToUint(2, 10);
-        await avlTree.insertUintToUint(4, 11);
-        await avlTree.insertUintToUint(1, 12);
-        await avlTree.insertUintToUint(6, 13);
-        await avlTree.insertUintToUint(7, 14);
+        await avlTree.insertUint(2, 10);
+        await avlTree.insertUint(4, 11);
+        await avlTree.insertUint(1, 12);
+        await avlTree.insertUint(6, 13);
+        await avlTree.insertUint(7, 14);
 
         let fullTraversal = await avlTree.traverseUint();
         expect(fullTraversal[0]).to.deep.equal([1, 2, 4, 6, 7]);
@@ -350,7 +331,11 @@ describe("AvlTree", () => {
         expect(firstThreeTraversal[0]).to.deep.equal([1, 2, 4]);
         expect(firstThreeTraversal[1]).to.deep.equal([12, 10, 11]);
 
-        await expect(avlTree.brokenTraversalUint()).to.be.revertedWith("Traversal: No more nodes");
+        let backwardsTraversal = await avlTree.backwardsTraversalUint();
+        expect(backwardsTraversal[0]).to.deep.equal([7, 6, 4, 2, 1]);
+        expect(backwardsTraversal[1]).to.deep.equal([14, 13, 11, 10, 12]);
+
+        await expect(avlTree.brokenTraversalUint()).to.be.revertedWith("Traversal: no more nodes");
       });
     });
   });
@@ -359,104 +344,92 @@ describe("AvlTree", () => {
     it("should insert nodes to the bytes32 tree correctly", async () => {
       await avlTree.setBytes32DescComparator();
 
-      await avlTree.insertUintToBytes32(encodeBytes32String("2"), 20);
-      await avlTree.insertUintToBytes32(encodeBytes32String("4"), 22);
-      await avlTree.insertUintToBytes32(encodeBytes32String("1"), 12);
-      await avlTree.insertUintToBytes32(encodeBytes32String("6"), 2);
-      await avlTree.insertUintToBytes32(encodeBytes32String("3"), 112);
-      await avlTree.insertUintToBytes32(encodeBytes32String("5"), 2);
+      await avlTree.insertBytes32(2, encodeBytes32String("20"));
+      await avlTree.insertBytes32(4, encodeBytes32String("22"));
+      await avlTree.insertBytes32(1, encodeBytes32String("12"));
+      await avlTree.insertBytes32(6, encodeBytes32String("2"));
+      await avlTree.insertBytes32(3, encodeBytes32String("112"));
+      await avlTree.insertBytes32(5, encodeBytes32String("2"));
 
-      expect(await avlTree.rootBytes32()).to.equal(encodeBytes32String("4"));
-      expect(await avlTree.getUintFromBytes32(encodeBytes32String("4"))).to.be.equal(22);
-      expect(await avlTree.tryGetUintFromBytes32(encodeBytes32String("4"))).to.deep.equal([true, 22]);
+      expect(await avlTree.rootBytes32()).to.equal(4);
+      expect(await avlTree.getBytes32(4)).to.be.equal(encodeBytes32String("22"));
+      expect(await avlTree.tryGetBytes32(4)).to.deep.equal([true, encodeBytes32String("22")]);
 
       expect(await avlTree.sizeBytes32()).to.equal(6);
 
       let fullTraversal = await avlTree.traverseBytes32();
-      expect(fullTraversal[0]).to.deep.equal(uintToBytes32Array([6, 5, 4, 3, 2, 1]));
-      expect(fullTraversal[1]).to.deep.equal([2, 2, 22, 112, 20, 12]);
+      expect(fullTraversal[0]).to.deep.equal([6, 5, 4, 3, 2, 1]);
+      expect(fullTraversal[1]).to.deep.equal(uintToBytes32Array([2, 2, 22, 112, 20, 12]));
 
       let firstThreeTraversal = await avlTree.traverseFirstThreeBytes32();
-      expect(firstThreeTraversal[0]).to.deep.equal(uintToBytes32Array([6, 5, 4]));
-      expect(firstThreeTraversal[1]).to.deep.equal([2, 2, 22]);
+      expect(firstThreeTraversal[0]).to.deep.equal([6, 5, 4]);
+      expect(firstThreeTraversal[1]).to.deep.equal(uintToBytes32Array([2, 2, 22]));
     });
 
     it("should remove nodes in the bytes32 tree correctly", async () => {
-      await avlTree.insertUintToBytes32(encodeBytes32String("2"), 2);
-      await avlTree.insertUintToBytes32(encodeBytes32String("1"), 1);
-      await avlTree.insertUintToBytes32(encodeBytes32String("5"), 5);
-      await avlTree.insertUintToBytes32(encodeBytes32String("4"), 6);
+      await avlTree.insertBytes32(2, encodeBytes32String("2"));
+      await avlTree.insertBytes32(1, encodeBytes32String("1"));
+      await avlTree.insertBytes32(5, encodeBytes32String("5"));
+      await avlTree.insertBytes32(4, encodeBytes32String("6"));
 
-      await avlTree.removeBytes32(encodeBytes32String("2"));
+      await avlTree.removeBytes32(2);
 
-      expect(await avlTree.rootBytes32()).to.equal(encodeBytes32String("4"));
+      expect(await avlTree.rootBytes32()).to.equal(4);
 
       expect(await avlTree.sizeBytes32()).to.equal(3);
-      await expect(avlTree.getUintFromBytes32(encodeBytes32String("2"))).to.be.revertedWith(
-        "AvlTree: the node doesn't exist",
-      );
-      expect(await avlTree.tryGetUintFromBytes32(encodeBytes32String("2"))).to.deep.equal([false, 0]);
+      await expect(avlTree.getBytes32(2)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetBytes32(2)).to.deep.equal([false, 0]);
 
       let traversal = await avlTree.traverseBytes32();
-      expect(traversal[0]).to.deep.equal(uintToBytes32Array([1, 4, 5]));
-      expect(traversal[1]).to.deep.equal([1, 6, 5]);
+      expect(traversal[0]).to.deep.equal([1, 4, 5]);
+      expect(traversal[1]).to.deep.equal(uintToBytes32Array([1, 6, 5]));
 
-      await avlTree.insertUintToBytes32(encodeBytes32String("3"), 3);
-      await avlTree.insertUintToBytes32(encodeBytes32String("6"), 4);
-      await avlTree.insertUintToBytes32(encodeBytes32String("2"), 2);
+      await avlTree.insertBytes32(3, encodeBytes32String("3"));
+      await avlTree.insertBytes32(6, encodeBytes32String("4"));
+      await avlTree.insertBytes32(2, encodeBytes32String("2"));
 
-      await avlTree.removeBytes32(encodeBytes32String("1"));
-      await avlTree.removeBytes32(encodeBytes32String("3"));
+      await avlTree.removeBytes32(1);
+      await avlTree.removeBytes32(3);
 
-      expect(await avlTree.rootBytes32()).to.equal(encodeBytes32String("4"));
+      expect(await avlTree.rootBytes32()).to.equal(4);
       expect(await avlTree.sizeBytes32()).to.equal(4);
 
-      expect(await avlTree.getUintFromBytes32(encodeBytes32String("2"))).to.be.equal(2);
-      expect(await avlTree.tryGetUintFromBytes32(encodeBytes32String("2"))).to.deep.equal([true, 2]);
+      expect(await avlTree.getBytes32(2)).to.be.equal(encodeBytes32String("2"));
+      expect(await avlTree.tryGetBytes32(2)).to.deep.equal([true, encodeBytes32String("2")]);
 
-      await expect(avlTree.getUintFromBytes32(encodeBytes32String("1"))).to.be.revertedWith(
-        "AvlTree: the node doesn't exist",
-      );
-      expect(await avlTree.tryGetUintFromBytes32(encodeBytes32String("1"))).to.deep.equal([false, 0]);
+      await expect(avlTree.getBytes32(1)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetBytes32(1)).to.deep.equal([false, encodeBytes32String("")]);
 
-      await expect(avlTree.getUintFromBytes32(encodeBytes32String("3"))).to.be.revertedWith(
-        "AvlTree: the node doesn't exist",
-      );
-      expect(await avlTree.tryGetUintFromBytes32(encodeBytes32String("3"))).to.deep.equal([false, 0]);
+      await expect(avlTree.getBytes32(3)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetBytes32(3)).to.deep.equal([false, encodeBytes32String("")]);
 
       traversal = await avlTree.traverseBytes32();
-      expect(traversal[0]).to.deep.equal(uintToBytes32Array([2, 4, 5, 6]));
-      expect(traversal[1]).to.deep.equal([2, 6, 5, 4]);
+      expect(traversal[0]).to.deep.equal([2, 4, 5, 6]);
+      expect(traversal[1]).to.deep.equal(uintToBytes32Array([2, 6, 5, 4]));
 
-      await avlTree.removeBytes32(encodeBytes32String("2"));
-      await avlTree.removeBytes32(encodeBytes32String("5"));
-      await avlTree.removeBytes32(encodeBytes32String("6"));
-      await avlTree.removeBytes32(encodeBytes32String("4"));
+      await avlTree.removeBytes32(2);
+      await avlTree.removeBytes32(5);
+      await avlTree.removeBytes32(6);
+      await avlTree.removeBytes32(4);
 
-      expect(await avlTree.rootBytes32()).to.equal(encodeBytes32String(""));
-      expect(await avlTree.sizeBytes32()).to.equal(0);
+      expect(await avlTree.rootBytes32()).to.equal(0);
+      expect(await avlTree.sizeBytes32()).to.equal(encodeBytes32String(""));
     });
 
     it("should handle getting value in the bytes32 tree correctly", async () => {
-      await expect(avlTree.getUintFromBytes32(encodeBytes32String("1"))).to.be.revertedWith(
-        "AvlTree: the node doesn't exist",
-      );
-      expect(await avlTree.tryGetUintFromBytes32(encodeBytes32String("1"))).to.deep.equal([false, 0]);
+      await expect(avlTree.getBytes32(1)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetBytes32(1)).to.deep.equal([false, encodeBytes32String("")]);
 
-      await avlTree.insertUintToBytes32(encodeBytes32String("1"), 18);
+      await avlTree.insertBytes32(1, encodeBytes32String("18"));
 
-      expect(await avlTree.getUintFromBytes32(encodeBytes32String("1"))).to.be.equal(18);
-      expect(await avlTree.tryGetUintFromBytes32(encodeBytes32String("1"))).to.deep.equal([true, 18]);
+      expect(await avlTree.getBytes32(1)).to.be.equal(encodeBytes32String("18"));
+      expect(await avlTree.tryGetBytes32(1)).to.deep.equal([true, encodeBytes32String("18")]);
 
-      await expect(avlTree.getUintFromBytes32(encodeBytes32String("2"))).to.be.revertedWith(
-        "AvlTree: the node doesn't exist",
-      );
-      expect(await avlTree.tryGetUintFromBytes32(encodeBytes32String("2"))).to.deep.equal([false, 0]);
+      await expect(avlTree.getBytes32(2)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetBytes32(2)).to.deep.equal([false, encodeBytes32String("")]);
 
-      await expect(avlTree.getUintFromBytes32(encodeBytes32String("0"))).to.be.revertedWith(
-        "AvlTree: the node doesn't exist",
-      );
-      expect(await avlTree.tryGetUintFromBytes32(encodeBytes32String("0"))).to.deep.equal([false, 0]);
+      await expect(avlTree.getBytes32(0)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetBytes32(0)).to.deep.equal([false, encodeBytes32String("")]);
     });
 
     it("should check if custom comparator is set for the bytes32 tree correctly", async () => {
@@ -470,105 +443,98 @@ describe("AvlTree", () => {
 
   describe("Address Tree", () => {
     it("should insert nodes to the address tree correctly", async () => {
-      let users = [USER1.address, USER2.address, USER3.address, USER4.address, USER5.address, USER6.address];
-      let addresses = users.map((user) => user);
+      await avlTree.insertAddress(6, USER1);
+      await avlTree.insertAddress(4, USER2);
+      await avlTree.insertAddress(5, USER1);
+      await avlTree.insertAddress(3, USER4);
+      await avlTree.insertAddress(2, USER3);
 
-      addresses.sort((a, b) => a.localeCompare(b));
-
-      await avlTree.insertUintToAddress(addresses[5], 10);
-      await avlTree.insertUintToAddress(addresses[3], 22);
-      await avlTree.insertUintToAddress(addresses[4], 15);
-      await avlTree.insertUintToAddress(addresses[2], 6);
-      await avlTree.insertUintToAddress(addresses[1], 16);
-
-      expect(await avlTree.rootAddress()).to.equal(addresses[4]);
-      expect(await avlTree.getUintFromAddress(addresses[4])).to.be.equal(15);
-      expect(await avlTree.tryGetUintFromAddress(addresses[4])).to.deep.equal([true, 15]);
+      expect(await avlTree.rootAddress()).to.equal(5);
+      expect(await avlTree.getAddressValue(5)).to.be.equal(USER1);
+      expect(await avlTree.tryGetAddress(5)).to.deep.equal([true, USER1.address]);
 
       expect(await avlTree.sizeAddress()).to.equal(5);
 
       let traversal = await avlTree.traverseAddress();
-      expect(traversal[0]).to.deep.equal([addresses[1], addresses[2], addresses[3], addresses[4], addresses[5]]);
-      expect(traversal[1]).to.deep.equal([16, 6, 22, 15, 10]);
+      expect(traversal[0]).to.deep.equal([2, 3, 4, 5, 6]);
+      expect(traversal[1]).to.deep.equal([USER3.address, USER4.address, USER2.address, USER1.address, USER1.address]);
 
-      await avlTree.insertUintToAddress(addresses[0], 17);
+      await avlTree.insertAddress(1, USER3);
 
-      expect(await avlTree.rootAddress()).to.equal(addresses[2]);
-      expect(await avlTree.getUintFromAddress(addresses[2])).to.be.equal(6);
-      expect(await avlTree.tryGetUintFromAddress(addresses[2])).to.deep.equal([true, 6]);
+      expect(await avlTree.rootAddress()).to.equal(3);
+      expect(await avlTree.getAddressValue(3)).to.be.equal(USER4);
+      expect(await avlTree.tryGetAddress(3)).to.deep.equal([true, USER4.address]);
 
       expect(await avlTree.sizeAddress()).to.equal(6);
 
       traversal = await avlTree.traverseAddress();
-      expect(traversal[0]).to.deep.equal([
-        addresses[0],
-        addresses[1],
-        addresses[2],
-        addresses[3],
-        addresses[4],
-        addresses[5],
+      expect(traversal[0]).to.deep.equal([1, 2, 3, 4, 5, 6]);
+      expect(traversal[1]).to.deep.equal([
+        USER3.address,
+        USER3.address,
+        USER4.address,
+        USER2.address,
+        USER1.address,
+        USER1.address,
       ]);
-      expect(traversal[1]).to.deep.equal([17, 16, 6, 22, 15, 10]);
 
       const firstThreeTraversal = await avlTree.traverseFirstThreeAddress();
-      expect(firstThreeTraversal[0]).to.deep.equal([addresses[0], addresses[1], addresses[2]]);
-      expect(firstThreeTraversal[1]).to.deep.equal([17, 16, 6]);
+      expect(firstThreeTraversal[0]).to.deep.equal([1, 2, 3]);
+      expect(firstThreeTraversal[1]).to.deep.equal([USER3.address, USER3.address, USER4.address]);
     });
 
     it("should remove nodes in the address tree correctly", async () => {
-      let users = [USER1.address, USER2.address, USER3.address, USER4.address, USER5.address, USER6.address];
-      let addresses = users.map((user) => user);
-
-      addresses.sort((a, b) => b.localeCompare(a));
-
       await avlTree.setAddressDescComparator();
 
-      await avlTree.insertUintToAddress(addresses[1], 2);
-      await avlTree.insertUintToAddress(addresses[0], 1);
-      await avlTree.insertUintToAddress(addresses[4], 5);
-      await avlTree.insertUintToAddress(addresses[5], 6);
+      await avlTree.insertAddress(2, USER2);
+      await avlTree.insertAddress(1, USER2);
+      await avlTree.insertAddress(5, USER3);
+      await avlTree.insertAddress(6, USER1);
 
-      await avlTree.removeAddress(addresses[1]);
+      await avlTree.removeAddress(2);
 
-      expect(await avlTree.rootAddress()).to.equal(addresses[4]);
+      expect(await avlTree.rootAddress()).to.equal(5);
       expect(await avlTree.sizeAddress()).to.equal(3);
 
-      await expect(avlTree.getUintFromAddress(addresses[1])).to.be.revertedWith("AvlTree: the node doesn't exist");
-      expect(await avlTree.tryGetUintFromAddress(addresses[1])).to.deep.equal([false, 0]);
+      await expect(avlTree.getAddressValue(2)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetAddress(2)).to.deep.equal([false, ZERO_ADDR]);
 
       let traversal = await avlTree.traverseAddress();
-      expect(traversal[0]).to.deep.equal([addresses[0], addresses[4], addresses[5]]);
-      expect(traversal[1]).to.deep.equal([1, 5, 6]);
+      expect(traversal[0]).to.deep.equal([6, 5, 1]);
+      expect(traversal[1]).to.deep.equal([USER1.address, USER3.address, USER2.address]);
 
-      await avlTree.insertUintToAddress(addresses[2], 3);
-      await avlTree.insertUintToAddress(addresses[3], 4);
-      await avlTree.insertUintToAddress(addresses[1], 2);
+      await avlTree.insertAddress(3, USER2);
+      await avlTree.insertAddress(4, USER4);
+      await avlTree.insertAddress(2, USER3);
 
-      await avlTree.removeAddress(addresses[2]);
-      await avlTree.removeAddress(addresses[4]);
+      await avlTree.removeAddress(2);
+      await avlTree.insertAddress(2, USER2);
 
-      expect(await avlTree.rootAddress()).to.equal(addresses[3]);
+      await avlTree.removeAddress(3);
+      await avlTree.removeAddress(5);
+
+      expect(await avlTree.rootAddress()).to.equal(2);
       expect(await avlTree.sizeAddress()).to.equal(4);
 
-      expect(await avlTree.getUintFromAddress(addresses[0])).to.be.equal(1);
-      expect(await avlTree.tryGetUintFromAddress(addresses[0])).to.deep.equal([true, 1]);
+      expect(await avlTree.getAddressValue(1)).to.be.equal(USER2);
+      expect(await avlTree.tryGetAddress(1)).to.deep.equal([true, USER2.address]);
 
-      await expect(avlTree.getUintFromAddress(addresses[2])).to.be.revertedWith("AvlTree: the node doesn't exist");
-      expect(await avlTree.tryGetUintFromAddress(addresses[2])).to.deep.equal([false, 0]);
+      await expect(avlTree.getAddressValue(3)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetAddress(3)).to.deep.equal([false, 0]);
 
-      await expect(avlTree.getUintFromAddress(addresses[4])).to.be.revertedWith("AvlTree: the node doesn't exist");
-      expect(await avlTree.tryGetUintFromAddress(addresses[4])).to.deep.equal([false, 0]);
+      await expect(avlTree.getAddressValue(5)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetAddress(5)).to.deep.equal([false, ZERO_ADDR]);
 
       traversal = await avlTree.traverseAddress();
-      expect(traversal[0]).to.deep.equal([addresses[0], addresses[1], addresses[3], addresses[5]]);
-      expect(traversal[1]).to.deep.equal([1, 2, 4, 6]);
+      expect(traversal[0]).to.deep.equal([6, 4, 2, 1]);
+      expect(traversal[1]).to.deep.equal([USER1.address, USER4.address, USER2.address, USER2.address]);
 
-      await avlTree.removeAddress(addresses[1]);
-      await avlTree.removeAddress(addresses[5]);
-      await avlTree.removeAddress(addresses[3]);
-      await avlTree.removeAddress(addresses[0]);
+      await avlTree.removeAddress(2);
+      await avlTree.removeAddress(6);
+      await avlTree.removeAddress(4);
+      await avlTree.removeAddress(1);
 
-      expect(await avlTree.rootAddress()).to.equal(ZERO_ADDR);
+      expect(await avlTree.rootAddress()).to.equal(0);
       expect(await avlTree.sizeAddress()).to.equal(0);
 
       traversal = await avlTree.traverseAddress();
@@ -577,19 +543,19 @@ describe("AvlTree", () => {
     });
 
     it("should handle getting value in the address tree correctly", async () => {
-      await expect(avlTree.getUintFromAddress(USER1)).to.be.revertedWith("AvlTree: the node doesn't exist");
-      expect(await avlTree.tryGetUintFromAddress(USER1)).to.deep.equal([false, 0]);
+      await expect(avlTree.getAddressValue(1)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetAddress(1)).to.deep.equal([false, ZERO_ADDR]);
 
-      await avlTree.insertUintToAddress(USER1, 2);
+      await avlTree.insertAddress(1, USER2);
 
-      expect(await avlTree.getUintFromAddress(USER1)).to.be.equal(2);
-      expect(await avlTree.tryGetUintFromAddress(USER1)).to.deep.equal([true, 2]);
+      expect(await avlTree.getAddressValue(1)).to.be.equal(USER2);
+      expect(await avlTree.tryGetAddress(1)).to.deep.equal([true, USER2.address]);
 
-      await expect(avlTree.getUintFromAddress(USER5)).to.be.revertedWith("AvlTree: the node doesn't exist");
-      expect(await avlTree.tryGetUintFromAddress(USER5)).to.deep.equal([false, 0]);
+      await expect(avlTree.getAddressValue(5)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetAddress(5)).to.deep.equal([false, ZERO_ADDR]);
 
-      await expect(avlTree.getUintFromAddress(ZERO_ADDR)).to.be.revertedWith("AvlTree: the node doesn't exist");
-      expect(await avlTree.tryGetUintFromAddress(ZERO_ADDR)).to.deep.equal([false, 0]);
+      await expect(avlTree.getAddressValue(0)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      expect(await avlTree.tryGetAddress(0)).to.deep.equal([false, ZERO_ADDR]);
     });
 
     it("should check if custom comparator is set for the address tree correctly", async () => {
