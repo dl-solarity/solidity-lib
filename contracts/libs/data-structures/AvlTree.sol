@@ -3,15 +3,14 @@ pragma solidity ^0.8.4;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import {TypeCaster} from "../utils/TypeCaster.sol";
-
 /**
  * @notice AVL Tree module
  *
- * This library provides implementation of three sets with dynamic key types:
+ * This library provides implementation of three sets with dynamic `value` types:
  * `UintAVL`, `Bytes32AVL` and `Bytes32AVL`.
  *
- * Each element in the tree contains a bytes32 `value` field to allow storing different types of values
+ * Each element in the tree has a bytes32 `key` field to allow storing values
+ * associated with different types of keys
  *
  * The implementation supports setting custom comparator function
  *
@@ -45,8 +44,6 @@ import {TypeCaster} from "../utils/TypeCaster.sol";
  * ```
  */
 library AvlTree {
-    using TypeCaster for *;
-
     /**
      *********************
      *      UintAVL      *
