@@ -1,10 +1,13 @@
 import { ethers } from "hardhat";
+import { encodeBytes32String } from "ethers";
 import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
-import { AvlTreeMock } from "@ethers-v6";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
+
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { encodeBytes32String } from "ethers";
+
+import { AvlTreeMock } from "@ethers-v6";
+
+import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 describe("AvlTree", () => {
   const reverter = new Reverter();
@@ -326,10 +329,6 @@ describe("AvlTree", () => {
         let fullTraversal = await avlTree.traverseUint();
         expect(fullTraversal[0]).to.deep.equal([1, 2, 4, 6, 7]);
         expect(fullTraversal[1]).to.deep.equal([12, 10, 11, 13, 14]);
-
-        let firstThreeTraversal = await avlTree.traverseFirstThreeUint();
-        expect(firstThreeTraversal[0]).to.deep.equal([1, 2, 4]);
-        expect(firstThreeTraversal[1]).to.deep.equal([12, 10, 11]);
 
         let backwardsTraversal = await avlTree.backwardsTraversalUint();
         expect(backwardsTraversal[0]).to.deep.equal([7, 6, 4, 2, 1]);
