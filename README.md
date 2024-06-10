@@ -12,11 +12,12 @@ The library consists of modules and utilities that are built with a help of [Ope
 - Implementation of [**Contracts Registry**](https://eips.ethereum.org/EIPS/eip-6224) pattern
 - Versatile access control smart contracts (Merkle whitelists, RBAC)
 - Enhanced and simplified [**Diamond**](https://eips.ethereum.org/EIPS/eip-2535) pattern
-- Advanced data structures (**Vector**, **PriorityQueue**)
+- Advanced data structures (**Vector**, **PriorityQueue**, **AVLTree**)
 - ZK-friendly [**Sparse Merkle Tree**](https://docs.iden3.io/publications/pdfs/Merkle-Tree.pdf) and [**Incremental Merkle Tree**](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf) implementations
 - Flexible finance primitives (**Staking**, **Vesting**)
 - Robust UniswapV2 and UniswapV3 oracles
-- Utilities to ease work with ERC20 decimals, arrays, sets and ZK proofs
+- Lightweight SBT implementation
+- Utilities to ease work with memory, ERC20 decimals, arrays, sets and ZK proofs
 
 ## Overview
 
