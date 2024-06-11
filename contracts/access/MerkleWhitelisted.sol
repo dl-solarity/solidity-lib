@@ -22,7 +22,7 @@ abstract contract MerkleWhitelisted {
 
     bytes32 private _merkleRoot;
 
-    modifier onlyWhitelisted(bytes memory data_, bytes32[] calldata merkleProof_) {
+    modifier onlyWhitelisted(bytes memory data_, bytes32[] memory merkleProof_) {
         require(
             isWhitelisted(keccak256(data_), merkleProof_),
             "MerkleWhitelisted: not whitelisted"
@@ -30,7 +30,7 @@ abstract contract MerkleWhitelisted {
         _;
     }
 
-    modifier onlyWhitelistedUser(address user_, bytes32[] calldata merkleProof_) {
+    modifier onlyWhitelistedUser(address user_, bytes32[] memory merkleProof_) {
         require(isWhitelistedUser(user_, merkleProof_), "MerkleWhitelisted: not whitelisted");
         _;
     }
@@ -43,9 +43,9 @@ abstract contract MerkleWhitelisted {
      */
     function isWhitelisted(
         bytes32 leaf_,
-        bytes32[] calldata merkleProof_
+        bytes32[] memory merkleProof_
     ) public view returns (bool) {
-        return merkleProof_.verifyCalldata(_merkleRoot, leaf_);
+        return merkleProof_.verify(_merkleRoot, leaf_);
     }
 
     /**
@@ -56,7 +56,7 @@ abstract contract MerkleWhitelisted {
      */
     function isWhitelistedUser(
         address user_,
-        bytes32[] calldata merkleProof_
+        bytes32[] memory merkleProof_
     ) public view returns (bool) {
         return isWhitelisted(keccak256(abi.encodePacked(user_)), merkleProof_);
     }
