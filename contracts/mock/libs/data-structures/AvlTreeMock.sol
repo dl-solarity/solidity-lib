@@ -178,13 +178,22 @@ contract AvlTreeMock {
     }
 
     function traverseAddress() external view returns (uint256[] memory, address[] memory) {
-        (uint256[] memory keys_, bytes32[] memory values_) = _traverseAll(
-            _addressTree.first(),
-            _addressTree.size(),
-            true
-        );
+        Traversal.Iterator memory iterator_ = _addressTree.first();
 
-        return (keys_, values_.asAddressArray());
+        bytes32[] memory keys_ = new bytes32[](_addressTree.size());
+        bytes32[] memory values_ = new bytes32[](keys_.length);
+
+        (keys_[0], values_[0]) = iterator_.value();
+
+        uint256 index_ = 1;
+
+        while (iterator_.hasNext()) {
+            (keys_[index_], values_[index_]) = iterator_.next();
+
+            index_++;
+        }
+
+        return (keys_.asUint256Array(), values_.asAddressArray());
     }
 
     function backwardsTraversalAddress()
@@ -192,13 +201,22 @@ contract AvlTreeMock {
         view
         returns (uint256[] memory, address[] memory)
     {
-        (uint256[] memory keys_, bytes32[] memory values_) = _traverseAll(
-            _addressTree.last(),
-            _addressTree.size(),
-            false
-        );
+        Traversal.Iterator memory iterator_ = _addressTree.last();
 
-        return (keys_, values_.asAddressArray());
+        bytes32[] memory keys_ = new bytes32[](_addressTree.size());
+        bytes32[] memory values_ = new bytes32[](keys_.length);
+
+        (keys_[0], values_[0]) = iterator_.value();
+
+        uint256 index_ = 1;
+
+        while (iterator_.hasPrev()) {
+            (keys_[index_], values_[index_]) = iterator_.prev();
+
+            index_++;
+        }
+
+        return (keys_.asUint256Array(), values_.asAddressArray());
     }
 
     function nextOnLast() external view returns (uint256, uint256) {
