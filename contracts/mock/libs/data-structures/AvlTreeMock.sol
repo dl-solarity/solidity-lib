@@ -183,7 +183,9 @@ contract AvlTreeMock {
         bytes32[] memory keys_ = new bytes32[](_addressTree.size());
         bytes32[] memory values_ = new bytes32[](keys_.length);
 
-        (keys_[0], values_[0]) = iterator_.value();
+        if (keys_.length != 0) {
+            (keys_[0], values_[0]) = iterator_.value();
+        }
 
         uint256 index_ = 1;
 
@@ -206,7 +208,9 @@ contract AvlTreeMock {
         bytes32[] memory keys_ = new bytes32[](_addressTree.size());
         bytes32[] memory values_ = new bytes32[](keys_.length);
 
-        (keys_[0], values_[0]) = iterator_.value();
+        if (keys_.length != 0) {
+            (keys_[0], values_[0]) = iterator_.value();
+        }
 
         uint256 index_ = 1;
 
