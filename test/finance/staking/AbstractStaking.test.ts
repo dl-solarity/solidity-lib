@@ -185,6 +185,7 @@ describe("AbstractStaking", () => {
       await expect(abstractStaking.unstake(wei(100, sharesDecimals))).to.be.revertedWith(revertMessage);
       await expect(abstractStaking.withdraw()).to.be.revertedWith(revertMessage);
       await expect(abstractStaking.claim(wei(100, sharesDecimals))).to.be.revertedWith(revertMessage);
+      await expect(abstractStaking.claimAll()).to.be.revertedWith(revertMessage);
     });
 
     it("should work as expected if the staking start time is set to the timestamp in the past", async () => {
@@ -594,6 +595,57 @@ describe("AbstractStaking", () => {
       await expect(abstractStaking.connect(FIRST).claim(wei(4, rewardsDecimals))).to.be.revertedWith(
         "ValueDistributor: insufficient amount",
       );
+    });
+  });
+
+  describe("claimAll()", () => {
+    it("should claim all the rewards correctly", async () => {
+      await performStakingManipulations();
+
+      await abstractStaking.connect(FIRST).claimAll();
+      await abstractStaking.connect(SECOND).claimAll();
+      await abstractStaking.connect(THIRD).claimAll();
+
+      expect(await abstractStaking.getOwedValue(FIRST)).to.equal(0);
+      expect(await abstractStaking.getOwedValue(SECOND)).to.equal(0);
+      expect(await abstractStaking.getOwedValue(THIRD)).to.equal(0);
+
+      expect(await abstractStaking.userOwedValue(FIRST)).to.equal(0);
+      expect(await abstractStaking.userOwedValue(SECOND)).to.equal(0);
+      expect(await abstractStaking.userOwedValue(THIRD)).to.equal(0);
+    });
+
+    it("should transfer tokens correctly on the claim", async () => {
+      await performStakingManipulations();
+
+      const initialRewardsBalance = await rewardsToken.balanceOf(abstractStaking);
+
+      const firstOwed = await abstractStaking.getOwedValue(FIRST);
+      const secondOwed = await abstractStaking.getOwedValue(SECOND);
+      const thirdOwed = await abstractStaking.getOwedValue(THIRD);
+
+      await abstractStaking.connect(FIRST).claimAll();
+      await abstractStaking.connect(SECOND).claimAll();
+
+      await abstractStaking.connect(THIRD).claimAll();
+
+      expect(await rewardsToken.balanceOf(abstractStaking)).to.equal(
+        initialRewardsBalance - (firstOwed + secondOwed + thirdOwed),
+      );
+      expect(await rewardsToken.balanceOf(FIRST)).to.equal(firstOwed);
+      expect(await rewardsToken.balanceOf(SECOND)).to.equal(secondOwed);
+      expect(await rewardsToken.balanceOf(THIRD)).to.equal(thirdOwed);
+    });
+
+    it("should not allow to claim 0 rewards", async () => {
+      await performStakingManipulations();
+
+      await expect(
+        abstractStaking.multicall([
+          abstractStaking.interface.encodeFunctionData("claimAll"),
+          abstractStaking.interface.encodeFunctionData("claimAll"),
+        ]),
+      ).to.be.revertedWith("ValueDistributor: amount has to be more than 0");
     });
   });
 

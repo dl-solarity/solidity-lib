@@ -19,6 +19,10 @@ contract AbstractValueDistributorMock is AbstractValueDistributor, Multicall {
         _distributeValue(user_, amount_);
     }
 
+    function distributeAllValue(address user_) external {
+        _distributeAllValue(user_);
+    }
+
     function userShares(address user_) external view returns (uint256) {
         return userDistribution(user_).shares;
     }

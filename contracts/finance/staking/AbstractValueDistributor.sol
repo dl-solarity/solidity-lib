@@ -107,16 +107,15 @@ abstract contract AbstractValueDistributor {
      * @param amount_ The amount of shares to remove.
      */
     function _removeShares(address user_, uint256 amount_) internal virtual {
+        UserDistribution storage _userDist = _userDistributions[user_];
+
         require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
-        require(
-            amount_ <= _userDistributions[user_].shares,
-            "ValueDistributor: insufficient amount"
-        );
+        require(amount_ <= _userDist.shares, "ValueDistributor: insufficient amount");
 
         _update(user_);
 
         _totalShares -= amount_;
-        _userDistributions[user_].shares -= amount_;
+        _userDist.shares -= amount_;
 
         emit SharesRemoved(user_, amount_);
 
@@ -131,13 +130,32 @@ abstract contract AbstractValueDistributor {
     function _distributeValue(address user_, uint256 amount_) internal virtual {
         _update(user_);
 
-        require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
-        require(
-            amount_ <= _userDistributions[user_].owedValue,
-            "ValueDistributor: insufficient amount"
-        );
+        UserDistribution storage _userDist = _userDistributions[user_];
 
-        _userDistributions[user_].owedValue -= amount_;
+        require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
+        require(amount_ <= _userDist.owedValue, "ValueDistributor: insufficient amount");
+
+        _userDist.owedValue -= amount_;
+
+        emit ValueDistributed(user_, amount_);
+
+        _afterDistributeValue(user_, amount_);
+    }
+
+    /**
+     * @notice Distributes all the available value to a specific user.
+     * @param user_ The address of the user.
+     */
+    function _distributeAllValue(address user_) internal virtual {
+        _update(user_);
+
+        UserDistribution storage _userDist = _userDistributions[user_];
+
+        uint256 amount_ = _userDist.owedValue;
+
+        require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
+
+        _userDist.owedValue -= amount_;
 
         emit ValueDistributed(user_, amount_);
 
@@ -189,12 +207,12 @@ abstract contract AbstractValueDistributor {
         _updatedAt = block.timestamp;
 
         if (user_ != address(0)) {
-            UserDistribution storage userDist = _userDistributions[user_];
+            UserDistribution storage _userDist = _userDistributions[user_];
 
-            userDist.owedValue +=
-                (userDist.shares * (_cumulativeSum - userDist.cumulativeSum)) /
+            _userDist.owedValue +=
+                (_userDist.shares * (_cumulativeSum - _userDist.cumulativeSum)) /
                 PRECISION;
-            userDist.cumulativeSum = _cumulativeSum;
+            _userDist.cumulativeSum = _cumulativeSum;
         }
     }
 

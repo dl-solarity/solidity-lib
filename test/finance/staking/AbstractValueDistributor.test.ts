@@ -228,6 +228,22 @@ describe("AbstractValueDistributor", () => {
       expect(await abstractValueDistributor.userOwedValue(THIRD)).to.equal(0);
     });
 
+    it("should distribute all the owed values optimally", async () => {
+      await performSharesManipulations();
+
+      await abstractValueDistributor.distributeAllValue(FIRST);
+      await abstractValueDistributor.distributeAllValue(SECOND);
+      await abstractValueDistributor.distributeAllValue(THIRD);
+
+      expect(await abstractValueDistributor.getOwedValue(FIRST)).to.equal(0);
+      expect(await abstractValueDistributor.getOwedValue(SECOND)).to.equal(0);
+      expect(await abstractValueDistributor.getOwedValue(THIRD)).to.equal(0);
+
+      expect(await abstractValueDistributor.userOwedValue(FIRST)).to.equal(0);
+      expect(await abstractValueDistributor.userOwedValue(SECOND)).to.equal(0);
+      expect(await abstractValueDistributor.userOwedValue(THIRD)).to.equal(0);
+    });
+
     it("should correctly distribute owed values partially", async () => {
       await performSharesManipulations();
 

@@ -90,6 +90,13 @@ abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
     }
 
     /**
+     * @notice Claims all the available rewards.
+     */
+    function claimAll() public stakingStarted {
+        _distributeAllValue(msg.sender);
+    }
+
+    /**
      * @notice Withdraws all the staked tokens together with rewards.
      *
      * Note: All the rewards are claimed after the shares are removed.
