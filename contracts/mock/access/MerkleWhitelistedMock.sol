@@ -20,6 +20,20 @@ contract MerkleWhitelistedMock is MerkleWhitelisted {
         emit WhitelistedUser();
     }
 
+    function isWhitelisted(
+        bytes32 leaf_,
+        bytes32[] memory merkleProof_
+    ) internal view returns (bool) {
+        return _isWhitelisted(leaf_, merkleProof_);
+    }
+
+    function isWhitelistedUser(
+        address user_,
+        bytes32[] memory merkleProof_
+    ) internal view returns (bool) {
+        return _isWhitelistedUser(user_, merkleProof_);
+    }
+
     function setMerkleRoot(bytes32 merkleRoot_) external {
         _setMerkleRoot(merkleRoot_);
     }

@@ -24,15 +24,23 @@ abstract contract MerkleWhitelisted {
 
     modifier onlyWhitelisted(bytes memory data_, bytes32[] memory merkleProof_) {
         require(
-            isWhitelisted(keccak256(data_), merkleProof_),
+            _isWhitelisted(keccak256(data_), merkleProof_),
             "MerkleWhitelisted: not whitelisted"
         );
         _;
     }
 
     modifier onlyWhitelistedUser(address user_, bytes32[] memory merkleProof_) {
-        require(isWhitelistedUser(user_, merkleProof_), "MerkleWhitelisted: not whitelisted");
+        require(_isWhitelistedUser(user_, merkleProof_), "MerkleWhitelisted: not whitelisted");
         _;
+    }
+
+    /**
+     * @notice The function to get the current Merkle root
+     * @return the current Merkle root or zero bytes if it has not been set
+     */
+    function getMerkleRoot() public view returns (bytes32) {
+        return _merkleRoot;
     }
 
     /**
@@ -41,10 +49,10 @@ abstract contract MerkleWhitelisted {
      * @param merkleProof_ the path from the leaf to the Merkle tree root
      * @return true if the leaf belongs to the Merkle tree, false otherwise
      */
-    function isWhitelisted(
+    function _isWhitelisted(
         bytes32 leaf_,
         bytes32[] memory merkleProof_
-    ) public view returns (bool) {
+    ) internal view returns (bool) {
         return merkleProof_.verify(_merkleRoot, leaf_);
     }
 
@@ -54,19 +62,11 @@ abstract contract MerkleWhitelisted {
      * @param merkleProof_ the path from the user to the Merkle tree root
      * @return true if the user belongs to the Merkle tree, false otherwise
      */
-    function isWhitelistedUser(
+    function _isWhitelistedUser(
         address user_,
         bytes32[] memory merkleProof_
-    ) public view returns (bool) {
-        return isWhitelisted(keccak256(abi.encodePacked(user_)), merkleProof_);
-    }
-
-    /**
-     * @notice The function to get the current Merkle root
-     * @return the current Merkle root or zero bytes if it has not been set
-     */
-    function getMerkleRoot() public view returns (bytes32) {
-        return _merkleRoot;
+    ) internal view returns (bool) {
+        return _isWhitelisted(keccak256(abi.encodePacked(user_)), merkleProof_);
     }
 
     /**
