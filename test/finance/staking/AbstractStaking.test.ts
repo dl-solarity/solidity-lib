@@ -624,6 +624,10 @@ describe("AbstractStaking", () => {
       const secondOwed = await abstractStaking.getOwedValue(SECOND);
       const thirdOwed = await abstractStaking.getOwedValue(THIRD);
 
+      expect(await abstractStaking.connect(FIRST).claimAll.staticCall()).to.eq(firstOwed);
+      expect(await abstractStaking.connect(SECOND).claimAll.staticCall()).to.eq(secondOwed);
+      expect(await abstractStaking.connect(THIRD).claimAll.staticCall()).to.eq(thirdOwed);
+
       await abstractStaking.connect(FIRST).claimAll();
       await abstractStaking.connect(SECOND).claimAll();
 
