@@ -231,6 +231,14 @@ describe("AbstractValueDistributor", () => {
     it("should distribute all the owed values optimally", async () => {
       await performSharesManipulations();
 
+      const firstOwed = await abstractValueDistributor.getOwedValue(FIRST);
+      const secondOwed = await abstractValueDistributor.getOwedValue(SECOND);
+      const thirdOwed = await abstractValueDistributor.getOwedValue(THIRD);
+
+      expect(await abstractValueDistributor.distributeAllValue.staticCall(FIRST)).to.eq(firstOwed);
+      expect(await abstractValueDistributor.distributeAllValue.staticCall(SECOND)).to.eq(secondOwed);
+      expect(await abstractValueDistributor.distributeAllValue.staticCall(THIRD)).to.eq(thirdOwed);
+
       await abstractValueDistributor.distributeAllValue(FIRST);
       await abstractValueDistributor.distributeAllValue(SECOND);
       await abstractValueDistributor.distributeAllValue(THIRD);

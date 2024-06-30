@@ -145,8 +145,9 @@ abstract contract AbstractValueDistributor {
     /**
      * @notice Distributes all the available value to a specific user.
      * @param user_ The address of the user.
+     * @return The amount of value distributed.
      */
-    function _distributeAllValue(address user_) internal virtual {
+    function _distributeAllValue(address user_) internal virtual returns (uint256) {
         _update(user_);
 
         UserDistribution storage _userDist = _userDistributions[user_];
@@ -155,11 +156,13 @@ abstract contract AbstractValueDistributor {
 
         require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
 
-        _userDist.owedValue -= amount_;
+        delete _userDist.owedValue;
 
         emit ValueDistributed(user_, amount_);
 
         _afterDistributeValue(user_, amount_);
+
+        return amount_;
     }
 
     /**

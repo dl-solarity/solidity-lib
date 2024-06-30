@@ -91,9 +91,10 @@ abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
 
     /**
      * @notice Claims all the available rewards.
+     * @return The total value of the rewards claimed.
      */
-    function claimAll() public stakingStarted {
-        _distributeAllValue(msg.sender);
+    function claimAll() public stakingStarted returns (uint256) {
+        return _distributeAllValue(msg.sender);
     }
 
     /**
