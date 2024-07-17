@@ -32,7 +32,7 @@ function parseArgs {
 
 parseArgs "$@"
 
-cp README.md package.json contracts/
+cp LICENSE README.md package.json contracts/
 
 if [ ${PUBLIC} == true ]
 then
@@ -41,4 +41,4 @@ else
   npm publish contracts/
 fi
 
-rm contracts/README.md contracts/package.json
+rm contracts/LICENSE contracts/README.md contracts/package.json
