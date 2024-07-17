@@ -20,6 +20,10 @@ contract ArrayHelperMock {
         return _tmpArr.upperBound(element_);
     }
 
+    function contains(uint256 element_) external view returns (bool) {
+        return _tmpArr.contains(element_);
+    }
+
     function getRangeSum(uint256 beginIndex_, uint256 endIndex_) external view returns (uint256) {
         return _tmpArr.getRangeSum(beginIndex_, endIndex_);
     }

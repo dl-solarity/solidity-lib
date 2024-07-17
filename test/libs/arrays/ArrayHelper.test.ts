@@ -155,6 +155,30 @@ describe("ArrayHelper", () => {
     });
   });
 
+  describe("contains", () => {
+    const arbitraryArray = [10, 20, 30, 30, 35, 40, 50];
+    const smallArray = [100];
+
+    it("should find the element in the arbitrary array", async () => {
+      await mock.setArray(arbitraryArray);
+
+      for (const element of arbitraryArray) {
+        expect(await mock.contains(element)).to.equal(true);
+      }
+
+      expect(await mock.contains(1)).to.equal(false);
+      expect(await mock.contains(100)).to.equal(false);
+    });
+
+    it("should find the element if the array contains only one element", async () => {
+      await mock.setArray(smallArray);
+
+      expect(await mock.contains(smallArray[0])).to.equal(true);
+      expect(await mock.contains(1)).to.equal(false);
+      expect(await mock.contains(200)).to.equal(false);
+    });
+  });
+
   describe("reverse", async () => {
     it("should reverse uint array", async () => {
       const arr = await mock.reverseUint([1, 2, 3]);

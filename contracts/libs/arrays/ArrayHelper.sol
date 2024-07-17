@@ -60,6 +60,32 @@ library ArrayHelper {
     }
 
     /**
+     * @notice The function that searches for the `element_` and returns whether it is present in the array.
+     * The time complexity is O(log n)
+     * @param array the array to search in
+     * @param element_ the element
+     * @return whether the `element_` is present in the array
+     */
+    function contains(uint256[] storage array, uint256 element_) internal view returns (bool) {
+        (uint256 low_, uint256 high_) = (0, array.length);
+
+        while (low_ < high_) {
+            uint256 mid_ = Math.average(low_, high_);
+            uint256 midElement_ = array[mid_];
+
+            if (midElement_ == element_) {
+                return true;
+            } else if (midElement_ > element_) {
+                high_ = mid_;
+            } else {
+                low_ = mid_ + 1;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @notice The function that calculates the sum of all array elements from `beginIndex_` to
      * `endIndex_` inclusive using its prefix sum array
      * @param beginIndex_ the index of the first range element
