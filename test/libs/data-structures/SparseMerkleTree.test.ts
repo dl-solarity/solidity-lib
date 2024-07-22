@@ -282,10 +282,10 @@ describe("SparseMerkleTree", () => {
         await merkleTree.addUint(hexKey, key);
       }
 
-      expect(merkleTree.removeUint(ethers.toBeHex(8, 32))).to.be.revertedWith(
+      await expect(merkleTree.removeUint(ethers.toBeHex(8, 32))).to.be.revertedWith(
         "SparseMerkleTree: the node does not exist",
       );
-      expect(merkleTree.removeUint(ethers.toBeHex(9, 32))).to.be.revertedWith(
+      await expect(merkleTree.removeUint(ethers.toBeHex(9, 32))).to.be.revertedWith(
         "SparseMerkleTree: the leaf does not match",
       );
     });
@@ -328,10 +328,10 @@ describe("SparseMerkleTree", () => {
         await merkleTree.addUint(hexKey, key);
       }
 
-      expect(merkleTree.updateUint(ethers.toBeHex(8, 32), 1n)).to.be.revertedWith(
+      await expect(merkleTree.updateUint(ethers.toBeHex(8, 32), 1n)).to.be.revertedWith(
         "SparseMerkleTree: the node does not exist",
       );
-      expect(merkleTree.updateUint(ethers.toBeHex(9, 32), 1n)).to.be.revertedWith(
+      await expect(merkleTree.updateUint(ethers.toBeHex(9, 32), 1n)).to.be.revertedWith(
         "SparseMerkleTree: the leaf does not match",
       );
     });
