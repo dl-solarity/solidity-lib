@@ -13,7 +13,7 @@ contract OwnableContractsRegistry is AbstractContractsRegistry, OwnableUpgradeab
      * @notice The initialization function
      */
     function __OwnableContractsRegistry_init() public initializer {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __ContractsRegistry_init();
     }
 
