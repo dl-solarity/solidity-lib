@@ -29,9 +29,11 @@ describe("ContractsRegistry", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(contractsRegistry.mockInit()).to.be.revertedWith("Initializable: contract is not initializing");
-      await expect(contractsRegistry.__OwnableContractsRegistry_init()).to.be.revertedWith(
-        "Initializable: contract is already initialized",
+      await expect(contractsRegistry.mockInit()).to.be.revertedWithCustomError(contractsRegistry, "NotInitializing");
+
+      await expect(contractsRegistry.__OwnableContractsRegistry_init()).to.be.revertedWithCustomError(
+        contractsRegistry,
+        "InvalidInitialization",
       );
     });
 
@@ -40,40 +42,46 @@ describe("ContractsRegistry", () => {
     });
 
     it("only owner should call these functions", async () => {
-      await expect(contractsRegistry.connect(SECOND).injectDependencies("")).to.be.revertedWith(
-        "Ownable: caller is not the owner",
+      await expect(contractsRegistry.connect(SECOND).injectDependencies("")).to.be.revertedWithCustomError(
+        contractsRegistry,
+        "OwnableUnauthorizedAccount",
       );
 
-      await expect(contractsRegistry.connect(SECOND).injectDependenciesWithData("", "0x")).to.be.revertedWith(
-        "Ownable: caller is not the owner",
+      await expect(
+        contractsRegistry.connect(SECOND).injectDependenciesWithData("", "0x"),
+      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+
+      await expect(contractsRegistry.connect(SECOND).upgradeContract("", ZERO_ADDR)).to.be.revertedWithCustomError(
+        contractsRegistry,
+        "OwnableUnauthorizedAccount",
       );
 
-      await expect(contractsRegistry.connect(SECOND).upgradeContract("", ZERO_ADDR)).to.be.revertedWith(
-        "Ownable: caller is not the owner",
+      await expect(
+        contractsRegistry.connect(SECOND).upgradeContractAndCall("", ZERO_ADDR, "0x"),
+      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+
+      await expect(contractsRegistry.connect(SECOND).addContract("", ZERO_ADDR)).to.be.revertedWithCustomError(
+        contractsRegistry,
+        "OwnableUnauthorizedAccount",
       );
 
-      await expect(contractsRegistry.connect(SECOND).upgradeContractAndCall("", ZERO_ADDR, "0x")).to.be.revertedWith(
-        "Ownable: caller is not the owner",
+      await expect(contractsRegistry.connect(SECOND).addProxyContract("", ZERO_ADDR)).to.be.revertedWithCustomError(
+        contractsRegistry,
+        "OwnableUnauthorizedAccount",
       );
 
-      await expect(contractsRegistry.connect(SECOND).addContract("", ZERO_ADDR)).to.be.revertedWith(
-        "Ownable: caller is not the owner",
+      await expect(
+        contractsRegistry.connect(SECOND).addProxyContractAndCall("", ZERO_ADDR, "0x"),
+      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+
+      await expect(contractsRegistry.connect(SECOND).justAddProxyContract("", ZERO_ADDR)).to.be.revertedWithCustomError(
+        contractsRegistry,
+        "OwnableUnauthorizedAccount",
       );
 
-      await expect(contractsRegistry.connect(SECOND).addProxyContract("", ZERO_ADDR)).to.be.revertedWith(
-        "Ownable: caller is not the owner",
-      );
-
-      await expect(contractsRegistry.connect(SECOND).addProxyContractAndCall("", ZERO_ADDR, "0x")).to.be.revertedWith(
-        "Ownable: caller is not the owner",
-      );
-
-      await expect(contractsRegistry.connect(SECOND).justAddProxyContract("", ZERO_ADDR)).to.be.revertedWith(
-        "Ownable: caller is not the owner",
-      );
-
-      await expect(contractsRegistry.connect(SECOND).removeContract("")).to.be.revertedWith(
-        "Ownable: caller is not the owner",
+      await expect(contractsRegistry.connect(SECOND).removeContract("")).to.be.revertedWithCustomError(
+        contractsRegistry,
+        "OwnableUnauthorizedAccount",
       );
     });
   });

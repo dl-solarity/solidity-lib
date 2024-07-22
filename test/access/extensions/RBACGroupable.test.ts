@@ -28,7 +28,7 @@ describe("RBAC", () => {
 
   describe("__RBACGroupable_init", () => {
     it("should not initialize twice", async () => {
-      await expect(rbac.mockInit()).to.be.revertedWith("Initializable: contract is not initializing");
+      await expect(rbac.mockInit()).to.be.revertedWithCustomError(rbac, "NotInitializing");
     });
   });
 

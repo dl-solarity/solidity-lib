@@ -55,8 +55,8 @@ describe("Vesting", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(vesting.__VestingMock_init()).to.be.revertedWith("Initializable: contract is already initialized");
-      await expect(vesting.vestingInit()).to.be.revertedWith("Initializable: contract is not initializing");
+      await expect(vesting.__VestingMock_init()).to.be.revertedWithCustomError(vesting, "InvalidInitialization");
+      await expect(vesting.vestingInit()).to.be.revertedWithCustomError(vesting, "NotInitializing");
     });
   });
 

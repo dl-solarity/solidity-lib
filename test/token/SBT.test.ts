@@ -31,10 +31,8 @@ describe("SBT", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(sbt.__SBTMock_init(name, symbol)).to.be.revertedWith(
-        "Initializable: contract is already initialized",
-      );
-      await expect(sbt.mockInit(name, symbol)).to.be.revertedWith("Initializable: contract is not initializing");
+      await expect(sbt.__SBTMock_init(name, symbol)).to.be.revertedWithCustomError(sbt, "InvalidInitialization");
+      await expect(sbt.mockInit(name, symbol)).to.be.revertedWithCustomError(sbt, "NotInitializing");
     });
   });
 
