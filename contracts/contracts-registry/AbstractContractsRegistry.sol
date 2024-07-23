@@ -2,9 +2,9 @@
 pragma solidity ^0.8.4;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import {TransparentProxyUpgrader} from "../proxy/transparent/TransparentProxyUpgrader.sol";
+import {TransparentUpgradeableProxy} from "../proxy/transparent/TransparentUpgradeableProxy.sol";
 import {AbstractDependant} from "./AbstractDependant.sol";
 
 /**
