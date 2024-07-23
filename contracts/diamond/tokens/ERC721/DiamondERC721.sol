@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 import {DiamondERC721Storage} from "./DiamondERC721Storage.sol";
 
@@ -14,8 +13,6 @@ import {DiamondERC721Storage} from "./DiamondERC721Storage.sol";
  * by the Diamond Standard.
  */
 contract DiamondERC721 is DiamondERC721Storage {
-    using Address for address;
-
     /**
      * @notice Sets the values for {name} and {symbol}.
      */
@@ -243,7 +240,7 @@ contract DiamondERC721 is DiamondERC721Storage {
         uint256 tokenId_,
         bytes memory data_
     ) private returns (bool) {
-        if (to_.isContract()) {
+        if (to_.code.length > 0) {
             try IERC721Receiver(to_).onERC721Received(msg.sender, from_, tokenId_, data_) returns (
                 bytes4 retval
             ) {

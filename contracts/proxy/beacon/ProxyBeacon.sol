@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 import {PermanentOwnable} from "../../access/PermanentOwnable.sol";
 
@@ -12,8 +11,6 @@ import {PermanentOwnable} from "../../access/PermanentOwnable.sol";
  * This is a lightweight utility ProxyBeacon contract that may be used as a beacon that BeaconProxies point to.
  */
 contract ProxyBeacon is IBeacon, PermanentOwnable {
-    using Address for address;
-
     constructor() PermanentOwnable(msg.sender) {}
 
     address private _implementation;
@@ -25,7 +22,7 @@ contract ProxyBeacon is IBeacon, PermanentOwnable {
      * @param newImplementation_ the new implementation
      */
     function upgradeTo(address newImplementation_) external virtual onlyOwner {
-        require(newImplementation_.isContract(), "ProxyBeacon: not a contract");
+        require(newImplementation_.code.length > 0, "ProxyBeacon: not a contract");
 
         _implementation = newImplementation_;
 

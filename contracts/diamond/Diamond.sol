@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {DiamondStorage} from "./DiamondStorage.sol";
@@ -20,7 +19,6 @@ import {DiamondStorage} from "./DiamondStorage.sol";
  * If you wish to add a receive() function, attach a "0x00000000" selector to a facet that has such a function.
  */
 contract Diamond is DiamondStorage {
-    using Address for address;
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -102,7 +100,6 @@ contract Diamond is DiamondStorage {
      */
     function _addFacet(address facet_, bytes4[] memory selectors_) internal virtual {
         require(facet_ != address(0), "Diamond: facet cannot be zero address");
-        require(facet_.isContract(), "Diamond: facet is not a contract");
         require(selectors_.length != 0, "Diamond: no selectors provided");
 
         DStorage storage _ds = _getDiamondStorage();
@@ -153,7 +150,6 @@ contract Diamond is DiamondStorage {
      */
     function _updateFacet(address facet_, bytes4[] memory selectors_) internal virtual {
         require(facet_ != address(0), "Diamond: facet cannot be zero address");
-        require(facet_.isContract(), "Diamond: facet is not a contract");
         require(selectors_.length != 0, "Diamond: no selectors provided");
 
         DStorage storage _ds = _getDiamondStorage();
@@ -189,8 +185,6 @@ contract Diamond is DiamondStorage {
         if (initFacet_ == address(0)) {
             return;
         }
-
-        require(initFacet_.isContract(), "Diamond: init_ address has no code");
 
         (bool success_, bytes memory err_) = initFacet_.delegatecall(initData_);
 
