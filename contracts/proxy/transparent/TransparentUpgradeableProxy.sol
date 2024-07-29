@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Reference: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.2/contracts/proxy/transparent/TransparentUpgradeableProxy.sol
+// Source: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.2/contracts/proxy/transparent/TransparentUpgradeableProxy.sol
 
 pragma solidity ^0.8.4;
 
