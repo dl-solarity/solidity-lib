@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
+import {DiamondStorage} from "../../../diamond/DiamondStorage.sol";
 import {DiamondERC721} from "../../../diamond/tokens/ERC721/DiamondERC721.sol";
 
 contract DiamondERC721Mock is DiamondERC721 {
@@ -72,6 +73,12 @@ contract DiamondERC721Mock is DiamondERC721 {
         } else {
             super._beforeTokenTransfer(from_, to_, firstTokenId_, batchSize_);
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId_) public view virtual override returns (bool) {
+        return
+            interfaceId_ == type(DiamondStorage).interfaceId ||
+            super.supportsInterface(interfaceId_);
     }
 }
 

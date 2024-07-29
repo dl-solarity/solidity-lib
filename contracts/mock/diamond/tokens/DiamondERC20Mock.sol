@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {DiamondStorage} from "../../../diamond/DiamondStorage.sol";
+
 import "../../../diamond/tokens/ERC20/DiamondERC20.sol";
 
-contract DiamondERC20Mock is DiamondERC20 {
+contract DiamondERC20Mock is ERC165, DiamondERC20 {
     constructor() {
         _disableInitializers(DIAMOND_ERC20_STORAGE_SLOT);
     }
@@ -37,5 +40,11 @@ contract DiamondERC20Mock is DiamondERC20 {
 
     function disableInitializers() external {
         _disableInitializers(DIAMOND_ERC20_STORAGE_SLOT);
+    }
+
+    function supportsInterface(bytes4 interfaceId_) public view virtual override returns (bool) {
+        return
+            interfaceId_ == type(DiamondStorage).interfaceId ||
+            super.supportsInterface(interfaceId_);
     }
 }

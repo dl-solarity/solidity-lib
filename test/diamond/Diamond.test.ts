@@ -129,7 +129,7 @@ describe("Diamond", () => {
       it("should revert if init address is not contract", async () => {
         const init = dummyInit.init.fragment.selector;
         await expect(diamond.diamondCutLong(facets, SECOND, init)).to.be.revertedWith(
-          "Diamond: init_ address has no code",
+          "Diamond: facet is not compatible",
         );
       });
 
@@ -178,7 +178,23 @@ describe("Diamond", () => {
 
       it("should not add non-contract as a facet", async () => {
         facets[0].facetAddress = SECOND.address;
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet is not a contract");
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet is not compatible");
+      });
+
+      it("should not add non-ERC165 compatible contract as a facet", async () => {
+        const DependantMock = await ethers.getContractFactory("DependantMock");
+        const facet = await DependantMock.deploy();
+
+        facets[0].facetAddress = await facet.getAddress();
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet is not compatible");
+      });
+
+      it("should not add ERC165 compatible contract as a facet if it does not inherit from DiamondStorage", async () => {
+        const DiamondERC165 = await ethers.getContractFactory("DiamondERC165");
+        const mock = await DiamondERC165.deploy();
+
+        facets[0].facetAddress = await mock.getAddress();
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet is not compatible");
       });
 
       it("should not add facet when no selectors provided", async () => {
@@ -339,7 +355,7 @@ describe("Diamond", () => {
 
       it("should not replace non-contract as a facet", async () => {
         facets[0].facetAddress = SECOND.address;
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet is not a contract");
+        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet is not compatible");
       });
 
       it("should not replace facet when no selectors provided", async () => {

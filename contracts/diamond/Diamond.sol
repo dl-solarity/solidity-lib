@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {DiamondStorage} from "./DiamondStorage.sol";
@@ -101,6 +102,7 @@ contract Diamond is DiamondStorage {
     function _addFacet(address facet_, bytes4[] memory selectors_) internal virtual {
         require(facet_ != address(0), "Diamond: facet cannot be zero address");
         require(selectors_.length != 0, "Diamond: no selectors provided");
+        _checkCompatibility(facet_, type(DiamondStorage).interfaceId);
 
         DStorage storage _ds = _getDiamondStorage();
 
@@ -151,6 +153,7 @@ contract Diamond is DiamondStorage {
     function _updateFacet(address facet_, bytes4[] memory selectors_) internal virtual {
         require(facet_ != address(0), "Diamond: facet cannot be zero address");
         require(selectors_.length != 0, "Diamond: no selectors provided");
+        _checkCompatibility(facet_, type(DiamondStorage).interfaceId);
 
         DStorage storage _ds = _getDiamondStorage();
 
@@ -186,6 +189,8 @@ contract Diamond is DiamondStorage {
             return;
         }
 
+        _checkCompatibility(initFacet_, type(IERC165).interfaceId);
+
         (bool success_, bytes memory err_) = initFacet_.delegatecall(initData_);
 
         if (!success_) {
@@ -199,4 +204,15 @@ contract Diamond is DiamondStorage {
     }
 
     function _beforeFallback(address facet_, bytes4 selector_) internal virtual {}
+
+    function _checkCompatibility(address facet_, bytes4 interfaceId_) internal view {
+        (bool success_, bytes memory returndata_) = address(facet_).staticcall(
+            abi.encodeWithSignature("supportsInterface(bytes4)", interfaceId_)
+        );
+
+        require(
+            success_ && returndata_.length != 0 && abi.decode(returndata_, (bool)),
+            "Diamond: facet is not compatible"
+        );
+    }
 }
