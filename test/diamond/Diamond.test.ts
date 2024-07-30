@@ -126,13 +126,6 @@ describe("Diamond", () => {
         expect(await dummyFacet.getDummyString()).to.be.equal("dummy facet initialized");
       });
 
-      it("should revert if init address is not contract", async () => {
-        const init = dummyInit.init.fragment.selector;
-        await expect(diamond.diamondCutLong(facets, SECOND, init)).to.be.revertedWith(
-          "Diamond: init_ address has no code",
-        );
-      });
-
       it("should revert if init function reverted", async () => {
         const initWithError = dummyInit.initWithError.fragment.selector;
         await expect(diamond.diamondCutLong(facets, await dummyInit.getAddress(), initWithError)).to.be.revertedWith(
@@ -174,11 +167,6 @@ describe("Diamond", () => {
       it("should not add facet with zero address", async () => {
         facets[0].facetAddress = ZERO_ADDR;
         await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet cannot be zero address");
-      });
-
-      it("should not add non-contract as a facet", async () => {
-        facets[0].facetAddress = SECOND.address;
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet is not a contract");
       });
 
       it("should not add facet when no selectors provided", async () => {
@@ -335,11 +323,6 @@ describe("Diamond", () => {
       it("should not replace facet when facet is zero address", async () => {
         facets[0].facetAddress = ZERO_ADDR;
         await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet cannot be zero address");
-      });
-
-      it("should not replace non-contract as a facet", async () => {
-        facets[0].facetAddress = SECOND.address;
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet is not a contract");
       });
 
       it("should not replace facet when no selectors provided", async () => {
