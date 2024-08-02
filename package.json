@@ -26,10 +26,11 @@
     "coverage": "npx hardhat coverage --solcoverjs ./.solcover.ts",
     "test": "npx hardhat test",
     "private-network": "npx hardhat node",
-    "lint-fix": "npm run lint-sol-fix && npm run lint-ts-fix && npm run lint-json-fix",
+    "lint-fix": "npm run lint-sol-fix && npm run lint-ts-fix && npm run lint-json-fix && npm run solhint-check",
     "lint-json-fix": "prettier --write \"./**/*.json\"",
     "lint-ts-fix": "prettier --write \"./**/*.ts\"",
     "lint-sol-fix": "prettier --write \"contracts/**/*.sol\"",
+    "solhint-check": "solhint \"./contracts/**/*.sol\"",
     "generate-docs": "npx hardhat markup",
     "publish-to-npm": "npm run lint-fix && bash ./scripts/publish.sh --public"
   },
