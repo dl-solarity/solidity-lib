@@ -16,5 +16,5 @@ elif [[ ${local_version_array[2]} -gt ${registry_version_array[2]} ]]; then
    version_changed="patch"
 fi
 
-echo "::set-output name=local_version::$local_version"
-echo "::set-output name=version_changed::$version_changed"
+echo "local_version=$local_version" >> "$GITHUB_OUTPUT"
+echo "version_changed=$version_changed" >> "$GITHUB_OUTPUT"
