@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {PermanentOwnable} from "../../access/PermanentOwnable.sol";
-import {ITransparentUpgradeableProxy} from "./TransparentUpgradeableProxy.sol";
+import {ISolarityTransparentProxy} from "./SolarityTransparentProxy.sol";
 
 /**
  * @notice The proxies module
@@ -19,7 +19,7 @@ contract TransparentProxyUpgrader is PermanentOwnable {
      * @param data_ arbitrary data the proxy will be called with after the upgrade
      */
     function upgrade(address what_, address to_, bytes calldata data_) external virtual onlyOwner {
-        ITransparentUpgradeableProxy(payable(what_)).upgradeToAndCall(to_, data_);
+        ISolarityTransparentProxy(payable(what_)).upgradeToAndCall(to_, data_);
     }
 
     /**

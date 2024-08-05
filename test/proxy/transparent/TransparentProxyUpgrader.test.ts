@@ -3,7 +3,7 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
 
-import { TransparentProxyUpgrader, TransparentUpgradeableProxy, ERC20Mock } from "@ethers-v6";
+import { TransparentProxyUpgrader, SolarityTransparentProxy, ERC20Mock } from "@ethers-v6";
 
 describe("TransparentProxyUpgrader", () => {
   const reverter = new Reverter();
@@ -13,19 +13,19 @@ describe("TransparentProxyUpgrader", () => {
 
   let transparentProxyUpgrader: TransparentProxyUpgrader;
   let token: ERC20Mock;
-  let proxy: TransparentUpgradeableProxy;
+  let proxy: SolarityTransparentProxy;
 
   before("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
     const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
     const TransparentProxyUpgrader = await ethers.getContractFactory("TransparentProxyUpgrader");
-    const TransparentUpgradeableProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+    const SolarityTransparentProxy = await ethers.getContractFactory("SolarityTransparentProxy");
 
     token = await ERC20Mock.deploy("mock", "mock", 18);
 
     transparentProxyUpgrader = await TransparentProxyUpgrader.deploy();
-    proxy = await TransparentUpgradeableProxy.deploy(
+    proxy = await SolarityTransparentProxy.deploy(
       await token.getAddress(),
       await transparentProxyUpgrader.getAddress(),
       "0x",

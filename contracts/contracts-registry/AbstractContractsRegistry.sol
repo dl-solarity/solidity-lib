@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import {TransparentProxyUpgrader} from "../proxy/transparent/TransparentProxyUpgrader.sol";
-import {TransparentUpgradeableProxy} from "../proxy/transparent/TransparentUpgradeableProxy.sol";
+import {SolarityTransparentProxy} from "../proxy/transparent/SolarityTransparentProxy.sol";
 import {AbstractDependant} from "./AbstractDependant.sol";
 
 /**
@@ -254,6 +254,6 @@ abstract contract AbstractContractsRegistry is Initializable {
         address admin_,
         bytes memory data_
     ) internal virtual returns (address) {
-        return address(new TransparentUpgradeableProxy(contractAddress_, admin_, data_));
+        return address(new SolarityTransparentProxy(contractAddress_, admin_, data_));
     }
 }

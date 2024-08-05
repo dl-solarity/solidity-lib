@@ -10,9 +10,9 @@ import {IERC1967} from "@openzeppelin/contracts/interfaces/IERC1967.sol";
 /**
  * @notice The proxies module
  *
- * Interface for TransparentUpgradeableProxy.
+ * Interface for SolarityTransparentProxy.
  **/
-interface ITransparentUpgradeableProxy is IERC1967 {
+interface ISolarityTransparentProxy is IERC1967 {
     /**
      * @notice The function to upgrade the implementation contract with additional setup call if data is nonempty.
      */
@@ -34,7 +34,7 @@ interface ITransparentUpgradeableProxy is IERC1967 {
  *
  * For more information about proxy logic, please refer to the OpenZeppelin documentation.
  */
-contract TransparentUpgradeableProxy is ERC1967Proxy {
+contract SolarityTransparentProxy is ERC1967Proxy {
     address private immutable _admin;
 
     error ProxyDeniedAdminAccess();
@@ -52,9 +52,9 @@ contract TransparentUpgradeableProxy is ERC1967Proxy {
         if (msg.sender == _admin) {
             bytes4 selector_ = msg.sig;
 
-            if (selector_ == ITransparentUpgradeableProxy.upgradeToAndCall.selector) {
+            if (selector_ == ISolarityTransparentProxy.upgradeToAndCall.selector) {
                 _dispatchUpgradeToAndCall();
-            } else if (selector_ == ITransparentUpgradeableProxy.implementation.selector) {
+            } else if (selector_ == ISolarityTransparentProxy.implementation.selector) {
                 bytes memory returndata_ = _dispatchImplementation();
 
                 assembly {
