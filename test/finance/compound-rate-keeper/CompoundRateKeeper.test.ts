@@ -31,21 +31,22 @@ describe("CompoundRateKeeper", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(keeper.mockInit(precision(1), 31536000)).to.be.revertedWith(
-        "Initializable: contract is not initializing",
-      );
-      await expect(keeper.__OwnableCompoundRateKeeper_init(precision(1), 31536000)).to.be.revertedWith(
-        "Initializable: contract is already initialized",
+      await expect(keeper.mockInit(precision(1), 31536000)).to.be.revertedWithCustomError(keeper, "NotInitializing");
+      await expect(keeper.__OwnableCompoundRateKeeper_init(precision(1), 31536000)).to.be.revertedWithCustomError(
+        keeper,
+        "InvalidInitialization",
       );
     });
 
     it("only owner should call these functions", async () => {
-      await expect(keeper.connect(SECOND).setCapitalizationRate(precision(1))).to.be.revertedWith(
-        "Ownable: caller is not the owner",
+      await expect(keeper.connect(SECOND).setCapitalizationRate(precision(1))).to.be.revertedWithCustomError(
+        keeper,
+        "OwnableUnauthorizedAccount",
       );
 
-      await expect(keeper.connect(SECOND).setCapitalizationPeriod(31536000)).to.be.revertedWith(
-        "Ownable: caller is not the owner",
+      await expect(keeper.connect(SECOND).setCapitalizationPeriod(31536000)).to.be.revertedWithCustomError(
+        keeper,
+        "OwnableUnauthorizedAccount",
       );
     });
   });

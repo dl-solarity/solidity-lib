@@ -18,7 +18,7 @@ contract OwnableCompoundRateKeeper is AbstractCompoundRateKeeper, OwnableUpgrade
         uint256 capitalizationRate_,
         uint64 capitalizationPeriod_
     ) public initializer {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __CompoundRateKeeper_init(capitalizationRate_, capitalizationPeriod_);
     }
 

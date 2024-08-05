@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 import {DiamondERC721} from "../../../diamond/tokens/ERC721/DiamondERC721.sol";
 

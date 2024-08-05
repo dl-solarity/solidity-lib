@@ -30,9 +30,10 @@ describe("MultiOwnable", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(multiOwnable.mockInit()).to.be.revertedWith("Initializable: contract is not initializing");
-      await expect(multiOwnable.__MultiOwnableMock_init()).to.be.revertedWith(
-        "Initializable: contract is already initialized",
+      await expect(multiOwnable.mockInit()).to.be.revertedWithCustomError(multiOwnable, "NotInitializing");
+      await expect(multiOwnable.__MultiOwnableMock_init()).to.be.revertedWithCustomError(
+        multiOwnable,
+        "InvalidInitialization",
       );
     });
 

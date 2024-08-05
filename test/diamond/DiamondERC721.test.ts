@@ -217,7 +217,7 @@ describe("DiamondERC721 and InitializableStorage", () => {
         expect(await erc721.balanceOf(OWNER.address)).to.equal(1);
         expect(await erc721.balanceOf(SECOND.address)).to.equal(0);
 
-        const receiver = await (await ethers.getContractFactory("ERC721Holder")).deploy();
+        const receiver = await (await ethers.getContractFactory("ERC721HolderMock")).deploy();
         const tx = erc721.safeTransferFromMock(OWNER.address, await receiver.getAddress(), 1);
 
         await expect(tx)

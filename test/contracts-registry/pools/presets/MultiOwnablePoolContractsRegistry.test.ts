@@ -29,8 +29,9 @@ describe("MultiOwnablePoolContractsRegistry", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(poolContractsRegistry.__MultiOwnablePoolContractsRegistry_init()).to.be.revertedWith(
-        "Initializable: contract is already initialized",
+      await expect(poolContractsRegistry.__MultiOwnablePoolContractsRegistry_init()).to.be.revertedWithCustomError(
+        poolContractsRegistry,
+        "InvalidInitialization",
       );
     });
 

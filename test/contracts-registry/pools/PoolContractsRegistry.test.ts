@@ -60,11 +60,15 @@ describe("PoolContractsRegistry", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(poolContractsRegistry.__OwnablePoolContractsRegistry_init()).to.be.revertedWith(
-        "Initializable: contract is already initialized",
+      await expect(poolContractsRegistry.__OwnablePoolContractsRegistry_init()).to.be.revertedWithCustomError(
+        poolContractsRegistry,
+        "InvalidInitialization",
       );
 
-      await expect(poolContractsRegistry.mockInit()).to.be.revertedWith("Initializable: contract is not initializing");
+      await expect(poolContractsRegistry.mockInit()).to.be.revertedWithCustomError(
+        poolContractsRegistry,
+        "NotInitializing",
+      );
     });
 
     it("should not set dependencies from non dependant", async () => {
@@ -74,17 +78,18 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("only owner should call these functions", async () => {
-      await expect(poolContractsRegistry.connect(SECOND).setNewImplementations([], [])).to.be.revertedWith(
-        "Ownable: caller is not the owner",
+      await expect(poolContractsRegistry.connect(SECOND).setNewImplementations([], [])).to.be.revertedWithCustomError(
+        contractsRegistry,
+        "OwnableUnauthorizedAccount",
       );
 
       await expect(
         poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPools("", 0, 0),
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
 
       await expect(
         poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPoolsWithData("", "0x", 0, 0),
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
     });
   });
 

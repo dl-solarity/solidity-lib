@@ -146,12 +146,12 @@ describe("AbstractStaking", () => {
 
   describe("AbstractStaking initialization", () => {
     it("should not initialize twice", async () => {
-      await expect(abstractStaking.mockInit(sharesToken, rewardsToken, rate, stakingStartTime)).to.be.revertedWith(
-        "Initializable: contract is not initializing",
-      );
+      await expect(
+        abstractStaking.mockInit(sharesToken, rewardsToken, rate, stakingStartTime),
+      ).to.be.revertedWithCustomError(abstractStaking, "NotInitializing");
       await expect(
         abstractStaking.__AbstractStakingMock_init(sharesToken, rewardsToken, rate, stakingStartTime),
-      ).to.be.revertedWith("Initializable: contract is already initialized");
+      ).to.be.revertedWithCustomError(abstractStaking, "InvalidInitialization");
     });
 
     it("should set the initial values correctly", async () => {
