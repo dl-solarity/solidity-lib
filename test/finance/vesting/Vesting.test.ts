@@ -162,14 +162,11 @@ describe("Vesting", () => {
         vestingAmount: vestingAmount * 2n,
       };
 
-      const linearTx = vesting.createVesting(linearVesting);
-      const exponentialTx = vesting.createVesting(exponentialVesting);
-
-      await expect(linearTx)
+      await expect(vesting.createVesting(linearVesting))
         .to.emit(vesting, "VestingCreated")
         .withArgs(1, linearVesting.beneficiary, linearVesting.vestingToken);
 
-      await expect(exponentialTx)
+      await expect(vesting.createVesting(exponentialVesting))
         .to.emit(vesting, "VestingCreated")
         .withArgs(2, exponentialVesting.beneficiary, exponentialVesting.vestingToken);
 
