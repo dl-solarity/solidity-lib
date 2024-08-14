@@ -34,6 +34,10 @@ abstract contract AbstractValueDistributor {
     event SharesRemoved(address user, uint256 amount);
     event ValueDistributed(address user, uint256 amount);
 
+    error ValueDistributorZeroAddress();
+    error ValueDistributorZeroAmount();
+    error ValueDistributorInsufficientAmount(uint256 balance, uint256 needed);
+
     /**
      * @notice Returns the total number of shares.
      * @return The total number of shares.
@@ -88,8 +92,13 @@ abstract contract AbstractValueDistributor {
      * @param amount_ The amount of shares to add.
      */
     function _addShares(address user_, uint256 amount_) internal virtual {
-        require(user_ != address(0), "ValueDistributor: zero address is not allowed");
-        require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
+        if (user_ == address(0)) {
+            revert ValueDistributorZeroAddress();
+        }
+
+        if (amount_ == 0) {
+            revert ValueDistributorZeroAmount();
+        }
 
         _update(user_);
 
@@ -109,8 +118,13 @@ abstract contract AbstractValueDistributor {
     function _removeShares(address user_, uint256 amount_) internal virtual {
         UserDistribution storage _userDist = _userDistributions[user_];
 
-        require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
-        require(amount_ <= _userDist.shares, "ValueDistributor: insufficient amount");
+        if (amount_ == 0) {
+            revert ValueDistributorZeroAmount();
+        }
+
+        if (amount_ > _userDist.shares) {
+            revert ValueDistributorInsufficientAmount(_userDist.shares, amount_);
+        }
 
         _update(user_);
 
@@ -132,8 +146,13 @@ abstract contract AbstractValueDistributor {
 
         UserDistribution storage _userDist = _userDistributions[user_];
 
-        require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
-        require(amount_ <= _userDist.owedValue, "ValueDistributor: insufficient amount");
+        if (amount_ == 0) {
+            revert ValueDistributorZeroAmount();
+        }
+
+        if (amount_ > _userDist.owedValue) {
+            revert ValueDistributorInsufficientAmount(_userDist.owedValue, amount_);
+        }
 
         _userDist.owedValue -= amount_;
 
@@ -154,7 +173,9 @@ abstract contract AbstractValueDistributor {
 
         uint256 amount_ = _userDist.owedValue;
 
-        require(amount_ > 0, "ValueDistributor: amount has to be more than 0");
+        if (amount_ == 0) {
+            revert ValueDistributorZeroAmount();
+        }
 
         delete _userDist.owedValue;
 

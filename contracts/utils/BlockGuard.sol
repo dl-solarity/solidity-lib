@@ -24,6 +24,8 @@ pragma solidity ^0.8.4;
 abstract contract BlockGuard {
     mapping(string => mapping(address => uint256)) private _lockedInBlocks;
 
+    error BlockGuardLocked();
+
     modifier lockBlock(string memory resource_, address key_) {
         _lockBlock(resource_, key_);
         _;
@@ -55,7 +57,9 @@ abstract contract BlockGuard {
      * @param key_ the key of the resource (the caller)
      */
     function _checkBlock(string memory resource_, address key_) internal view {
-        require(_lockedInBlocks[resource_][key_] != _getBlockNumber(), "BlockGuard: locked");
+        if (_lockedInBlocks[resource_][key_] == _getBlockNumber()) {
+            revert BlockGuardLocked();
+        }
     }
 
     /**

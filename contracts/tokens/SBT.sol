@@ -29,6 +29,10 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
     string private _baseURI;
     mapping(uint256 => string) private _tokenURIs;
 
+    error SBTTokenDoesNotExist(uint256 tokenId);
+    error SBTInvalidreceiver(address receiver);
+    error SBTTokenAlreadyExists(uint256 tokenId);
+
     /**
      * @notice The constructor
      * @param name_ the name of the contract (can't be changed)
@@ -156,8 +160,13 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenId_ the token to mint
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
-        require(to_ != address(0), "SBT: address(0) receiver");
-        require(!tokenExists(tokenId_), "SBT: token already exists");
+        if (to_ == address(0)) {
+            revert SBTInvalidreceiver(address(0));
+        }
+
+        if (tokenExists(tokenId_)) {
+            revert SBTTokenAlreadyExists(tokenId_);
+        }
 
         _beforeTokenAction(to_, tokenId_);
 
@@ -173,7 +182,10 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      */
     function _burn(uint256 tokenId_) internal virtual {
         address owner_ = _ownerOf(tokenId_);
-        require(owner_ != address(0), "SBT: token doesn't exist");
+
+        if (owner_ == address(0)) {
+            revert SBTTokenDoesNotExist(tokenId_);
+        }
 
         _beforeTokenAction(address(0), tokenId_);
 
@@ -191,7 +203,9 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenURI_ the URI to be set
      */
     function _setTokenURI(uint256 tokenId_, string memory tokenURI_) internal virtual {
-        require(tokenExists(tokenId_), "SBT: token doesn't exist");
+        if (!tokenExists(tokenId_)) {
+            revert SBTTokenDoesNotExist(tokenId_);
+        }
 
         _tokenURIs[tokenId_] = tokenURI_;
     }

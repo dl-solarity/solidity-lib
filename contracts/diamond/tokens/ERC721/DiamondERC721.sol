@@ -13,6 +13,16 @@ import {DiamondERC721Storage} from "./DiamondERC721Storage.sol";
  * by the Diamond Standard.
  */
 contract DiamondERC721 is DiamondERC721Storage {
+    error ERC721SpenderIsNotOwnerOrApproved(address spender, uint256 tokenId_);
+    error ERC721ApproverNeitherOwnerNorApprovedForAll(address approver, address owner);
+    error ERC721ApprovalToCurrentOwner();
+    error ERC721TransferToNonERC721Receiver(address to);
+    error ERC721MintToZeroAddress();
+    error ERC721TokenAlreadyMinted(uint256 tokenId_);
+    error ERC721SenderNotOwner(address sender);
+    error ERC721InvalidReceiver(address receiver);
+    error ERC721ApproveToCaller();
+
     /**
      * @notice Sets the values for {name} and {symbol}.
      */
@@ -31,12 +41,13 @@ contract DiamondERC721 is DiamondERC721Storage {
      */
     function approve(address to_, uint256 tokenId_) public virtual override {
         address owner_ = ownerOf(tokenId_);
-        require(to_ != owner_, "ERC721: approval to current owner");
+        if (to_ == owner_) {
+            revert ERC721ApprovalToCurrentOwner();
+        }
 
-        require(
-            msg.sender == owner_ || isApprovedForAll(owner_, msg.sender),
-            "ERC721: approve caller is not token owner or approved for all"
-        );
+        if (msg.sender != owner_ && !isApprovedForAll(owner_, msg.sender)) {
+            revert ERC721ApproverNeitherOwnerNorApprovedForAll(msg.sender, owner_);
+        }
 
         _approve(to_, tokenId_);
     }
@@ -52,10 +63,9 @@ contract DiamondERC721 is DiamondERC721Storage {
      * @inheritdoc IERC721
      */
     function transferFrom(address from_, address to_, uint256 tokenId_) public virtual override {
-        require(
-            _isApprovedOrOwner(msg.sender, tokenId_),
-            "ERC721: caller is not token owner or approved"
-        );
+        if (!_isApprovedOrOwner(msg.sender, tokenId_)) {
+            revert ERC721SpenderIsNotOwnerOrApproved(msg.sender, tokenId_);
+        }
 
         _transfer(from_, to_, tokenId_);
     }
@@ -80,10 +90,9 @@ contract DiamondERC721 is DiamondERC721Storage {
         uint256 tokenId_,
         bytes memory data_
     ) public virtual override {
-        require(
-            _isApprovedOrOwner(msg.sender, tokenId_),
-            "ERC721: caller is not token owner or approved"
-        );
+        if (!_isApprovedOrOwner(msg.sender, tokenId_)) {
+            revert ERC721SpenderIsNotOwnerOrApproved(msg.sender, tokenId_);
+        }
 
         _safeTransfer(from_, to_, tokenId_, data_);
     }
@@ -100,10 +109,9 @@ contract DiamondERC721 is DiamondERC721Storage {
     ) internal virtual {
         _transfer(from_, to_, tokenId_);
 
-        require(
-            _checkOnERC721Received(from_, to_, tokenId_, data_),
-            "ERC721: transfer to non ERC721Receiver implementer"
-        );
+        if (!_checkOnERC721Received(from_, to_, tokenId_, data_)) {
+            revert ERC721TransferToNonERC721Receiver(to_);
+        }
     }
 
     /**
@@ -119,23 +127,29 @@ contract DiamondERC721 is DiamondERC721Storage {
     function _safeMint(address to_, uint256 tokenId_, bytes memory data_) internal virtual {
         _mint(to_, tokenId_);
 
-        require(
-            _checkOnERC721Received(address(0), to_, tokenId_, data_),
-            "ERC721: transfer to non ERC721Receiver implementer"
-        );
+        if (!_checkOnERC721Received(address(0), to_, tokenId_, data_)) {
+            revert ERC721TransferToNonERC721Receiver(to_);
+        }
     }
 
     /**
      * @notice Mints `tokenId` and transfers it to `to`.
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
-        require(to_ != address(0), "ERC721: mint to the zero address");
-        require(!_exists(tokenId_), "ERC721: token already minted");
+        if (to_ == address(0)) {
+            revert ERC721MintToZeroAddress();
+        }
+
+        if (_exists(tokenId_)) {
+            revert ERC721TokenAlreadyMinted(tokenId_);
+        }
 
         _beforeTokenTransfer(address(0), to_, tokenId_, 1);
 
         // Check that tokenId was not minted by `_beforeTokenTransfer` hook
-        require(!_exists(tokenId_), "ERC721: token already minted");
+        if (_exists(tokenId_)) {
+            revert ERC721TokenAlreadyMinted(tokenId_);
+        }
 
         DERC721Storage storage _erc721Storage = _getErc721Storage();
 
@@ -181,13 +195,20 @@ contract DiamondERC721 is DiamondERC721Storage {
      * @notice Transfers `tokenId` from `from` to `to`.
      */
     function _transfer(address from_, address to_, uint256 tokenId_) internal virtual {
-        require(ownerOf(tokenId_) == from_, "ERC721: transfer from incorrect owner");
-        require(to_ != address(0), "ERC721: transfer to the zero address");
+        if (ownerOf(tokenId_) != from_) {
+            revert ERC721SenderNotOwner(from_);
+        }
+
+        if (to_ == address(0)) {
+            revert ERC721InvalidReceiver(address(0));
+        }
 
         _beforeTokenTransfer(from_, to_, tokenId_, 1);
 
         // Check that tokenId was not transferred by `_beforeTokenTransfer` hook
-        require(ownerOf(tokenId_) == from_, "ERC721: transfer from incorrect owner");
+        if (ownerOf(tokenId_) != from_) {
+            revert ERC721SenderNotOwner(from_);
+        }
 
         DERC721Storage storage _erc721Storage = _getErc721Storage();
 
@@ -223,7 +244,9 @@ contract DiamondERC721 is DiamondERC721Storage {
         address operator_,
         bool approved_
     ) internal virtual {
-        require(owner_ != operator_, "ERC721: approve to caller");
+        if (owner_ == operator_) {
+            revert ERC721ApproveToCaller();
+        }
 
         _getErc721Storage().operatorApprovals[owner_][operator_] = approved_;
 

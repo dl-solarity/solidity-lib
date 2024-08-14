@@ -23,6 +23,10 @@ library VerifierHelper {
         uint256[2] c;
     }
 
+    //TODO: length
+    error VerifierHelperInvalidPublicSignalsCount(uint256 expected, uint256 actual);
+    error VerifierHelperFailedToCallVerifyProof();
+
     /**
      * @notice Function to call the `verifyProof` function on the `verifier` contract.
      * The ZK proof points are wrapped in a structure for convenience
@@ -82,10 +86,9 @@ library VerifierHelper {
         ProofPoints memory proofPoints_,
         uint256 pubSignalsCount_
     ) internal view returns (bool) {
-        require(
-            pubSignals_.length == pubSignalsCount_,
-            "VerifierHelper: invalid public signals count"
-        );
+        if (pubSignals_.length != pubSignalsCount_) {
+            revert VerifierHelperInvalidPublicSignalsCount(pubSignals_.length, pubSignalsCount_);
+        }
 
         return
             _verifyProof(
@@ -117,10 +120,9 @@ library VerifierHelper {
         uint256[2] memory c_,
         uint256 pubSignalsCount_
     ) internal view returns (bool) {
-        require(
-            pubSignals_.length == pubSignalsCount_,
-            "VerifierHelper: invalid public signals count"
-        );
+        if (pubSignals_.length != pubSignalsCount_) {
+            revert VerifierHelperInvalidPublicSignalsCount(pubSignals_.length, pubSignalsCount_);
+        }
 
         return _verifyProof(verifier_, a_, b_, c_, pubSignals_, pubSignalsCount_);
     }
@@ -146,7 +148,9 @@ library VerifierHelper {
             abi.encodePacked(abi.encodeWithSignature(funcSign_, a_, b_, c_), pubSignals_)
         );
 
-        require(success_, "VerifierHelper: failed to call verifyProof function");
+        if (!success_) {
+            revert VerifierHelperFailedToCallVerifyProof();
+        }
 
         return abi.decode(returnData_, (bool));
     }

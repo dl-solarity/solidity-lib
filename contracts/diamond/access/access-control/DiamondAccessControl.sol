@@ -10,6 +10,10 @@ import {DiamondAccessControlStorage, IAccessControl} from "./DiamondAccessContro
  * by the Diamond Standard.
  */
 abstract contract DiamondAccessControl is DiamondAccessControlStorage {
+    error DiamondAccessControlOnlyRenounceForSelf();
+    error DiamondAccessControlRoleAlreadyGranted();
+    error DiamondAccessControlRoleNotGranted();
+
     /**
      * @notice Sets `DEFAULT_ADMIN_ROLE` to `msg.sender`
      */
@@ -44,7 +48,9 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      * @inheritdoc IAccessControl
      */
     function renounceRole(bytes32 role_, address account_) public virtual override {
-        require(account_ == msg.sender, "AccessControl: can only renounce roles for self");
+        if (account_ != msg.sender) {
+            revert DiamondAccessControlOnlyRenounceForSelf();
+        }
 
         _revokeRole(role_, account_);
     }
@@ -70,7 +76,9 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      * May emit a {RoleGranted} event.
      */
     function _grantRole(bytes32 role_, address account_) internal virtual {
-        require(!hasRole(role_, account_), "AccessControl: role is granted");
+        if (hasRole(role_, account_)) {
+            revert DiamondAccessControlRoleAlreadyGranted();
+        }
 
         _getAccessControlStorage().roles[role_].members[account_] = true;
 
@@ -85,7 +93,9 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      * May emit a {RoleRevoked} event.
      */
     function _revokeRole(bytes32 role_, address account_) internal virtual {
-        require(hasRole(role_, account_), "AccessControl: role is not granted");
+        if (!hasRole(role_, account_)) {
+            revert DiamondAccessControlRoleNotGranted();
+        }
 
         _getAccessControlStorage().roles[role_].members[account_] = false;
 

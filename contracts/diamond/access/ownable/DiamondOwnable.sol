@@ -12,6 +12,8 @@ import {DiamondOwnableStorage} from "./DiamondOwnableStorage.sol";
 contract DiamondOwnable is DiamondOwnableStorage {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
+    error DiamondOwnableZeroAddress(); //todo: DiamondOwnableInvalidOwner(address)
+
     /**
      * @notice Transfers ownership to `msg.sender`
      */
@@ -24,7 +26,9 @@ contract DiamondOwnable is DiamondOwnableStorage {
      * @param newOwner_ the new owner of the Diamond
      */
     function transferOwnership(address newOwner_) public virtual onlyOwner {
-        require(newOwner_ != address(0), "DiamondOwnable: zero address owner");
+        if (newOwner_ == address(0)) {
+            revert DiamondOwnableZeroAddress();
+        }
 
         _transferOwnership(newOwner_);
     }

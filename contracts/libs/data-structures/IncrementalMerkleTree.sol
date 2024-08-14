@@ -57,6 +57,9 @@ library IncrementalMerkleTree {
         IMT _tree;
     }
 
+    error IMTNewHeightMustBeGreater(uint256 currentHeight, uint256 newHeight);
+    error IMTTreeNotEmpty();
+
     /**
      * @notice The function to set the height of the uint256 tree.
      * Complexity is O(1).
@@ -301,10 +304,11 @@ library IncrementalMerkleTree {
     }
 
     function _setHeight(IMT storage tree, uint256 height_) private {
-        require(
-            height_ > _height(tree),
-            "IncrementalMerkleTree: the height must be greater than the current one"
-        );
+        uint256 currentHeight_ = _height(tree);
+
+        if (height_ <= currentHeight_) {
+            revert IMTNewHeightMustBeGreater(currentHeight_, height_); // the height must be greater than the current one
+        }
 
         tree.isStrictHeightSet = true;
 
@@ -318,7 +322,9 @@ library IncrementalMerkleTree {
         function(bytes32) view returns (bytes32) hash1_,
         function(bytes32, bytes32) view returns (bytes32) hash2_
     ) private {
-        require(_length(tree) == 0, "IncrementalMerkleTree: the tree must be empty");
+        if (_length(tree) != 0) {
+            revert IMTTreeNotEmpty();
+        }
 
         tree.isCustomHasherSet = true;
 

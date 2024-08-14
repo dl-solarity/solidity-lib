@@ -71,6 +71,14 @@ library SparseMerkleTree {
         SMT _tree;
     }
 
+    error SMTTreeNotInitialized();
+    error SMTTreeAlreadyInitialized();
+    error SMTMaxDepthIsZero();
+    error SMTMaxDepthNotIncreased();
+    error SMTMaxDepthExceedsHardCap();
+    error SMTTreeNotEmpty();
+    error SMTMaxDepthReached();
+
     /**
      * @notice The function to initialize the Merkle tree.
      * Under the hood it sets the maximum depth of the Merkle tree, therefore can be considered
@@ -679,23 +687,32 @@ library SparseMerkleTree {
     }
 
     modifier onlyInitialized(SMT storage tree) {
-        require(_isInitialized(tree), "SparseMerkleTree: tree is not initialized");
+        if (!_isInitialized(tree)) {
+            revert SMTTreeNotInitialized();
+        }
         _;
     }
 
     function _initialize(SMT storage tree, uint32 maxDepth_) private {
-        require(!_isInitialized(tree), "SparseMerkleTree: tree is already initialized");
+        if (_isInitialized(tree)) {
+            revert SMTTreeAlreadyInitialized();
+        }
 
         _setMaxDepth(tree, maxDepth_);
     }
 
     function _setMaxDepth(SMT storage tree, uint32 maxDepth_) private {
-        require(maxDepth_ > 0, "SparseMerkleTree: max depth must be greater than zero");
-        require(maxDepth_ > tree.maxDepth, "SparseMerkleTree: max depth can only be increased");
-        require(
-            maxDepth_ <= MAX_DEPTH_HARD_CAP,
-            "SparseMerkleTree: max depth is greater than hard cap"
-        );
+        if (maxDepth_ == 0) {
+            revert SMTMaxDepthIsZero();
+        }
+
+        if (maxDepth_ <= tree.maxDepth) {
+            revert SMTMaxDepthNotIncreased();
+        }
+
+        if (maxDepth_ > MAX_DEPTH_HARD_CAP) {
+            revert SMTMaxDepthExceedsHardCap();
+        }
 
         tree.maxDepth = maxDepth_;
     }
@@ -705,7 +722,9 @@ library SparseMerkleTree {
         function(bytes32, bytes32) view returns (bytes32) hash2_,
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
     ) private {
-        require(_nodesCount(tree) == 0, "SparseMerkleTree: tree is not empty");
+        if (_nodesCount(tree) != 0) {
+            revert SMTTreeNotEmpty();
+        }
 
         tree.isCustomHasherSet = true;
 
@@ -891,7 +910,9 @@ library SparseMerkleTree {
         uint256 oldLeafId_,
         uint16 currentDepth_
     ) private returns (uint256) {
-        require(currentDepth_ < tree.maxDepth, "SparseMerkleTree: max depth reached");
+        if (currentDepth_ >= tree.maxDepth) {
+            revert SMTMaxDepthReached();
+        }
 
         Node memory newNodeMiddle_;
         bool newLeafBitAtDepth_ = (uint256(newLeaf_.key) >> currentDepth_) & 1 == 1;

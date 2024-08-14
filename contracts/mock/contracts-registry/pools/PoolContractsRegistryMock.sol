@@ -11,8 +11,12 @@ contract PoolContractsRegistryMock is OwnablePoolContractsRegistry {
 
     address internal _poolFactory;
 
+    error PoolContractsRegistryNotFactory();
+
     modifier onlyPoolFactory() {
-        require(_poolFactory == msg.sender, "PoolContractsRegistry: not a factory");
+        if (_poolFactory != msg.sender) {
+            revert PoolContractsRegistryNotFactory();
+        }
         _;
     }
 

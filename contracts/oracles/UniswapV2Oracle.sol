@@ -40,6 +40,11 @@ abstract contract UniswapV2Oracle is Initializable {
     mapping(address => address[]) private _paths;
     mapping(address => PairInfo) private _pairInfos;
 
+    error UniV2OracleInvalidPath(address tokenIn, uint256 pathLength);
+    error UniV2OracleTimeWindowIsZero();
+    error UniV2OraclePathAlreadyRegistered(address tokenIn);
+    error UniV2OraclePairDoesNotExist(address token1, address token2);
+
     /**
      * @notice Constructor
      * @param uniswapV2Factory_ the Uniswap V2 factory
@@ -96,7 +101,9 @@ abstract contract UniswapV2Oracle is Initializable {
         address[] storage path = _paths[tokenIn_];
         uint256 pathLength_ = path.length;
 
-        require(pathLength_ > 1, "UniswapV2Oracle: invalid path");
+        if (pathLength_ < 2) {
+            revert UniV2OracleInvalidPath(tokenIn_, pathLength_);
+        }
 
         address tokenOut_ = path[pathLength_ - 1];
 
@@ -163,7 +170,9 @@ abstract contract UniswapV2Oracle is Initializable {
      * @param newTimeWindow_ the new time window value in seconds
      */
     function _setTimeWindow(uint256 newTimeWindow_) internal {
-        require(newTimeWindow_ > 0, "UniswapV2Oracle: time window can't be 0");
+        if (newTimeWindow_ == 0) {
+            revert UniV2OracleTimeWindowIsZero();
+        }
 
         timeWindow = newTimeWindow_;
     }
@@ -177,16 +186,22 @@ abstract contract UniswapV2Oracle is Initializable {
 
         for (uint256 i = 0; i < numberOfPaths_; i++) {
             uint256 pathLength_ = paths_[i].length;
-
-            require(pathLength_ >= 2, "UniswapV2Oracle: path must be longer than 2");
-
             address tokenIn_ = paths_[i][0];
 
-            require(_paths[tokenIn_].length == 0, "UniswapV2Oracle: path already registered");
+            if (pathLength_ < 2) {
+                revert UniV2OracleInvalidPath(tokenIn_, pathLength_);
+            }
+
+            if (_paths[tokenIn_].length != 0) {
+                revert UniV2OraclePathAlreadyRegistered(tokenIn_);
+            }
 
             for (uint256 j = 0; j < pathLength_ - 1; j++) {
                 (bool exists_, address pair_) = _pairExists(paths_[i][j], paths_[i][j + 1]);
-                require(exists_, "UniswapV2Oracle: uniswap pair doesn't exist");
+
+                if (!exists_) {
+                    revert UniV2OraclePairDoesNotExist(paths_[i][j], paths_[i][j + 1]);
+                }
 
                 _pairs.add(pair_);
                 _pairInfos[pair_].refs++;

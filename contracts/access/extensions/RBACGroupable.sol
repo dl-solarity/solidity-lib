@@ -31,6 +31,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     mapping(address => DynamicSet.StringSet) private _userGroups;
     mapping(string => DynamicSet.StringSet) private _groupRoles;
 
+    error RBACGroupableEmptyGroups();
+    error RBACGroupableEmptyRoles();
+
     /**
      * @notice The initialization function
      */
@@ -47,7 +50,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         address who_,
         string[] memory groupsToAddTo_
     ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
-        require(groupsToAddTo_.length > 0, "RBACGroupable: empty groups");
+        if (groupsToAddTo_.length == 0) {
+            revert RBACGroupableEmptyGroups();
+        }
 
         _addUserToGroups(who_, groupsToAddTo_);
     }
@@ -61,7 +66,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         address who_,
         string[] memory groupsToRemoveFrom_
     ) public virtual override onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION) {
-        require(groupsToRemoveFrom_.length > 0, "RBACGroupable: empty groups");
+        if (groupsToRemoveFrom_.length == 0) {
+            revert RBACGroupableEmptyGroups();
+        }
 
         _removeUserFromGroups(who_, groupsToRemoveFrom_);
     }
@@ -75,7 +82,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         string memory groupTo_,
         string[] memory rolesToGrant_
     ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
-        require(rolesToGrant_.length > 0, "RBACGroupable: empty roles");
+        if (rolesToGrant_.length == 0) {
+            revert RBACGroupableEmptyRoles();
+        }
 
         _grantGroupRoles(groupTo_, rolesToGrant_);
     }
@@ -89,7 +98,9 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         string memory groupFrom_,
         string[] memory rolesToRevoke_
     ) public virtual override onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION) {
-        require(rolesToRevoke_.length > 0, "RBACGroupable: empty roles");
+        if (rolesToRevoke_.length == 0) {
+            revert RBACGroupableEmptyRoles();
+        }
 
         _revokeGroupRoles(groupFrom_, rolesToRevoke_);
     }

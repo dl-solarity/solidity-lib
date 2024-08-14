@@ -5,6 +5,9 @@ contract BaseVerifierMock {
     bool public verifyResult;
     uint256[] public expectedInputs;
 
+    error Verifier2MockInvalidInputs();
+    error Verifier3MockInvalidInputs();
+
     constructor(bool verifyResult_, uint256[] memory expectedInputs_) {
         verifyResult = verifyResult_;
         expectedInputs = expectedInputs_;
@@ -32,7 +35,9 @@ contract Verifier2Mock is BaseVerifierMock {
         uint256[2] memory inputs_
     ) external view returns (bool) {
         for (uint256 i = 0; i < inputs_.length; i++) {
-            require(inputs_[i] == expectedInputs[i], "Verifier2Mock: invalid inputs");
+            if (inputs_[i] != expectedInputs[i]) {
+                revert Verifier2MockInvalidInputs();
+            }
         }
 
         return verifyResult;
@@ -52,7 +57,9 @@ contract Verifier3Mock is BaseVerifierMock {
         uint256[3] memory inputs_
     ) external view returns (bool) {
         for (uint256 i = 0; i < inputs_.length; i++) {
-            require(inputs_[i] == expectedInputs[i], "Verifier3Mock: invalid inputs");
+            if (inputs_[i] != expectedInputs[i]) {
+                revert Verifier3MockInvalidInputs();
+            }
         }
 
         return verifyResult;

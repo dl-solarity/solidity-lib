@@ -16,6 +16,15 @@ abstract contract PermanentOwnable {
     address private immutable _OWNER;
 
     /**
+     * @dev The caller account is not authorized to perform an operation.
+     */
+    error PermanentOwnableUnauthorizedAccount(address account);
+    /**
+     * @dev The owner is not a valid owner account. (eg. `address(0)`)
+     */
+    error PermanentOwnableInvalidOwner(address owner);
+
+    /**
      * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwner() {
@@ -28,7 +37,9 @@ abstract contract PermanentOwnable {
      * @param owner_ the address of the permanent owner.
      */
     constructor(address owner_) {
-        require(owner_ != address(0), "PermanentOwnable: zero address can not be the owner");
+        if (owner_ == address(0)) {
+            revert PermanentOwnableInvalidOwner(address(0));
+        }
 
         _OWNER = owner_;
     }
@@ -42,6 +53,8 @@ abstract contract PermanentOwnable {
     }
 
     function _onlyOwner() internal view virtual {
-        require(_OWNER == msg.sender, "PermanentOwnable: caller is not the owner");
+        if (_OWNER != msg.sender) {
+            revert PermanentOwnableUnauthorizedAccount(msg.sender);
+        }
     }
 }

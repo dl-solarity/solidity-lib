@@ -22,16 +22,19 @@ abstract contract MerkleWhitelisted {
 
     bytes32 private _merkleRoot;
 
+    error MerkleNotWhitelisted();
+
     modifier onlyWhitelisted(bytes memory data_, bytes32[] memory merkleProof_) {
-        require(
-            _isWhitelisted(keccak256(data_), merkleProof_),
-            "MerkleWhitelisted: not whitelisted"
-        );
+        if (!_isWhitelisted(keccak256(data_), merkleProof_)) {
+            revert MerkleNotWhitelisted();
+        }
         _;
     }
 
     modifier onlyWhitelistedUser(address user_, bytes32[] memory merkleProof_) {
-        require(_isWhitelistedUser(user_, merkleProof_), "MerkleWhitelisted: not whitelisted");
+        if (!_isWhitelistedUser(user_, merkleProof_)) {
+            revert MerkleNotWhitelisted();
+        }
         _;
     }
 

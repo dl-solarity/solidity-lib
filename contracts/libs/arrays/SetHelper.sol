@@ -14,6 +14,10 @@ library SetHelper {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using DynamicSet for *;
 
+    //TODO: enough or specify each type of arguments?
+    error SetHelperElementAlreadyExists();
+    error SetHelperNoSuchElement();
+
     /**
      * @notice The function to insert an array of elements into the address set
      * @param set the set to insert the elements into

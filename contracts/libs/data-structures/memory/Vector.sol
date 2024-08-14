@@ -42,6 +42,9 @@ library Vector {
         Vector _vector;
     }
 
+    error VectorEmptyVector();
+    error VectorOutOfBounds(uint256 index);
+
     /**
      * @notice The UintVector constructor, creates an empty vector instance, O(1) complex
      * @return vector the newly created instance
@@ -367,7 +370,9 @@ library Vector {
     function _pop(Vector memory vector) private pure {
         uint256 length_ = _length(vector);
 
-        require(length_ > 0, "Vector: empty vector");
+        if (length_ == 0) {
+            revert VectorEmptyVector();
+        }
 
         assembly {
             mstore(mload(add(vector, 0x20)), sub(length_, 0x1))
@@ -423,7 +428,9 @@ library Vector {
     }
 
     function _requireInBounds(Vector memory vector, uint256 index_) private pure {
-        require(index_ < _length(vector), "Vector: out of bounds");
+        if (index_ >= _length(vector)) {
+            revert VectorOutOfBounds(index_);
+        }
     }
 
     function _clean(uint256 dataPointer_, uint256 slots_) private pure {

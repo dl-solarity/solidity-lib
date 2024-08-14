@@ -39,6 +39,13 @@ abstract contract DiamondERC721Storage is
         mapping(address => mapping(uint256 => uint256)) ownedTokens;
     }
 
+    /**
+     * @dev The owner being `address(0)` indicates a global out of bounds index.
+     */
+    error ERC721OutOfBoundsIndex(address owner, uint256 index);
+
+    error ERC721NonexistentToken(uint256 tokenId);
+
     function _getErc721Storage() internal pure returns (DERC721Storage storage _erc721Storage) {
         bytes32 slot_ = DIAMOND_ERC721_STORAGE_SLOT;
 
@@ -113,7 +120,9 @@ abstract contract DiamondERC721Storage is
         address owner_,
         uint256 index_
     ) public view virtual returns (uint256) {
-        require(index_ < balanceOf(owner_), "ERC721Enumerable: owner index out of bounds");
+        if (index_ >= balanceOf(owner_)) {
+            revert ERC721OutOfBoundsIndex(owner_, index_);
+        }
 
         return _getErc721Storage().ownedTokens[owner_][index_];
     }
@@ -122,7 +131,9 @@ abstract contract DiamondERC721Storage is
      * @notice This function allows you to retrieve the NFT token ID at a given `index` of all the tokens stored by the contract.
      */
     function tokenByIndex(uint256 index_) public view virtual returns (uint256) {
-        require(index_ < totalSupply(), "ERC721Enumerable: global index out of bounds");
+        if (index_ >= totalSupply()) {
+            revert ERC721OutOfBoundsIndex(address(0), index_);
+        }
 
         return _getErc721Storage().allTokens[index_];
     }
@@ -133,7 +144,9 @@ abstract contract DiamondERC721Storage is
     function ownerOf(uint256 tokenId_) public view virtual override returns (address) {
         address owner = _ownerOf(tokenId_);
 
-        require(owner != address(0), "ERC721: invalid token ID");
+        if (owner == address(0)) {
+            revert ERC721NonexistentToken(tokenId_);
+        }
 
         return owner;
     }
@@ -168,7 +181,9 @@ abstract contract DiamondERC721Storage is
      * @notice The function that reverts if the `tokenId` has not been minted yet.
      */
     function _requireMinted(uint256 tokenId_) internal view virtual {
-        require(_exists(tokenId_), "ERC721: invalid token ID");
+        if (!_exists(tokenId_)) {
+            revert ERC721NonexistentToken(tokenId_);
+        }
     }
 
     /**

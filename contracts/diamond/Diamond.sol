@@ -36,6 +36,19 @@ contract Diamond is DiamondStorage {
 
     event DiamondCut(Facet[] facets, address initFacet, bytes initData);
 
+    error DiamondSelectorNotRegistered();
+
+    error DiamondNoSelectorsProvided();
+    error DiamondSelectorAlreadyAdded();
+
+    error DiamondSelectorFromAnotherFacet();
+    error DiamondNoFacetForSelector();
+
+    error DiamondFacetIsZeroAddress();
+    error DiamondSameFacet();
+
+    error DiamondInitializationReverted();
+
     /**
      * @notice The payable fallback function that delegatecall's the facet with associated selector
      */
@@ -43,7 +56,9 @@ contract Diamond is DiamondStorage {
     fallback() external payable virtual {
         address facet_ = facetAddress(msg.sig);
 
-        require(facet_ != address(0), "Diamond: selector is not registered");
+        if (facet_ == address(0)) {
+            revert DiamondSelectorNotRegistered();
+        }
 
         _beforeFallback(facet_, msg.sig);
 
@@ -99,16 +114,18 @@ contract Diamond is DiamondStorage {
      * @param selectors_ the function selectors the implementation has
      */
     function _addFacet(address facet_, bytes4[] memory selectors_) internal virtual {
-        require(facet_ != address(0), "Diamond: facet cannot be zero address");
-        require(selectors_.length != 0, "Diamond: no selectors provided");
+        _checkIfFacetZeroAddress(facet_);
+
+        if (selectors_.length == 0) {
+            revert DiamondNoSelectorsProvided();
+        }
 
         DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i = 0; i < selectors_.length; i++) {
-            require(
-                _ds.selectorToFacet[selectors_[i]] == address(0),
-                "Diamond: selector already added"
-            );
+            if (_ds.selectorToFacet[selectors_[i]] != address(0)) {
+                revert DiamondSelectorAlreadyAdded();
+            }
 
             _ds.selectorToFacet[selectors_[i]] = facet_;
             _ds.facetToSelectors[facet_].add(bytes32(selectors_[i]));
@@ -123,16 +140,18 @@ contract Diamond is DiamondStorage {
      * @param selectors_ the selectors of that implementation to be removed
      */
     function _removeFacet(address facet_, bytes4[] memory selectors_) internal virtual {
-        require(facet_ != address(0), "Diamond: facet cannot be zero address");
-        require(selectors_.length != 0, "Diamond: no selectors provided");
+        _checkIfFacetZeroAddress(facet_);
+
+        if (selectors_.length == 0) {
+            revert DiamondNoSelectorsProvided();
+        }
 
         DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i = 0; i < selectors_.length; i++) {
-            require(
-                _ds.selectorToFacet[selectors_[i]] == facet_,
-                "Diamond: selector from another facet"
-            );
+            if (_ds.selectorToFacet[selectors_[i]] != facet_) {
+                revert DiamondSelectorFromAnotherFacet();
+            }
 
             _ds.selectorToFacet[selectors_[i]] = address(0);
             _ds.facetToSelectors[facet_].remove(bytes32(selectors_[i]));
@@ -149,8 +168,11 @@ contract Diamond is DiamondStorage {
      * @param selectors_ the selectors of the facet
      */
     function _updateFacet(address facet_, bytes4[] memory selectors_) internal virtual {
-        require(facet_ != address(0), "Diamond: facet cannot be zero address");
-        require(selectors_.length != 0, "Diamond: no selectors provided");
+        _checkIfFacetZeroAddress(facet_);
+
+        if (selectors_.length == 0) {
+            revert DiamondNoSelectorsProvided();
+        }
 
         DStorage storage _ds = _getDiamondStorage();
 
@@ -158,8 +180,13 @@ contract Diamond is DiamondStorage {
             bytes4 selector_ = selectors_[i];
             address oldFacet_ = facetAddress(selector_);
 
-            require(oldFacet_ != facet_, "Diamond: cannot replace to the same facet");
-            require(oldFacet_ != address(0), "Diamond: no facet found for selector");
+            if (oldFacet_ == facet_) {
+                revert DiamondSameFacet();
+            }
+
+            if (oldFacet_ == address(0)) {
+                revert DiamondNoFacetForSelector();
+            }
 
             // replace old facet address
             _ds.selectorToFacet[selector_] = facet_;
@@ -189,12 +216,21 @@ contract Diamond is DiamondStorage {
         (bool success_, bytes memory err_) = initFacet_.delegatecall(initData_);
 
         if (!success_) {
-            require(err_.length > 0, "Diamond: initialization function reverted");
+            if (err_.length == 0) {
+                revert DiamondInitializationReverted();
+            }
+
             // bubble up error
             // @solidity memory-safe-assembly
             assembly {
                 revert(add(32, err_), mload(err_))
             }
+        }
+    }
+
+    function _checkIfFacetZeroAddress(address facet_) internal pure {
+        if (facet_ == address(0)) {
+            revert DiamondFacetIsZeroAddress();
         }
     }
 
