@@ -53,12 +53,12 @@ abstract contract RBAC is IRBAC, Initializable {
 
     mapping(address => DynamicSet.StringSet) private _userRoles;
 
-    error NoPermissionForResource(string permission, string resource);
+    error NoPermissionForResource(address account, string permission, string resource);
     error EmptyRoles();
 
     modifier onlyPermission(string memory resource_, string memory permission_) {
         if (!hasPermission(msg.sender, resource_, permission_))
-            revert NoPermissionForResource(permission_, resource_);
+            revert NoPermissionForResource(msg.sender, permission_, resource_);
         _;
     }
 

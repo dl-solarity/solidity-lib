@@ -687,7 +687,7 @@ library SparseMerkleTree {
     error NodeDoesNotExist(uint256 nodeId);
     error TreeAlreadyInitialized();
     error TreeNotInitialized();
-    error TreeNotEmpty();
+    error TreeIsNotEmpty();
 
     modifier onlyInitialized(SMT storage tree) {
         if (!_isInitialized(tree)) revert TreeNotInitialized();
@@ -706,7 +706,6 @@ library SparseMerkleTree {
         uint32 currentDepth_ = tree.maxDepth;
 
         if (maxDepth_ <= currentDepth_) revert NewMaxDepthMustBeLarger(currentDepth_, maxDepth_);
-
         if (maxDepth_ > MAX_DEPTH_HARD_CAP) revert MaxDepthExceedsHardCap(maxDepth_);
 
         tree.maxDepth = maxDepth_;
@@ -717,7 +716,7 @@ library SparseMerkleTree {
         function(bytes32, bytes32) view returns (bytes32) hash2_,
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
     ) private {
-        if (_nodesCount(tree) != 0) revert TreeNotEmpty();
+        if (_nodesCount(tree) != 0) revert TreeIsNotEmpty();
 
         tree.isCustomHasherSet = true;
 

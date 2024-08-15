@@ -420,7 +420,7 @@ library AvlTree {
         function(bytes32, bytes32) view returns (int256) comparator;
     }
 
-    error InvalidTreeKey(bytes32 key);
+    error TreeKeyIsZero();
     error NodeAlreadyExists(bytes32 key);
     error NodeDoesNotExist(bytes32 key);
     error TreeNotEmpty();
@@ -437,7 +437,7 @@ library AvlTree {
     }
 
     function _insert(Tree storage tree, bytes32 key_, bytes32 value_) private {
-        if (key_ == 0) revert InvalidTreeKey(0);
+        if (key_ == 0) revert TreeKeyIsZero();
 
         tree.totalCount++;
 
@@ -453,7 +453,7 @@ library AvlTree {
     }
 
     function _remove(Tree storage tree, bytes32 key_) private {
-        if (key_ == 0) revert InvalidTreeKey(0);
+        if (key_ == 0) revert TreeKeyIsZero();
 
         tree.root = _removeNode(tree.tree, tree.root, 0, bytes32(key_), _getComparator(tree));
 
@@ -770,7 +770,7 @@ library Traversal {
         uint64 currentNode;
     }
 
-    error NoMoreNodes();
+    error NoNodesLeft();
 
     /**
      * @notice The function to check if the iterator is currently valid (has not reached the end of the traversal).
@@ -860,7 +860,7 @@ library Traversal {
     ) internal view returns (bytes32, bytes32) {
         uint64 currentNodeIndex_ = iterator_.currentNode;
 
-        if (currentNodeIndex_ == 0) revert NoMoreNodes();
+        if (currentNodeIndex_ == 0) revert NoNodesLeft();
 
         AvlTree.Node memory node_ = _getNode(iterator_.treeMappingSlot, currentNodeIndex_);
 

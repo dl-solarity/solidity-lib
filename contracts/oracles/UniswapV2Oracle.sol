@@ -41,7 +41,7 @@ abstract contract UniswapV2Oracle is Initializable {
     mapping(address => PairInfo) private _pairInfos;
 
     error InvalidPath(address tokenIn, uint256 pathLength);
-    error InvalidTimeWindow(uint256 newTimeWindow);
+    error TimeWindowIsZero();
     error PathAlreadyRegistered(address tokenIn);
     error PairDoesNotExist(address token1, address token2);
 
@@ -168,9 +168,7 @@ abstract contract UniswapV2Oracle is Initializable {
      * @param newTimeWindow_ the new time window value in seconds
      */
     function _setTimeWindow(uint256 newTimeWindow_) internal {
-        if (newTimeWindow_ == 0) {
-            revert InvalidTimeWindow(0);
-        }
+        if (newTimeWindow_ == 0) revert TimeWindowIsZero();
 
         timeWindow = newTimeWindow_;
     }

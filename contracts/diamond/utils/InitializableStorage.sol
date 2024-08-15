@@ -18,8 +18,8 @@ abstract contract InitializableStorage {
 
     event Initialized(bytes32 storageSlot);
 
+    error AlreadyInitialized();
     error InvalidInitialization();
-
     error NotInitializing();
 
     /**
@@ -32,7 +32,7 @@ abstract contract InitializableStorage {
     modifier initializer(bytes32 storageSlot_) {
         uint8 initializing_ = _getInitializing(storageSlot_);
 
-        if (initializing_ != 0) revert InvalidInitialization();
+        if (initializing_ != 0) revert AlreadyInitialized();
 
         _setInitializing(storageSlot_, 1);
         _;
@@ -47,7 +47,6 @@ abstract contract InitializableStorage {
      */
     modifier onlyInitializing(bytes32 storageSlot_) {
         if (_getInitializing(storageSlot_) != 1) revert NotInitializing();
-
         _;
     }
 

@@ -16,7 +16,7 @@ abstract contract PermanentOwnable {
     address private immutable _OWNER;
 
     error UnauthorizedAccount(address account);
-    error InvalidOwner(address owner);
+    error InvalidOwner();
 
     /**
      * @dev Throws if called by any account other than the owner.
@@ -31,7 +31,7 @@ abstract contract PermanentOwnable {
      * @param owner_ the address of the permanent owner.
      */
     constructor(address owner_) {
-        if (owner_ == address(0)) revert InvalidOwner(address(0));
+        if (owner_ == address(0)) revert InvalidOwner();
 
         _OWNER = owner_;
     }

@@ -13,6 +13,11 @@ import {DiamondERC20Storage} from "./DiamondERC20Storage.sol";
  * by the Diamond Standard.
  */
 contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
+    error SenderIsZeroAddress();
+    error ReceiverIsZeroAddress();
+    error ApproverIsZeroAddress();
+    error SpenderIsZeroAddress();
+
     /**
      * @notice Sets the values for {name} and {symbol}.
      *
@@ -64,9 +69,8 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
      * @notice Moves `amount` of tokens from `from` to `to`.
      */
     function _transfer(address from_, address to_, uint256 amount_) internal virtual {
-        if (from_ == address(0)) revert ERC20InvalidSender(address(0));
-
-        if (to_ == address(0)) revert ERC20InvalidReceiver(address(0));
+        if (from_ == address(0)) revert SenderIsZeroAddress();
+        if (to_ == address(0)) revert ReceiverIsZeroAddress();
 
         _beforeTokenTransfer(from_, to_, amount_);
 
@@ -94,7 +98,7 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
      * the total supply.
      */
     function _mint(address account_, uint256 amount_) internal virtual {
-        if (account_ == address(0)) revert ERC20InvalidReceiver(address(0));
+        if (account_ == address(0)) revert ReceiverIsZeroAddress();
 
         _beforeTokenTransfer(address(0), account_, amount_);
 
@@ -117,7 +121,7 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
      * total supply.
      */
     function _burn(address account_, uint256 amount_) internal virtual {
-        if (account_ == address(0)) revert ERC20InvalidSender(address(0));
+        if (account_ == address(0)) revert SenderIsZeroAddress();
 
         _beforeTokenTransfer(account_, address(0), amount_);
 
@@ -142,9 +146,9 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
      * @notice Sets `amount` as the allowance of `spender` over the `owner` s tokens.
      */
     function _approve(address owner_, address spender_, uint256 amount_) internal virtual {
-        if (owner_ == address(0)) revert ERC20InvalidApprover(owner_);
+        if (owner_ == address(0)) revert ApproverIsZeroAddress();
 
-        if (spender_ == address(0)) revert ERC20InvalidSpender(spender_);
+        if (spender_ == address(0)) revert SpenderIsZeroAddress();
 
         _getErc20Storage().allowances[owner_][spender_] = amount_;
 

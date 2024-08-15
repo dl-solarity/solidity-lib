@@ -39,7 +39,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
 
     error MaxRateIsReached();
     error RateIsLessThanOne(uint256 rate);
-    error InvalidPeriod(uint64 period);
+    error CapitalizationPeriodIsZero();
 
     /**
      * @notice The initialization function
@@ -202,7 +202,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      * @notice The private function that changes to capitalization period
      */
     function _changeCapitalizationPeriod(uint64 capitalizationPeriod_) private {
-        if (capitalizationPeriod_ == 0) revert InvalidPeriod(0);
+        if (capitalizationPeriod_ == 0) revert CapitalizationPeriodIsZero();
 
         _capitalizationPeriod = capitalizationPeriod_;
 

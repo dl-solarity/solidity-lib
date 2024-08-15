@@ -135,11 +135,11 @@ abstract contract Vesting is Initializable {
      */
     event WithdrawnFromVesting(uint256 indexed vestingId, uint256 amount);
 
-    error InvalidAmount(uint256 amount);
-    error InvalidBeneficiary(address beneficiary);
-    error InvalidExponent(uint256 exponent);
-    error InvalidTime(uint256 time);
-    error InvalidVestingTokenAddress(address vestingToken);
+    error VestingAmountIsZero();
+    error BeneficiaryIsZeroAddress();
+    error ExponentIsZero();
+    error StartTimeIsZero();
+    error VestingTokenIsZeroAddress();
     error NothingToWithdraw();
     error ScheduleInvalidPeriodParameter(uint256 durationInPeriods, uint256 secondsInPeriod);
     error ScheduleCliffGreaterThanDuration(uint256 cliffInPeriods, uint256 durationInPeriods);
@@ -264,7 +264,7 @@ abstract contract Vesting is Initializable {
      * @return The ID of the created schedule.
      */
     function _createSchedule(Schedule memory schedule_) internal virtual returns (uint256) {
-        if (schedule_.exponent == 0) revert InvalidExponent(0);
+        if (schedule_.exponent == 0) revert ExponentIsZero();
 
         _validateSchedule(schedule_.scheduleData);
 
@@ -429,13 +429,13 @@ abstract contract Vesting is Initializable {
      * @param vesting_ Vesting data to be validated.
      */
     function _validateVesting(VestingData memory vesting_) internal pure {
-        if (vesting_.vestingStartTime == 0) revert InvalidTime(0);
+        if (vesting_.vestingStartTime == 0) revert StartTimeIsZero();
 
-        if (vesting_.vestingAmount == 0) revert InvalidAmount(0);
+        if (vesting_.vestingAmount == 0) revert VestingAmountIsZero();
 
-        if (vesting_.beneficiary == address(0)) revert InvalidBeneficiary(address(0));
+        if (vesting_.beneficiary == address(0)) revert BeneficiaryIsZeroAddress();
 
-        if (vesting_.vestingToken == address(0)) revert InvalidVestingTokenAddress(address(0));
+        if (vesting_.vestingToken == address(0)) revert VestingTokenIsZeroAddress();
     }
 
     /**

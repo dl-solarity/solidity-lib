@@ -14,12 +14,12 @@ import {DiamondERC721Storage} from "./DiamondERC721Storage.sol";
  */
 contract DiamondERC721 is DiamondERC721Storage {
     error ApproveToCaller(address caller);
-    error ApprovalToCurrentOwner(address owner);
+    error ApprovalToCurrentOwner(address owner, uint256 tokenId);
     error ConsecutiveTransfersNotSupported();
     error InvalidApprover(address approver, address owner);
-    error InvalidReceiver(address receiver);
     error InvalidSpender(address spender, uint256 tokenId_);
     error NonERC721Receiver(address receiver);
+    error ReceiverIsZeroAddress();
     error TokenAlreadyMinted(uint256 tokenId_);
     error UnauthorizedAccount(address account);
 
@@ -41,7 +41,7 @@ contract DiamondERC721 is DiamondERC721Storage {
      */
     function approve(address to_, uint256 tokenId_) public virtual override {
         address owner_ = ownerOf(tokenId_);
-        if (to_ == owner_) revert ApprovalToCurrentOwner(owner_);
+        if (to_ == owner_) revert ApprovalToCurrentOwner(owner_, tokenId_);
 
         if (msg.sender != owner_ && !isApprovedForAll(owner_, msg.sender))
             revert InvalidApprover(msg.sender, owner_);
@@ -126,7 +126,7 @@ contract DiamondERC721 is DiamondERC721Storage {
      * @notice Mints `tokenId` and transfers it to `to`.
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
-        if (to_ == address(0)) revert InvalidReceiver(address(0));
+        if (to_ == address(0)) revert ReceiverIsZeroAddress();
 
         if (_exists(tokenId_)) revert TokenAlreadyMinted(tokenId_);
 
@@ -181,7 +181,7 @@ contract DiamondERC721 is DiamondERC721Storage {
     function _transfer(address from_, address to_, uint256 tokenId_) internal virtual {
         if (ownerOf(tokenId_) != from_) revert UnauthorizedAccount(from_);
 
-        if (to_ == address(0)) revert InvalidReceiver(address(0));
+        if (to_ == address(0)) revert ReceiverIsZeroAddress();
 
         _beforeTokenTransfer(from_, to_, tokenId_, 1);
 

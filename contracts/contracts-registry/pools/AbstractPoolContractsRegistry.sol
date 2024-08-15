@@ -36,7 +36,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
 
     error NoMappingExists(string poolName);
     error ProxyDoesNotExist(string poolName);
-    error NoPoolsToInject();
+    error NoPoolsToInject(string poolName);
 
     /**
      * @notice The proxy initializer function
@@ -174,7 +174,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
 
         uint256 to_ = (offset_ + limit_).min(_namedPools.length()).max(offset_);
 
-        if (to_ == offset_) revert NoPoolsToInject();
+        if (to_ == offset_) revert NoPoolsToInject(name_);
 
         address contractsRegistry_ = _contractsRegistry;
 

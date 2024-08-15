@@ -31,7 +31,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
 
     error TokenAlreadyExists(uint256 tokenId);
     error TokenDoesNotExist(uint256 tokenId);
-    error Invalidreceiver(address receiver);
+    error ReceiverIsZeroAddress();
 
     /**
      * @notice The constructor
@@ -160,7 +160,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenId_ the token to mint
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
-        if (to_ == address(0)) revert Invalidreceiver(address(0));
+        if (to_ == address(0)) revert ReceiverIsZeroAddress();
 
         if (tokenExists(tokenId_)) revert TokenAlreadyExists(tokenId_);
 

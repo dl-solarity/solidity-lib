@@ -29,7 +29,7 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
     EnumerableSet.AddressSet private _owners;
 
     error UnauthorizedAccount(address account);
-    error InvalidOwner(address owner);
+    error InvalidOwner();
 
     modifier onlyOwner() {
         _checkOwner();
@@ -94,7 +94,7 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
     function _addOwners(address[] memory newOwners_) private {
         _owners.add(newOwners_);
 
-        if (_owners.contains(address(0))) revert InvalidOwner(address(0));
+        if (_owners.contains(address(0))) revert InvalidOwner();
 
         emit OwnersAdded(newOwners_);
     }

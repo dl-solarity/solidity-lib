@@ -34,8 +34,8 @@ abstract contract AbstractValueDistributor {
     event SharesRemoved(address user, uint256 amount);
     event ValueDistributed(address user, uint256 amount);
 
-    error InvalidAmount(uint256 amount);
-    error InvalidUserAddress(address user);
+    error AmountIsZero();
+    error UserIsZeroAddress();
     error InsufficientOwedValue(address account, uint256 balance, uint256 needed);
     error InsufficientSharesAmount(address account, uint256 balance, uint256 needed);
 
@@ -93,9 +93,8 @@ abstract contract AbstractValueDistributor {
      * @param amount_ The amount of shares to add.
      */
     function _addShares(address user_, uint256 amount_) internal virtual {
-        if (user_ == address(0)) revert InvalidUserAddress(address(0));
-
-        if (amount_ == 0) revert InvalidAmount(0);
+        if (user_ == address(0)) revert UserIsZeroAddress();
+        if (amount_ == 0) revert AmountIsZero();
 
         _update(user_);
 
@@ -115,9 +114,7 @@ abstract contract AbstractValueDistributor {
     function _removeShares(address user_, uint256 amount_) internal virtual {
         UserDistribution storage _userDist = _userDistributions[user_];
 
-        if (amount_ == 0) {
-            revert InvalidAmount(0);
-        }
+        if (amount_ == 0) revert AmountIsZero();
 
         if (amount_ > _userDist.shares)
             revert InsufficientSharesAmount(user_, _userDist.shares, amount_);
@@ -142,7 +139,7 @@ abstract contract AbstractValueDistributor {
 
         UserDistribution storage _userDist = _userDistributions[user_];
 
-        if (amount_ == 0) revert InvalidAmount(0);
+        if (amount_ == 0) revert AmountIsZero();
 
         if (amount_ > _userDist.owedValue)
             revert InsufficientOwedValue(user_, _userDist.owedValue, amount_);
@@ -166,7 +163,7 @@ abstract contract AbstractValueDistributor {
 
         uint256 amount_ = _userDist.owedValue;
 
-        if (amount_ == 0) revert InvalidAmount(0);
+        if (amount_ == 0) revert AmountIsZero();
 
         delete _userDist.owedValue;
 
