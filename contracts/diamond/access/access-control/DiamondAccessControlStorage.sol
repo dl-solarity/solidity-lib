@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 import {InitializableStorage} from "../../utils/InitializableStorage.sol";
 
