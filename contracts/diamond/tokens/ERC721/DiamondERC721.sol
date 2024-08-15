@@ -13,15 +13,15 @@ import {DiamondERC721Storage} from "./DiamondERC721Storage.sol";
  * by the Diamond Standard.
  */
 contract DiamondERC721 is DiamondERC721Storage {
-    error ERC721SpenderIsNotOwnerOrApproved(address spender, uint256 tokenId_);
-    error ERC721ApproverNeitherOwnerNorApprovedForAll(address approver, address owner);
-    error ERC721ApprovalToCurrentOwner();
-    error ERC721TransferToNonERC721Receiver(address to);
-    error ERC721MintToZeroAddress();
-    error ERC721TokenAlreadyMinted(uint256 tokenId_);
-    error ERC721SenderNotOwner(address sender);
-    error ERC721InvalidReceiver(address receiver);
-    error ERC721ApproveToCaller();
+    error ApproveToCaller(address caller);
+    error ApprovalToCurrentOwner(address owner);
+    error ConsecutiveTransfersNotSupported();
+    error InvalidApprover(address approver, address owner);
+    error InvalidReceiver(address receiver);
+    error InvalidSpender(address spender, uint256 tokenId_);
+    error NonERC721Receiver(address receiver);
+    error TokenAlreadyMinted(uint256 tokenId_);
+    error UnauthorizedAccount(address account);
 
     /**
      * @notice Sets the values for {name} and {symbol}.
@@ -42,11 +42,11 @@ contract DiamondERC721 is DiamondERC721Storage {
     function approve(address to_, uint256 tokenId_) public virtual override {
         address owner_ = ownerOf(tokenId_);
         if (to_ == owner_) {
-            revert ERC721ApprovalToCurrentOwner();
+            revert ApprovalToCurrentOwner(owner_);
         }
 
         if (msg.sender != owner_ && !isApprovedForAll(owner_, msg.sender)) {
-            revert ERC721ApproverNeitherOwnerNorApprovedForAll(msg.sender, owner_);
+            revert InvalidApprover(msg.sender, owner_);
         }
 
         _approve(to_, tokenId_);
@@ -64,7 +64,7 @@ contract DiamondERC721 is DiamondERC721Storage {
      */
     function transferFrom(address from_, address to_, uint256 tokenId_) public virtual override {
         if (!_isApprovedOrOwner(msg.sender, tokenId_)) {
-            revert ERC721SpenderIsNotOwnerOrApproved(msg.sender, tokenId_);
+            revert InvalidSpender(msg.sender, tokenId_);
         }
 
         _transfer(from_, to_, tokenId_);
@@ -91,7 +91,7 @@ contract DiamondERC721 is DiamondERC721Storage {
         bytes memory data_
     ) public virtual override {
         if (!_isApprovedOrOwner(msg.sender, tokenId_)) {
-            revert ERC721SpenderIsNotOwnerOrApproved(msg.sender, tokenId_);
+            revert InvalidSpender(msg.sender, tokenId_);
         }
 
         _safeTransfer(from_, to_, tokenId_, data_);
@@ -110,7 +110,7 @@ contract DiamondERC721 is DiamondERC721Storage {
         _transfer(from_, to_, tokenId_);
 
         if (!_checkOnERC721Received(from_, to_, tokenId_, data_)) {
-            revert ERC721TransferToNonERC721Receiver(to_);
+            revert NonERC721Receiver(to_);
         }
     }
 
@@ -128,7 +128,7 @@ contract DiamondERC721 is DiamondERC721Storage {
         _mint(to_, tokenId_);
 
         if (!_checkOnERC721Received(address(0), to_, tokenId_, data_)) {
-            revert ERC721TransferToNonERC721Receiver(to_);
+            revert NonERC721Receiver(to_);
         }
     }
 
@@ -137,18 +137,18 @@ contract DiamondERC721 is DiamondERC721Storage {
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
         if (to_ == address(0)) {
-            revert ERC721MintToZeroAddress();
+            revert InvalidReceiver(address(0));
         }
 
         if (_exists(tokenId_)) {
-            revert ERC721TokenAlreadyMinted(tokenId_);
+            revert TokenAlreadyMinted(tokenId_);
         }
 
         _beforeTokenTransfer(address(0), to_, tokenId_, 1);
 
         // Check that tokenId was not minted by `_beforeTokenTransfer` hook
         if (_exists(tokenId_)) {
-            revert ERC721TokenAlreadyMinted(tokenId_);
+            revert TokenAlreadyMinted(tokenId_);
         }
 
         DERC721Storage storage _erc721Storage = _getErc721Storage();
@@ -196,18 +196,18 @@ contract DiamondERC721 is DiamondERC721Storage {
      */
     function _transfer(address from_, address to_, uint256 tokenId_) internal virtual {
         if (ownerOf(tokenId_) != from_) {
-            revert ERC721SenderNotOwner(from_);
+            revert UnauthorizedAccount(from_);
         }
 
         if (to_ == address(0)) {
-            revert ERC721InvalidReceiver(address(0));
+            revert InvalidReceiver(address(0));
         }
 
         _beforeTokenTransfer(from_, to_, tokenId_, 1);
 
         // Check that tokenId was not transferred by `_beforeTokenTransfer` hook
         if (ownerOf(tokenId_) != from_) {
-            revert ERC721SenderNotOwner(from_);
+            revert UnauthorizedAccount(from_);
         }
 
         DERC721Storage storage _erc721Storage = _getErc721Storage();
@@ -245,7 +245,7 @@ contract DiamondERC721 is DiamondERC721Storage {
         bool approved_
     ) internal virtual {
         if (owner_ == operator_) {
-            revert ERC721ApproveToCaller();
+            revert ApproveToCaller(owner_);
         }
 
         _getErc721Storage().operatorApprovals[owner_][operator_] = approved_;
@@ -270,7 +270,7 @@ contract DiamondERC721 is DiamondERC721Storage {
                 return retval == IERC721Receiver.onERC721Received.selector;
             } catch (bytes memory reason) {
                 if (reason.length == 0) {
-                    revert("ERC721: transfer to non ERC721Receiver implementer");
+                    revert NonERC721Receiver(to_);
                 } else {
                     // @solidity memory-safe-assembly
                     assembly {
@@ -294,7 +294,7 @@ contract DiamondERC721 is DiamondERC721Storage {
     ) internal virtual {
         if (batchSize_ > 1) {
             // Will only trigger during construction. Batch transferring (minting) is not available afterwards.
-            revert("ERC721Enumerable: consecutive transfers not supported");
+            revert ConsecutiveTransfersNotSupported();
         }
 
         uint256 tokenId_ = firstTokenId_;

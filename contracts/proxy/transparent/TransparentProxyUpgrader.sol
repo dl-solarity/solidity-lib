@@ -10,7 +10,7 @@ import {ISolarityTransparentProxy} from "./SolarityTransparentProxy.sol";
  * This is the lightweight helper contract that may be used as a TransparentProxy admin.
  */
 contract TransparentProxyUpgrader is PermanentOwnable {
-    error TransparentProxyUpgraderNotProxy(address notProxy);
+    error AddressNotAProxy(address notProxy);
 
     constructor() PermanentOwnable(msg.sender) {}
 
@@ -34,7 +34,7 @@ contract TransparentProxyUpgrader is PermanentOwnable {
         (bool success_, bytes memory returndata_) = address(what_).staticcall(hex"5c60da1b");
 
         if (!success_) {
-            revert TransparentProxyUpgraderNotProxy(what_);
+            revert AddressNotAProxy(what_);
         }
 
         return abi.decode(returndata_, (address));

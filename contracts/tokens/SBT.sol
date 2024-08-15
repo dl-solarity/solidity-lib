@@ -29,9 +29,9 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
     string private _baseURI;
     mapping(uint256 => string) private _tokenURIs;
 
-    error SBTTokenDoesNotExist(uint256 tokenId);
-    error SBTInvalidreceiver(address receiver);
-    error SBTTokenAlreadyExists(uint256 tokenId);
+    error TokenAlreadyExists(uint256 tokenId);
+    error TokenDoesNotExist(uint256 tokenId);
+    error Invalidreceiver(address receiver);
 
     /**
      * @notice The constructor
@@ -161,11 +161,11 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
         if (to_ == address(0)) {
-            revert SBTInvalidreceiver(address(0));
+            revert Invalidreceiver(address(0));
         }
 
         if (tokenExists(tokenId_)) {
-            revert SBTTokenAlreadyExists(tokenId_);
+            revert TokenAlreadyExists(tokenId_);
         }
 
         _beforeTokenAction(to_, tokenId_);
@@ -184,7 +184,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
         address owner_ = _ownerOf(tokenId_);
 
         if (owner_ == address(0)) {
-            revert SBTTokenDoesNotExist(tokenId_);
+            revert TokenDoesNotExist(tokenId_);
         }
 
         _beforeTokenAction(address(0), tokenId_);
@@ -204,7 +204,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      */
     function _setTokenURI(uint256 tokenId_, string memory tokenURI_) internal virtual {
         if (!tokenExists(tokenId_)) {
-            revert SBTTokenDoesNotExist(tokenId_);
+            revert TokenDoesNotExist(tokenId_);
         }
 
         _tokenURIs[tokenId_] = tokenURI_;

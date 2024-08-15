@@ -34,9 +34,9 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
     mapping(string => ProxyBeacon) private _beacons;
     mapping(string => EnumerableSet.AddressSet) private _pools; // name => pool
 
-    error PoolContractRegistryNoMappingExists(string poolName);
-    error PoolContractsRegistryBadProxyBeacon();
-    error PoolContractsRegistryNoPoolsToInject();
+    error NoMappingExists(string poolName);
+    error ProxyDoesNotExist(string poolName);
+    error NoPoolsToInject();
 
     /**
      * @notice The proxy initializer function
@@ -71,7 +71,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
      */
     function getImplementation(string memory name_) public view returns (address) {
         if (address(_beacons[name_]) == address(0)) {
-            revert PoolContractRegistryNoMappingExists(name_);
+            revert NoMappingExists(name_);
         }
 
         return _beacons[name_].implementation();
@@ -86,7 +86,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
         address beacon_ = address(_beacons[name_]);
 
         if (beacon_ == address(0)) {
-            revert PoolContractsRegistryBadProxyBeacon();
+            revert ProxyDoesNotExist(name_);
         }
 
         return beacon_;
@@ -179,7 +179,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
         uint256 to_ = (offset_ + limit_).min(_namedPools.length()).max(offset_);
 
         if (to_ == offset_) {
-            revert PoolContractsRegistryNoPoolsToInject();
+            revert NoPoolsToInject();
         }
 
         address contractsRegistry_ = _contractsRegistry;

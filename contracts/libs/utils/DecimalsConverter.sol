@@ -36,7 +36,7 @@ import {ERC20, IERC20, IERC20Metadata} from "@openzeppelin/contracts/token/ERC20
  * ```
  */
 library DecimalsConverter {
-    error DecimalsConverterConversionFailed();
+    error ConversionFailed();
 
     /**
      * @notice The function to get the decimals of ERC20 token. Needed for bytecode optimization
@@ -237,7 +237,7 @@ library DecimalsConverter {
 
     function _safe(uint256 amount_) private pure returns (uint256) {
         if (amount_ == 0) {
-            revert DecimalsConverterConversionFailed();
+            revert ConversionFailed();
         }
 
         return amount_;

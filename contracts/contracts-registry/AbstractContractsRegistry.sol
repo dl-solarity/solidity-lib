@@ -48,9 +48,9 @@ abstract contract AbstractContractsRegistry is Initializable {
     event ProxyContractUpgraded(string name, address newImplementation);
     event ContractRemoved(string name);
 
-    error ContractsRegistryNoMappingExists(string contractName);
-    error ContractsRegistryNotAProxy();
-    error ContractsRegistryZeroAddress();
+    error NoMappingExists(string contractName);
+    error NotAProxy(address contractProxy);
+    error InvalidContractAddress(address invalidContract);
 
     /**
      * @notice The initialization function
@@ -98,11 +98,11 @@ abstract contract AbstractContractsRegistry is Initializable {
         address contractProxy_ = _contracts[name_];
 
         if (contractProxy_ == address(0)) {
-            revert ContractsRegistryNoMappingExists(name_);
+            revert NoMappingExists(name_);
         }
 
         if (!_isProxy[contractProxy_]) {
-            revert ContractsRegistryNotAProxy();
+            revert NotAProxy(contractProxy_);
         }
 
         return _proxyUpgrader.getImplementation(contractProxy_);
@@ -160,11 +160,11 @@ abstract contract AbstractContractsRegistry is Initializable {
         address contractToUpgrade_ = _contracts[name_];
 
         if (contractToUpgrade_ == address(0)) {
-            revert ContractsRegistryNoMappingExists(name_);
+            revert NoMappingExists(name_);
         }
 
         if (!_isProxy[contractToUpgrade_]) {
-            revert ContractsRegistryNotAProxy();
+            revert NotAProxy(contractToUpgrade_);
         }
 
         _proxyUpgrader.upgrade(contractToUpgrade_, newImplementation_, data_);
@@ -180,7 +180,7 @@ abstract contract AbstractContractsRegistry is Initializable {
      */
     function _addContract(string memory name_, address contractAddress_) internal virtual {
         if (contractAddress_ == address(0)) {
-            revert ContractsRegistryZeroAddress();
+            revert InvalidContractAddress(address(0));
         }
 
         _contracts[name_] = contractAddress_;
@@ -211,7 +211,7 @@ abstract contract AbstractContractsRegistry is Initializable {
         bytes memory data_
     ) internal virtual {
         if (contractAddress_ == address(0)) {
-            revert ContractsRegistryZeroAddress();
+            revert InvalidContractAddress(address(0));
         }
 
         address proxyAddr_ = _deployProxy(contractAddress_, address(_proxyUpgrader), data_);
@@ -234,7 +234,7 @@ abstract contract AbstractContractsRegistry is Initializable {
         address contractAddress_
     ) internal virtual {
         if (contractAddress_ == address(0)) {
-            revert ContractsRegistryZeroAddress();
+            revert InvalidContractAddress(address(0));
         }
 
         _contracts[name_] = contractAddress_;
@@ -279,7 +279,7 @@ abstract contract AbstractContractsRegistry is Initializable {
 
     function _checkIfMappingExist(address contractAddress_, string memory name_) internal pure {
         if (contractAddress_ == address(0)) {
-            revert ContractsRegistryNoMappingExists(name_);
+            revert NoMappingExists(name_);
         }
     }
 }

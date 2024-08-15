@@ -135,16 +135,16 @@ abstract contract Vesting is Initializable {
      */
     event WithdrawnFromVesting(uint256 indexed vestingId, uint256 amount);
 
-    error VestingWalletUnauthorizedAccount(address account);
-    error VestingWalletNothingToWithdraw();
-    error VestingWalletZeroPeriodParam(uint256 durationInPeriods, uint256 secondsInPeriod);
-    error VestingWalletZeroExponent();
-    error VestingWalletCliffGreaterThanDuration(uint256 cliffInPeriods, uint256 durationInPeriods);
-    error VestingWalletPastDate();
-    error VestingWalletZeroTime();
-    error VestingWalletZeroAmount();
-    error VestingWalletBeneficiaryIsZeroAddress();
-    error VestingWalletVestingTokenIsZeroAddress();
+    error InvalidAmount(uint256 amount);
+    error InvalidBeneficiary(address beneficiary);
+    error InvalidExponent(uint256 exponent);
+    error InvalidTime(uint256 time);
+    error InvalidVestingTokenAddress(address vestingToken);
+    error NothingToWithdraw();
+    error ScheduleInvalidPeriodParameter(uint256 durationInPeriods, uint256 secondsInPeriod);
+    error ScheduleCliffGreaterThanDuration(uint256 cliffInPeriods, uint256 durationInPeriods);
+    error UnauthorizedAccount(address account);
+    error VestingPastDate();
 
     /**
      * @notice Constructor.
@@ -159,11 +159,11 @@ abstract contract Vesting is Initializable {
         VestingData storage _vesting = _vestings[vestingId_];
 
         if (msg.sender != _vesting.beneficiary) {
-            revert VestingWalletUnauthorizedAccount(msg.sender);
+            revert UnauthorizedAccount(msg.sender);
         }
 
         if (_vesting.paidAmount >= _vesting.vestingAmount) {
-            revert VestingWalletNothingToWithdraw();
+            revert NothingToWithdraw();
         }
 
         uint256 amountToPay_ = getWithdrawableAmount(vestingId_);
@@ -269,7 +269,7 @@ abstract contract Vesting is Initializable {
      */
     function _createSchedule(Schedule memory schedule_) internal virtual returns (uint256) {
         if (schedule_.exponent == 0) {
-            revert VestingWalletZeroExponent();
+            revert InvalidExponent(0);
         }
 
         _validateSchedule(schedule_.scheduleData);
@@ -297,7 +297,7 @@ abstract contract Vesting is Initializable {
                 _schedule.scheduleData.secondsInPeriod <=
             block.timestamp
         ) {
-            revert VestingWalletPastDate();
+            revert VestingPastDate();
         }
 
         uint256 _currentVestingId = ++vestingId;
@@ -420,14 +420,14 @@ abstract contract Vesting is Initializable {
      */
     function _validateSchedule(BaseSchedule memory schedule_) internal pure {
         if (schedule_.durationInPeriods == 0 || schedule_.secondsInPeriod == 0) {
-            revert VestingWalletZeroPeriodParam(
+            revert ScheduleInvalidPeriodParameter(
                 schedule_.durationInPeriods,
                 schedule_.secondsInPeriod
             );
         }
 
         if (schedule_.cliffInPeriods >= schedule_.durationInPeriods) {
-            revert VestingWalletCliffGreaterThanDuration(
+            revert ScheduleCliffGreaterThanDuration(
                 schedule_.cliffInPeriods,
                 schedule_.durationInPeriods
             );
@@ -440,19 +440,19 @@ abstract contract Vesting is Initializable {
      */
     function _validateVesting(VestingData memory vesting_) internal pure {
         if (vesting_.vestingStartTime == 0) {
-            revert VestingWalletZeroTime();
+            revert InvalidTime(0);
         }
 
         if (vesting_.vestingAmount == 0) {
-            revert VestingWalletZeroAmount();
+            revert InvalidAmount(0);
         }
 
         if (vesting_.beneficiary == address(0)) {
-            revert VestingWalletBeneficiaryIsZeroAddress();
+            revert InvalidBeneficiary(address(0));
         }
 
         if (vesting_.vestingToken == address(0)) {
-            revert VestingWalletVestingTokenIsZeroAddress();
+            revert InvalidVestingTokenAddress(address(0));
         }
     }
 

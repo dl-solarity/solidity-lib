@@ -15,14 +15,8 @@ pragma solidity ^0.8.4;
 abstract contract PermanentOwnable {
     address private immutable _OWNER;
 
-    /**
-     * @dev The caller account is not authorized to perform an operation.
-     */
-    error PermanentOwnableUnauthorizedAccount(address account);
-    /**
-     * @dev The owner is not a valid owner account. (eg. `address(0)`)
-     */
-    error PermanentOwnableInvalidOwner(address owner);
+    error UnauthorizedAccount(address account);
+    error InvalidOwner(address owner);
 
     /**
      * @dev Throws if called by any account other than the owner.
@@ -38,7 +32,7 @@ abstract contract PermanentOwnable {
      */
     constructor(address owner_) {
         if (owner_ == address(0)) {
-            revert PermanentOwnableInvalidOwner(address(0));
+            revert InvalidOwner(address(0));
         }
 
         _OWNER = owner_;
@@ -54,7 +48,7 @@ abstract contract PermanentOwnable {
 
     function _onlyOwner() internal view virtual {
         if (_OWNER != msg.sender) {
-            revert PermanentOwnableUnauthorizedAccount(msg.sender);
+            revert UnauthorizedAccount(msg.sender);
         }
     }
 }

@@ -37,9 +37,9 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
 
     uint256 private _currentRate;
 
-    error CRKMaxRateIsReached();
-    error CRKRateIsLessThanOne(uint256 rate);
-    error CRKInvalidPeriod();
+    error MaxRateIsReached();
+    error RateIsLessThanOne(uint256 rate);
+    error InvalidPeriod(uint64 period);
 
     /**
      * @notice The initialization function
@@ -182,7 +182,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      */
     function _update() private {
         if (_isMaxRateReached) {
-            revert CRKMaxRateIsReached();
+            revert MaxRateIsReached();
         }
 
         _currentRate = getCompoundRate();
@@ -194,7 +194,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      */
     function _changeCapitalizationRate(uint256 capitalizationRate_) private {
         if (capitalizationRate_ < PRECISION) {
-            revert CRKRateIsLessThanOne(capitalizationRate_);
+            revert RateIsLessThanOne(capitalizationRate_);
         }
 
         _capitalizationRate = capitalizationRate_;
@@ -207,7 +207,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      */
     function _changeCapitalizationPeriod(uint64 capitalizationPeriod_) private {
         if (capitalizationPeriod_ == 0) {
-            revert CRKInvalidPeriod();
+            revert InvalidPeriod(0);
         }
 
         _capitalizationPeriod = capitalizationPeriod_;

@@ -7,7 +7,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
  * @notice A simple library to work with arrays
  */
 library ArrayHelper {
-    error ArrayHelperWrongRange();
+    error InvalidRange(uint256 beginIndex, uint256 endIndex);
 
     /**
      * @notice The function that searches for the index of the first occurring element, which is
@@ -100,7 +100,7 @@ library ArrayHelper {
         uint256 endIndex_
     ) internal view returns (uint256) {
         if (beginIndex_ > endIndex_) {
-            revert ArrayHelperWrongRange();
+            revert InvalidRange(beginIndex_, endIndex_);
         }
 
         if (beginIndex_ == 0) {

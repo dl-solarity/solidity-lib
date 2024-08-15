@@ -31,8 +31,8 @@ abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
 
     uint256 private _stakingStartTime;
 
-    error StakinSharesTokenAddressIsZero();
-    error StakingRewardsTokenAddressIsZero();
+    error RewardsTokenInvalidAddress(address rewardsToken);
+    error SharesTokenInvalidAddress(address sharesToken);
     error StakingHasNotStarted();
 
     /**
@@ -61,10 +61,10 @@ abstract contract AbstractStaking is AbstractValueDistributor, Initializable {
         uint256 stakingStartTime_
     ) internal onlyInitializing {
         if (sharesToken_ == address(0)) {
-            revert StakinSharesTokenAddressIsZero();
+            revert SharesTokenInvalidAddress(address(0));
         }
         if (rewardsToken_ == address(0)) {
-            revert StakingRewardsTokenAddressIsZero();
+            revert RewardsTokenInvalidAddress(address(0));
         }
 
         _sharesToken = sharesToken_;

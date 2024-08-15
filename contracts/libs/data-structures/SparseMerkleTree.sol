@@ -71,14 +71,6 @@ library SparseMerkleTree {
         SMT _tree;
     }
 
-    error SMTTreeNotInitialized();
-    error SMTTreeAlreadyInitialized();
-    error SMTMaxDepthIsZero();
-    error SMTMaxDepthNotIncreased();
-    error SMTMaxDepthExceedsHardCap();
-    error SMTTreeNotEmpty();
-    error SMTMaxDepthReached();
-
     /**
      * @notice The function to initialize the Merkle tree.
      * Under the hood it sets the maximum depth of the Merkle tree, therefore can be considered
@@ -686,16 +678,27 @@ library SparseMerkleTree {
         bytes32 auxValue;
     }
 
+    error InvalidMaxDepth(uint32 depth);
+    error KeyAlreadyExists(bytes32 key);
+    error LeafDoesNotMatch(bytes32 currentKey, bytes32 key);
+    error MaxDepthExceedsHardCap(uint32 maxDepth);
+    error MaxDepthReached();
+    error NewMaxDepthMustBeLarger(uint32 currentDepth, uint32 newDepth);
+    error NodeDoesNotExist(uint256 nodeId);
+    error TreeAlreadyInitialized();
+    error TreeNotInitialized();
+    error TreeNotEmpty();
+
     modifier onlyInitialized(SMT storage tree) {
         if (!_isInitialized(tree)) {
-            revert SMTTreeNotInitialized();
+            revert TreeNotInitialized();
         }
         _;
     }
 
     function _initialize(SMT storage tree, uint32 maxDepth_) private {
         if (_isInitialized(tree)) {
-            revert SMTTreeAlreadyInitialized();
+            revert TreeAlreadyInitialized();
         }
 
         _setMaxDepth(tree, maxDepth_);
@@ -703,15 +706,17 @@ library SparseMerkleTree {
 
     function _setMaxDepth(SMT storage tree, uint32 maxDepth_) private {
         if (maxDepth_ == 0) {
-            revert SMTMaxDepthIsZero();
+            revert InvalidMaxDepth(0);
         }
 
-        if (maxDepth_ <= tree.maxDepth) {
-            revert SMTMaxDepthNotIncreased();
+        uint32 currentDepth_ = tree.maxDepth;
+
+        if (maxDepth_ <= currentDepth_) {
+            revert NewMaxDepthMustBeLarger(currentDepth_, maxDepth_);
         }
 
         if (maxDepth_ > MAX_DEPTH_HARD_CAP) {
-            revert SMTMaxDepthExceedsHardCap();
+            revert MaxDepthExceedsHardCap(maxDepth_);
         }
 
         tree.maxDepth = maxDepth_;
@@ -723,7 +728,7 @@ library SparseMerkleTree {
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
     ) private {
         if (_nodesCount(tree) != 0) {
-            revert SMTTreeNotEmpty();
+            revert TreeNotEmpty();
         }
 
         tree.isCustomHasherSet = true;
@@ -784,7 +789,7 @@ library SparseMerkleTree {
             return _setNode(tree, newLeaf_);
         } else if (currentNode_.nodeType == NodeType.LEAF) {
             if (currentNode_.key == newLeaf_.key) {
-                revert("SparseMerkleTree: the key already exists");
+                revert KeyAlreadyExists(newLeaf_.key);
             }
 
             return _pushLeaf(tree, newLeaf_, currentNode_, nodeId_, currentDepth_);
@@ -816,10 +821,10 @@ library SparseMerkleTree {
         Node memory currentNode_ = tree.nodes[nodeId_];
 
         if (currentNode_.nodeType == NodeType.EMPTY) {
-            revert("SparseMerkleTree: the node does not exist");
+            revert NodeDoesNotExist(nodeId_);
         } else if (currentNode_.nodeType == NodeType.LEAF) {
             if (currentNode_.key != key_) {
-                revert("SparseMerkleTree: the leaf does not match");
+                revert LeafDoesNotMatch(currentNode_.key, key_);
             }
 
             _deleteNode(tree, nodeId_);
@@ -884,10 +889,10 @@ library SparseMerkleTree {
         Node memory currentNode_ = tree.nodes[nodeId_];
 
         if (currentNode_.nodeType == NodeType.EMPTY) {
-            revert("SparseMerkleTree: the node does not exist");
+            revert NodeDoesNotExist(nodeId_);
         } else if (currentNode_.nodeType == NodeType.LEAF) {
             if (currentNode_.key != newLeaf_.key) {
-                revert("SparseMerkleTree: the leaf does not match");
+                revert LeafDoesNotMatch(currentNode_.key, newLeaf_.key);
             }
 
             tree.nodes[nodeId_] = newLeaf_;
@@ -911,7 +916,7 @@ library SparseMerkleTree {
         uint16 currentDepth_
     ) private returns (uint256) {
         if (currentDepth_ >= tree.maxDepth) {
-            revert SMTMaxDepthReached();
+            revert MaxDepthReached();
         }
 
         Node memory newNodeMiddle_;

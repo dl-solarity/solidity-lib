@@ -42,8 +42,8 @@ library Vector {
         Vector _vector;
     }
 
-    error VectorEmptyVector();
-    error VectorOutOfBounds(uint256 index);
+    error PopEmptyVector();
+    error IndexOutOfBounds(uint256 index, uint256 vectorLength);
 
     /**
      * @notice The UintVector constructor, creates an empty vector instance, O(1) complex
@@ -371,7 +371,7 @@ library Vector {
         uint256 length_ = _length(vector);
 
         if (length_ == 0) {
-            revert VectorEmptyVector();
+            revert PopEmptyVector();
         }
 
         assembly {
@@ -429,7 +429,7 @@ library Vector {
 
     function _requireInBounds(Vector memory vector, uint256 index_) private pure {
         if (index_ >= _length(vector)) {
-            revert VectorOutOfBounds(index_);
+            revert IndexOutOfBounds(index_, _length(vector));
         }
     }
 

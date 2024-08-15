@@ -66,10 +66,6 @@ library AvlTree {
         Tree _tree;
     }
 
-    error AvlTreeNotEmpty();
-    error AvlTreeKeyIsZero();
-    error AvlTreeNodeDoesNotExist();
-
     /**
      * @notice The function to set a custom comparator function, that will be used to build the uint256 tree.
      * @param tree self.
@@ -424,12 +420,17 @@ library AvlTree {
         function(bytes32, bytes32) view returns (int256) comparator;
     }
 
+    error InvalidTreeKey(bytes32 key);
+    error NodeAlreadyExists(bytes32 key);
+    error NodeDoesNotExist(bytes32 key);
+    error TreeNotEmpty();
+
     function _setComparator(
         Tree storage tree,
         function(bytes32, bytes32) view returns (int256) comparator_
     ) private {
         if (_size(tree) != 0) {
-            revert AvlTreeNotEmpty();
+            revert TreeNotEmpty();
         }
 
         tree.isCustomComparatorSet = true;
@@ -439,7 +440,7 @@ library AvlTree {
 
     function _insert(Tree storage tree, bytes32 key_, bytes32 value_) private {
         if (key_ == 0) {
-            revert AvlTreeKeyIsZero();
+            revert InvalidTreeKey(0);
         }
 
         tree.totalCount++;
@@ -457,7 +458,7 @@ library AvlTree {
 
     function _remove(Tree storage tree, bytes32 key_) private {
         if (key_ == 0) {
-            revert AvlTreeKeyIsZero();
+            revert InvalidTreeKey(0);
         }
 
         tree.root = _removeNode(tree.tree, tree.root, 0, bytes32(key_), _getComparator(tree));
@@ -500,7 +501,7 @@ library AvlTree {
                 comparator_
             );
         } else if (comparison_ == 0) {
-            revert("AvlTree: the node already exists");
+            revert NodeAlreadyExists(key_);
         } else {
             _tree[node_].right = _insertNode(
                 _tree,
@@ -524,7 +525,7 @@ library AvlTree {
         function(bytes32, bytes32) view returns (int256) comparator_
     ) private returns (uint64) {
         if (node_ == 0) {
-            revert AvlTreeNodeDoesNotExist();
+            revert NodeDoesNotExist(key_);
         }
 
         int256 comparison_ = comparator_(key_, _tree[node_].key);
@@ -696,7 +697,7 @@ library AvlTree {
         uint64 index_ = _search(tree.tree, tree.root, key_, _getComparator(tree));
 
         if (index_ == 0) {
-            revert AvlTreeNodeDoesNotExist();
+            revert NodeDoesNotExist(key_);
         }
 
         return tree.tree[index_].value;
@@ -779,7 +780,7 @@ library Traversal {
         uint64 currentNode;
     }
 
-    error TraversalNoMoreNodes();
+    error NoMoreNodes();
 
     /**
      * @notice The function to check if the iterator is currently valid (has not reached the end of the traversal).
@@ -870,7 +871,7 @@ library Traversal {
         uint64 currentNodeIndex_ = iterator_.currentNode;
 
         if (currentNodeIndex_ == 0) {
-            revert TraversalNoMoreNodes();
+            revert NoMoreNodes();
         }
 
         AvlTree.Node memory node_ = _getNode(iterator_.treeMappingSlot, currentNodeIndex_);

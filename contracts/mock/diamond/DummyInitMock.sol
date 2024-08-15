@@ -6,6 +6,8 @@ import {DummyFacetMock} from "./DummyFacetMock.sol";
 contract DummyInitMock is DummyFacetMock {
     event Initialized();
 
+    error InitError();
+
     function init() external {
         setDummyString("dummy facet initialized");
         emit Initialized();
@@ -16,6 +18,6 @@ contract DummyInitMock is DummyFacetMock {
     }
 
     function initWithErrorMsg() external pure {
-        revert("DiamondInit: init error");
+        revert InitError();
     }
 }

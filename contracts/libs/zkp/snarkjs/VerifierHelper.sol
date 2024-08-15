@@ -23,9 +23,8 @@ library VerifierHelper {
         uint256[2] c;
     }
 
-    //TODO: length
-    error VerifierHelperInvalidPublicSignalsCount(uint256 expected, uint256 actual);
-    error VerifierHelperFailedToCallVerifyProof();
+    error InvalidPublicSignalsCount(uint256 arrayLength, uint256 pubSignalsCount);
+    error FailedToCallVerifyProof();
 
     /**
      * @notice Function to call the `verifyProof` function on the `verifier` contract.
@@ -87,7 +86,7 @@ library VerifierHelper {
         uint256 pubSignalsCount_
     ) internal view returns (bool) {
         if (pubSignals_.length != pubSignalsCount_) {
-            revert VerifierHelperInvalidPublicSignalsCount(pubSignals_.length, pubSignalsCount_);
+            revert InvalidPublicSignalsCount(pubSignals_.length, pubSignalsCount_);
         }
 
         return
@@ -121,7 +120,7 @@ library VerifierHelper {
         uint256 pubSignalsCount_
     ) internal view returns (bool) {
         if (pubSignals_.length != pubSignalsCount_) {
-            revert VerifierHelperInvalidPublicSignalsCount(pubSignals_.length, pubSignalsCount_);
+            revert InvalidPublicSignalsCount(pubSignals_.length, pubSignalsCount_);
         }
 
         return _verifyProof(verifier_, a_, b_, c_, pubSignals_, pubSignalsCount_);
@@ -149,7 +148,7 @@ library VerifierHelper {
         );
 
         if (!success_) {
-            revert VerifierHelperFailedToCallVerifyProof();
+            revert FailedToCallVerifyProof();
         }
 
         return abi.decode(returnData_, (bool));

@@ -40,7 +40,7 @@ library PriorityQueue {
         Queue _queue;
     }
 
-    error PriorityQueueEmptyQueue();
+    error QueueIsEmpty();
 
     /**
      * @notice The function to add an element to the uint256 queue. O(log(n)) complex
@@ -371,7 +371,7 @@ library PriorityQueue {
 
     function _requireNotEmpty(Queue storage queue) private view {
         if (_length(queue) == 0) {
-            revert PriorityQueueEmptyQueue();
+            revert QueueIsEmpty();
         }
     }
 }

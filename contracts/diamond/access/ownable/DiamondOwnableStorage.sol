@@ -16,7 +16,7 @@ abstract contract DiamondOwnableStorage is InitializableStorage {
         address owner;
     }
 
-    error DiamondOwnableNotOwner(address account);
+    error InvalidOwner(address account);
 
     modifier onlyOwner() {
         _onlyOwner();
@@ -44,7 +44,7 @@ abstract contract DiamondOwnableStorage is InitializableStorage {
      */
     function _onlyOwner() internal view virtual {
         if (owner() != msg.sender) {
-            revert DiamondOwnableNotOwner(msg.sender);
+            revert InvalidOwner(msg.sender);
         }
     }
 }

@@ -36,18 +36,17 @@ contract Diamond is DiamondStorage {
 
     event DiamondCut(Facet[] facets, address initFacet, bytes initData);
 
-    error DiamondSelectorNotRegistered();
+    error SelectorNotRegistered(bytes4 selector);
+    error NoSelectorsProvided();
+    error SelectorAlreadyAdded(bytes4 selector);
 
-    error DiamondNoSelectorsProvided();
-    error DiamondSelectorAlreadyAdded();
+    error SelectorFromAnotherFacet(bytes4 selector);
+    error NoFacetForSelector(bytes4 selector);
 
-    error DiamondSelectorFromAnotherFacet();
-    error DiamondNoFacetForSelector();
+    error InvalidFacetAddress(address facet);
+    error SelectorIsAlreadyInThisFaucet(bytes4 selector, address facet);
 
-    error DiamondFacetIsZeroAddress();
-    error DiamondSameFacet();
-
-    error DiamondInitializationReverted();
+    error InitializationReverted();
 
     /**
      * @notice The payable fallback function that delegatecall's the facet with associated selector
@@ -57,7 +56,7 @@ contract Diamond is DiamondStorage {
         address facet_ = facetAddress(msg.sig);
 
         if (facet_ == address(0)) {
-            revert DiamondSelectorNotRegistered();
+            revert SelectorNotRegistered(msg.sig);
         }
 
         _beforeFallback(facet_, msg.sig);
@@ -114,17 +113,17 @@ contract Diamond is DiamondStorage {
      * @param selectors_ the function selectors the implementation has
      */
     function _addFacet(address facet_, bytes4[] memory selectors_) internal virtual {
-        _checkIfFacetZeroAddress(facet_);
+        _checkIfFacetIsValid(facet_);
 
         if (selectors_.length == 0) {
-            revert DiamondNoSelectorsProvided();
+            revert NoSelectorsProvided();
         }
 
         DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i = 0; i < selectors_.length; i++) {
             if (_ds.selectorToFacet[selectors_[i]] != address(0)) {
-                revert DiamondSelectorAlreadyAdded();
+                revert SelectorAlreadyAdded(selectors_[i]);
             }
 
             _ds.selectorToFacet[selectors_[i]] = facet_;
@@ -140,17 +139,17 @@ contract Diamond is DiamondStorage {
      * @param selectors_ the selectors of that implementation to be removed
      */
     function _removeFacet(address facet_, bytes4[] memory selectors_) internal virtual {
-        _checkIfFacetZeroAddress(facet_);
+        _checkIfFacetIsValid(facet_);
 
         if (selectors_.length == 0) {
-            revert DiamondNoSelectorsProvided();
+            revert NoSelectorsProvided();
         }
 
         DStorage storage _ds = _getDiamondStorage();
 
         for (uint256 i = 0; i < selectors_.length; i++) {
             if (_ds.selectorToFacet[selectors_[i]] != facet_) {
-                revert DiamondSelectorFromAnotherFacet();
+                revert SelectorFromAnotherFacet(selectors_[i]);
             }
 
             _ds.selectorToFacet[selectors_[i]] = address(0);
@@ -168,10 +167,10 @@ contract Diamond is DiamondStorage {
      * @param selectors_ the selectors of the facet
      */
     function _updateFacet(address facet_, bytes4[] memory selectors_) internal virtual {
-        _checkIfFacetZeroAddress(facet_);
+        _checkIfFacetIsValid(facet_);
 
         if (selectors_.length == 0) {
-            revert DiamondNoSelectorsProvided();
+            revert NoSelectorsProvided();
         }
 
         DStorage storage _ds = _getDiamondStorage();
@@ -181,11 +180,11 @@ contract Diamond is DiamondStorage {
             address oldFacet_ = facetAddress(selector_);
 
             if (oldFacet_ == facet_) {
-                revert DiamondSameFacet();
+                revert SelectorIsAlreadyInThisFaucet(selector_, facet_);
             }
 
             if (oldFacet_ == address(0)) {
-                revert DiamondNoFacetForSelector();
+                revert NoFacetForSelector(selector_);
             }
 
             // replace old facet address
@@ -217,7 +216,7 @@ contract Diamond is DiamondStorage {
 
         if (!success_) {
             if (err_.length == 0) {
-                revert DiamondInitializationReverted();
+                revert InitializationReverted();
             }
 
             // bubble up error
@@ -228,9 +227,9 @@ contract Diamond is DiamondStorage {
         }
     }
 
-    function _checkIfFacetZeroAddress(address facet_) internal pure {
+    function _checkIfFacetIsValid(address facet_) internal pure {
         if (facet_ == address(0)) {
-            revert DiamondFacetIsZeroAddress();
+            revert InvalidFacetAddress(address(0));
         }
     }
 

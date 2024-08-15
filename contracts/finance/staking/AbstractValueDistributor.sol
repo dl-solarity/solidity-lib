@@ -34,9 +34,10 @@ abstract contract AbstractValueDistributor {
     event SharesRemoved(address user, uint256 amount);
     event ValueDistributed(address user, uint256 amount);
 
-    error ValueDistributorZeroAddress();
-    error ValueDistributorZeroAmount();
-    error ValueDistributorInsufficientAmount(uint256 balance, uint256 needed);
+    error InvalidAmount(uint256 amount);
+    error InvalidUserAddress(address user);
+    error InsufficientOwedValue(address account, uint256 balance, uint256 needed);
+    error InsufficientSharesAmount(address account, uint256 balance, uint256 needed);
 
     /**
      * @notice Returns the total number of shares.
@@ -93,11 +94,11 @@ abstract contract AbstractValueDistributor {
      */
     function _addShares(address user_, uint256 amount_) internal virtual {
         if (user_ == address(0)) {
-            revert ValueDistributorZeroAddress();
+            revert InvalidUserAddress(address(0));
         }
 
         if (amount_ == 0) {
-            revert ValueDistributorZeroAmount();
+            revert InvalidAmount(0);
         }
 
         _update(user_);
@@ -119,11 +120,11 @@ abstract contract AbstractValueDistributor {
         UserDistribution storage _userDist = _userDistributions[user_];
 
         if (amount_ == 0) {
-            revert ValueDistributorZeroAmount();
+            revert InvalidAmount(0);
         }
 
         if (amount_ > _userDist.shares) {
-            revert ValueDistributorInsufficientAmount(_userDist.shares, amount_);
+            revert InsufficientSharesAmount(user_, _userDist.shares, amount_);
         }
 
         _update(user_);
@@ -147,11 +148,11 @@ abstract contract AbstractValueDistributor {
         UserDistribution storage _userDist = _userDistributions[user_];
 
         if (amount_ == 0) {
-            revert ValueDistributorZeroAmount();
+            revert InvalidAmount(0);
         }
 
         if (amount_ > _userDist.owedValue) {
-            revert ValueDistributorInsufficientAmount(_userDist.owedValue, amount_);
+            revert InsufficientOwedValue(user_, _userDist.owedValue, amount_);
         }
 
         _userDist.owedValue -= amount_;
@@ -174,7 +175,7 @@ abstract contract AbstractValueDistributor {
         uint256 amount_ = _userDist.owedValue;
 
         if (amount_ == 0) {
-            revert ValueDistributorZeroAmount();
+            revert InvalidAmount(0);
         }
 
         delete _userDist.owedValue;

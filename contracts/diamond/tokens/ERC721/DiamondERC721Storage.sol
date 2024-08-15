@@ -42,9 +42,9 @@ abstract contract DiamondERC721Storage is
     /**
      * @dev The owner being `address(0)` indicates a global out of bounds index.
      */
-    error ERC721OutOfBoundsIndex(address owner, uint256 index);
+    error OutOfBoundsIndex(address owner, uint256 index);
 
-    error ERC721NonexistentToken(uint256 tokenId);
+    error NonexistentToken(uint256 tokenId);
 
     function _getErc721Storage() internal pure returns (DERC721Storage storage _erc721Storage) {
         bytes32 slot_ = DIAMOND_ERC721_STORAGE_SLOT;
@@ -121,7 +121,7 @@ abstract contract DiamondERC721Storage is
         uint256 index_
     ) public view virtual returns (uint256) {
         if (index_ >= balanceOf(owner_)) {
-            revert ERC721OutOfBoundsIndex(owner_, index_);
+            revert OutOfBoundsIndex(owner_, index_);
         }
 
         return _getErc721Storage().ownedTokens[owner_][index_];
@@ -132,7 +132,7 @@ abstract contract DiamondERC721Storage is
      */
     function tokenByIndex(uint256 index_) public view virtual returns (uint256) {
         if (index_ >= totalSupply()) {
-            revert ERC721OutOfBoundsIndex(address(0), index_);
+            revert OutOfBoundsIndex(address(0), index_);
         }
 
         return _getErc721Storage().allTokens[index_];
@@ -145,7 +145,7 @@ abstract contract DiamondERC721Storage is
         address owner = _ownerOf(tokenId_);
 
         if (owner == address(0)) {
-            revert ERC721NonexistentToken(tokenId_);
+            revert NonexistentToken(tokenId_);
         }
 
         return owner;
@@ -182,7 +182,7 @@ abstract contract DiamondERC721Storage is
      */
     function _requireMinted(uint256 tokenId_) internal view virtual {
         if (!_exists(tokenId_)) {
-            revert ERC721NonexistentToken(tokenId_);
+            revert NonexistentToken(tokenId_);
         }
     }
 

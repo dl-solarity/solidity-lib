@@ -10,9 +10,8 @@ import {DiamondAccessControlStorage, IAccessControl} from "./DiamondAccessContro
  * by the Diamond Standard.
  */
 abstract contract DiamondAccessControl is DiamondAccessControlStorage {
-    error DiamondAccessControlOnlyRenounceForSelf();
-    error DiamondAccessControlRoleAlreadyGranted();
-    error DiamondAccessControlRoleNotGranted();
+    error UnauthorizedAccount(address account);
+    error RoleAlreadyGranted(bytes32 role, address account);
 
     /**
      * @notice Sets `DEFAULT_ADMIN_ROLE` to `msg.sender`
@@ -49,7 +48,7 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      */
     function renounceRole(bytes32 role_, address account_) public virtual override {
         if (account_ != msg.sender) {
-            revert DiamondAccessControlOnlyRenounceForSelf();
+            revert UnauthorizedAccount(msg.sender);
         }
 
         _revokeRole(role_, account_);
@@ -77,7 +76,7 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      */
     function _grantRole(bytes32 role_, address account_) internal virtual {
         if (hasRole(role_, account_)) {
-            revert DiamondAccessControlRoleAlreadyGranted();
+            revert RoleAlreadyGranted(role_, account_);
         }
 
         _getAccessControlStorage().roles[role_].members[account_] = true;
@@ -94,7 +93,7 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      */
     function _revokeRole(bytes32 role_, address account_) internal virtual {
         if (!hasRole(role_, account_)) {
-            revert DiamondAccessControlRoleNotGranted();
+            revert RoleNotGranted(role_, account_);
         }
 
         _getAccessControlStorage().roles[role_].members[account_] = false;

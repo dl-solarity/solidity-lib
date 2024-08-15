@@ -5,8 +5,7 @@ contract BaseVerifierMock {
     bool public verifyResult;
     uint256[] public expectedInputs;
 
-    error Verifier2MockInvalidInputs();
-    error Verifier3MockInvalidInputs();
+    error InvalidInputs();
 
     constructor(bool verifyResult_, uint256[] memory expectedInputs_) {
         verifyResult = verifyResult_;
@@ -36,7 +35,7 @@ contract Verifier2Mock is BaseVerifierMock {
     ) external view returns (bool) {
         for (uint256 i = 0; i < inputs_.length; i++) {
             if (inputs_[i] != expectedInputs[i]) {
-                revert Verifier2MockInvalidInputs();
+                revert InvalidInputs();
             }
         }
 
@@ -58,7 +57,7 @@ contract Verifier3Mock is BaseVerifierMock {
     ) external view returns (bool) {
         for (uint256 i = 0; i < inputs_.length; i++) {
             if (inputs_[i] != expectedInputs[i]) {
-                revert Verifier3MockInvalidInputs();
+                revert InvalidInputs();
             }
         }
 

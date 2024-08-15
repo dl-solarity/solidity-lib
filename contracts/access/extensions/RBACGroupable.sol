@@ -31,8 +31,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     mapping(address => DynamicSet.StringSet) private _userGroups;
     mapping(string => DynamicSet.StringSet) private _groupRoles;
 
-    error RBACGroupableEmptyGroups();
-    error RBACGroupableEmptyRoles();
+    error EmptyGroups();
 
     /**
      * @notice The initialization function
@@ -51,7 +50,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         string[] memory groupsToAddTo_
     ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
         if (groupsToAddTo_.length == 0) {
-            revert RBACGroupableEmptyGroups();
+            revert EmptyGroups();
         }
 
         _addUserToGroups(who_, groupsToAddTo_);
@@ -67,7 +66,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         string[] memory groupsToRemoveFrom_
     ) public virtual override onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION) {
         if (groupsToRemoveFrom_.length == 0) {
-            revert RBACGroupableEmptyGroups();
+            revert EmptyGroups();
         }
 
         _removeUserFromGroups(who_, groupsToRemoveFrom_);
@@ -83,7 +82,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         string[] memory rolesToGrant_
     ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
         if (rolesToGrant_.length == 0) {
-            revert RBACGroupableEmptyRoles();
+            revert EmptyRoles();
         }
 
         _grantGroupRoles(groupTo_, rolesToGrant_);
@@ -99,7 +98,7 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
         string[] memory rolesToRevoke_
     ) public virtual override onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION) {
         if (rolesToRevoke_.length == 0) {
-            revert RBACGroupableEmptyRoles();
+            revert EmptyRoles();
         }
 
         _revokeGroupRoles(groupFrom_, rolesToRevoke_);

@@ -11,11 +11,11 @@ contract PoolContractsRegistryMock is OwnablePoolContractsRegistry {
 
     address internal _poolFactory;
 
-    error PoolContractsRegistryNotFactory();
+    error CallerNotAFactory(address caller, address factory);
 
     modifier onlyPoolFactory() {
         if (_poolFactory != msg.sender) {
-            revert PoolContractsRegistryNotFactory();
+            revert CallerNotAFactory(msg.sender, _poolFactory);
         }
         _;
     }

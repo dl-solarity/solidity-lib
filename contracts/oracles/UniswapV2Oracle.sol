@@ -40,10 +40,10 @@ abstract contract UniswapV2Oracle is Initializable {
     mapping(address => address[]) private _paths;
     mapping(address => PairInfo) private _pairInfos;
 
-    error UniV2OracleInvalidPath(address tokenIn, uint256 pathLength);
-    error UniV2OracleTimeWindowIsZero();
-    error UniV2OraclePathAlreadyRegistered(address tokenIn);
-    error UniV2OraclePairDoesNotExist(address token1, address token2);
+    error InvalidPath(address tokenIn, uint256 pathLength);
+    error InvalidTimeWindow(uint256 newTimeWindow);
+    error PathAlreadyRegistered(address tokenIn);
+    error PairDoesNotExist(address token1, address token2);
 
     /**
      * @notice Constructor
@@ -102,7 +102,7 @@ abstract contract UniswapV2Oracle is Initializable {
         uint256 pathLength_ = path.length;
 
         if (pathLength_ < 2) {
-            revert UniV2OracleInvalidPath(tokenIn_, pathLength_);
+            revert InvalidPath(tokenIn_, pathLength_);
         }
 
         address tokenOut_ = path[pathLength_ - 1];
@@ -171,7 +171,7 @@ abstract contract UniswapV2Oracle is Initializable {
      */
     function _setTimeWindow(uint256 newTimeWindow_) internal {
         if (newTimeWindow_ == 0) {
-            revert UniV2OracleTimeWindowIsZero();
+            revert InvalidTimeWindow(0);
         }
 
         timeWindow = newTimeWindow_;
@@ -189,18 +189,18 @@ abstract contract UniswapV2Oracle is Initializable {
             address tokenIn_ = paths_[i][0];
 
             if (pathLength_ < 2) {
-                revert UniV2OracleInvalidPath(tokenIn_, pathLength_);
+                revert InvalidPath(tokenIn_, pathLength_);
             }
 
             if (_paths[tokenIn_].length != 0) {
-                revert UniV2OraclePathAlreadyRegistered(tokenIn_);
+                revert PathAlreadyRegistered(tokenIn_);
             }
 
             for (uint256 j = 0; j < pathLength_ - 1; j++) {
                 (bool exists_, address pair_) = _pairExists(paths_[i][j], paths_[i][j + 1]);
 
                 if (!exists_) {
-                    revert UniV2OraclePairDoesNotExist(paths_[i][j], paths_[i][j + 1]);
+                    revert PairDoesNotExist(paths_[i][j], paths_[i][j + 1]);
                 }
 
                 _pairs.add(pair_);

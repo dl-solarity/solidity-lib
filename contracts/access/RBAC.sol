@@ -53,12 +53,12 @@ abstract contract RBAC is IRBAC, Initializable {
 
     mapping(address => DynamicSet.StringSet) private _userRoles;
 
-    error RBACNoPermissionForResource(string permission, string resource);
-    error RBACEmptyRoles();
+    error NoPermissionForResource(string permission, string resource);
+    error EmptyRoles();
 
     modifier onlyPermission(string memory resource_, string memory permission_) {
         if (!hasPermission(msg.sender, resource_, permission_)) {
-            revert RBACNoPermissionForResource(permission_, resource_);
+            revert NoPermissionForResource(permission_, resource_);
         }
         _;
     }
@@ -80,7 +80,7 @@ abstract contract RBAC is IRBAC, Initializable {
         string[] memory rolesToGrant_
     ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
         if (rolesToGrant_.length == 0) {
-            revert RBACEmptyRoles();
+            revert EmptyRoles();
         }
 
         _grantRoles(to_, rolesToGrant_);
@@ -96,7 +96,7 @@ abstract contract RBAC is IRBAC, Initializable {
         string[] memory rolesToRevoke_
     ) public virtual override onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION) {
         if (rolesToRevoke_.length == 0) {
-            revert RBACEmptyRoles();
+            revert EmptyRoles();
         }
 
         _revokeRoles(from_, rolesToRevoke_);

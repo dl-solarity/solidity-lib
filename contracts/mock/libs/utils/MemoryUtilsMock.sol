@@ -8,22 +8,22 @@ contract MemoryUtilsMock {
     using TypeCaster for *;
     using MemoryUtils for *;
 
-    error BytesMemoryCopyInitialDataAndSomeBytesAreInvalid(bool ifEqual);
-    error Bytes32MemoryCopyInitialDataAndSomeBytesAreInvalid(bool ifEqual);
-    error BigMemoryInitialDataAndSomeBytesAreInvalid(bool ifEqual);
-    error PartialCopyInitialDataAndSomeBytesAreInvalid(bool ifEqual);
+    error BytesMemoryCopyError(bool ifDataEqual);
+    error Bytes32MemoryCopyError(bool ifDataEqual);
+    error BigMemoryError(bool ifDataEqual);
+    error PartialCopyError(bool ifDataEqual);
 
     function testBytesMemoryCopy(bytes memory data_) external view {
         bytes memory someBytes_ = new bytes(data_.length);
 
         if (keccak256(data_) == keccak256(someBytes_)) {
-            revert BytesMemoryCopyInitialDataAndSomeBytesAreInvalid(true);
+            revert BytesMemoryCopyError(true);
         }
 
         someBytes_ = data_.copy();
 
         if (keccak256(data_) != keccak256(someBytes_)) {
-            revert BytesMemoryCopyInitialDataAndSomeBytesAreInvalid(false);
+            revert BytesMemoryCopyError(false);
         }
     }
 
@@ -31,13 +31,13 @@ contract MemoryUtilsMock {
         bytes32[] memory someBytes_ = new bytes32[](data_.length);
 
         if (keccak256(abi.encode(data_)) == keccak256(abi.encode(someBytes_))) {
-            revert Bytes32MemoryCopyInitialDataAndSomeBytesAreInvalid(true);
+            revert Bytes32MemoryCopyError(true);
         }
 
         someBytes_ = data_.copy();
 
         if (keccak256(abi.encode(data_)) != keccak256(abi.encode(someBytes_))) {
-            revert Bytes32MemoryCopyInitialDataAndSomeBytesAreInvalid(false);
+            revert Bytes32MemoryCopyError(false);
         }
     }
 
@@ -45,7 +45,7 @@ contract MemoryUtilsMock {
         bytes memory someBytes_ = new bytes(data_.length);
 
         if (keccak256(data_) == keccak256(someBytes_)) {
-            revert BigMemoryInitialDataAndSomeBytesAreInvalid(true);
+            revert BigMemoryError(true);
         }
 
         MemoryUtils.unsafeCopy(
@@ -55,7 +55,7 @@ contract MemoryUtilsMock {
         );
 
         if (keccak256(data_) != keccak256(someBytes_)) {
-            revert BigMemoryInitialDataAndSomeBytesAreInvalid(false);
+            revert BigMemoryError(false);
         }
     }
 
@@ -63,7 +63,7 @@ contract MemoryUtilsMock {
         bytes memory someBytes_ = new bytes(data_.length / 2);
 
         if (keccak256(data_) == keccak256(someBytes_)) {
-            revert PartialCopyInitialDataAndSomeBytesAreInvalid(true);
+            revert PartialCopyError(true);
         }
 
         MemoryUtils.unsafeCopy(
@@ -74,7 +74,7 @@ contract MemoryUtilsMock {
 
         for (uint256 i = 0; i < someBytes_.length; i++) {
             if (someBytes_[i] != data_[i]) {
-                revert PartialCopyInitialDataAndSomeBytesAreInvalid(false);
+                revert PartialCopyError(false);
             }
         }
     }
