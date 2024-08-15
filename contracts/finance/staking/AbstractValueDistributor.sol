@@ -35,9 +35,9 @@ abstract contract AbstractValueDistributor {
     event ValueDistributed(address user, uint256 amount);
 
     error AmountIsZero();
-    error UserIsZeroAddress();
     error InsufficientOwedValue(address account, uint256 balance, uint256 needed);
     error InsufficientSharesAmount(address account, uint256 balance, uint256 needed);
+    error UserIsZeroAddress();
 
     /**
      * @notice Returns the total number of shares.

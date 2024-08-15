@@ -40,10 +40,8 @@ abstract contract DiamondERC721Storage is
     }
 
     error GlobalIndexOutOfBounds(uint256 index);
-
-    error OwnerIndexOutOfBounds(address owner, uint256 index);
-
     error NonexistentToken(uint256 tokenId);
+    error OwnerIndexOutOfBounds(address owner, uint256 index);
 
     function _getErc721Storage() internal pure returns (DERC721Storage storage _erc721Storage) {
         bytes32 slot_ = DIAMOND_ERC721_STORAGE_SLOT;

@@ -38,7 +38,6 @@ contract Diamond is DiamondStorage {
 
     error FacetIsZeroAddress();
     error InitializationReverted(address initFacet, bytes initData);
-
     error NoSelectorsProvided();
     error NoFacetForSelector(bytes4 selector);
 

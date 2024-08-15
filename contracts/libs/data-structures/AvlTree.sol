@@ -420,9 +420,9 @@ library AvlTree {
         function(bytes32, bytes32) view returns (int256) comparator;
     }
 
-    error TreeKeyIsZero();
     error NodeAlreadyExists(bytes32 key);
     error NodeDoesNotExist(bytes32 key);
+    error TreeKeyIsZero();
     error TreeNotEmpty();
 
     function _setComparator(

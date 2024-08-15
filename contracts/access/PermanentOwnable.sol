@@ -15,8 +15,8 @@ pragma solidity ^0.8.4;
 abstract contract PermanentOwnable {
     address private immutable _OWNER;
 
-    error UnauthorizedAccount(address account);
     error InvalidOwner();
+    error UnauthorizedAccount(address account);
 
     /**
      * @dev Throws if called by any account other than the owner.

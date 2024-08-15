@@ -13,9 +13,9 @@ import {DiamondERC20Storage} from "./DiamondERC20Storage.sol";
  * by the Diamond Standard.
  */
 contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
-    error SenderIsZeroAddress();
-    error ReceiverIsZeroAddress();
     error ApproverIsZeroAddress();
+    error ReceiverIsZeroAddress();
+    error SenderIsZeroAddress();
     error SpenderIsZeroAddress();
 
     /**

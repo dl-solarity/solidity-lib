@@ -35,8 +35,8 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
     mapping(string => EnumerableSet.AddressSet) private _pools; // name => pool
 
     error NoMappingExists(string poolName);
-    error ProxyDoesNotExist(string poolName);
     error NoPoolsToInject(string poolName);
+    error ProxyDoesNotExist(string poolName);
 
     /**
      * @notice The proxy initializer function

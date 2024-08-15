@@ -41,9 +41,9 @@ abstract contract UniswapV2Oracle is Initializable {
     mapping(address => PairInfo) private _pairInfos;
 
     error InvalidPath(address tokenIn, uint256 pathLength);
-    error TimeWindowIsZero();
     error PathAlreadyRegistered(address tokenIn);
     error PairDoesNotExist(address token1, address token2);
+    error TimeWindowIsZero();
 
     /**
      * @notice Constructor

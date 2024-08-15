@@ -29,9 +29,9 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
     string private _baseURI;
     mapping(uint256 => string) private _tokenURIs;
 
+    error ReceiverIsZeroAddress();
     error TokenAlreadyExists(uint256 tokenId);
     error TokenDoesNotExist(uint256 tokenId);
-    error ReceiverIsZeroAddress();
 
     /**
      * @notice The constructor

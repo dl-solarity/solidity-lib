@@ -135,15 +135,15 @@ abstract contract Vesting is Initializable {
      */
     event WithdrawnFromVesting(uint256 indexed vestingId, uint256 amount);
 
-    error VestingAmountIsZero();
     error BeneficiaryIsZeroAddress();
     error ExponentIsZero();
-    error StartTimeIsZero();
-    error VestingTokenIsZeroAddress();
     error NothingToWithdraw();
+    error StartTimeIsZero();
     error ScheduleInvalidPeriodParameter(uint256 durationInPeriods, uint256 secondsInPeriod);
     error ScheduleCliffGreaterThanDuration(uint256 cliffInPeriods, uint256 durationInPeriods);
     error UnauthorizedAccount(address account);
+    error VestingAmountIsZero();
+    error VestingTokenIsZeroAddress();
     error VestingPastDate();
 
     /**

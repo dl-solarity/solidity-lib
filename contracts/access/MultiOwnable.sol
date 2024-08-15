@@ -28,8 +28,8 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
 
     EnumerableSet.AddressSet private _owners;
 
-    error UnauthorizedAccount(address account);
     error InvalidOwner();
+    error UnauthorizedAccount(address account);
 
     modifier onlyOwner() {
         _checkOwner();

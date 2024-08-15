@@ -37,9 +37,9 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
 
     uint256 private _currentRate;
 
+    error CapitalizationPeriodIsZero();
     error MaxRateIsReached();
     error RateIsLessThanOne(uint256 rate);
-    error CapitalizationPeriodIsZero();
 
     /**
      * @notice The initialization function

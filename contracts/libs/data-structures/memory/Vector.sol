@@ -42,8 +42,8 @@ library Vector {
         Vector _vector;
     }
 
-    error PopEmptyVector();
     error IndexOutOfBounds(uint256 index, uint256 vectorLength);
+    error PopEmptyVector();
 
     /**
      * @notice The UintVector constructor, creates an empty vector instance, O(1) complex
