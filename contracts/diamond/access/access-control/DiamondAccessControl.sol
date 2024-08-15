@@ -47,9 +47,7 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      * @inheritdoc IAccessControl
      */
     function renounceRole(bytes32 role_, address account_) public virtual override {
-        if (account_ != msg.sender) {
-            revert UnauthorizedAccount(msg.sender);
-        }
+        if (account_ != msg.sender) revert UnauthorizedAccount(msg.sender);
 
         _revokeRole(role_, account_);
     }
@@ -75,9 +73,7 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      * May emit a {RoleGranted} event.
      */
     function _grantRole(bytes32 role_, address account_) internal virtual {
-        if (hasRole(role_, account_)) {
-            revert RoleAlreadyGranted(role_, account_);
-        }
+        if (hasRole(role_, account_)) revert RoleAlreadyGranted(role_, account_);
 
         _getAccessControlStorage().roles[role_].members[account_] = true;
 
@@ -92,9 +88,7 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      * May emit a {RoleRevoked} event.
      */
     function _revokeRole(bytes32 role_, address account_) internal virtual {
-        if (!hasRole(role_, account_)) {
-            revert RoleNotGranted(role_, account_);
-        }
+        if (!hasRole(role_, account_)) revert RoleNotGranted(role_, account_);
 
         _getAccessControlStorage().roles[role_].members[account_] = false;
 

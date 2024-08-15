@@ -70,9 +70,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
      * @return address_ the implementation these pools point to
      */
     function getImplementation(string memory name_) public view returns (address) {
-        if (address(_beacons[name_]) == address(0)) {
-            revert NoMappingExists(name_);
-        }
+        if (address(_beacons[name_]) == address(0)) revert NoMappingExists(name_);
 
         return _beacons[name_].implementation();
     }
@@ -85,9 +83,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
     function getProxyBeacon(string memory name_) public view returns (address) {
         address beacon_ = address(_beacons[name_]);
 
-        if (beacon_ == address(0)) {
-            revert ProxyDoesNotExist(name_);
-        }
+        if (beacon_ == address(0)) revert ProxyDoesNotExist(name_);
 
         return beacon_;
     }
@@ -178,9 +174,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
 
         uint256 to_ = (offset_ + limit_).min(_namedPools.length()).max(offset_);
 
-        if (to_ == offset_) {
-            revert NoPoolsToInject();
-        }
+        if (to_ == offset_) revert NoPoolsToInject();
 
         address contractsRegistry_ = _contractsRegistry;
 

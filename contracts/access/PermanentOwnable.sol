@@ -31,9 +31,7 @@ abstract contract PermanentOwnable {
      * @param owner_ the address of the permanent owner.
      */
     constructor(address owner_) {
-        if (owner_ == address(0)) {
-            revert InvalidOwner(address(0));
-        }
+        if (owner_ == address(0)) revert InvalidOwner(address(0));
 
         _OWNER = owner_;
     }
@@ -47,8 +45,6 @@ abstract contract PermanentOwnable {
     }
 
     function _onlyOwner() internal view virtual {
-        if (_OWNER != msg.sender) {
-            revert UnauthorizedAccount(msg.sender);
-        }
+        if (_OWNER != msg.sender) revert UnauthorizedAccount(msg.sender);
     }
 }

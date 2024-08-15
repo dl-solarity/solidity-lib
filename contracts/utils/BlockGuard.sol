@@ -57,9 +57,7 @@ abstract contract BlockGuard {
      * @param key_ the key of the resource (the caller)
      */
     function _checkBlock(string memory resource_, address key_) internal view {
-        if (_lockedInBlocks[resource_][key_] == _getBlockNumber()) {
-            revert BlockGuardLocked();
-        }
+        if (_lockedInBlocks[resource_][key_] == _getBlockNumber()) revert BlockGuardLocked();
     }
 
     /**

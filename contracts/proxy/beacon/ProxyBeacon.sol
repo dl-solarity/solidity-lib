@@ -24,9 +24,8 @@ contract ProxyBeacon is IBeacon, PermanentOwnable {
      * @param newImplementation_ the new implementation
      */
     function upgradeTo(address newImplementation_) external virtual onlyOwner {
-        if (newImplementation_.code.length == 0) {
+        if (newImplementation_.code.length == 0)
             revert NewImplementationNotAContract(newImplementation_);
-        }
 
         _implementation = newImplementation_;
 

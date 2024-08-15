@@ -78,8 +78,7 @@ abstract contract AbstractDependant {
     function _checkInjector() internal view {
         address injector_ = getInjector();
 
-        if (injector_ != address(0) && injector_ != msg.sender) {
+        if (injector_ != address(0) && injector_ != msg.sender)
             revert NotAnInjector(injector_, msg.sender);
-        }
     }
 }

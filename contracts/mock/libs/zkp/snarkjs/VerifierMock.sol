@@ -34,9 +34,7 @@ contract Verifier2Mock is BaseVerifierMock {
         uint256[2] memory inputs_
     ) external view returns (bool) {
         for (uint256 i = 0; i < inputs_.length; i++) {
-            if (inputs_[i] != expectedInputs[i]) {
-                revert InvalidInputs();
-            }
+            if (inputs_[i] != expectedInputs[i]) revert InvalidInputs();
         }
 
         return verifyResult;
@@ -56,9 +54,7 @@ contract Verifier3Mock is BaseVerifierMock {
         uint256[3] memory inputs_
     ) external view returns (bool) {
         for (uint256 i = 0; i < inputs_.length; i++) {
-            if (inputs_[i] != expectedInputs[i]) {
-                revert InvalidInputs();
-            }
+            if (inputs_[i] != expectedInputs[i]) revert InvalidInputs();
         }
 
         return verifyResult;

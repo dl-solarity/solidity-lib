@@ -85,9 +85,8 @@ library VerifierHelper {
         ProofPoints memory proofPoints_,
         uint256 pubSignalsCount_
     ) internal view returns (bool) {
-        if (pubSignals_.length != pubSignalsCount_) {
+        if (pubSignals_.length != pubSignalsCount_)
             revert InvalidPublicSignalsCount(pubSignals_.length, pubSignalsCount_);
-        }
 
         return
             _verifyProof(
@@ -119,9 +118,8 @@ library VerifierHelper {
         uint256[2] memory c_,
         uint256 pubSignalsCount_
     ) internal view returns (bool) {
-        if (pubSignals_.length != pubSignalsCount_) {
+        if (pubSignals_.length != pubSignalsCount_)
             revert InvalidPublicSignalsCount(pubSignals_.length, pubSignalsCount_);
-        }
 
         return _verifyProof(verifier_, a_, b_, c_, pubSignals_, pubSignalsCount_);
     }
@@ -147,9 +145,7 @@ library VerifierHelper {
             abi.encodePacked(abi.encodeWithSignature(funcSign_, a_, b_, c_), pubSignals_)
         );
 
-        if (!success_) {
-            revert FailedToCallVerifyProof();
-        }
+        if (!success_) revert FailedToCallVerifyProof();
 
         return abi.decode(returnData_, (bool));
     }

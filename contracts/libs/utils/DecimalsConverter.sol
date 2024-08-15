@@ -236,9 +236,7 @@ library DecimalsConverter {
     }
 
     function _safe(uint256 amount_) private pure returns (uint256) {
-        if (amount_ == 0) {
-            revert ConversionFailed();
-        }
+        if (amount_ == 0) revert ConversionFailed();
 
         return amount_;
     }

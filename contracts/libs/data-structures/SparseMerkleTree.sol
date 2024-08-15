@@ -690,34 +690,24 @@ library SparseMerkleTree {
     error TreeNotEmpty();
 
     modifier onlyInitialized(SMT storage tree) {
-        if (!_isInitialized(tree)) {
-            revert TreeNotInitialized();
-        }
+        if (!_isInitialized(tree)) revert TreeNotInitialized();
         _;
     }
 
     function _initialize(SMT storage tree, uint32 maxDepth_) private {
-        if (_isInitialized(tree)) {
-            revert TreeAlreadyInitialized();
-        }
+        if (_isInitialized(tree)) revert TreeAlreadyInitialized();
 
         _setMaxDepth(tree, maxDepth_);
     }
 
     function _setMaxDepth(SMT storage tree, uint32 maxDepth_) private {
-        if (maxDepth_ == 0) {
-            revert InvalidMaxDepth(0);
-        }
+        if (maxDepth_ == 0) revert InvalidMaxDepth(0);
 
         uint32 currentDepth_ = tree.maxDepth;
 
-        if (maxDepth_ <= currentDepth_) {
-            revert NewMaxDepthMustBeLarger(currentDepth_, maxDepth_);
-        }
+        if (maxDepth_ <= currentDepth_) revert NewMaxDepthMustBeLarger(currentDepth_, maxDepth_);
 
-        if (maxDepth_ > MAX_DEPTH_HARD_CAP) {
-            revert MaxDepthExceedsHardCap(maxDepth_);
-        }
+        if (maxDepth_ > MAX_DEPTH_HARD_CAP) revert MaxDepthExceedsHardCap(maxDepth_);
 
         tree.maxDepth = maxDepth_;
     }
@@ -727,9 +717,7 @@ library SparseMerkleTree {
         function(bytes32, bytes32) view returns (bytes32) hash2_,
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
     ) private {
-        if (_nodesCount(tree) != 0) {
-            revert TreeNotEmpty();
-        }
+        if (_nodesCount(tree) != 0) revert TreeNotEmpty();
 
         tree.isCustomHasherSet = true;
 
@@ -788,9 +776,7 @@ library SparseMerkleTree {
         if (currentNode_.nodeType == NodeType.EMPTY) {
             return _setNode(tree, newLeaf_);
         } else if (currentNode_.nodeType == NodeType.LEAF) {
-            if (currentNode_.key == newLeaf_.key) {
-                revert KeyAlreadyExists(newLeaf_.key);
-            }
+            if (currentNode_.key == newLeaf_.key) revert KeyAlreadyExists(newLeaf_.key);
 
             return _pushLeaf(tree, newLeaf_, currentNode_, nodeId_, currentDepth_);
         } else {
@@ -823,9 +809,7 @@ library SparseMerkleTree {
         if (currentNode_.nodeType == NodeType.EMPTY) {
             revert NodeDoesNotExist(nodeId_);
         } else if (currentNode_.nodeType == NodeType.LEAF) {
-            if (currentNode_.key != key_) {
-                revert LeafDoesNotMatch(currentNode_.key, key_);
-            }
+            if (currentNode_.key != key_) revert LeafDoesNotMatch(currentNode_.key, key_);
 
             _deleteNode(tree, nodeId_);
 
@@ -891,9 +875,8 @@ library SparseMerkleTree {
         if (currentNode_.nodeType == NodeType.EMPTY) {
             revert NodeDoesNotExist(nodeId_);
         } else if (currentNode_.nodeType == NodeType.LEAF) {
-            if (currentNode_.key != newLeaf_.key) {
+            if (currentNode_.key != newLeaf_.key)
                 revert LeafDoesNotMatch(currentNode_.key, newLeaf_.key);
-            }
 
             tree.nodes[nodeId_] = newLeaf_;
             currentNode_ = newLeaf_;
@@ -915,9 +898,7 @@ library SparseMerkleTree {
         uint256 oldLeafId_,
         uint16 currentDepth_
     ) private returns (uint256) {
-        if (currentDepth_ >= tree.maxDepth) {
-            revert MaxDepthReached();
-        }
+        if (currentDepth_ >= tree.maxDepth) revert MaxDepthReached();
 
         Node memory newNodeMiddle_;
         bool newLeafBitAtDepth_ = (uint256(newLeaf_.key) >> currentDepth_) & 1 == 1;

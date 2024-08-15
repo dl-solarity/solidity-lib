@@ -33,9 +33,7 @@ contract TransparentProxyUpgrader is PermanentOwnable {
         // bytes4(keccak256("implementation()")) == 0x5c60da1b
         (bool success_, bytes memory returndata_) = address(what_).staticcall(hex"5c60da1b");
 
-        if (!success_) {
-            revert AddressNotAProxy(what_);
-        }
+        if (!success_) revert AddressNotAProxy(what_);
 
         return abi.decode(returndata_, (address));
     }

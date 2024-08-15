@@ -24,9 +24,7 @@ contract DiamondOwnable is DiamondOwnableStorage {
      * @param newOwner_ the new owner of the Diamond
      */
     function transferOwnership(address newOwner_) public virtual onlyOwner {
-        if (newOwner_ == address(0)) {
-            revert InvalidOwner(address(0));
-        }
+        if (newOwner_ == address(0)) revert InvalidOwner(address(0));
 
         _transferOwnership(newOwner_);
     }

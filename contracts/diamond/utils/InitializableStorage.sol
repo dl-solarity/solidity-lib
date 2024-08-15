@@ -32,9 +32,7 @@ abstract contract InitializableStorage {
     modifier initializer(bytes32 storageSlot_) {
         uint8 initializing_ = _getInitializing(storageSlot_);
 
-        if (initializing_ != 0) {
-            revert InvalidInitialization();
-        }
+        if (initializing_ != 0) revert InvalidInitialization();
 
         _setInitializing(storageSlot_, 1);
         _;
@@ -48,9 +46,7 @@ abstract contract InitializableStorage {
      * {initializer} modifier, directly or indirectly.
      */
     modifier onlyInitializing(bytes32 storageSlot_) {
-        if (_getInitializing(storageSlot_) != 1) {
-            revert NotInitializing();
-        }
+        if (_getInitializing(storageSlot_) != 1) revert NotInitializing();
 
         _;
     }
@@ -72,9 +68,7 @@ abstract contract InitializableStorage {
     function _disableInitializers(bytes32 storageSlot_) internal virtual {
         uint8 initializing_ = _getInitializing(storageSlot_);
 
-        if (initializing_ != 0) {
-            revert InvalidInitialization();
-        }
+        if (initializing_ != 0) revert InvalidInitialization();
 
         _setInitializing(storageSlot_, 2);
 

@@ -101,9 +101,7 @@ abstract contract UniswapV2Oracle is Initializable {
         address[] storage path = _paths[tokenIn_];
         uint256 pathLength_ = path.length;
 
-        if (pathLength_ < 2) {
-            revert InvalidPath(tokenIn_, pathLength_);
-        }
+        if (pathLength_ < 2) revert InvalidPath(tokenIn_, pathLength_);
 
         address tokenOut_ = path[pathLength_ - 1];
 
@@ -188,20 +186,14 @@ abstract contract UniswapV2Oracle is Initializable {
             uint256 pathLength_ = paths_[i].length;
             address tokenIn_ = paths_[i][0];
 
-            if (pathLength_ < 2) {
-                revert InvalidPath(tokenIn_, pathLength_);
-            }
+            if (pathLength_ < 2) revert InvalidPath(tokenIn_, pathLength_);
 
-            if (_paths[tokenIn_].length != 0) {
-                revert PathAlreadyRegistered(tokenIn_);
-            }
+            if (_paths[tokenIn_].length != 0) revert PathAlreadyRegistered(tokenIn_);
 
             for (uint256 j = 0; j < pathLength_ - 1; j++) {
                 (bool exists_, address pair_) = _pairExists(paths_[i][j], paths_[i][j + 1]);
 
-                if (!exists_) {
-                    revert PairDoesNotExist(paths_[i][j], paths_[i][j + 1]);
-                }
+                if (!exists_) revert PairDoesNotExist(paths_[i][j], paths_[i][j + 1]);
 
                 _pairs.add(pair_);
                 _pairInfos[pair_].refs++;

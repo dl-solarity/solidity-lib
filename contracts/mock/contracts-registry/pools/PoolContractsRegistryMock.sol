@@ -14,9 +14,7 @@ contract PoolContractsRegistryMock is OwnablePoolContractsRegistry {
     error CallerNotAFactory(address caller, address factory);
 
     modifier onlyPoolFactory() {
-        if (_poolFactory != msg.sender) {
-            revert CallerNotAFactory(msg.sender, _poolFactory);
-        }
+        if (_poolFactory != msg.sender) revert CallerNotAFactory(msg.sender, _poolFactory);
         _;
     }
 

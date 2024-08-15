@@ -43,8 +43,6 @@ abstract contract DiamondOwnableStorage is InitializableStorage {
      * @notice The function to check if `msg.sender` is the owner
      */
     function _onlyOwner() internal view virtual {
-        if (owner() != msg.sender) {
-            revert InvalidOwner(msg.sender);
-        }
+        if (owner() != msg.sender) revert InvalidOwner(msg.sender);
     }
 }

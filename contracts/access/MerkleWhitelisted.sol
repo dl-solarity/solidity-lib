@@ -26,16 +26,12 @@ abstract contract MerkleWhitelisted {
     error UserNotWhitelisted(address user);
 
     modifier onlyWhitelisted(bytes memory data_, bytes32[] memory merkleProof_) {
-        if (!_isWhitelisted(keccak256(data_), merkleProof_)) {
-            revert LeafNotWhitelisted(data_);
-        }
+        if (!_isWhitelisted(keccak256(data_), merkleProof_)) revert LeafNotWhitelisted(data_);
         _;
     }
 
     modifier onlyWhitelistedUser(address user_, bytes32[] memory merkleProof_) {
-        if (!_isWhitelistedUser(user_, merkleProof_)) {
-            revert UserNotWhitelisted(user_);
-        }
+        if (!_isWhitelistedUser(user_, merkleProof_)) revert UserNotWhitelisted(user_);
         _;
     }
 

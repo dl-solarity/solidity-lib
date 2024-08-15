@@ -370,8 +370,6 @@ library PriorityQueue {
     }
 
     function _requireNotEmpty(Queue storage queue) private view {
-        if (_length(queue) == 0) {
-            revert QueueIsEmpty();
-        }
+        if (_length(queue) == 0) revert QueueIsEmpty();
     }
 }

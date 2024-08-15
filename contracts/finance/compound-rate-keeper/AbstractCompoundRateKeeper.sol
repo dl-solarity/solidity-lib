@@ -181,9 +181,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      * @notice The private function to update the compound rate
      */
     function _update() private {
-        if (_isMaxRateReached) {
-            revert MaxRateIsReached();
-        }
+        if (_isMaxRateReached) revert MaxRateIsReached();
 
         _currentRate = getCompoundRate();
         _lastUpdate = uint64(block.timestamp);
@@ -193,9 +191,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      * @notice The private function that changes to capitalization rate
      */
     function _changeCapitalizationRate(uint256 capitalizationRate_) private {
-        if (capitalizationRate_ < PRECISION) {
-            revert RateIsLessThanOne(capitalizationRate_);
-        }
+        if (capitalizationRate_ < PRECISION) revert RateIsLessThanOne(capitalizationRate_);
 
         _capitalizationRate = capitalizationRate_;
 
@@ -206,9 +202,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      * @notice The private function that changes to capitalization period
      */
     function _changeCapitalizationPeriod(uint64 capitalizationPeriod_) private {
-        if (capitalizationPeriod_ == 0) {
-            revert InvalidPeriod(0);
-        }
+        if (capitalizationPeriod_ == 0) revert InvalidPeriod(0);
 
         _capitalizationPeriod = capitalizationPeriod_;
 

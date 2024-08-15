@@ -158,13 +158,9 @@ abstract contract Vesting is Initializable {
     function withdrawFromVesting(uint256 vestingId_) public virtual {
         VestingData storage _vesting = _vestings[vestingId_];
 
-        if (msg.sender != _vesting.beneficiary) {
-            revert UnauthorizedAccount(msg.sender);
-        }
+        if (msg.sender != _vesting.beneficiary) revert UnauthorizedAccount(msg.sender);
 
-        if (_vesting.paidAmount >= _vesting.vestingAmount) {
-            revert NothingToWithdraw();
-        }
+        if (_vesting.paidAmount >= _vesting.vestingAmount) revert NothingToWithdraw();
 
         uint256 amountToPay_ = getWithdrawableAmount(vestingId_);
         address token_ = _vesting.vestingToken;
@@ -268,9 +264,7 @@ abstract contract Vesting is Initializable {
      * @return The ID of the created schedule.
      */
     function _createSchedule(Schedule memory schedule_) internal virtual returns (uint256) {
-        if (schedule_.exponent == 0) {
-            revert InvalidExponent(0);
-        }
+        if (schedule_.exponent == 0) revert InvalidExponent(0);
 
         _validateSchedule(schedule_.scheduleData);
 
@@ -296,9 +290,7 @@ abstract contract Vesting is Initializable {
                 _schedule.scheduleData.durationInPeriods *
                 _schedule.scheduleData.secondsInPeriod <=
             block.timestamp
-        ) {
-            revert VestingPastDate();
-        }
+        ) revert VestingPastDate();
 
         uint256 _currentVestingId = ++vestingId;
 
@@ -419,19 +411,17 @@ abstract contract Vesting is Initializable {
      * @param schedule_ Base schedule data to be validated.
      */
     function _validateSchedule(BaseSchedule memory schedule_) internal pure {
-        if (schedule_.durationInPeriods == 0 || schedule_.secondsInPeriod == 0) {
+        if (schedule_.durationInPeriods == 0 || schedule_.secondsInPeriod == 0)
             revert ScheduleInvalidPeriodParameter(
                 schedule_.durationInPeriods,
                 schedule_.secondsInPeriod
             );
-        }
 
-        if (schedule_.cliffInPeriods >= schedule_.durationInPeriods) {
+        if (schedule_.cliffInPeriods >= schedule_.durationInPeriods)
             revert ScheduleCliffGreaterThanDuration(
                 schedule_.cliffInPeriods,
                 schedule_.durationInPeriods
             );
-        }
     }
 
     /**
@@ -439,21 +429,13 @@ abstract contract Vesting is Initializable {
      * @param vesting_ Vesting data to be validated.
      */
     function _validateVesting(VestingData memory vesting_) internal pure {
-        if (vesting_.vestingStartTime == 0) {
-            revert InvalidTime(0);
-        }
+        if (vesting_.vestingStartTime == 0) revert InvalidTime(0);
 
-        if (vesting_.vestingAmount == 0) {
-            revert InvalidAmount(0);
-        }
+        if (vesting_.vestingAmount == 0) revert InvalidAmount(0);
 
-        if (vesting_.beneficiary == address(0)) {
-            revert InvalidBeneficiary(address(0));
-        }
+        if (vesting_.beneficiary == address(0)) revert InvalidBeneficiary(address(0));
 
-        if (vesting_.vestingToken == address(0)) {
-            revert InvalidVestingTokenAddress(address(0));
-        }
+        if (vesting_.vestingToken == address(0)) revert InvalidVestingTokenAddress(address(0));
     }
 
     /**

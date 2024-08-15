@@ -71,8 +71,6 @@ abstract contract DiamondAccessControlStorage is IAccessControl, InitializableSt
      * @dev Revert with a custom error if `account` is missing `role`.
      */
     function _checkRole(bytes32 role_, address account_) internal view virtual {
-        if (!hasRole(role_, account_)) {
-            revert RoleNotGranted(role_, account_);
-        }
+        if (!hasRole(role_, account_)) revert RoleNotGranted(role_, account_);
     }
 }

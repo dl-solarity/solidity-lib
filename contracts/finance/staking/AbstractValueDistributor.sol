@@ -93,13 +93,9 @@ abstract contract AbstractValueDistributor {
      * @param amount_ The amount of shares to add.
      */
     function _addShares(address user_, uint256 amount_) internal virtual {
-        if (user_ == address(0)) {
-            revert InvalidUserAddress(address(0));
-        }
+        if (user_ == address(0)) revert InvalidUserAddress(address(0));
 
-        if (amount_ == 0) {
-            revert InvalidAmount(0);
-        }
+        if (amount_ == 0) revert InvalidAmount(0);
 
         _update(user_);
 
@@ -123,9 +119,8 @@ abstract contract AbstractValueDistributor {
             revert InvalidAmount(0);
         }
 
-        if (amount_ > _userDist.shares) {
+        if (amount_ > _userDist.shares)
             revert InsufficientSharesAmount(user_, _userDist.shares, amount_);
-        }
 
         _update(user_);
 
@@ -147,13 +142,10 @@ abstract contract AbstractValueDistributor {
 
         UserDistribution storage _userDist = _userDistributions[user_];
 
-        if (amount_ == 0) {
-            revert InvalidAmount(0);
-        }
+        if (amount_ == 0) revert InvalidAmount(0);
 
-        if (amount_ > _userDist.owedValue) {
+        if (amount_ > _userDist.owedValue)
             revert InsufficientOwedValue(user_, _userDist.owedValue, amount_);
-        }
 
         _userDist.owedValue -= amount_;
 
@@ -174,9 +166,7 @@ abstract contract AbstractValueDistributor {
 
         uint256 amount_ = _userDist.owedValue;
 
-        if (amount_ == 0) {
-            revert InvalidAmount(0);
-        }
+        if (amount_ == 0) revert InvalidAmount(0);
 
         delete _userDist.owedValue;
 

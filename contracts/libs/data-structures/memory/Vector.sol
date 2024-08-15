@@ -370,9 +370,7 @@ library Vector {
     function _pop(Vector memory vector) private pure {
         uint256 length_ = _length(vector);
 
-        if (length_ == 0) {
-            revert PopEmptyVector();
-        }
+        if (length_ == 0) revert PopEmptyVector();
 
         assembly {
             mstore(mload(add(vector, 0x20)), sub(length_, 0x1))
@@ -428,9 +426,7 @@ library Vector {
     }
 
     function _requireInBounds(Vector memory vector, uint256 index_) private pure {
-        if (index_ >= _length(vector)) {
-            revert IndexOutOfBounds(index_, _length(vector));
-        }
+        if (index_ >= _length(vector)) revert IndexOutOfBounds(index_, _length(vector));
     }
 
     function _clean(uint256 dataPointer_, uint256 slots_) private pure {

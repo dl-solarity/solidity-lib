@@ -94,9 +94,7 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
     function _addOwners(address[] memory newOwners_) private {
         _owners.add(newOwners_);
 
-        if (_owners.contains(address(0))) {
-            revert InvalidOwner(address(0));
-        }
+        if (_owners.contains(address(0))) revert InvalidOwner(address(0));
 
         emit OwnersAdded(newOwners_);
     }
@@ -120,8 +118,6 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
      * @dev Throws if the sender is not the owner.
      */
     function _checkOwner() private view {
-        if (!isOwner(msg.sender)) {
-            revert UnauthorizedAccount(msg.sender);
-        }
+        if (!isOwner(msg.sender)) revert UnauthorizedAccount(msg.sender);
     }
 }

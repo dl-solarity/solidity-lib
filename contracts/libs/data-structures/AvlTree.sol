@@ -429,9 +429,7 @@ library AvlTree {
         Tree storage tree,
         function(bytes32, bytes32) view returns (int256) comparator_
     ) private {
-        if (_size(tree) != 0) {
-            revert TreeNotEmpty();
-        }
+        if (_size(tree) != 0) revert TreeNotEmpty();
 
         tree.isCustomComparatorSet = true;
 
@@ -439,9 +437,7 @@ library AvlTree {
     }
 
     function _insert(Tree storage tree, bytes32 key_, bytes32 value_) private {
-        if (key_ == 0) {
-            revert InvalidTreeKey(0);
-        }
+        if (key_ == 0) revert InvalidTreeKey(0);
 
         tree.totalCount++;
 
@@ -457,9 +453,7 @@ library AvlTree {
     }
 
     function _remove(Tree storage tree, bytes32 key_) private {
-        if (key_ == 0) {
-            revert InvalidTreeKey(0);
-        }
+        if (key_ == 0) revert InvalidTreeKey(0);
 
         tree.root = _removeNode(tree.tree, tree.root, 0, bytes32(key_), _getComparator(tree));
 
@@ -524,9 +518,7 @@ library AvlTree {
         bytes32 key_,
         function(bytes32, bytes32) view returns (int256) comparator_
     ) private returns (uint64) {
-        if (node_ == 0) {
-            revert NodeDoesNotExist(key_);
-        }
+        if (node_ == 0) revert NodeDoesNotExist(key_);
 
         int256 comparison_ = comparator_(key_, _tree[node_].key);
 
@@ -696,9 +688,7 @@ library AvlTree {
     function _get(Tree storage tree, bytes32 key_) private view returns (bytes32) {
         uint64 index_ = _search(tree.tree, tree.root, key_, _getComparator(tree));
 
-        if (index_ == 0) {
-            revert NodeDoesNotExist(key_);
-        }
+        if (index_ == 0) revert NodeDoesNotExist(key_);
 
         return tree.tree[index_].value;
     }
@@ -870,9 +860,7 @@ library Traversal {
     ) internal view returns (bytes32, bytes32) {
         uint64 currentNodeIndex_ = iterator_.currentNode;
 
-        if (currentNodeIndex_ == 0) {
-            revert NoMoreNodes();
-        }
+        if (currentNodeIndex_ == 0) revert NoMoreNodes();
 
         AvlTree.Node memory node_ = _getNode(iterator_.treeMappingSlot, currentNodeIndex_);
 

@@ -41,13 +41,10 @@ contract DiamondERC721 is DiamondERC721Storage {
      */
     function approve(address to_, uint256 tokenId_) public virtual override {
         address owner_ = ownerOf(tokenId_);
-        if (to_ == owner_) {
-            revert ApprovalToCurrentOwner(owner_);
-        }
+        if (to_ == owner_) revert ApprovalToCurrentOwner(owner_);
 
-        if (msg.sender != owner_ && !isApprovedForAll(owner_, msg.sender)) {
+        if (msg.sender != owner_ && !isApprovedForAll(owner_, msg.sender))
             revert InvalidApprover(msg.sender, owner_);
-        }
 
         _approve(to_, tokenId_);
     }
@@ -63,9 +60,7 @@ contract DiamondERC721 is DiamondERC721Storage {
      * @inheritdoc IERC721
      */
     function transferFrom(address from_, address to_, uint256 tokenId_) public virtual override {
-        if (!_isApprovedOrOwner(msg.sender, tokenId_)) {
-            revert InvalidSpender(msg.sender, tokenId_);
-        }
+        if (!_isApprovedOrOwner(msg.sender, tokenId_)) revert InvalidSpender(msg.sender, tokenId_);
 
         _transfer(from_, to_, tokenId_);
     }
@@ -90,9 +85,7 @@ contract DiamondERC721 is DiamondERC721Storage {
         uint256 tokenId_,
         bytes memory data_
     ) public virtual override {
-        if (!_isApprovedOrOwner(msg.sender, tokenId_)) {
-            revert InvalidSpender(msg.sender, tokenId_);
-        }
+        if (!_isApprovedOrOwner(msg.sender, tokenId_)) revert InvalidSpender(msg.sender, tokenId_);
 
         _safeTransfer(from_, to_, tokenId_, data_);
     }
@@ -109,9 +102,7 @@ contract DiamondERC721 is DiamondERC721Storage {
     ) internal virtual {
         _transfer(from_, to_, tokenId_);
 
-        if (!_checkOnERC721Received(from_, to_, tokenId_, data_)) {
-            revert NonERC721Receiver(to_);
-        }
+        if (!_checkOnERC721Received(from_, to_, tokenId_, data_)) revert NonERC721Receiver(to_);
     }
 
     /**
@@ -127,29 +118,22 @@ contract DiamondERC721 is DiamondERC721Storage {
     function _safeMint(address to_, uint256 tokenId_, bytes memory data_) internal virtual {
         _mint(to_, tokenId_);
 
-        if (!_checkOnERC721Received(address(0), to_, tokenId_, data_)) {
+        if (!_checkOnERC721Received(address(0), to_, tokenId_, data_))
             revert NonERC721Receiver(to_);
-        }
     }
 
     /**
      * @notice Mints `tokenId` and transfers it to `to`.
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
-        if (to_ == address(0)) {
-            revert InvalidReceiver(address(0));
-        }
+        if (to_ == address(0)) revert InvalidReceiver(address(0));
 
-        if (_exists(tokenId_)) {
-            revert TokenAlreadyMinted(tokenId_);
-        }
+        if (_exists(tokenId_)) revert TokenAlreadyMinted(tokenId_);
 
         _beforeTokenTransfer(address(0), to_, tokenId_, 1);
 
         // Check that tokenId was not minted by `_beforeTokenTransfer` hook
-        if (_exists(tokenId_)) {
-            revert TokenAlreadyMinted(tokenId_);
-        }
+        if (_exists(tokenId_)) revert TokenAlreadyMinted(tokenId_);
 
         DERC721Storage storage _erc721Storage = _getErc721Storage();
 
@@ -195,20 +179,14 @@ contract DiamondERC721 is DiamondERC721Storage {
      * @notice Transfers `tokenId` from `from` to `to`.
      */
     function _transfer(address from_, address to_, uint256 tokenId_) internal virtual {
-        if (ownerOf(tokenId_) != from_) {
-            revert UnauthorizedAccount(from_);
-        }
+        if (ownerOf(tokenId_) != from_) revert UnauthorizedAccount(from_);
 
-        if (to_ == address(0)) {
-            revert InvalidReceiver(address(0));
-        }
+        if (to_ == address(0)) revert InvalidReceiver(address(0));
 
         _beforeTokenTransfer(from_, to_, tokenId_, 1);
 
         // Check that tokenId was not transferred by `_beforeTokenTransfer` hook
-        if (ownerOf(tokenId_) != from_) {
-            revert UnauthorizedAccount(from_);
-        }
+        if (ownerOf(tokenId_) != from_) revert UnauthorizedAccount(from_);
 
         DERC721Storage storage _erc721Storage = _getErc721Storage();
 
@@ -244,9 +222,7 @@ contract DiamondERC721 is DiamondERC721Storage {
         address operator_,
         bool approved_
     ) internal virtual {
-        if (owner_ == operator_) {
-            revert ApproveToCaller(owner_);
-        }
+        if (owner_ == operator_) revert ApproveToCaller(owner_);
 
         _getErc721Storage().operatorApprovals[owner_][operator_] = approved_;
 

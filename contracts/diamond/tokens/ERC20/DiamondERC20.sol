@@ -64,13 +64,9 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
      * @notice Moves `amount` of tokens from `from` to `to`.
      */
     function _transfer(address from_, address to_, uint256 amount_) internal virtual {
-        if (from_ == address(0)) {
-            revert ERC20InvalidSender(address(0));
-        }
+        if (from_ == address(0)) revert ERC20InvalidSender(address(0));
 
-        if (to_ == address(0)) {
-            revert ERC20InvalidReceiver(address(0));
-        }
+        if (to_ == address(0)) revert ERC20InvalidReceiver(address(0));
 
         _beforeTokenTransfer(from_, to_, amount_);
 
@@ -78,9 +74,7 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
 
         uint256 fromBalance_ = _erc20Storage.balances[from_];
 
-        if (fromBalance_ < amount_) {
-            revert ERC20InsufficientBalance(from_, fromBalance_, amount_);
-        }
+        if (fromBalance_ < amount_) revert ERC20InsufficientBalance(from_, fromBalance_, amount_);
 
         unchecked {
             _erc20Storage.balances[from_] = fromBalance_ - amount_;
@@ -100,9 +94,7 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
      * the total supply.
      */
     function _mint(address account_, uint256 amount_) internal virtual {
-        if (account_ == address(0)) {
-            revert ERC20InvalidReceiver(address(0));
-        }
+        if (account_ == address(0)) revert ERC20InvalidReceiver(address(0));
 
         _beforeTokenTransfer(address(0), account_, amount_);
 
@@ -125,18 +117,15 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
      * total supply.
      */
     function _burn(address account_, uint256 amount_) internal virtual {
-        if (account_ == address(0)) {
-            revert ERC20InvalidSender(address(0));
-        }
+        if (account_ == address(0)) revert ERC20InvalidSender(address(0));
 
         _beforeTokenTransfer(account_, address(0), amount_);
 
         DERC20Storage storage _erc20Storage = _getErc20Storage();
 
         uint256 accountBalance_ = _erc20Storage.balances[account_];
-        if (accountBalance_ < amount_) {
+        if (accountBalance_ < amount_)
             revert ERC20InsufficientBalance(account_, accountBalance_, amount_);
-        }
 
         unchecked {
             _erc20Storage.balances[account_] -= amount_;
@@ -153,13 +142,9 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
      * @notice Sets `amount` as the allowance of `spender` over the `owner` s tokens.
      */
     function _approve(address owner_, address spender_, uint256 amount_) internal virtual {
-        if (owner_ == address(0)) {
-            revert ERC20InvalidApprover(owner_);
-        }
+        if (owner_ == address(0)) revert ERC20InvalidApprover(owner_);
 
-        if (spender_ == address(0)) {
-            revert ERC20InvalidSpender(spender_);
-        }
+        if (spender_ == address(0)) revert ERC20InvalidSpender(spender_);
 
         _getErc20Storage().allowances[owner_][spender_] = amount_;
 
@@ -173,9 +158,8 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
         uint256 currentAllowance_ = allowance(owner_, spender_);
 
         if (currentAllowance_ != type(uint256).max) {
-            if (currentAllowance_ < amount_) {
+            if (currentAllowance_ < amount_)
                 revert ERC20InsufficientAllowance(spender_, currentAllowance_, amount_);
-            }
 
             unchecked {
                 _approve(owner_, spender_, currentAllowance_ - amount_);

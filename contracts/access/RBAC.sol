@@ -57,9 +57,8 @@ abstract contract RBAC is IRBAC, Initializable {
     error EmptyRoles();
 
     modifier onlyPermission(string memory resource_, string memory permission_) {
-        if (!hasPermission(msg.sender, resource_, permission_)) {
+        if (!hasPermission(msg.sender, resource_, permission_))
             revert NoPermissionForResource(permission_, resource_);
-        }
         _;
     }
 
@@ -79,9 +78,7 @@ abstract contract RBAC is IRBAC, Initializable {
         address to_,
         string[] memory rolesToGrant_
     ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
-        if (rolesToGrant_.length == 0) {
-            revert EmptyRoles();
-        }
+        if (rolesToGrant_.length == 0) revert EmptyRoles();
 
         _grantRoles(to_, rolesToGrant_);
     }
@@ -95,9 +92,7 @@ abstract contract RBAC is IRBAC, Initializable {
         address from_,
         string[] memory rolesToRevoke_
     ) public virtual override onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION) {
-        if (rolesToRevoke_.length == 0) {
-            revert EmptyRoles();
-        }
+        if (rolesToRevoke_.length == 0) revert EmptyRoles();
 
         _revokeRoles(from_, rolesToRevoke_);
     }

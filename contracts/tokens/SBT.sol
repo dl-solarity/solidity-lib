@@ -160,13 +160,9 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenId_ the token to mint
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
-        if (to_ == address(0)) {
-            revert Invalidreceiver(address(0));
-        }
+        if (to_ == address(0)) revert Invalidreceiver(address(0));
 
-        if (tokenExists(tokenId_)) {
-            revert TokenAlreadyExists(tokenId_);
-        }
+        if (tokenExists(tokenId_)) revert TokenAlreadyExists(tokenId_);
 
         _beforeTokenAction(to_, tokenId_);
 
@@ -183,9 +179,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
     function _burn(uint256 tokenId_) internal virtual {
         address owner_ = _ownerOf(tokenId_);
 
-        if (owner_ == address(0)) {
-            revert TokenDoesNotExist(tokenId_);
-        }
+        if (owner_ == address(0)) revert TokenDoesNotExist(tokenId_);
 
         _beforeTokenAction(address(0), tokenId_);
 
@@ -203,9 +197,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param tokenURI_ the URI to be set
      */
     function _setTokenURI(uint256 tokenId_, string memory tokenURI_) internal virtual {
-        if (!tokenExists(tokenId_)) {
-            revert TokenDoesNotExist(tokenId_);
-        }
+        if (!tokenExists(tokenId_)) revert TokenDoesNotExist(tokenId_);
 
         _tokenURIs[tokenId_] = tokenURI_;
     }

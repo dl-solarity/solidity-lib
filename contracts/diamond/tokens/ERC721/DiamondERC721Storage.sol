@@ -120,9 +120,7 @@ abstract contract DiamondERC721Storage is
         address owner_,
         uint256 index_
     ) public view virtual returns (uint256) {
-        if (index_ >= balanceOf(owner_)) {
-            revert OutOfBoundsIndex(owner_, index_);
-        }
+        if (index_ >= balanceOf(owner_)) revert OutOfBoundsIndex(owner_, index_);
 
         return _getErc721Storage().ownedTokens[owner_][index_];
     }
@@ -131,9 +129,7 @@ abstract contract DiamondERC721Storage is
      * @notice This function allows you to retrieve the NFT token ID at a given `index` of all the tokens stored by the contract.
      */
     function tokenByIndex(uint256 index_) public view virtual returns (uint256) {
-        if (index_ >= totalSupply()) {
-            revert OutOfBoundsIndex(address(0), index_);
-        }
+        if (index_ >= totalSupply()) revert OutOfBoundsIndex(address(0), index_);
 
         return _getErc721Storage().allTokens[index_];
     }
@@ -144,9 +140,7 @@ abstract contract DiamondERC721Storage is
     function ownerOf(uint256 tokenId_) public view virtual override returns (address) {
         address owner = _ownerOf(tokenId_);
 
-        if (owner == address(0)) {
-            revert NonexistentToken(tokenId_);
-        }
+        if (owner == address(0)) revert NonexistentToken(tokenId_);
 
         return owner;
     }
@@ -181,9 +175,7 @@ abstract contract DiamondERC721Storage is
      * @notice The function that reverts if the `tokenId` has not been minted yet.
      */
     function _requireMinted(uint256 tokenId_) internal view virtual {
-        if (!_exists(tokenId_)) {
-            revert NonexistentToken(tokenId_);
-        }
+        if (!_exists(tokenId_)) revert NonexistentToken(tokenId_);
     }
 
     /**

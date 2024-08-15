@@ -99,9 +99,7 @@ library ArrayHelper {
         uint256 beginIndex_,
         uint256 endIndex_
     ) internal view returns (uint256) {
-        if (beginIndex_ > endIndex_) {
-            revert InvalidRange(beginIndex_, endIndex_);
-        }
+        if (beginIndex_ > endIndex_) revert InvalidRange(beginIndex_, endIndex_);
 
         if (beginIndex_ == 0) {
             return prefixes[endIndex_];
