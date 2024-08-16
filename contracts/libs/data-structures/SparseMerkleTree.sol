@@ -71,6 +71,17 @@ library SparseMerkleTree {
         SMT _tree;
     }
 
+    error InvalidMaxDepth(uint32 depth);
+    error KeyAlreadyExists(bytes32 key);
+    error LeafDoesNotMatch(bytes32 currentKey, bytes32 key);
+    error MaxDepthExceedsHardCap(uint32 maxDepth);
+    error MaxDepthReached();
+    error NewMaxDepthMustBeLarger(uint32 currentDepth, uint32 newDepth);
+    error NodeDoesNotExist(uint256 nodeId);
+    error TreeAlreadyInitialized();
+    error TreeNotInitialized();
+    error TreeIsNotEmpty();
+
     /**
      * @notice The function to initialize the Merkle tree.
      * Under the hood it sets the maximum depth of the Merkle tree, therefore can be considered
@@ -677,17 +688,6 @@ library SparseMerkleTree {
         bytes32 auxKey;
         bytes32 auxValue;
     }
-
-    error InvalidMaxDepth(uint32 depth);
-    error KeyAlreadyExists(bytes32 key);
-    error LeafDoesNotMatch(bytes32 currentKey, bytes32 key);
-    error MaxDepthExceedsHardCap(uint32 maxDepth);
-    error MaxDepthReached();
-    error NewMaxDepthMustBeLarger(uint32 currentDepth, uint32 newDepth);
-    error NodeDoesNotExist(uint256 nodeId);
-    error TreeAlreadyInitialized();
-    error TreeNotInitialized();
-    error TreeIsNotEmpty();
 
     modifier onlyInitialized(SMT storage tree) {
         if (!_isInitialized(tree)) revert TreeNotInitialized();

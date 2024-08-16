@@ -147,7 +147,6 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
      */
     function _approve(address owner_, address spender_, uint256 amount_) internal virtual {
         if (owner_ == address(0)) revert ApproverIsZeroAddress();
-
         if (spender_ == address(0)) revert SpenderIsZeroAddress();
 
         _getErc20Storage().allowances[owner_][spender_] = amount_;

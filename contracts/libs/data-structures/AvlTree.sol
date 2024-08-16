@@ -68,6 +68,11 @@ library AvlTree {
         Tree _tree;
     }
 
+    error NodeAlreadyExists(bytes32 key);
+    error NodeDoesNotExist(bytes32 key);
+    error TreeKeyIsZero();
+    error TreeNotEmpty();
+
     /**
      * @notice The function to set a custom comparator function, that will be used to build the uint256 tree.
      * @param tree self.
@@ -421,11 +426,6 @@ library AvlTree {
         mapping(uint64 => Node) tree;
         function(bytes32, bytes32) view returns (int256) comparator;
     }
-
-    error NodeAlreadyExists(bytes32 key);
-    error NodeDoesNotExist(bytes32 key);
-    error TreeKeyIsZero();
-    error TreeNotEmpty();
 
     function _setComparator(
         Tree storage tree,

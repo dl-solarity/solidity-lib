@@ -39,7 +39,7 @@ abstract contract DiamondERC721Storage is
         mapping(address => mapping(uint256 => uint256)) ownedTokens;
     }
 
-    error GlobalIndexOutOfBounds(uint256 index);
+    error IndexOutOfBounds(uint256 index);
     error NonexistentToken(uint256 tokenId);
     error OwnerIndexOutOfBounds(address owner, uint256 index);
 
@@ -126,7 +126,7 @@ abstract contract DiamondERC721Storage is
      * @notice This function allows you to retrieve the NFT token ID at a given `index` of all the tokens stored by the contract.
      */
     function tokenByIndex(uint256 index_) public view virtual returns (uint256) {
-        if (index_ >= totalSupply()) revert GlobalIndexOutOfBounds(index_);
+        if (index_ >= totalSupply()) revert IndexOutOfBounds(index_);
 
         return _getErc721Storage().allTokens[index_];
     }
