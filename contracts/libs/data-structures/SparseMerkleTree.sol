@@ -71,10 +71,10 @@ library SparseMerkleTree {
         SMT _tree;
     }
 
-    error InvalidMaxDepth(uint32 depth);
     error KeyAlreadyExists(bytes32 key);
     error LeafDoesNotMatch(bytes32 currentKey, bytes32 key);
     error MaxDepthExceedsHardCap(uint32 maxDepth);
+    error MaxDepthIsZero();
     error MaxDepthReached();
     error NewMaxDepthMustBeLarger(uint32 currentDepth, uint32 newDepth);
     error NodeDoesNotExist(uint256 nodeId);
@@ -701,7 +701,7 @@ library SparseMerkleTree {
     }
 
     function _setMaxDepth(SMT storage tree, uint32 maxDepth_) private {
-        if (maxDepth_ == 0) revert InvalidMaxDepth(0);
+        if (maxDepth_ == 0) revert MaxDepthIsZero();
 
         uint32 currentDepth_ = tree.maxDepth;
 
