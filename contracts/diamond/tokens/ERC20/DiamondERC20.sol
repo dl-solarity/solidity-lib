@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
 import {DiamondERC20Storage} from "./DiamondERC20Storage.sol";
 
@@ -12,8 +11,10 @@ import {DiamondERC20Storage} from "./DiamondERC20Storage.sol";
  * This is modified version of OpenZeppelin's ERC20 contract to be used as a Storage contract
  * by the Diamond Standard.
  */
-contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
+contract DiamondERC20 is DiamondERC20Storage {
     error ApproverIsZeroAddress();
+    error InsufficientAllowance(address spender, uint256 allowance, uint256 needed);
+    error InsufficientBalance(address sender, uint256 balance, uint256 needed);
     error ReceiverIsZeroAddress();
     error SenderIsZeroAddress();
     error SpenderIsZeroAddress();
@@ -78,7 +79,7 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
 
         uint256 fromBalance_ = _erc20Storage.balances[from_];
 
-        if (fromBalance_ < amount_) revert ERC20InsufficientBalance(from_, fromBalance_, amount_);
+        if (fromBalance_ < amount_) revert InsufficientBalance(from_, fromBalance_, amount_);
 
         unchecked {
             _erc20Storage.balances[from_] = fromBalance_ - amount_;
@@ -129,7 +130,7 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
 
         uint256 accountBalance_ = _erc20Storage.balances[account_];
         if (accountBalance_ < amount_)
-            revert ERC20InsufficientBalance(account_, accountBalance_, amount_);
+            revert InsufficientBalance(account_, accountBalance_, amount_);
 
         unchecked {
             _erc20Storage.balances[account_] -= amount_;
@@ -162,7 +163,7 @@ contract DiamondERC20 is DiamondERC20Storage, IERC20Errors {
 
         if (currentAllowance_ != type(uint256).max) {
             if (currentAllowance_ < amount_)
-                revert ERC20InsufficientAllowance(spender_, currentAllowance_, amount_);
+                revert InsufficientAllowance(spender_, currentAllowance_, amount_);
 
             unchecked {
                 _approve(owner_, spender_, currentAllowance_ - amount_);
