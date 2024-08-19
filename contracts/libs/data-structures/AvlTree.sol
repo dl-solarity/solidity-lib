@@ -70,7 +70,7 @@ library AvlTree {
 
     error NodeAlreadyExists(bytes32 key);
     error NodeDoesNotExist(bytes32 key);
-    error TreeKeyIsZero();
+    error KeyIsZero();
     error TreeNotEmpty();
 
     /**
@@ -439,7 +439,7 @@ library AvlTree {
     }
 
     function _insert(Tree storage tree, bytes32 key_, bytes32 value_) private {
-        if (key_ == 0) revert TreeKeyIsZero();
+        if (key_ == 0) revert KeyIsZero();
 
         tree.totalCount++;
 
@@ -455,7 +455,7 @@ library AvlTree {
     }
 
     function _remove(Tree storage tree, bytes32 key_) private {
-        if (key_ == 0) revert TreeKeyIsZero();
+        if (key_ == 0) revert KeyIsZero();
 
         tree.root = _removeNode(tree.tree, tree.root, 0, bytes32(key_), _getComparator(tree));
 
