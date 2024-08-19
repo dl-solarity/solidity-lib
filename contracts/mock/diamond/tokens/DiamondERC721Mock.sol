@@ -6,8 +6,8 @@ import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Recei
 import {DiamondERC721} from "../../../diamond/tokens/ERC721/DiamondERC721.sol";
 
 contract DiamondERC721Mock is DiamondERC721 {
-    string baseUri;
-    bool replaceOwner;
+    string internal baseUri;
+    bool internal replaceOwner;
 
     constructor() {
         _disableInitializers(DIAMOND_ERC721_STORAGE_SLOT);
