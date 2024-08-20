@@ -5,7 +5,7 @@ import { Reverter } from "@/test/helpers/reverter";
 import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
 import { ZERO_ADDR } from "@/scripts/utils/constants";
 
-import { OwnableDiamondMock, DiamondERC721Mock, Diamond } from "@ethers-v6";
+import { OwnableDiamondMock, DiamondERC721Mock, Diamond, DiamondERC721NotReceiverMock } from "@ethers-v6";
 
 describe("DiamondERC721 and InitializableStorage", () => {
   const reverter = new Reverter();
@@ -16,15 +16,19 @@ describe("DiamondERC721 and InitializableStorage", () => {
 
   let erc721: DiamondERC721Mock;
   let diamond: OwnableDiamondMock;
+  let notReceiverMock: DiamondERC721NotReceiverMock;
 
   before("setup", async () => {
     [OWNER, SECOND, THIRD] = await ethers.getSigners();
 
     const OwnableDiamond = await ethers.getContractFactory("OwnableDiamondMock");
     const DiamondERC721Mock = await ethers.getContractFactory("DiamondERC721Mock");
+    const DiamondERC721NotReceiverMock = await ethers.getContractFactory("DiamondERC721NotReceiverMock");
 
     diamond = await OwnableDiamond.deploy();
+    const diamond2 = await OwnableDiamond.deploy();
     erc721 = await DiamondERC721Mock.deploy();
+    notReceiverMock = await DiamondERC721NotReceiverMock.deploy();
 
     const facets: Diamond.FacetStruct[] = [
       {
@@ -34,12 +38,25 @@ describe("DiamondERC721 and InitializableStorage", () => {
       },
     ];
 
+    const facets2: Diamond.FacetStruct[] = [
+      {
+        facetAddress: await notReceiverMock.getAddress(),
+        action: FacetAction.Add,
+        functionSelectors: getSelectors(notReceiverMock.interface),
+      },
+    ];
+
     await diamond.__OwnableDiamondMock_init();
     await diamond.diamondCutShort(facets);
 
+    await diamond2.__OwnableDiamondMock_init();
+    await diamond2.diamondCutShort(facets2);
+
     erc721 = <DiamondERC721Mock>DiamondERC721Mock.attach(await diamond.getAddress());
+    notReceiverMock = <DiamondERC721NotReceiverMock>DiamondERC721NotReceiverMock.attach(await diamond2.getAddress());
 
     await erc721.__DiamondERC721Mock_init("Mock Token", "MT");
+    await notReceiverMock.__DiamondERC721Mock_init("Mock Token", "MT");
 
     await reverter.snapshot();
   });
@@ -148,6 +165,10 @@ describe("DiamondERC721 and InitializableStorage", () => {
 
         await expect(erc721.mint(await contract1.getAddress(), 1))
           .to.be.revertedWithCustomError(erc721, "NonERC721Receiver")
+          .withArgs(await contract1.getAddress());
+
+        await expect(notReceiverMock.mint(await contract1.getAddress(), 1))
+          .to.be.revertedWithCustomError(notReceiverMock, "NonERC721Receiver")
           .withArgs(await contract1.getAddress());
 
         const contract2 = await (await ethers.getContractFactory("NonERC721Receiver")).deploy();
@@ -278,12 +299,12 @@ describe("DiamondERC721 and InitializableStorage", () => {
       });
 
       it("should not transfer token if the receiver is a contract and doesn't implement onERC721Received", async () => {
-        await erc721.mint(OWNER.address, 1);
+        await notReceiverMock.mockMint(OWNER.address, 1);
 
         const contract = await (await ethers.getContractFactory("DiamondERC721Mock")).deploy();
 
-        await expect(erc721.safeTransferFromMock(OWNER.address, await contract.getAddress(), 1))
-          .to.be.revertedWithCustomError(erc721, "NonERC721Receiver")
+        await expect(notReceiverMock.safeTransferFromMock(OWNER.address, await contract.getAddress(), 1))
+          .to.be.revertedWithCustomError(notReceiverMock, "NonERC721Receiver")
           .withArgs(await contract.getAddress());
       });
     });

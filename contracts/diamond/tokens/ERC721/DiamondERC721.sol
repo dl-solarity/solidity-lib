@@ -238,7 +238,7 @@ contract DiamondERC721 is DiamondERC721Storage {
         address to_,
         uint256 tokenId_,
         bytes memory data_
-    ) private returns (bool) {
+    ) internal virtual returns (bool) {
         if (to_.code.length > 0) {
             try IERC721Receiver(to_).onERC721Received(msg.sender, from_, tokenId_, data_) returns (
                 bytes4 retval
