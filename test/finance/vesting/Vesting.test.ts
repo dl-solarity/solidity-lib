@@ -1,18 +1,21 @@
-import { MAX_UINT256, ZERO_ADDR } from "@/scripts/utils/constants";
-import { precision, wei } from "@/scripts/utils/utils";
-import { Reverter } from "@/test/helpers/reverter";
+import { ethers } from "hardhat";
+import { expect } from "chai";
+
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ZeroAddress } from "ethers";
+
+import { Reverter } from "@/test/helpers/reverter";
+import { precision, wei } from "@/scripts/utils/utils";
+import { MAX_UINT256 } from "@/scripts/utils/constants";
 
 import { ERC20Mock, ERC20Mock__factory, Vesting, VestingMock, VestingMock__factory } from "@ethers-v6";
 
 describe("Vesting", () => {
   let reverter = new Reverter();
 
-  let owner: SignerWithAddress;
-  let alice: SignerWithAddress;
+  let OWNER: SignerWithAddress;
+  let ALICE: SignerWithAddress;
 
   let vesting: VestingMock;
   let erc20: ERC20Mock;
@@ -30,14 +33,14 @@ describe("Vesting", () => {
   const exponent = 4n;
 
   before(async () => {
-    [owner, alice] = await ethers.getSigners();
+    [OWNER, ALICE] = await ethers.getSigners();
 
-    vesting = await new VestingMock__factory(owner).deploy();
-    erc20 = await new ERC20Mock__factory(owner).deploy("Test", "TST", 18);
+    vesting = await new VestingMock__factory(OWNER).deploy();
+    erc20 = await new ERC20Mock__factory(OWNER).deploy("Test", "TST", 18);
 
     await vesting.__VestingMock_init();
 
-    await erc20.mint(owner.address, wei(1_000_000));
+    await erc20.mint(OWNER.address, wei(1_000_000));
     await erc20.approve(await vesting.getAddress(), MAX_UINT256);
 
     await reverter.snapshot();
@@ -139,7 +142,7 @@ describe("Vesting", () => {
 
       defaultVesting = {
         vestingStartTime: await time.latest(),
-        beneficiary: alice.address,
+        beneficiary: ALICE.address,
         vestingToken: await erc20.getAddress(),
         vestingAmount: vestingAmount,
         paidAmount: 0,
@@ -150,7 +153,7 @@ describe("Vesting", () => {
     it("should correctly create vesting", async () => {
       let linearVesting = {
         vestingStartTime: await time.latest(),
-        beneficiary: alice.address,
+        beneficiary: ALICE.address,
         vestingToken: await erc20.getAddress(),
         vestingAmount: vestingAmount,
         paidAmount: 0,
@@ -175,8 +178,8 @@ describe("Vesting", () => {
       expect(await vesting.getVesting(1)).to.deep.equal(Object.values(linearVesting));
       expect(await vesting.getVesting(2)).to.deep.equal(Object.values(exponentialVesting));
 
-      expect(await vesting.getVestingIds(await alice.getAddress())).to.deep.equal([1, 2]);
-      expect(await vesting.getVestings(await alice.getAddress())).to.deep.equal([
+      expect(await vesting.getVestingIds(await ALICE.getAddress())).to.deep.equal([1, 2]);
+      expect(await vesting.getVestings(await ALICE.getAddress())).to.deep.equal([
         Object.values(linearVesting),
         Object.values(exponentialVesting),
       ]);
@@ -205,7 +208,7 @@ describe("Vesting", () => {
     });
 
     it("should revert if vesting beneficiary is zero address", async () => {
-      defaultVesting.beneficiary = ZERO_ADDR;
+      defaultVesting.beneficiary = ZeroAddress;
 
       await expect(vesting.createVesting(defaultVesting))
         .to.be.revertedWithCustomError(vesting, "BeneficiaryIsZeroAddress")
@@ -213,7 +216,7 @@ describe("Vesting", () => {
     });
 
     it("should revert if vesting token is zero address", async () => {
-      defaultVesting.vestingToken = ZERO_ADDR;
+      defaultVesting.vestingToken = ZeroAddress;
 
       await expect(vesting.createVesting(defaultVesting))
         .to.be.revertedWithCustomError(vesting, "VestingTokenIsZeroAddress")
@@ -245,7 +248,7 @@ describe("Vesting", () => {
 
       linearVesting = {
         vestingStartTime: await time.latest(),
-        beneficiary: alice.address,
+        beneficiary: ALICE.address,
         vestingToken: await erc20.getAddress(),
         vestingAmount: vestingAmount,
         paidAmount: 0,
@@ -280,8 +283,8 @@ describe("Vesting", () => {
       expect(await vesting.getVestedAmount(exponentialVestingId)).to.be.equal(exponentialVesting.vestingAmount);
       expect(await vesting.getWithdrawableAmount(exponentialVestingId)).to.be.equal(exponentialVesting.vestingAmount);
 
-      const linearTx = vesting.connect(alice).withdrawFromVesting(linearVestingId);
-      const exponentialTx = vesting.connect(alice).withdrawFromVesting(exponentialVestingId);
+      const linearTx = vesting.connect(ALICE).withdrawFromVesting(linearVestingId);
+      const exponentialTx = vesting.connect(ALICE).withdrawFromVesting(exponentialVestingId);
 
       await expect(linearTx)
         .to.emit(vesting, "WithdrawnFromVesting")
@@ -296,9 +299,9 @@ describe("Vesting", () => {
       expect(await vesting.getVesting(linearVestingId)).to.deep.equal(Object.values(linearVesting));
       expect(await vesting.getVesting(exponentialVestingId)).to.deep.equal(Object.values(exponentialVesting));
 
-      expect(await erc20.balanceOf(alice.address)).changeTokenBalance(
+      expect(await erc20.balanceOf(ALICE.address)).changeTokenBalance(
         erc20,
-        alice.address,
+        ALICE.address,
         BigInt(linearVesting.vestingAmount) + BigInt(exponentialVesting.vestingAmount),
       );
     });
@@ -337,8 +340,8 @@ describe("Vesting", () => {
       expect(await vesting.getVestedAmount(exponentialVestingId)).to.be.equal(exponentialVestedAmount);
       expect(await vesting.getWithdrawableAmount(exponentialVestingId)).to.be.equal(exponentialVestedAmount);
 
-      await vesting.connect(alice).withdrawFromVesting(linearVestingId);
-      await vesting.connect(alice).withdrawFromVesting(exponentialVestingId);
+      await vesting.connect(ALICE).withdrawFromVesting(linearVestingId);
+      await vesting.connect(ALICE).withdrawFromVesting(exponentialVestingId);
 
       linearVesting.paidAmount = linearVestedAmount;
       exponentialVesting.paidAmount = exponentialVestedAmount;
@@ -349,9 +352,9 @@ describe("Vesting", () => {
       expect(await vesting.getWithdrawableAmount(linearVestingId)).to.be.equal(0);
       expect(await vesting.getWithdrawableAmount(exponentialVestingId)).to.be.equal(0);
 
-      expect(await erc20.balanceOf(alice.address)).changeTokenBalance(
+      expect(await erc20.balanceOf(ALICE.address)).changeTokenBalance(
         erc20,
-        alice.address,
+        ALICE.address,
         linearVestedAmount + exponentialVestedAmount,
       );
     });
@@ -361,7 +364,7 @@ describe("Vesting", () => {
 
       await expect(vesting.withdrawFromVesting(1))
         .to.be.revertedWithCustomError(vesting, "UnauthorizedAccount")
-        .withArgs(owner);
+        .withArgs(OWNER);
     });
 
     it("should revert if nothing to withdraw", async () => {
@@ -369,9 +372,9 @@ describe("Vesting", () => {
 
       await time.increase(secondsInPeriod * durationInPeriods);
 
-      await vesting.connect(alice).withdrawFromVesting(1);
+      await vesting.connect(ALICE).withdrawFromVesting(1);
 
-      await expect(vesting.connect(alice).withdrawFromVesting(1))
+      await expect(vesting.connect(ALICE).withdrawFromVesting(1))
         .to.be.revertedWithCustomError(vesting, "NothingToWithdraw")
         .withArgs();
     });

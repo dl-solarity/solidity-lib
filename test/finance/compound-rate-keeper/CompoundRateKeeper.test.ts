@@ -1,7 +1,9 @@
 import { ethers } from "hardhat";
+import { expect } from "chai";
+
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { expect } from "chai";
+
 import { Reverter } from "@/test/helpers/reverter";
 import { precision } from "@/scripts/utils/utils";
 

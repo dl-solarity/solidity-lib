@@ -1,10 +1,12 @@
 import { ethers } from "hardhat";
+import { expect } from "chai";
+
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { MerkleTree } from "merkletreejs";
-import { expect } from "chai";
+
 import { Reverter } from "@/test/helpers/reverter";
-import { ZERO_BYTES32 } from "@/scripts/utils/constants";
 import { getRoot, getProof, buildTree } from "../helpers/merkle-tree-helper";
+import { ZERO_BYTES32 } from "@/scripts/utils/constants";
 
 import { MerkleWhitelistedMock } from "@ethers-v6";
 

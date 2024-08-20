@@ -1,12 +1,14 @@
 import { ethers } from "hardhat";
+import { expect } from "chai";
+
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { expect } from "chai";
+import { ZeroAddress } from "ethers";
+
 import { Reverter } from "@/test/helpers/reverter";
 import { wei } from "@/scripts/utils/utils";
 
 import { AbstractValueDistributorMock } from "@ethers-v6";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 describe("AbstractValueDistributor", () => {
   const reverter = new Reverter();
@@ -90,7 +92,7 @@ describe("AbstractValueDistributor", () => {
     });
 
     it("should not allow zero address to add shares", async () => {
-      await expect(abstractValueDistributor.addShares(ZERO_ADDR, 2))
+      await expect(abstractValueDistributor.addShares(ZeroAddress, 2))
         .to.be.revertedWithCustomError(abstractValueDistributor, "UserIsZeroAddress")
         .withArgs();
     });
@@ -132,9 +134,9 @@ describe("AbstractValueDistributor", () => {
     });
 
     it("should not allow zero address to remove shares", async () => {
-      await expect(abstractValueDistributor.removeShares(ZERO_ADDR, 2))
+      await expect(abstractValueDistributor.removeShares(ZeroAddress, 2))
         .to.be.revertedWithCustomError(abstractValueDistributor, "InsufficientSharesAmount")
-        .withArgs(ZERO_ADDR, 0, 2);
+        .withArgs(ZeroAddress, 0, 2);
     });
 
     it("should not allow to remove more shares than it was added", async () => {
@@ -309,9 +311,9 @@ describe("AbstractValueDistributor", () => {
     });
 
     it("should not allow zero address to distribute values", async () => {
-      await expect(abstractValueDistributor.distributeValue(ZERO_ADDR, 2))
+      await expect(abstractValueDistributor.distributeValue(ZeroAddress, 2))
         .to.be.revertedWithCustomError(abstractValueDistributor, "InsufficientOwedValue")
-        .withArgs(ZERO_ADDR, 0, 2);
+        .withArgs(ZeroAddress, 0, 2);
     });
 
     it("should not allow to distribute more values than owed", async () => {

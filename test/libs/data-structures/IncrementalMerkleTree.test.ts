@@ -1,15 +1,14 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import { MerkleTree } from "merkletreejs";
-
-import { IncrementalMerkleTreeMock } from "@ethers-v6";
-
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { MerkleTree } from "merkletreejs";
 
 import { Reverter } from "@/test/helpers/reverter";
 import { getPoseidon, poseidonHash } from "@/test/helpers/poseidon-hash";
 import { getRoot, buildSparseMerkleTree } from "@/test/helpers/merkle-tree-helper";
+
+import { IncrementalMerkleTreeMock } from "@ethers-v6";
 
 describe("IncrementalMerkleTree", () => {
   const reverter = new Reverter();

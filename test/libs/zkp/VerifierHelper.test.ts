@@ -1,5 +1,6 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
+
 import { Reverter } from "@/test/helpers/reverter";
 
 import { VerifierHelperMock, Verifier2Mock, Verifier3Mock } from "@ethers-v6";

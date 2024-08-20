@@ -1,7 +1,9 @@
 import { ethers } from "hardhat";
+import { expect } from "chai";
+
 import { impersonateAccount, setBalance } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { expect } from "chai";
+
 import { Reverter } from "@/test/helpers/reverter";
 
 import { TransparentProxyUpgrader, SolarityTransparentProxy, ERC20Mock } from "@ethers-v6";

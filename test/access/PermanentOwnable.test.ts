@@ -1,8 +1,10 @@
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
+
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { ZeroAddress } from "ethers";
+
 import { Reverter } from "@/test/helpers/reverter";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 import { PermanentOwnableMock } from "@ethers-v6";
 
@@ -33,7 +35,7 @@ describe("PermanentOwnable", () => {
     it("should reject zero address during the owner initialization", async () => {
       const permanentOwnableMock = await ethers.getContractFactory("PermanentOwnableMock");
 
-      await expect(permanentOwnableMock.deploy(ZERO_ADDR)).to.be.revertedWithCustomError(
+      await expect(permanentOwnableMock.deploy(ZeroAddress)).to.be.revertedWithCustomError(
         permanentOwnable,
         "InvalidOwner",
       );

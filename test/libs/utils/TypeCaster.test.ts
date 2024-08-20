@@ -1,7 +1,10 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
+
+import { ZeroAddress } from "ethers";
+
 import { Reverter } from "@/test/helpers/reverter";
-import { ZERO_ADDR, ETHER_ADDR, ZERO_BYTES32 } from "@/scripts/utils/constants";
+import { ETHER_ADDR, ZERO_BYTES32 } from "@/scripts/utils/constants";
 
 import { TypeCasterMock } from "@ethers-v6";
 
@@ -21,7 +24,7 @@ describe("TypeCaster", () => {
   afterEach(reverter.revert);
 
   describe("array cast", () => {
-    const addressArrays = [[], [ZERO_ADDR, ETHER_ADDR]];
+    const addressArrays = [[], [ZeroAddress, ETHER_ADDR]];
     const bytes32Arrays = [[], addressArrays[1].flatMap((e) => coder.encode(["address"], [e]))];
     const uint256Arrays = [[], <bigint[]>(<unknown>bytes32Arrays[1].flatMap((e) => coder.decode(["uint256"], e)))];
 

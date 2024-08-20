@@ -1,9 +1,12 @@
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
+
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { ZeroAddress } from "ethers";
+
 import { Reverter } from "@/test/helpers/reverter";
 import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
-import { ZERO_ADDR, MAX_UINT256 } from "@/scripts/utils/constants";
+import { MAX_UINT256 } from "@/scripts/utils/constants";
 import { wei } from "@/scripts/utils/utils";
 
 import { OwnableDiamondMock, DiamondERC20Mock, Diamond } from "@ethers-v6";
@@ -85,11 +88,11 @@ describe("DiamondERC20 and InitializableStorage", () => {
     });
 
     it("should not transfer tokens to/from zero address", async () => {
-      await expect(erc20.transferMock(SECOND.address, ZERO_ADDR, wei("100")))
+      await expect(erc20.transferMock(SECOND.address, ZeroAddress, wei("100")))
         .to.be.revertedWithCustomError(erc20, "ReceiverIsZeroAddress")
         .withArgs();
 
-      await expect(erc20.transferMock(ZERO_ADDR, SECOND.address, wei("100")))
+      await expect(erc20.transferMock(ZeroAddress, SECOND.address, wei("100")))
         .to.be.revertedWithCustomError(erc20, "SenderIsZeroAddress")
         .withArgs();
     });
@@ -107,7 +110,7 @@ describe("DiamondERC20 and InitializableStorage", () => {
     });
 
     it("should not mint tokens to zero address", async () => {
-      await expect(erc20.mint(ZERO_ADDR, wei("100")))
+      await expect(erc20.mint(ZeroAddress, wei("100")))
         .to.be.revertedWithCustomError(erc20, "ReceiverIsZeroAddress")
         .withArgs();
     });
@@ -120,7 +123,7 @@ describe("DiamondERC20 and InitializableStorage", () => {
     });
 
     it("should not burn tokens from zero address", async () => {
-      await expect(erc20.burn(ZERO_ADDR, wei("100")))
+      await expect(erc20.burn(ZeroAddress, wei("100")))
         .to.be.revertedWithCustomError(erc20, "SenderIsZeroAddress")
         .withArgs();
     });
@@ -138,11 +141,11 @@ describe("DiamondERC20 and InitializableStorage", () => {
     });
 
     it("should not approve tokens to/from zero address", async () => {
-      await expect(erc20.approveMock(OWNER.address, ZERO_ADDR, wei("100")))
+      await expect(erc20.approveMock(OWNER.address, ZeroAddress, wei("100")))
         .to.be.revertedWithCustomError(erc20, "SpenderIsZeroAddress")
         .withArgs();
 
-      await expect(erc20.approveMock(ZERO_ADDR, OWNER.address, wei("100")))
+      await expect(erc20.approveMock(ZeroAddress, OWNER.address, wei("100")))
         .to.be.revertedWithCustomError(erc20, "ApproverIsZeroAddress")
         .withArgs();
     });

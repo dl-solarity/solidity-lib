@@ -1,8 +1,10 @@
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
+
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { ZeroAddress } from "ethers";
+
 import { Reverter } from "@/test/helpers/reverter";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 import { ProxyBeacon, ERC20Mock } from "@ethers-v6";
 
@@ -31,7 +33,7 @@ describe("ProxyBeacon", () => {
 
   describe("functions", () => {
     it("should upgrade", async () => {
-      expect(await proxyBeacon.implementation()).to.equal(ZERO_ADDR);
+      expect(await proxyBeacon.implementation()).to.equal(ZeroAddress);
 
       await proxyBeacon.upgradeTo(await token.getAddress());
 

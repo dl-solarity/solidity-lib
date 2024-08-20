@@ -1,12 +1,14 @@
 import { ethers } from "hardhat";
+import { expect } from "chai";
+
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { expect } from "chai";
+import { ZeroAddress } from "ethers";
+
 import { Reverter } from "@/test/helpers/reverter";
 
 import { AbstractStakingMock, ERC20Mock } from "@ethers-v6";
 import { wei } from "@/scripts/utils/utils";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 describe("AbstractStaking", () => {
   const reverter = new Reverter();
@@ -165,11 +167,11 @@ describe("AbstractStaking", () => {
       const AbstractStakingMock = await ethers.getContractFactory("AbstractStakingMock");
       let abstractStaking = await AbstractStakingMock.deploy();
 
-      await expect(abstractStaking.__AbstractStakingMock_init(ZERO_ADDR, rewardsToken, rate, stakingStartTime))
+      await expect(abstractStaking.__AbstractStakingMock_init(ZeroAddress, rewardsToken, rate, stakingStartTime))
         .to.be.revertedWithCustomError(abstractStaking, "SharesTokenIsZeroAddress")
         .withArgs();
 
-      await expect(abstractStaking.__AbstractStakingMock_init(sharesToken, ZERO_ADDR, rate, stakingStartTime))
+      await expect(abstractStaking.__AbstractStakingMock_init(sharesToken, ZeroAddress, rate, stakingStartTime))
         .to.be.revertedWithCustomError(abstractStaking, "RewardsTokenIsZeroAddress")
         .withArgs();
     });

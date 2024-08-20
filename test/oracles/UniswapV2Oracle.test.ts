@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
+
 import { wei } from "@/scripts/utils/utils";
 import { Reverter } from "@/test/helpers/reverter";
 

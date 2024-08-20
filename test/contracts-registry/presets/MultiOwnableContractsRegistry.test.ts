@@ -1,8 +1,10 @@
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
+
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { ZeroAddress } from "ethers";
+
 import { Reverter } from "@/test/helpers/reverter";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 import { MultiOwnableContractsRegistry } from "@ethers-v6";
 
@@ -43,27 +45,27 @@ describe("MultiOwnableContractsRegistry", () => {
         .to.be.revertedWithCustomError(contractsRegistry, "UnauthorizedAccount")
         .withArgs(SECOND.address);
 
-      await expect(contractsRegistry.connect(SECOND).upgradeContract("", ZERO_ADDR))
+      await expect(contractsRegistry.connect(SECOND).upgradeContract("", ZeroAddress))
         .to.be.revertedWithCustomError(contractsRegistry, "UnauthorizedAccount")
         .withArgs(SECOND.address);
 
-      await expect(contractsRegistry.connect(SECOND).upgradeContractAndCall("", ZERO_ADDR, "0x"))
+      await expect(contractsRegistry.connect(SECOND).upgradeContractAndCall("", ZeroAddress, "0x"))
         .to.be.revertedWithCustomError(contractsRegistry, "UnauthorizedAccount")
         .withArgs(SECOND.address);
 
-      await expect(contractsRegistry.connect(SECOND).addContract("", ZERO_ADDR))
+      await expect(contractsRegistry.connect(SECOND).addContract("", ZeroAddress))
         .to.be.revertedWithCustomError(contractsRegistry, "UnauthorizedAccount")
         .withArgs(SECOND.address);
 
-      await expect(contractsRegistry.connect(SECOND).addProxyContract("", ZERO_ADDR))
+      await expect(contractsRegistry.connect(SECOND).addProxyContract("", ZeroAddress))
         .to.be.revertedWithCustomError(contractsRegistry, "UnauthorizedAccount")
         .withArgs(SECOND.address);
 
-      await expect(contractsRegistry.connect(SECOND).addProxyContractAndCall("", ZERO_ADDR, "0x"))
+      await expect(contractsRegistry.connect(SECOND).addProxyContractAndCall("", ZeroAddress, "0x"))
         .to.be.revertedWithCustomError(contractsRegistry, "UnauthorizedAccount")
         .withArgs(SECOND.address);
 
-      await expect(contractsRegistry.connect(SECOND).justAddProxyContract("", ZERO_ADDR))
+      await expect(contractsRegistry.connect(SECOND).justAddProxyContract("", ZeroAddress))
         .to.be.revertedWithCustomError(contractsRegistry, "UnauthorizedAccount")
         .withArgs(SECOND.address);
 
@@ -79,17 +81,17 @@ describe("MultiOwnableContractsRegistry", () => {
 
       await expect(contractsRegistry.injectDependenciesWithData("", "0x")).to.be.reverted;
 
-      await expect(contractsRegistry.upgradeContract("", ZERO_ADDR)).to.be.reverted;
+      await expect(contractsRegistry.upgradeContract("", ZeroAddress)).to.be.reverted;
 
-      await expect(contractsRegistry.upgradeContractAndCall("", ZERO_ADDR, "0x")).to.be.reverted;
+      await expect(contractsRegistry.upgradeContractAndCall("", ZeroAddress, "0x")).to.be.reverted;
 
-      await expect(contractsRegistry.addContract("", ZERO_ADDR)).to.be.reverted;
+      await expect(contractsRegistry.addContract("", ZeroAddress)).to.be.reverted;
 
-      await expect(contractsRegistry.addProxyContract("", ZERO_ADDR)).to.be.reverted;
+      await expect(contractsRegistry.addProxyContract("", ZeroAddress)).to.be.reverted;
 
-      await expect(contractsRegistry.addProxyContractAndCall("", ZERO_ADDR, "0x")).to.be.reverted;
+      await expect(contractsRegistry.addProxyContractAndCall("", ZeroAddress, "0x")).to.be.reverted;
 
-      await expect(contractsRegistry.justAddProxyContract("", ZERO_ADDR)).to.be.reverted;
+      await expect(contractsRegistry.justAddProxyContract("", ZeroAddress)).to.be.reverted;
 
       await expect(contractsRegistry.removeContract("")).to.be.reverted;
     });
