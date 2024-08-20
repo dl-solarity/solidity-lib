@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../../diamond/tokens/ERC20/DiamondERC20.sol";
+import {DiamondERC20} from "../../../diamond/tokens/ERC20/DiamondERC20.sol";
 
 contract DiamondERC20Mock is DiamondERC20 {
     constructor() {
