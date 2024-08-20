@@ -38,7 +38,7 @@ describe("ReturnDataProxy", () => {
     });
 
     it("should revert with message", async () => {
-      await expect(proxyMock.callRevertWithMessage()).to.be.revertedWith("test");
+      await expect(proxyMock.callRevertWithMessage()).to.be.revertedWithCustomError(rawMock, "Test").withArgs();
     });
   });
 
@@ -51,7 +51,7 @@ describe("ReturnDataProxy", () => {
     });
 
     it("should return revert message", async () => {
-      await expect(proxyMock.staticCallRevertWithMessage()).to.be.revertedWith("test");
+      await expect(proxyMock.staticCallRevertWithMessage()).to.be.revertedWithCustomError(rawMock, "Test").withArgs();
     });
 
     it("should return value with passed arguments", async () => {
@@ -73,7 +73,7 @@ describe("ReturnDataProxy", () => {
     });
 
     it("should revert with message", async () => {
-      await expect(proxyMock.delegateCallRevertWithMessage()).to.be.revertedWith("test");
+      await expect(proxyMock.delegateCallRevertWithMessage()).to.be.revertedWithCustomError(rawMock, "Test").withArgs();
     });
   });
 });
