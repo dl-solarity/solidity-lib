@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { toBeHex } from "ethers";
 
 import { Hash, LocalStorageDB, Merkletree, Proof, str2Bytes, verifyProof } from "@iden3/js-merkletree";
 
@@ -94,23 +95,23 @@ describe("SparseMerkleTree", () => {
     });
 
     it("should not initialize twice", async () => {
-      await expect(merkleTree.initializeUintTree(20)).to.be.rejectedWith(
-        "SparseMerkleTree: tree is already initialized",
-      );
+      await expect(merkleTree.initializeUintTree(20))
+        .to.be.revertedWithCustomError(merkleTree, "TreeAlreadyInitialized")
+        .withArgs();
     });
 
     it("should revert if trying to set incorrect max depth", async () => {
-      await expect(merkleTree.setMaxDepthUintTree(0)).to.be.rejectedWith(
-        "SparseMerkleTree: max depth must be greater than zero",
-      );
+      await expect(merkleTree.setMaxDepthUintTree(0))
+        .to.be.revertedWithCustomError(merkleTree, "MaxDepthIsZero")
+        .withArgs();
 
-      await expect(merkleTree.setMaxDepthUintTree(15)).to.be.rejectedWith(
-        "SparseMerkleTree: max depth can only be increased",
-      );
+      await expect(merkleTree.setMaxDepthUintTree(15))
+        .to.be.revertedWithCustomError(merkleTree, "NewMaxDepthMustBeLarger")
+        .withArgs(merkleTree.getUintMaxDepth(), 15);
 
-      await expect(merkleTree.setMaxDepthUintTree(300)).to.be.rejectedWith(
-        "SparseMerkleTree: max depth is greater than hard cap",
-      );
+      await expect(merkleTree.setMaxDepthUintTree(300))
+        .to.be.revertedWithCustomError(merkleTree, "MaxDepthExceedsHardCap")
+        .withArgs(300);
     });
 
     it("should set max depth bigger than the current one", async () => {
@@ -128,15 +129,17 @@ describe("SparseMerkleTree", () => {
       });
       const newMerkleTree = await SparseMerkleTreeMock.deploy();
 
-      await expect(newMerkleTree.addUint(ethers.toBeHex(1n, 32), 1n)).to.be.rejectedWith(
-        "SparseMerkleTree: tree is not initialized",
-      );
-      await expect(newMerkleTree.removeUint(ethers.toBeHex(1n, 32))).to.be.rejectedWith(
-        "SparseMerkleTree: tree is not initialized",
-      );
-      await expect(newMerkleTree.updateUint(ethers.toBeHex(1n, 32), 1n)).to.be.rejectedWith(
-        "SparseMerkleTree: tree is not initialized",
-      );
+      await expect(newMerkleTree.addUint(ethers.toBeHex(1n, 32), 1n))
+        .to.be.revertedWithCustomError(merkleTree, "TreeNotInitialized")
+        .withArgs();
+
+      await expect(newMerkleTree.removeUint(ethers.toBeHex(1n, 32)))
+        .to.be.revertedWithCustomError(merkleTree, "TreeNotInitialized")
+        .withArgs();
+
+      await expect(newMerkleTree.updateUint(ethers.toBeHex(1n, 32), 1n))
+        .to.be.revertedWithCustomError(merkleTree, "TreeNotInitialized")
+        .withArgs();
     });
 
     it("should build a Merkle Tree of a predefined size with correct initial values", async () => {
@@ -181,7 +184,9 @@ describe("SparseMerkleTree", () => {
 
       expect(await merkleTree.isUintCustomHasherSet()).to.be.true;
 
-      await expect(merkleTree.setUintPoseidonHasher()).to.be.rejectedWith("SparseMerkleTree: tree is not empty");
+      await expect(merkleTree.setUintPoseidonHasher())
+        .to.be.revertedWithCustomError(merkleTree, "TreeIsNotEmpty")
+        .withArgs();
     });
 
     it("should add and full remove elements from Merkle Tree correctly", async () => {
@@ -282,12 +287,13 @@ describe("SparseMerkleTree", () => {
         await merkleTree.addUint(hexKey, key);
       }
 
-      await expect(merkleTree.removeUint(ethers.toBeHex(8, 32))).to.be.revertedWith(
-        "SparseMerkleTree: the node does not exist",
-      );
-      await expect(merkleTree.removeUint(ethers.toBeHex(9, 32))).to.be.revertedWith(
-        "SparseMerkleTree: the leaf does not match",
-      );
+      await expect(merkleTree.removeUint(ethers.toBeHex(8, 32)))
+        .to.be.revertedWithCustomError(merkleTree, "NodeDoesNotExist")
+        .withArgs(0);
+
+      await expect(merkleTree.removeUint(ethers.toBeHex(9, 32)))
+        .to.be.revertedWithCustomError(merkleTree, "LeafDoesNotMatch")
+        .withArgs(toBeHex(1, 32), toBeHex(9, 32));
     });
 
     it("should update existing leaves", async () => {
@@ -328,12 +334,13 @@ describe("SparseMerkleTree", () => {
         await merkleTree.addUint(hexKey, key);
       }
 
-      await expect(merkleTree.updateUint(ethers.toBeHex(8, 32), 1n)).to.be.revertedWith(
-        "SparseMerkleTree: the node does not exist",
-      );
-      await expect(merkleTree.updateUint(ethers.toBeHex(9, 32), 1n)).to.be.revertedWith(
-        "SparseMerkleTree: the leaf does not match",
-      );
+      await expect(merkleTree.updateUint(ethers.toBeHex(8, 32), 1n))
+        .to.be.revertedWithCustomError(merkleTree, "NodeDoesNotExist")
+        .withArgs(0);
+
+      await expect(merkleTree.updateUint(ethers.toBeHex(9, 32), 1n))
+        .to.be.revertedWithCustomError(merkleTree, "LeafDoesNotMatch")
+        .withArgs(toBeHex(1, 32), toBeHex(9, 32));
     });
 
     it("should generate empty proof on empty tree", async () => {
@@ -373,7 +380,9 @@ describe("SparseMerkleTree", () => {
 
       await merkleTree.addUint(key, value);
 
-      await expect(merkleTree.addUint(key, value)).to.be.rejectedWith("SparseMerkleTree: the key already exists");
+      await expect(merkleTree.addUint(key, value))
+        .to.be.revertedWithCustomError(merkleTree, "KeyAlreadyExists")
+        .withArgs(key);
     });
 
     it("should revert if max depth is reached", async () => {
@@ -390,9 +399,9 @@ describe("SparseMerkleTree", () => {
       await newMerkleTree.addUint(ethers.toBeHex(1n, 32), 1n);
       await newMerkleTree.addUint(ethers.toBeHex(2n, 32), 1n);
 
-      await expect(newMerkleTree.addUint(ethers.toBeHex(3n, 32), 1n)).to.be.rejectedWith(
-        "SparseMerkleTree: max depth reached",
-      );
+      await expect(newMerkleTree.addUint(ethers.toBeHex(3n, 32), 1n))
+        .to.be.revertedWithCustomError(merkleTree, "MaxDepthReached")
+        .withArgs();
     });
 
     it("should get empty Node by non-existing key", async () => {
@@ -413,9 +422,9 @@ describe("SparseMerkleTree", () => {
     });
 
     it("should not initialize twice", async () => {
-      await expect(merkleTree.initializeBytes32Tree(20)).to.be.rejectedWith(
-        "SparseMerkleTree: tree is already initialized",
-      );
+      await expect(merkleTree.initializeBytes32Tree(20))
+        .to.be.revertedWithCustomError(merkleTree, "TreeAlreadyInitialized")
+        .withArgs();
     });
 
     it("should build a Merkle Tree of a predefined size with correct initial values", async () => {
@@ -458,7 +467,9 @@ describe("SparseMerkleTree", () => {
 
       expect(await merkleTree.isBytes32CustomHasherSet()).to.be.true;
 
-      await expect(merkleTree.setBytes32PoseidonHasher()).to.be.rejectedWith("SparseMerkleTree: tree is not empty");
+      await expect(merkleTree.setBytes32PoseidonHasher())
+        .to.be.revertedWithCustomError(merkleTree, "TreeIsNotEmpty")
+        .withArgs();
     });
 
     it("should add and full remove elements from Merkle Tree correctly", async () => {
@@ -526,9 +537,9 @@ describe("SparseMerkleTree", () => {
     });
 
     it("should not initialize twice", async () => {
-      await expect(merkleTree.initializeAddressTree(20)).to.be.rejectedWith(
-        "SparseMerkleTree: tree is already initialized",
-      );
+      await expect(merkleTree.initializeAddressTree(20))
+        .to.be.revertedWithCustomError(merkleTree, "TreeAlreadyInitialized")
+        .withArgs();
     });
 
     it("should build a Merkle Tree of a predefined size with correct initial values", async () => {
@@ -571,7 +582,9 @@ describe("SparseMerkleTree", () => {
 
       expect(await merkleTree.isAddressCustomHasherSet()).to.be.true;
 
-      await expect(merkleTree.setAddressPoseidonHasher()).to.be.rejectedWith("SparseMerkleTree: tree is not empty");
+      await expect(merkleTree.setAddressPoseidonHasher())
+        .to.be.revertedWithCustomError(merkleTree, "TreeIsNotEmpty")
+        .withArgs();
     });
 
     it("should add and full remove elements from Merkle Tree correctly", async () => {

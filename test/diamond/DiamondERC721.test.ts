@@ -48,14 +48,16 @@ describe("DiamondERC721 and InitializableStorage", () => {
 
   describe("access", () => {
     it("should initialize only once", async () => {
-      await expect(erc721.__DiamondERC721Mock_init("Mock Token", "MT")).to.be.revertedWith(
-        "Initializable: contract is already initialized",
+      await expect(erc721.__DiamondERC721Mock_init("Mock Token", "MT")).to.be.revertedWithCustomError(
+        erc721,
+        "AlreadyInitialized",
       );
     });
 
     it("should initialize only by top level contract", async () => {
-      await expect(erc721.__DiamondERC721Direct_init("Mock Token", "MT")).to.be.revertedWith(
-        "Initializable: contract is not initializing",
+      await expect(erc721.__DiamondERC721Direct_init("Mock Token", "MT")).to.be.revertedWithCustomError(
+        erc721,
+        "NotInitializing",
       );
     });
 
@@ -69,7 +71,7 @@ describe("DiamondERC721 and InitializableStorage", () => {
         .to.emit(contract, "Initialized")
         .withArgs(await erc721.DIAMOND_ERC721_STORAGE_SLOT());
 
-      await expect(contract.disableInitializers()).to.be.revertedWith("Initializable: contract is initializing");
+      await expect(contract.disableInitializers()).to.be.revertedWithCustomError(erc721, "InvalidInitialization");
     });
   });
 
@@ -87,16 +89,17 @@ describe("DiamondERC721 and InitializableStorage", () => {
       expect(await erc721.tokenByIndex(0)).to.equal(1);
       expect(await erc721.ownerOf(1)).to.equal(OWNER.address);
 
-      await expect(erc721.tokenOfOwnerByIndex(OWNER.address, 10)).to.be.revertedWith(
-        "ERC721Enumerable: owner index out of bounds",
-      );
-      await expect(erc721.tokenByIndex(10)).to.be.revertedWith("ERC721Enumerable: global index out of bounds");
+      await expect(erc721.tokenOfOwnerByIndex(OWNER.address, 10))
+        .to.be.revertedWithCustomError(erc721, "OwnerIndexOutOfBounds")
+        .withArgs(OWNER.address, 10);
+
+      await expect(erc721.tokenByIndex(10)).to.be.revertedWithCustomError(erc721, "IndexOutOfBounds").withArgs(10);
 
       expect(await erc721.tokenURI(1)).to.equal("");
       await erc721.setBaseURI("https://example.com/");
       expect(await erc721.tokenURI(1)).to.equal("https://example.com/1");
 
-      await expect(erc721.tokenURI(10)).to.be.revertedWith("ERC721: invalid token ID");
+      await expect(erc721.tokenURI(10)).to.be.revertedWithCustomError(erc721, "NonexistentToken").withArgs(10);
     });
 
     it("should support all necessary interfaces", async () => {
@@ -122,31 +125,36 @@ describe("DiamondERC721 and InitializableStorage", () => {
       });
 
       it("should not mint tokens to zero address", async () => {
-        await expect(erc721.mint(ZERO_ADDR, 1)).to.be.revertedWith("ERC721: mint to the zero address");
+        await expect(erc721.mint(ZERO_ADDR, 1)).to.be.revertedWithCustomError(erc721, "ReceiverIsZeroAddress");
       });
 
       it("should not mint tokens if it's alredy minted", async () => {
         await erc721.mint(OWNER.address, 1);
-        await expect(erc721.mint(OWNER.address, 1)).to.be.revertedWith("ERC721: token already minted");
+        await expect(erc721.mint(OWNER.address, 1))
+          .to.be.revertedWithCustomError(erc721, "TokenAlreadyMinted")
+          .withArgs(1);
       });
 
       it("should not mint tokens if token is minted after `_beforeTokenTransfer` hook", async () => {
         await erc721.toggleReplaceOwner();
 
-        await expect(erc721.mint(OWNER.address, 1)).to.be.revertedWith("ERC721: token already minted");
+        await expect(erc721.mint(OWNER.address, 1))
+          .to.be.revertedWithCustomError(erc721, "TokenAlreadyMinted")
+          .withArgs(1);
       });
 
       it("should not mint token if the receiver is a contract and doesn't implement onERC721Received correctly", async () => {
         const contract1 = await (await ethers.getContractFactory("DiamondERC721Mock")).deploy();
 
-        await expect(erc721.mint(await contract1.getAddress(), 1)).to.be.revertedWith(
-          "ERC721: transfer to non ERC721Receiver implementer",
-        );
+        await expect(erc721.mint(await contract1.getAddress(), 1))
+          .to.be.revertedWithCustomError(erc721, "NonERC721Receiver")
+          .withArgs(await contract1.getAddress());
 
         const contract2 = await (await ethers.getContractFactory("NonERC721Receiver")).deploy();
 
-        await expect(erc721.mint(await contract2.getAddress(), 1)).to.be.revertedWith(
-          "ERC721Receiver: reverting onERC721Received",
+        await expect(erc721.mint(await contract2.getAddress(), 1)).to.be.revertedWithCustomError(
+          contract2,
+          "RevertingOnERC721Received",
         );
       });
     });
@@ -165,7 +173,7 @@ describe("DiamondERC721 and InitializableStorage", () => {
       });
 
       it("should not burn an incorrect token", async () => {
-        await expect(erc721.burn(1)).to.be.revertedWith("ERC721: invalid token ID");
+        await expect(erc721.burn(1)).to.be.revertedWithCustomError(erc721, "NonexistentToken").withArgs(1);
       });
     });
 
@@ -175,8 +183,9 @@ describe("DiamondERC721 and InitializableStorage", () => {
       });
 
       it("before token transfer hook should not accept more than one token", async () => {
-        await expect(erc721.beforeTokenTransfer(2)).to.be.revertedWith(
-          "ERC721Enumerable: consecutive transfers not supported",
+        await expect(erc721.beforeTokenTransfer(2)).to.be.revertedWithCustomError(
+          erc721,
+          "ConsecutiveTransfersNotSupported",
         );
       });
     });
@@ -231,27 +240,29 @@ describe("DiamondERC721 and InitializableStorage", () => {
       it("should not transfer tokens when caller is not an owner or not approved", async () => {
         await erc721.mint(OWNER.address, 1);
 
-        await expect(erc721.connect(SECOND).transferFrom(OWNER.address, SECOND.address, 1)).to.be.revertedWith(
-          "ERC721: caller is not token owner or approved",
-        );
-        await expect(erc721.connect(SECOND).safeTransferFromMock(OWNER.address, SECOND.address, 1)).to.be.revertedWith(
-          "ERC721: caller is not token owner or approved",
-        );
+        await expect(erc721.connect(SECOND).transferFrom(OWNER.address, SECOND.address, 1))
+          .to.be.revertedWithCustomError(erc721, "InvalidSpender")
+          .withArgs(SECOND.address, 1);
+
+        await expect(erc721.connect(SECOND).safeTransferFromMock(OWNER.address, SECOND.address, 1))
+          .to.be.revertedWithCustomError(erc721, "InvalidSpender")
+          .withArgs(SECOND.address, 1);
       });
 
       it("should not transfer tokens when call is not an owner", async () => {
         await erc721.mint(OWNER.address, 1);
 
-        await expect(erc721.transferFromMock(SECOND.address, OWNER.address, 1)).to.be.revertedWith(
-          "ERC721: transfer from incorrect owner",
-        );
+        await expect(erc721.transferFromMock(SECOND.address, OWNER.address, 1))
+          .to.be.revertedWithCustomError(erc721, "UnauthorizedAccount")
+          .withArgs(SECOND.address);
       });
 
       it("should not transfer tokens to zero address", async () => {
         await erc721.mint(OWNER.address, 1);
 
-        await expect(erc721.transferFromMock(OWNER.address, ZERO_ADDR, 1)).to.be.revertedWith(
-          "ERC721: transfer to the zero address",
+        await expect(erc721.transferFromMock(OWNER.address, ZERO_ADDR, 1)).to.be.revertedWithCustomError(
+          erc721,
+          "ReceiverIsZeroAddress",
         );
       });
 
@@ -260,8 +271,9 @@ describe("DiamondERC721 and InitializableStorage", () => {
 
         await erc721.toggleReplaceOwner();
 
-        await expect(erc721.transferFromMock(OWNER.address, SECOND.address, 1)).to.be.revertedWith(
-          "ERC721: transfer from incorrect owner",
+        await expect(erc721.transferFromMock(OWNER.address, SECOND.address, 1)).to.be.revertedWithCustomError(
+          erc721,
+          "UnauthorizedAccount",
         );
       });
 
@@ -270,9 +282,9 @@ describe("DiamondERC721 and InitializableStorage", () => {
 
         const contract = await (await ethers.getContractFactory("DiamondERC721Mock")).deploy();
 
-        await expect(erc721.safeTransferFromMock(OWNER.address, await contract.getAddress(), 1)).to.be.revertedWith(
-          "ERC721: transfer to non ERC721Receiver implementer",
-        );
+        await expect(erc721.safeTransferFromMock(OWNER.address, await contract.getAddress(), 1))
+          .to.be.revertedWithCustomError(erc721, "NonERC721Receiver")
+          .withArgs(await contract.getAddress());
       });
     });
 
@@ -298,20 +310,24 @@ describe("DiamondERC721 and InitializableStorage", () => {
       });
 
       it("should not approve incorrect token", async () => {
-        await expect(erc721.approve(OWNER.address, 1)).to.be.revertedWith("ERC721: invalid token ID");
+        await expect(erc721.approve(OWNER.address, 1))
+          .to.be.revertedWithCustomError(erc721, "NonexistentToken")
+          .withArgs(1);
       });
 
       it("should not approve token if caller is not an owner", async () => {
         await erc721.mint(OWNER.address, 1);
-        await expect(erc721.connect(SECOND).approve(THIRD.address, 1)).to.be.revertedWith(
-          "ERC721: approve caller is not token owner or approved for all",
-        );
+        await expect(erc721.connect(SECOND).approve(THIRD.address, 1))
+          .to.be.revertedWithCustomError(erc721, "InvalidApprover")
+          .withArgs(SECOND.address, OWNER.address);
       });
 
       it("should not approve token if spender and caller are the same", async () => {
         await erc721.mint(OWNER.address, 1);
 
-        await expect(erc721.approve(OWNER.address, 1)).to.be.revertedWith("ERC721: approval to current owner");
+        await expect(erc721.approve(OWNER.address, 1))
+          .to.be.revertedWithCustomError(erc721, "ApprovalToCurrentOwner")
+          .withArgs(OWNER.address, 1);
       });
 
       it("should approve all tokens", async () => {
@@ -332,7 +348,9 @@ describe("DiamondERC721 and InitializableStorage", () => {
         await erc721.mint(OWNER.address, 2);
         await erc721.mint(OWNER.address, 3);
 
-        await expect(erc721.setApprovalForAll(OWNER.address, true)).to.be.revertedWith("ERC721: approve to caller");
+        await expect(erc721.setApprovalForAll(OWNER.address, true))
+          .to.be.revertedWithCustomError(erc721, "ApproveToCaller")
+          .withArgs(OWNER.address);
       });
     });
   });

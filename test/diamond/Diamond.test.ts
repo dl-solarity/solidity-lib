@@ -31,15 +31,15 @@ describe("Diamond", () => {
 
   describe("access", () => {
     it("should initialize only once", async () => {
-      await expect(diamond.__OwnableDiamondMock_init()).to.be.revertedWith(
-        "Initializable: contract is already initialized",
-      );
+      await expect(diamond.__OwnableDiamondMock_init())
+        .to.be.revertedWithCustomError(diamond, "AlreadyInitialized")
+        .withArgs();
     });
 
     it("should initialize only by top level contract", async () => {
-      await expect(diamond.__OwnableDiamondDirect_init()).to.be.revertedWith(
-        "Initializable: contract is not initializing",
-      );
+      await expect(diamond.__OwnableDiamondDirect_init())
+        .to.be.revertedWithCustomError(diamond, "NotInitializing")
+        .withArgs();
     });
   });
 
@@ -61,17 +61,21 @@ describe("Diamond", () => {
     });
 
     it("should not transfer ownership from non-owner", async () => {
-      await expect(diamond.connect(SECOND).transferOwnership(SECOND.address)).to.be.revertedWith(
-        "DiamondOwnable: not an owner",
-      );
+      await expect(diamond.connect(SECOND).transferOwnership(SECOND.address))
+        .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
+        .withArgs(SECOND.address, OWNER.address);
     });
 
     it("should not renounce ownership from non-owner", async () => {
-      await expect(diamond.connect(SECOND).renounceOwnership()).to.be.revertedWith("DiamondOwnable: not an owner");
+      await expect(diamond.connect(SECOND).renounceOwnership())
+        .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
+        .withArgs(SECOND.address, OWNER.address);
     });
 
     it("should not transfer ownership to zero address", async () => {
-      await expect(diamond.transferOwnership(ZERO_ADDR)).to.be.revertedWith("DiamondOwnable: zero address owner");
+      await expect(diamond.transferOwnership(ZERO_ADDR))
+        .to.be.revertedWithCustomError(diamond, "InvalidOwner")
+        .withArgs();
     });
   });
 
@@ -128,16 +132,16 @@ describe("Diamond", () => {
 
       it("should revert if init function reverted", async () => {
         const initWithError = dummyInit.initWithError.fragment.selector;
-        await expect(diamond.diamondCutLong(facets, await dummyInit.getAddress(), initWithError)).to.be.revertedWith(
-          "Diamond: initialization function reverted",
-        );
+        await expect(diamond.diamondCutLong(facets, await dummyInit.getAddress(), initWithError))
+          .to.be.revertedWithCustomError(diamond, "InitializationReverted")
+          .withArgs(await dummyInit.getAddress(), initWithError);
       });
 
       it("should revert if init function reverted with message", async () => {
         const initWithErrorMsg = dummyInit.initWithErrorMsg.fragment.selector;
-        await expect(diamond.diamondCutLong(facets, await dummyInit.getAddress(), initWithErrorMsg)).to.be.revertedWith(
-          "DiamondInit: init error",
-        );
+        await expect(diamond.diamondCutLong(facets, await dummyInit.getAddress(), initWithErrorMsg))
+          .to.be.revertedWithCustomError(dummyInit, "InitError")
+          .withArgs();
       });
     });
 
@@ -166,27 +170,33 @@ describe("Diamond", () => {
 
       it("should not add facet with zero address", async () => {
         facets[0].facetAddress = ZERO_ADDR;
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet cannot be zero address");
+        await expect(diamond.diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "FacetIsZeroAddress")
+          .withArgs();
       });
 
       it("should not add facet when no selectors provided", async () => {
         facets[0].functionSelectors = [];
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: no selectors provided");
+        await expect(diamond.diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "NoSelectorsProvided")
+          .withArgs();
       });
 
       it("only owner should add facets", async () => {
-        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith(
-          "DiamondOwnable: not an owner",
-        );
+        await expect(diamond.connect(SECOND).diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
+          .withArgs(SECOND.address, OWNER.address);
 
-        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "DiamondOwnable: not an owner",
-        );
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32))
+          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
+          .withArgs(SECOND.address, OWNER.address);
       });
 
       it("should not add duplicate selectors", async () => {
         await diamond.diamondCutShort(facets);
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: selector already added");
+        await expect(diamond.diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "SelectorAlreadyAdded")
+          .withArgs(facets[0].facetAddress, selectors[0]);
       });
     });
 
@@ -236,12 +246,16 @@ describe("Diamond", () => {
 
       it("should not remove facet when facet is zero address", async () => {
         facets[0].facetAddress = ZERO_ADDR;
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet cannot be zero address");
+        await expect(diamond.diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "FacetIsZeroAddress")
+          .withArgs();
       });
 
       it("should not remove facet when no selectors provided", async () => {
         facets[0].functionSelectors = [];
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: no selectors provided");
+        await expect(diamond.diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "NoSelectorsProvided")
+          .withArgs();
       });
 
       it("should not remove selectors from another facet", async () => {
@@ -251,17 +265,19 @@ describe("Diamond", () => {
         facets[0].action = FacetAction.Remove;
         facets[0].facetAddress = await diamond.getAddress();
 
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: selector from another facet");
+        await expect(diamond.diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "SelectorFromAnotherFacet")
+          .withArgs(facets[0].functionSelectors[0]);
       });
 
       it("only owner should remove facets", async () => {
-        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith(
-          "DiamondOwnable: not an owner",
-        );
+        await expect(diamond.connect(SECOND).diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
+          .withArgs(SECOND.address, OWNER.address);
 
-        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "DiamondOwnable: not an owner",
-        );
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32))
+          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
+          .withArgs(SECOND.address, OWNER.address);
       });
     });
 
@@ -322,12 +338,16 @@ describe("Diamond", () => {
 
       it("should not replace facet when facet is zero address", async () => {
         facets[0].facetAddress = ZERO_ADDR;
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: facet cannot be zero address");
+        await expect(diamond.diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "FacetIsZeroAddress")
+          .withArgs();
       });
 
       it("should not replace facet when no selectors provided", async () => {
         facets[0].functionSelectors = [];
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: no selectors provided");
+        await expect(diamond.diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "NoSelectorsProvided")
+          .withArgs();
       });
 
       it("should not replace facet with the same facet", async () => {
@@ -335,7 +355,9 @@ describe("Diamond", () => {
         await diamond.diamondCutShort(facets);
 
         facets[0].action = FacetAction.Replace;
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: cannot replace to the same facet");
+        await expect(diamond.diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "SelectorIsAlreadyInThisFaucet")
+          .withArgs(facets[0].functionSelectors[0], facets[0].facetAddress);
       });
 
       it("should not replace facet if selector is not registered", async () => {
@@ -345,17 +367,19 @@ describe("Diamond", () => {
         facets[0].action = FacetAction.Replace;
         // set random selector
         facets[0].functionSelectors = ["0x00000000"];
-        await expect(diamond.diamondCutShort(facets)).to.be.revertedWith("Diamond: no facet found for selector");
+        await expect(diamond.diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "NoFacetForSelector")
+          .withArgs(facets[0].functionSelectors[0]);
       });
 
       it("only owner should replace facets", async () => {
-        await expect(diamond.connect(SECOND).diamondCutShort(facets)).to.be.revertedWith(
-          "DiamondOwnable: not an owner",
-        );
+        await expect(diamond.connect(SECOND).diamondCutShort(facets))
+          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
+          .withArgs(SECOND.address, OWNER.address);
 
-        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32)).to.be.revertedWith(
-          "DiamondOwnable: not an owner",
-        );
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZERO_ADDR, ZERO_BYTES32))
+          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
+          .withArgs(SECOND.address, OWNER.address);
       });
     });
 
@@ -398,7 +422,9 @@ describe("Diamond", () => {
         const DummyFacetMock = await ethers.getContractFactory("DummyFacetMock");
         const facet = <DummyFacetMock>DummyFacetMock.attach(await diamond.getAddress());
 
-        await expect(facet.getDummyString()).to.be.revertedWith("Diamond: selector is not registered");
+        await expect(facet.getDummyString())
+          .to.be.revertedWithCustomError(diamond, "SelectorNotRegistered")
+          .withArgs(getSelectors(facet.interface)[1]);
       });
 
       it("should not receive ether if receive is not added", async () => {
@@ -407,7 +433,9 @@ describe("Diamond", () => {
           value: wei("1"),
         };
 
-        await expect(OWNER.sendTransaction(tx)).to.be.revertedWith("Diamond: selector is not registered");
+        await expect(OWNER.sendTransaction(tx))
+          .to.be.revertedWithCustomError(diamond, "SelectorNotRegistered")
+          .withArgs("0x00000000");
       });
     });
   });

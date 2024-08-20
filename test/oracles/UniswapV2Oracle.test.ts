@@ -69,7 +69,7 @@ describe("UniswapV2Oracle", () => {
     });
 
     it("shouldn't set 0 timewindow", async () => {
-      await expect(oracle.setTimeWindow(0)).to.be.revertedWith("UniswapV2Oracle: time window can't be 0");
+      await expect(oracle.setTimeWindow(0)).to.be.revertedWithCustomError(oracle, "TimeWindowIsZero").withArgs();
     });
 
     it("should add paths correctly", async () => {
@@ -84,19 +84,23 @@ describe("UniswapV2Oracle", () => {
     });
 
     it("should not allow to set path with length < 2", async () => {
-      await expect(oracle.addPaths([[C_TOKEN]])).to.be.revertedWith("UniswapV2Oracle: path must be longer than 2");
+      await expect(oracle.addPaths([[C_TOKEN]]))
+        .to.be.revertedWithCustomError(oracle, "InvalidPath")
+        .withArgs(C_TOKEN, 1);
     });
 
     it("should not allow to set path with non-existent pairs", async () => {
-      await expect(oracle.addPaths([A_C_PATH])).to.be.revertedWith("UniswapV2Oracle: uniswap pair doesn't exist");
+      await expect(oracle.addPaths([A_C_PATH]))
+        .to.be.revertedWithCustomError(oracle, "PairDoesNotExist")
+        .withArgs(A_TOKEN, C_TOKEN);
     });
 
     it("should not add same path twice", async () => {
       await createPairs();
 
-      await expect(oracle.addPaths([A_C_PATH, A_C_PATH])).to.be.revertedWith(
-        "UniswapV2Oracle: path already registered",
-      );
+      await expect(oracle.addPaths([A_C_PATH, A_C_PATH]))
+        .to.be.revertedWithCustomError(oracle, "PathAlreadyRegistered")
+        .withArgs(A_TOKEN);
     });
   });
 
@@ -208,7 +212,9 @@ describe("UniswapV2Oracle", () => {
     });
 
     it("should not get price if there is no path", async () => {
-      await expect(oracle.getPrice(A_TOKEN, 10)).to.be.revertedWith("UniswapV2Oracle: invalid path");
+      await expect(oracle.getPrice(A_TOKEN, 10))
+        .to.be.revertedWithCustomError(oracle, "InvalidPath")
+        .withArgs(A_TOKEN, 0);
     });
   });
 });

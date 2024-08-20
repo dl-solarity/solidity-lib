@@ -88,26 +88,26 @@ describe("ContractsRegistry", () => {
 
   describe("contract management", async () => {
     it("should fail adding ZERO_ADDR address", async () => {
-      await expect(
-        contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR),
-      ).to.be.revertedWith("ContractsRegistry: zero address is forbidden");
+      await expect(contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR))
+        .to.be.revertedWithCustomError(contractsRegistry, "ZeroAddressProvided")
+        .withArgs(await contractsRegistry.DEPENDANT_NAME());
 
-      await expect(
-        contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR),
-      ).to.be.revertedWith("ContractsRegistry: zero address is forbidden");
+      await expect(contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR))
+        .to.be.revertedWithCustomError(contractsRegistry, "ZeroAddressProvided")
+        .withArgs(await contractsRegistry.DEPENDANT_NAME());
 
-      await expect(
-        contractsRegistry.justAddProxyContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR),
-      ).to.be.revertedWith("ContractsRegistry: zero address is forbidden");
+      await expect(contractsRegistry.justAddProxyContract(await contractsRegistry.DEPENDANT_NAME(), ZERO_ADDR))
+        .to.be.revertedWithCustomError(contractsRegistry, "ZeroAddressProvided")
+        .withArgs(await contractsRegistry.DEPENDANT_NAME());
     });
 
     it("should add and remove the contract", async () => {
       const DependantMock = await ethers.getContractFactory("DependantMock");
       const dependant = await DependantMock.deploy();
 
-      await expect(contractsRegistry.removeContract(await contractsRegistry.DEPENDANT_NAME())).to.be.revertedWith(
-        "ContractsRegistry: this mapping doesn't exist",
-      );
+      await expect(contractsRegistry.removeContract(await contractsRegistry.DEPENDANT_NAME()))
+        .to.be.revertedWithCustomError(contractsRegistry, "NoMappingExists")
+        .withArgs(await contractsRegistry.DEPENDANT_NAME());
 
       await contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), await dependant.getAddress());
 
@@ -116,9 +116,10 @@ describe("ContractsRegistry", () => {
 
       await contractsRegistry.removeContract(await contractsRegistry.DEPENDANT_NAME());
 
-      await expect(contractsRegistry.getDependantContract()).to.be.revertedWith(
-        "ContractsRegistry: this mapping doesn't exist",
-      );
+      await expect(contractsRegistry.getDependantContract())
+        .to.be.revertedWithCustomError(contractsRegistry, "NoMappingExists")
+        .withArgs(await contractsRegistry.DEPENDANT_NAME());
+
       expect(await contractsRegistry.hasContract(await contractsRegistry.DEPENDANT_NAME())).to.be.false;
     });
 
@@ -126,9 +127,9 @@ describe("ContractsRegistry", () => {
       const DependantMock = await ethers.getContractFactory("DependantMock");
       const _dependant = await DependantMock.deploy();
 
-      await expect(contractsRegistry.getImplementation(await contractsRegistry.DEPENDANT_NAME())).to.be.revertedWith(
-        "ContractsRegistry: this mapping doesn't exist",
-      );
+      await expect(contractsRegistry.getImplementation(await contractsRegistry.DEPENDANT_NAME()))
+        .to.be.revertedWithCustomError(contractsRegistry, "NoMappingExists")
+        .withArgs(await contractsRegistry.DEPENDANT_NAME());
 
       await contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), await _dependant.getAddress());
 
@@ -194,16 +195,18 @@ describe("ContractsRegistry", () => {
 
       await contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), await dependant.getAddress());
 
-      await expect(contractsRegistry.getImplementation(await contractsRegistry.DEPENDANT_NAME())).to.be.revertedWith(
-        "ContractsRegistry: not a proxy contract",
-      );
+      await expect(contractsRegistry.getImplementation(await contractsRegistry.DEPENDANT_NAME()))
+        .to.be.revertedWithCustomError(contractsRegistry, "NotAProxy")
+        .withArgs(await contractsRegistry.DEPENDANT_NAME(), await dependant.getAddress());
 
       await expect(
         contractsRegistry.upgradeContract(
           await contractsRegistry.DEPENDANT_NAME(),
           await _dependantUpgrade.getAddress(),
         ),
-      ).to.be.revertedWith("ContractsRegistry: not a proxy contract");
+      )
+        .to.be.revertedWithCustomError(contractsRegistry, "NotAProxy")
+        .withArgs(await contractsRegistry.DEPENDANT_NAME(), await dependant.getAddress());
     });
 
     it("should upgrade the contract", async () => {
@@ -226,9 +229,9 @@ describe("ContractsRegistry", () => {
     });
 
     it("should not upgrade non existing contract", async () => {
-      await expect(
-        contractsRegistry.upgradeContract("RANDOM CONTRACT", await _dependantUpgrade.getAddress()),
-      ).to.be.revertedWith("ContractsRegistry: this mapping doesn't exist");
+      await expect(contractsRegistry.upgradeContract("RANDOM CONTRACT", await _dependantUpgrade.getAddress()))
+        .to.be.revertedWithCustomError(contractsRegistry, "NoMappingExists")
+        .withArgs("RANDOM CONTRACT");
     });
 
     it("should upgrade and call the contract", async () => {
@@ -282,9 +285,9 @@ describe("ContractsRegistry", () => {
     });
 
     it("should not inject dependencies", async () => {
-      await expect(contractsRegistry.injectDependencies("RANDOM CONTRACT")).to.be.revertedWith(
-        "ContractsRegistry: this mapping doesn't exist",
-      );
+      await expect(contractsRegistry.injectDependencies("RANDOM CONTRACT"))
+        .to.be.revertedWithCustomError(contractsRegistry, "NoMappingExists")
+        .withArgs("RANDOM CONTRACT");
     });
 
     it("should not allow random users to inject dependencies", async () => {
@@ -292,15 +295,17 @@ describe("ContractsRegistry", () => {
 
       expect(await dependant.getInjector()).to.equal(await contractsRegistry.getAddress());
 
-      await expect(dependant.setDependencies(await contractsRegistry.getAddress(), "0x")).to.be.revertedWith(
-        "Dependant: not an injector",
-      );
+      await expect(dependant.setDependencies(await contractsRegistry.getAddress(), "0x"))
+        .to.be.revertedWithCustomError(dependant, "NotAnInjector")
+        .withArgs(await contractsRegistry.getAddress(), OWNER.address);
     });
 
     it("should not allow random users to set new injector", async () => {
       await contractsRegistry.injectDependencies(await contractsRegistry.DEPENDANT_NAME());
 
-      await expect(dependant.setInjector(OWNER)).to.be.revertedWith("Dependant: not an injector");
+      await expect(dependant.setInjector(OWNER))
+        .to.be.revertedWithCustomError(dependant, "NotAnInjector")
+        .withArgs(await dependant.getInjector(), OWNER.address);
     });
   });
 });

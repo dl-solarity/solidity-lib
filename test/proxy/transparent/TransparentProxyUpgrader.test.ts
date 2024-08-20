@@ -40,7 +40,9 @@ describe("TransparentProxyUpgrader", () => {
     it("only owner should upgrade", async () => {
       await expect(
         transparentProxyUpgrader.connect(SECOND).upgrade(await proxy.getAddress(), await proxy.getAddress(), "0x"),
-      ).to.be.revertedWith("PermanentOwnable: caller is not the owner");
+      )
+        .to.be.revertedWithCustomError(transparentProxyUpgrader, "UnauthorizedAccount")
+        .withArgs(SECOND);
     });
   });
 
@@ -52,9 +54,9 @@ describe("TransparentProxyUpgrader", () => {
     });
 
     it("should not get implementation", async () => {
-      await expect(transparentProxyUpgrader.getImplementation(await token.getAddress())).to.be.revertedWith(
-        "TransparentProxyUpgrader: not a proxy",
-      );
+      await expect(transparentProxyUpgrader.getImplementation(await token.getAddress()))
+        .to.be.revertedWithCustomError(transparentProxyUpgrader, "AddressNotAProxy")
+        .withArgs(await token.getAddress());
     });
   });
 });

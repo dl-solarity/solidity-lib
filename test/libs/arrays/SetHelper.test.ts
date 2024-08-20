@@ -64,31 +64,35 @@ describe("SetHelper", () => {
 
   describe("strictAdd", () => {
     it("should not strict add to address set if element already exists", async () => {
-      await expect(mock.strictAddToAddressSet([FIRST.address, FIRST.address])).to.be.revertedWith(
-        "SetHelper: element already exists",
-      );
+      await expect(mock.strictAddToAddressSet([FIRST.address, FIRST.address]))
+        .to.be.revertedWithCustomError(mock, "ElementAlreadyExistsAddress")
+        .withArgs(FIRST.address);
     });
 
     it("should not strict add to uint set if element already exists", async () => {
-      await expect(mock.strictAddToUintSet([1, 1])).to.be.revertedWith("SetHelper: element already exists");
+      await expect(mock.strictAddToUintSet([1, 1]))
+        .to.be.revertedWithCustomError(mock, "ElementAlreadyExistsUint256")
+        .withArgs(1);
     });
 
     it("should not strict add to bytes32 set if element already exists", async () => {
-      await expect(mock.strictAddToBytes32Set([ZERO_BYTES32, ZERO_BYTES32])).to.be.revertedWith(
-        "SetHelper: element already exists",
-      );
+      await expect(mock.strictAddToBytes32Set([ZERO_BYTES32, ZERO_BYTES32]))
+        .to.be.revertedWithCustomError(mock, "ElementAlreadyExistsBytes32")
+        .withArgs(ZERO_BYTES32);
     });
 
     it("should not strict add to bytes set if element already exists", async () => {
       const bytesToAdd = ethers.toUtf8Bytes("1");
 
-      await expect(mock.strictAddToBytesSet([bytesToAdd, bytesToAdd])).to.be.revertedWith(
-        "SetHelper: element already exists",
-      );
+      await expect(mock.strictAddToBytesSet([bytesToAdd, bytesToAdd]))
+        .to.be.revertedWithCustomError(mock, "ElementAlreadyExistsBytes")
+        .withArgs(bytesToAdd);
     });
 
     it("should not strict add to string set if element already exists", async () => {
-      await expect(mock.strictAddToStringSet(["1", "1"])).to.be.revertedWith("SetHelper: element already exists");
+      await expect(mock.strictAddToStringSet(["1", "1"]))
+        .to.be.revertedWithCustomError(mock, "ElementAlreadyExistsString")
+        .withArgs("1");
     });
 
     it("should strict add to address set", async () => {
@@ -166,37 +170,43 @@ describe("SetHelper", () => {
     it("should not strict remove from address set if no such element", async () => {
       await mock.strictAddToAddressSet([FIRST.address, SECOND.address]);
 
-      await expect(mock.strictRemoveFromAddressSet([SECOND.address, SECOND.address])).to.be.revertedWith(
-        "SetHelper: no such element",
-      );
+      await expect(mock.strictRemoveFromAddressSet([SECOND.address, SECOND.address]))
+        .to.be.revertedWithCustomError(mock, "NoSuchAddress")
+        .withArgs(SECOND.address);
     });
 
     it("should not strict remove from uint set if no such element", async () => {
       await mock.strictAddToUintSet([1]);
 
-      await expect(mock.strictRemoveFromUintSet([1, 1])).to.be.revertedWith("SetHelper: no such element");
+      await expect(mock.strictRemoveFromUintSet([1, 1]))
+        .to.be.revertedWithCustomError(mock, "NoSuchUint256")
+        .withArgs(1);
     });
 
     it("should not strict remove from bytes32 set if no such element", async () => {
       await mock.strictAddToBytes32Set([ZERO_BYTES32]);
 
-      await expect(mock.strictRemoveFromBytes32Set([ZERO_BYTES32, ZERO_BYTES32])).to.be.revertedWith(
-        "SetHelper: no such element",
-      );
+      await expect(mock.strictRemoveFromBytes32Set([ZERO_BYTES32, ZERO_BYTES32]))
+        .to.be.revertedWithCustomError(mock, "NoSuchBytes32")
+        .withArgs(ZERO_BYTES32);
     });
 
     it("should not strict remove from string set if no such element", async () => {
       await mock.strictAddToStringSet(["1", "2", "3"]);
 
-      await expect(mock.strictRemoveFromStringSet(["1", "1"])).to.be.revertedWith("SetHelper: no such element");
+      await expect(mock.strictRemoveFromStringSet(["1", "1"]))
+        .to.be.revertedWithCustomError(mock, "NoSuchString")
+        .withArgs("1");
+      ("SetHelper: no such element");
     });
 
     it("should not strict remove from bytes set if no such element", async () => {
       await mock.strictAddToBytesSet([ethers.toUtf8Bytes("1"), ethers.toUtf8Bytes("2"), ethers.toUtf8Bytes("3")]);
 
-      await expect(mock.strictRemoveFromBytesSet([ethers.toUtf8Bytes("5")])).to.be.revertedWith(
-        "SetHelper: no such element",
-      );
+      const bytesToRemove = ethers.toUtf8Bytes("5");
+      await expect(mock.strictRemoveFromBytesSet([bytesToRemove]))
+        .to.be.revertedWithCustomError(mock, "NoSuchBytes")
+        .withArgs(bytesToRemove);
     });
 
     it("should strict remove from address set", async () => {

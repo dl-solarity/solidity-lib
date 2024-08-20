@@ -82,21 +82,27 @@ describe("MerkleWhitelisted", () => {
     });
 
     it("should revert if the user is incorrect", async () => {
-      await expect(
-        merkle.connect(users[1]).onlyWhitelistedMethod(amounts[0], getProof(tree, leaves[0])),
-      ).to.be.revertedWith("MerkleWhitelisted: not whitelisted");
+      const data = ethers.solidityPacked(["uint256", "address"], [amounts[0], users[1].address]);
+
+      await expect(merkle.connect(users[1]).onlyWhitelistedMethod(amounts[0], getProof(tree, leaves[0])))
+        .to.be.revertedWithCustomError(merkle, "LeafNotWhitelisted")
+        .withArgs(data);
     });
 
     it("should revert if the amount is incorrect", async () => {
-      await expect(
-        merkle.connect(users[0]).onlyWhitelistedMethod(amounts[1], getProof(tree, leaves[0])),
-      ).to.be.revertedWith("MerkleWhitelisted: not whitelisted");
+      const data = ethers.solidityPacked(["uint256", "address"], [amounts[1], users[0].address]);
+
+      await expect(merkle.connect(users[0]).onlyWhitelistedMethod(amounts[1], getProof(tree, leaves[0])))
+        .to.be.revertedWithCustomError(merkle, "LeafNotWhitelisted")
+        .withArgs(data);
     });
 
     it("should revert if the proof is incorrect", async () => {
-      await expect(
-        merkle.connect(users[0]).onlyWhitelistedMethod(amounts[0], getProof(tree, leaves[1])),
-      ).to.be.revertedWith("MerkleWhitelisted: not whitelisted");
+      const data = ethers.solidityPacked(["uint256", "address"], [amounts[0], users[0].address]);
+
+      await expect(merkle.connect(users[0]).onlyWhitelistedMethod(amounts[0], getProof(tree, leaves[1])))
+        .to.be.revertedWithCustomError(merkle, "LeafNotWhitelisted")
+        .withArgs(data);
     });
 
     it("should not revert if all conditions are met", async () => {
@@ -117,15 +123,15 @@ describe("MerkleWhitelisted", () => {
     });
 
     it("should revert if the user is incorrect", async () => {
-      await expect(merkle.onlyWhitelistedUserMethod(getProof(tree, leaves[0]))).to.be.revertedWith(
-        "MerkleWhitelisted: not whitelisted",
-      );
+      await expect(merkle.onlyWhitelistedUserMethod(getProof(tree, leaves[0])))
+        .to.be.revertedWithCustomError(merkle, "UserNotWhitelisted")
+        .withArgs(OWNER.address);
     });
 
     it("should revert if the proof is incorrect", async () => {
-      await expect(merkle.connect(users[0]).onlyWhitelistedUserMethod(getProof(tree, leaves[1]))).to.be.revertedWith(
-        "MerkleWhitelisted: not whitelisted",
-      );
+      await expect(merkle.connect(users[0]).onlyWhitelistedUserMethod(getProof(tree, leaves[1])))
+        .to.be.revertedWithCustomError(merkle, "UserNotWhitelisted")
+        .withArgs(users[0].address);
     });
 
     it("should not revert if all conditions are met", async () => {

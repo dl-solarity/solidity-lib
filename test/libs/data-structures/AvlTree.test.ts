@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { encodeBytes32String } from "ethers";
+import { encodeBytes32String, toBeHex } from "ethers";
 import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
 
@@ -122,12 +122,16 @@ describe("AvlTree", () => {
       });
 
       it("should not allow to insert 0 as key to the uint tree", async () => {
-        await expect(avlTree.insertUint(0, 100)).to.be.revertedWith("AvlTree: key is not allowed to be 0");
+        await expect(avlTree.insertUint(0, 100)).to.be.revertedWithCustomError(avlTree, "KeyIsZero").withArgs();
       });
 
       it("should not allow to insert node with duplicate key to the uint tree", async () => {
-        await avlTree.insertUint(2, 10);
-        await expect(avlTree.insertUint(2, 4)).to.be.revertedWith("AvlTree: the node already exists");
+        const key = 2;
+        await avlTree.insertUint(key, 10);
+
+        await expect(avlTree.insertUint(key, 4))
+          .to.be.revertedWithCustomError(avlTree, "NodeAlreadyExists")
+          .withArgs(toBeHex(key, 32));
       });
     });
 
@@ -220,21 +224,28 @@ describe("AvlTree", () => {
       it("should not allow to remove a node that doesn't exist in the uint tree", async () => {
         await avlTree.insertUint(1, 10);
 
-        await expect(avlTree.removeUint(2)).to.be.revertedWith("AvlTree: the node doesn't exist");
-        await expect(avlTree.removeUint(0)).to.be.revertedWith("AvlTree: key is not allowed to be 0");
+        await expect(avlTree.removeUint(2))
+          .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+          .withArgs(toBeHex(2, 32));
+        await expect(avlTree.removeUint(0)).to.be.revertedWithCustomError(avlTree, "KeyIsZero").withArgs();
       });
 
       it("should not allow to remove a node twice in the uint tree", async () => {
+        const key = 2;
         await avlTree.insertUint(1, 10);
-        await avlTree.insertUint(2, 20);
+        await avlTree.insertUint(key, 20);
 
-        await avlTree.removeUint(2);
+        await avlTree.removeUint(key);
 
-        await expect(avlTree.removeUint(2)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        await expect(avlTree.removeUint(key))
+          .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+          .withArgs(toBeHex(key, 32));
       });
 
       it("should not allow to remove nodes in the empty uint tree", async () => {
-        await expect(avlTree.removeUint(1)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        await expect(avlTree.removeUint(1))
+          .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+          .withArgs(toBeHex(1, 32));
       });
     });
 
@@ -260,7 +271,7 @@ describe("AvlTree", () => {
       it("should not allow to set comparator for the uint tree if the tree is not empty", async () => {
         await avlTree.insertUint(1, 10);
 
-        await expect(avlTree.setUintDescComparator()).to.be.revertedWith("AvlTree: the tree must be empty");
+        await expect(avlTree.setUintDescComparator()).to.be.revertedWithCustomError(avlTree, "TreeNotEmpty").withArgs();
       });
     });
 
@@ -279,23 +290,33 @@ describe("AvlTree", () => {
         expect(await avlTree.getUint(3)).to.be.equal(1);
         expect(await avlTree.tryGetUint(3)).to.deep.equal([true, 1]);
 
-        await expect(avlTree.getUint(4)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        await expect(avlTree.getUint(4))
+          .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+          .withArgs(toBeHex(4, 32));
         expect(await avlTree.tryGetUint(4)).to.deep.equal([false, 0]);
 
-        await expect(avlTree.getUint(6)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        await expect(avlTree.getUint(6))
+          .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+          .withArgs(toBeHex(6, 32));
         expect(await avlTree.tryGetUint(6)).to.deep.equal([false, 0]);
       });
 
       it("should handle getting value for the non-existing node in the uint tree correctly", async () => {
-        await expect(avlTree.getUint(1)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        await expect(avlTree.getUint(1))
+          .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+          .withArgs(toBeHex(1, 32));
         expect(await avlTree.tryGetUint(1)).to.deep.equal([false, 0]);
 
         await avlTree.insertUint(1, 30);
 
-        await expect(avlTree.getUint(2)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        await expect(avlTree.getUint(2))
+          .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+          .withArgs(toBeHex(2, 32));
         expect(await avlTree.tryGetUint(2)).to.deep.equal([false, 0]);
 
-        await expect(avlTree.getUint(0)).to.be.revertedWith("AvlTree: the node doesn't exist");
+        await expect(avlTree.getUint(0))
+          .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+          .withArgs(toBeHex(0, 32));
         expect(await avlTree.tryGetUint(0)).to.deep.equal([false, 0]);
       });
 
@@ -337,7 +358,7 @@ describe("AvlTree", () => {
         expect(await avlTree.nextOnLast()).to.deep.equal([0, 0]);
         expect(await avlTree.prevOnFirst()).to.deep.equal([0, 0]);
 
-        await expect(avlTree.brokenTraversalUint()).to.be.revertedWith("Traversal: no more nodes");
+        await expect(avlTree.brokenTraversalUint()).to.be.revertedWithCustomError(avlTree, "NoNodesLeft").withArgs();
       });
 
       it("should maintain idempotent traversal", async () => {
@@ -400,7 +421,9 @@ describe("AvlTree", () => {
       expect(await avlTree.rootBytes32()).to.equal(4);
 
       expect(await avlTree.sizeBytes32()).to.equal(3);
-      await expect(avlTree.getBytes32(2)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getBytes32(2))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(2, 32));
       expect(await avlTree.tryGetBytes32(2)).to.deep.equal([false, 0]);
 
       let traversal = await avlTree.traverseBytes32();
@@ -420,10 +443,14 @@ describe("AvlTree", () => {
       expect(await avlTree.getBytes32(2)).to.be.equal(encodeBytes32String("2"));
       expect(await avlTree.tryGetBytes32(2)).to.deep.equal([true, encodeBytes32String("2")]);
 
-      await expect(avlTree.getBytes32(1)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getBytes32(1))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(1, 32));
       expect(await avlTree.tryGetBytes32(1)).to.deep.equal([false, encodeBytes32String("")]);
 
-      await expect(avlTree.getBytes32(3)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getBytes32(3))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(3, 32));
       expect(await avlTree.tryGetBytes32(3)).to.deep.equal([false, encodeBytes32String("")]);
 
       traversal = await avlTree.traverseBytes32();
@@ -440,7 +467,9 @@ describe("AvlTree", () => {
     });
 
     it("should handle getting value in the bytes32 tree correctly", async () => {
-      await expect(avlTree.getBytes32(1)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getBytes32(1))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(1, 32));
       expect(await avlTree.tryGetBytes32(1)).to.deep.equal([false, encodeBytes32String("")]);
 
       await avlTree.insertBytes32(1, encodeBytes32String(""));
@@ -452,10 +481,14 @@ describe("AvlTree", () => {
       expect(await avlTree.getBytes32(2)).to.be.equal(encodeBytes32String("2"));
       expect(await avlTree.tryGetBytes32(2)).to.deep.equal([true, encodeBytes32String("2")]);
 
-      await expect(avlTree.getBytes32(3)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getBytes32(3))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(3, 32));
       expect(await avlTree.tryGetBytes32(3)).to.deep.equal([false, encodeBytes32String("")]);
 
-      await expect(avlTree.getBytes32(0)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getBytes32(0))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(0, 32));
       expect(await avlTree.tryGetBytes32(0)).to.deep.equal([false, encodeBytes32String("")]);
     });
 
@@ -530,7 +563,9 @@ describe("AvlTree", () => {
       expect(await avlTree.rootAddress()).to.equal(5);
       expect(await avlTree.sizeAddress()).to.equal(3);
 
-      await expect(avlTree.getAddressValue(2)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getAddressValue(2))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(2, 32));
       expect(await avlTree.tryGetAddress(2)).to.deep.equal([false, ZERO_ADDR]);
 
       let traversal = await avlTree.traverseAddress();
@@ -553,10 +588,14 @@ describe("AvlTree", () => {
       expect(await avlTree.getAddressValue(1)).to.be.equal(USER2);
       expect(await avlTree.tryGetAddress(1)).to.deep.equal([true, USER2.address]);
 
-      await expect(avlTree.getAddressValue(3)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getAddressValue(3))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(3, 32));
       expect(await avlTree.tryGetAddress(3)).to.deep.equal([false, 0]);
 
-      await expect(avlTree.getAddressValue(5)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getAddressValue(5))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(5, 32));
       expect(await avlTree.tryGetAddress(5)).to.deep.equal([false, ZERO_ADDR]);
 
       traversal = await avlTree.traverseAddress();
@@ -577,7 +616,9 @@ describe("AvlTree", () => {
     });
 
     it("should handle getting value in the address tree correctly", async () => {
-      await expect(avlTree.getAddressValue(1)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getAddressValue(1))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(1, 32));
       expect(await avlTree.tryGetAddress(1)).to.deep.equal([false, ZERO_ADDR]);
 
       await avlTree.insertAddress(1, USER2);
@@ -589,10 +630,14 @@ describe("AvlTree", () => {
       expect(await avlTree.getAddressValue(2)).to.be.equal(ZERO_ADDR);
       expect(await avlTree.tryGetAddress(2)).to.deep.equal([true, ZERO_ADDR]);
 
-      await expect(avlTree.getAddressValue(5)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getAddressValue(5))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(5, 32));
       expect(await avlTree.tryGetAddress(5)).to.deep.equal([false, ZERO_ADDR]);
 
-      await expect(avlTree.getAddressValue(0)).to.be.revertedWith("AvlTree: the node doesn't exist");
+      await expect(avlTree.getAddressValue(0))
+        .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
+        .withArgs(toBeHex(0, 32));
       expect(await avlTree.tryGetAddress(0)).to.deep.equal([false, ZERO_ADDR]);
     });
 

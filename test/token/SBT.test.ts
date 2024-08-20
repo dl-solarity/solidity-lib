@@ -61,13 +61,13 @@ describe("SBT", () => {
     });
 
     it("should not mint to null address", async () => {
-      await expect(sbt.mint(ZERO_ADDR, 1)).to.be.revertedWith("SBT: address(0) receiver");
+      await expect(sbt.mint(ZERO_ADDR, 1)).to.be.revertedWithCustomError(sbt, "ReceiverIsZeroAddress").withArgs();
     });
 
     it("should not mint token twice", async () => {
       await sbt.mint(FIRST.address, 1);
 
-      await expect(sbt.mint(FIRST.address, 1)).to.be.revertedWith("SBT: token already exists");
+      await expect(sbt.mint(FIRST.address, 1)).to.be.revertedWithCustomError(sbt, "TokenAlreadyExists").withArgs(1);
     });
   });
 
@@ -88,7 +88,7 @@ describe("SBT", () => {
     });
 
     it("should not burn SBT that doesn't exist", async () => {
-      await expect(sbt.burn(1337)).to.be.revertedWith("SBT: token doesn't exist");
+      await expect(sbt.burn(1337)).to.be.revertedWithCustomError(sbt, "TokenDoesNotExist").withArgs(1337);
     });
   });
 
@@ -101,7 +101,7 @@ describe("SBT", () => {
     });
 
     it("should not set uri for non-existent token", async () => {
-      await expect(sbt.setTokenURI(1337, "")).to.be.revertedWith("SBT: token doesn't exist");
+      await expect(sbt.setTokenURI(1337, "")).to.be.revertedWithCustomError(sbt, "TokenDoesNotExist").withArgs(1337);
     });
 
     it("should reset token URI if token is burnder", async () => {

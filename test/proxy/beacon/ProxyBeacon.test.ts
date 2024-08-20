@@ -39,13 +39,15 @@ describe("ProxyBeacon", () => {
     });
 
     it("should not upgrade to non-contract", async () => {
-      await expect(proxyBeacon.upgradeTo(SECOND)).to.be.revertedWith("ProxyBeacon: not a contract");
+      await expect(proxyBeacon.upgradeTo(SECOND))
+        .to.be.revertedWithCustomError(proxyBeacon, "NewImplementationNotAContract")
+        .withArgs(SECOND);
     });
 
     it("only owner should upgrade", async () => {
-      await expect(proxyBeacon.connect(SECOND).upgradeTo(await token.getAddress())).to.be.revertedWith(
-        "PermanentOwnable: caller is not the owner",
-      );
+      await expect(proxyBeacon.connect(SECOND).upgradeTo(await token.getAddress()))
+        .to.be.revertedWithCustomError(proxyBeacon, "UnauthorizedAccount")
+        .withArgs(SECOND);
     });
   });
 });

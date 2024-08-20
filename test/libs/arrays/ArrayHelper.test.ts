@@ -133,9 +133,11 @@ describe("ArrayHelper", () => {
       it("should revert if the first index is greater than the last one", async () => {
         await mock.setArray((await mock.countPrefixes(array)).map((e) => Number(e)));
 
-        await expect(mock.getRangeSum(array.length - 1, 0)).to.be.revertedWith("ArrayHelper: wrong range");
-        await expect(mock.getRangeSum(1, 0)).to.be.revertedWith("ArrayHelper: wrong range");
-        await expect(mock.getRangeSum(2, 1)).to.be.revertedWith("ArrayHelper: wrong range");
+        await expect(mock.getRangeSum(array.length - 1, 0))
+          .to.be.revertedWithCustomError(mock, "InvalidRange")
+          .withArgs(array.length - 1, 0);
+        await expect(mock.getRangeSum(1, 0)).to.be.revertedWithCustomError(mock, "InvalidRange").withArgs(1, 0);
+        await expect(mock.getRangeSum(2, 1)).to.be.revertedWithCustomError(mock, "InvalidRange").withArgs(2, 1);
       });
 
       it("should revert if one of the indexes is out of range", async () => {

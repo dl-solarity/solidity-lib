@@ -20,10 +20,6 @@ describe("DiamondAccessControl", () => {
   let access: DiamondAccessControlMock;
   let diamond: OwnableDiamondMock;
 
-  const hasRoleErrorMessage = async (account: SignerWithAddress, role: string) => {
-    return `AccessControl: account ${(await account.getAddress()).toLowerCase()} is missing role ${role}`;
-  };
-
   before("setup", async () => {
     [OWNER, SECOND, THIRD] = await ethers.getSigners();
 
@@ -56,30 +52,32 @@ describe("DiamondAccessControl", () => {
 
   describe("access", () => {
     it("should initialize only once", async () => {
-      await expect(access.__DiamondAccessControlMock_init()).to.be.revertedWith(
-        "Initializable: contract is already initialized",
-      );
+      await expect(access.__DiamondAccessControlMock_init())
+        .to.be.revertedWithCustomError(diamond, "AlreadyInitialized")
+        .withArgs();
     });
 
     it("should initialize only by top level contract", async () => {
-      await expect(access.__DiamondAccessControlDirect_init()).to.be.revertedWith(
-        "Initializable: contract is not initializing",
-      );
+      await expect(access.__DiamondAccessControlDirect_init())
+        .to.be.revertedWithCustomError(diamond, "NotInitializing")
+        .withArgs();
     });
   });
 
   describe("DiamondAccessControl functions", () => {
     describe("grantRole", async () => {
       it("should not grant role if not admin", async () => {
-        await expect(access.connect(SECOND).grantRole(AGENT_ROLE, SECOND)).to.be.revertedWith(
-          await hasRoleErrorMessage(SECOND, ADMIN_ROLE),
-        );
+        await expect(access.connect(SECOND).grantRole(AGENT_ROLE, SECOND))
+          .to.be.revertedWithCustomError(access, "RoleNotGranted")
+          .withArgs(await access.getRoleAdmin(AGENT_ROLE), SECOND);
       });
 
       it("should not grant role if it's granted", async () => {
         await access.grantRole(AGENT_ROLE, SECOND);
 
-        await expect(access.grantRole(AGENT_ROLE, SECOND)).to.be.revertedWith("AccessControl: role is granted");
+        await expect(access.grantRole(AGENT_ROLE, SECOND))
+          .to.be.revertedWithCustomError(access, "RoleAlreadyGranted")
+          .withArgs(AGENT_ROLE, SECOND);
       });
 
       it("should grant role if all conditions are met", async () => {
@@ -95,15 +93,17 @@ describe("DiamondAccessControl", () => {
       });
 
       it("should not revoke role if not admin", async () => {
-        await expect(access.connect(SECOND).revokeRole(AGENT_ROLE, SECOND)).to.be.revertedWith(
-          await hasRoleErrorMessage(SECOND, ADMIN_ROLE),
-        );
+        await expect(access.connect(SECOND).revokeRole(AGENT_ROLE, SECOND))
+          .to.be.revertedWithCustomError(access, "RoleNotGranted")
+          .withArgs(await access.getRoleAdmin(AGENT_ROLE), SECOND);
       });
 
       it("should not revoke role if it's not granted", async () => {
         await access.revokeRole(AGENT_ROLE, SECOND);
 
-        await expect(access.revokeRole(AGENT_ROLE, SECOND)).to.be.revertedWith("AccessControl: role is not granted");
+        await expect(access.revokeRole(AGENT_ROLE, SECOND))
+          .to.be.revertedWithCustomError(access, "RoleNotGranted")
+          .withArgs(AGENT_ROLE, SECOND);
       });
 
       it("should revoke role if all conditions are met", async () => {
@@ -119,9 +119,9 @@ describe("DiamondAccessControl", () => {
       });
 
       it("should not renounce role if not self", async () => {
-        await expect(access.renounceRole(AGENT_ROLE, SECOND)).to.be.revertedWith(
-          "AccessControl: can only renounce roles for self",
-        );
+        await expect(access.renounceRole(AGENT_ROLE, SECOND))
+          .to.be.revertedWithCustomError(access, "UnauthorizedAccount")
+          .withArgs(OWNER);
       });
 
       it("should renounce role if all conditions are met", async () => {
@@ -138,26 +138,26 @@ describe("DiamondAccessControl", () => {
       });
 
       it("should not grant role if not admin", async () => {
-        await expect(access.grantRole(AGENT_ROLE, THIRD)).to.be.revertedWith(
-          await hasRoleErrorMessage(OWNER, AGENT_ROLE),
-        );
-      });
+        await expect(access.grantRole(AGENT_ROLE, THIRD))
+          .to.be.revertedWithCustomError(access, "RoleNotGranted")
+          .withArgs(await access.getRoleAdmin(AGENT_ROLE), OWNER);
 
-      it("should grant role if all conditions are met", async () => {
-        await access.connect(SECOND).grantRole(AGENT_ROLE, THIRD);
+        it("should grant role if all conditions are met", async () => {
+          await access.connect(SECOND).grantRole(AGENT_ROLE, THIRD);
 
-        expect(await access.hasRole(AGENT_ROLE, THIRD)).to.be.true;
+          expect(await access.hasRole(AGENT_ROLE, THIRD)).to.be.true;
+        });
       });
     });
-  });
 
-  describe("getters", () => {
-    it("should return base data", async () => {
-      expect(await access.DEFAULT_ADMIN_ROLE()).to.equal(ADMIN_ROLE);
-      expect(await access.AGENT_ROLE()).to.equal(AGENT_ROLE);
-      expect(await access.hasRole(ADMIN_ROLE, OWNER)).to.be.true;
-      expect(await access.hasRole(ADMIN_ROLE, SECOND)).to.be.false;
-      expect(await access.getRoleAdmin(AGENT_ROLE)).to.equal(ADMIN_ROLE);
+    describe("getters", () => {
+      it("should return base data", async () => {
+        expect(await access.DEFAULT_ADMIN_ROLE()).to.equal(ADMIN_ROLE);
+        expect(await access.AGENT_ROLE()).to.equal(AGENT_ROLE);
+        expect(await access.hasRole(ADMIN_ROLE, OWNER)).to.be.true;
+        expect(await access.hasRole(ADMIN_ROLE, SECOND)).to.be.false;
+        expect(await access.getRoleAdmin(AGENT_ROLE)).to.equal(ADMIN_ROLE);
+      });
     });
   });
 });

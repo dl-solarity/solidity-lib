@@ -33,16 +33,17 @@ describe("PermanentOwnable", () => {
     it("should reject zero address during the owner initialization", async () => {
       const permanentOwnableMock = await ethers.getContractFactory("PermanentOwnableMock");
 
-      await expect(permanentOwnableMock.deploy(ZERO_ADDR)).to.be.revertedWith(
-        "PermanentOwnable: zero address can not be the owner",
+      await expect(permanentOwnableMock.deploy(ZERO_ADDR)).to.be.revertedWithCustomError(
+        permanentOwnable,
+        "InvalidOwner",
       );
     });
 
     it("only owner should call this function", async () => {
       expect(await permanentOwnable.connect(OWNER).onlyOwnerMethod()).to.emit(permanentOwnable, "ValidOwner");
-      await expect(permanentOwnable.connect(OTHER).onlyOwnerMethod()).to.be.revertedWith(
-        "PermanentOwnable: caller is not the owner",
-      );
+      await expect(permanentOwnable.connect(OTHER).onlyOwnerMethod())
+        .to.be.revertedWithCustomError(permanentOwnable, "UnauthorizedAccount")
+        .withArgs(OTHER);
     });
   });
 });

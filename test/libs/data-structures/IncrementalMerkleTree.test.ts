@@ -125,9 +125,9 @@ describe("IncrementalMerkleTree", () => {
 
       expect(await merkleTree.isUnitHashFnSet()).to.be.true;
 
-      await expect(merkleTree.setUintPoseidonHasher()).to.be.rejectedWith(
-        "IncrementalMerkleTree: the tree must be empty",
-      );
+      await expect(merkleTree.setUintPoseidonHasher())
+        .to.be.revertedWithCustomError(merkleTree, "TreeIsNotEmpty")
+        .withArgs();
     });
 
     it("should return zeroHash if tree is empty", async () => {
@@ -135,9 +135,9 @@ describe("IncrementalMerkleTree", () => {
     });
 
     it("should revert if an attempt is made to set the tree height lower than the current one", async () => {
-      await expect(merkleTree.setUintTreeHeight(0)).to.be.rejectedWith(
-        "IncrementalMerkleTree: the height must be greater than the current one",
-      );
+      await expect(merkleTree.setUintTreeHeight(0))
+        .to.be.revertedWithCustomError(merkleTree, "NewHeightMustBeGreater")
+        .withArgs(await merkleTree.getUintTreeHeight(), 0);
     });
 
     it("should revert if the set tree height's limit is reached", async () => {
@@ -145,7 +145,7 @@ describe("IncrementalMerkleTree", () => {
 
       await merkleTree.addUint(1);
 
-      await expect(merkleTree.addUint(2)).to.be.rejectedWith("IncrementalMerkleTree: the tree is full");
+      await expect(merkleTree.addUint(2)).to.be.revertedWithCustomError(merkleTree, "TreeIsFull").withArgs();
     });
   });
 
@@ -225,9 +225,9 @@ describe("IncrementalMerkleTree", () => {
 
       expect(await merkleTree.isBytes32HashFnSet()).to.be.true;
 
-      await expect(merkleTree.setBytes32PoseidonHasher()).to.be.rejectedWith(
-        "IncrementalMerkleTree: the tree must be empty",
-      );
+      await expect(merkleTree.setBytes32PoseidonHasher())
+        .to.be.revertedWithCustomError(merkleTree, "TreeIsNotEmpty")
+        .withArgs();
     });
 
     it("should return zeroHash if tree is empty", async () => {
@@ -235,9 +235,9 @@ describe("IncrementalMerkleTree", () => {
     });
 
     it("should revert if an attempt is made to set the tree height lower than the current one", async () => {
-      await expect(merkleTree.setBytes32TreeHeight(0)).to.be.rejectedWith(
-        "IncrementalMerkleTree: the height must be greater than the current one",
-      );
+      await expect(merkleTree.setBytes32TreeHeight(0))
+        .to.be.revertedWithCustomError(merkleTree, "NewHeightMustBeGreater")
+        .withArgs(await merkleTree.getBytes32TreeHeight(), 0);
     });
 
     it("should revert if the set tree height's limit is reached", async () => {
@@ -245,9 +245,9 @@ describe("IncrementalMerkleTree", () => {
 
       await merkleTree.addBytes32(ethers.ZeroHash);
 
-      await expect(merkleTree.addBytes32(ethers.ZeroHash)).to.be.rejectedWith(
-        "IncrementalMerkleTree: the tree is full",
-      );
+      await expect(merkleTree.addBytes32(ethers.ZeroHash))
+        .to.be.revertedWithCustomError(merkleTree, "TreeIsFull")
+        .withArgs();
     });
   });
 
@@ -327,9 +327,9 @@ describe("IncrementalMerkleTree", () => {
 
       expect(await merkleTree.isAddressHashFnSet()).to.be.true;
 
-      await expect(merkleTree.setAddressPoseidonHasher()).to.be.rejectedWith(
-        "IncrementalMerkleTree: the tree must be empty",
-      );
+      await expect(merkleTree.setAddressPoseidonHasher())
+        .to.be.revertedWithCustomError(merkleTree, "TreeIsNotEmpty")
+        .withArgs();
     });
 
     it("should return zeroHash if tree is empty", async () => {
@@ -337,9 +337,9 @@ describe("IncrementalMerkleTree", () => {
     });
 
     it("should revert if an attempt is made to set the tree height lower than the current one", async () => {
-      await expect(merkleTree.setAddressTreeHeight(0)).to.be.rejectedWith(
-        "IncrementalMerkleTree: the height must be greater than the current one",
-      );
+      await expect(merkleTree.setAddressTreeHeight(0))
+        .to.be.revertedWithCustomError(merkleTree, "NewHeightMustBeGreater")
+        .withArgs(await merkleTree.getAddressTreeHeight(), 0);
     });
 
     it("should revert if the set tree height's limit is reached", async () => {
@@ -347,7 +347,9 @@ describe("IncrementalMerkleTree", () => {
 
       await merkleTree.addAddress(USER1.address);
 
-      await expect(merkleTree.addAddress(USER1.address)).to.be.rejectedWith("IncrementalMerkleTree: the tree is full");
+      await expect(merkleTree.addAddress(USER1.address))
+        .to.be.revertedWithCustomError(merkleTree, "TreeIsFull")
+        .withArgs();
     });
   });
 });

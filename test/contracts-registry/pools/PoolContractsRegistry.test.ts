@@ -72,9 +72,11 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("should not set dependencies from non dependant", async () => {
-      await expect(poolContractsRegistry.setDependencies(OWNER.address, "0x")).to.be.rejectedWith(
-        "Dependant: not an injector",
-      );
+      const injector = await poolContractsRegistry.getInjector();
+
+      await expect(poolContractsRegistry.setDependencies(OWNER.address, "0x"))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "NotAnInjector")
+        .withArgs(injector, OWNER.address);
     });
 
     it("only owner should call these functions", async () => {
@@ -102,12 +104,13 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("should not get not existing implementation", async () => {
-      await expect(poolContractsRegistry.getImplementation(NAME_1)).to.be.revertedWith(
-        "PoolContractsRegistry: this mapping doesn't exist",
-      );
-      await expect(poolContractsRegistry.getProxyBeacon(NAME_1)).to.be.revertedWith(
-        "PoolContractsRegistry: bad ProxyBeacon",
-      );
+      await expect(poolContractsRegistry.getImplementation(NAME_1))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "NoMappingExists")
+        .withArgs(NAME_1);
+
+      await expect(poolContractsRegistry.getProxyBeacon(NAME_1))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "ProxyDoesNotExist")
+        .withArgs(NAME_1);
     });
   });
 
@@ -133,9 +136,9 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("only owner should be able to add pools", async () => {
-      await expect(poolContractsRegistry.connect(POOL_1).addProxyPool(NAME_1, POOL_1.address)).to.be.revertedWith(
-        "PoolContractsRegistry: not a factory",
-      );
+      await expect(poolContractsRegistry.connect(POOL_1).addProxyPool(NAME_1, POOL_1.address))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "CallerNotAFactory")
+        .withArgs(POOL_1, OWNER.address);
     });
   });
 
@@ -168,9 +171,9 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("should not inject dependencies to 0 pools", async () => {
-      await expect(poolContractsRegistry.injectDependenciesToExistingPools(NAME_1, 0, 1)).to.be.revertedWith(
-        "PoolContractsRegistry: no pools to inject",
-      );
+      await expect(poolContractsRegistry.injectDependenciesToExistingPools(NAME_1, 0, 1))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "NoPoolsToInject")
+        .withArgs(NAME_1);
     });
   });
 

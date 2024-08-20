@@ -51,7 +51,9 @@ describe("BlockGuard", () => {
     it("should disallow to call in the same block", async () => {
       await expect(
         mock.multicall([mock.interface.encodeFunctionData("deposit"), mock.interface.encodeFunctionData("withdraw")]),
-      ).to.be.revertedWith("BlockGuard: locked");
+      )
+        .to.be.revertedWithCustomError(mock, "BlockGuardLocked")
+        .withArgs(await mock.DEPOSIT_WITHDRAW_RESOURCE(), FIRST);
     });
   });
 
@@ -71,7 +73,9 @@ describe("BlockGuard", () => {
     it("should disallow to call in the same block", async () => {
       await expect(
         mock.multicall([mock.interface.encodeFunctionData("lock"), mock.interface.encodeFunctionData("lock")]),
-      ).to.be.revertedWith("BlockGuard: locked");
+      )
+        .to.be.revertedWithCustomError(mock, "BlockGuardLocked")
+        .withArgs(await mock.LOCK_LOCK_RESOURCE(), FIRST);
     });
   });
 });

@@ -72,7 +72,9 @@ describe("PoolFactory", () => {
 
   describe("access", () => {
     it("should not set dependencies from non dependant", async () => {
-      await expect(poolFactory.setDependencies(OWNER, "0x")).to.be.revertedWith("Dependant: not an injector");
+      await expect(poolFactory.setDependencies(OWNER, "0x"))
+        .to.be.revertedWithCustomError(poolFactory, "NotAnInjector")
+        .withArgs(await poolContractsRegistry.getInjector(), OWNER.address);
     });
   });
 
@@ -107,7 +109,9 @@ describe("PoolFactory", () => {
         await contractsRegistry.addContract(await contractsRegistry.POOL_FACTORY_NAME(), OWNER);
         await contractsRegistry.injectDependencies(await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME());
 
-        await expect(poolFactory.deployPool()).to.be.revertedWith("PoolContractsRegistry: not a factory");
+        await expect(poolFactory.deployPool())
+          .to.be.revertedWithCustomError(poolContractsRegistry, "CallerNotAFactory")
+          .withArgs(await poolFactory.getAddress(), OWNER.address);
       });
 
       it("should deploy several pools", async () => {
@@ -124,12 +128,13 @@ describe("PoolFactory", () => {
         const PoolMock = await ethers.getContractFactory("PoolMock");
         const pool = <PoolMock>PoolMock.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
 
-        await expect(poolContractsRegistry.addProxyPool(NAME_1, await poolFactory.getAddress())).to.be.revertedWith(
-          "PoolContractsRegistry: not a factory",
-        );
-        await expect(pool.setDependencies(await contractsRegistry.getAddress(), "0x")).to.be.revertedWith(
-          "Dependant: not an injector",
-        );
+        await expect(poolContractsRegistry.addProxyPool(NAME_1, await poolFactory.getAddress()))
+          .to.be.revertedWithCustomError(poolContractsRegistry, "CallerNotAFactory")
+          .withArgs(OWNER.address, await poolFactory.getAddress());
+
+        await expect(pool.setDependencies(await contractsRegistry.getAddress(), "0x"))
+          .to.be.revertedWithCustomError(poolFactory, "NotAnInjector")
+          .withArgs(await pool.getInjector(), OWNER.address);
       });
 
       it("should upgrade pools", async () => {
