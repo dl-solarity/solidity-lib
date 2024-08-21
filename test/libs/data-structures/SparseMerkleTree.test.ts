@@ -7,7 +7,6 @@ import { toBeHex } from "ethers";
 import { Hash, LocalStorageDB, Merkletree, Proof, str2Bytes, verifyProof } from "@iden3/js-merkletree";
 
 import { Reverter } from "@/test/helpers/reverter";
-import { ZERO_BYTES32 } from "@/scripts/utils/constants";
 import { getPoseidon, poseidonHash } from "@/test/helpers/poseidon-hash";
 
 import { SparseMerkleTreeMock, SparseMerkleTree } from "@ethers-v6";
@@ -206,7 +205,7 @@ describe("SparseMerkleTree", () => {
         await merkleTree.removeUint(key);
       }
 
-      expect(await merkleTree.getUintRoot()).to.equal(ZERO_BYTES32);
+      expect(await merkleTree.getUintRoot()).to.equal(ethers.ZeroHash);
 
       expect(await merkleTree.getUintNodesCount()).to.equal(0);
 
@@ -489,7 +488,7 @@ describe("SparseMerkleTree", () => {
         await merkleTree.removeBytes32(key);
       }
 
-      expect(await merkleTree.getBytes32Root()).to.equal(ZERO_BYTES32);
+      expect(await merkleTree.getBytes32Root()).to.equal(ethers.ZeroHash);
 
       expect(await merkleTree.getBytes32NodesCount()).to.equal(0);
 
@@ -604,7 +603,7 @@ describe("SparseMerkleTree", () => {
         await merkleTree.removeAddress(key);
       }
 
-      expect(await merkleTree.getAddressRoot()).to.equal(ZERO_BYTES32);
+      expect(await merkleTree.getAddressRoot()).to.equal(ethers.ZeroHash);
 
       expect(await merkleTree.getAddressNodesCount()).to.equal(0);
 

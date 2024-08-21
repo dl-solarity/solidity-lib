@@ -4,14 +4,13 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 import { Reverter } from "@/test/helpers/reverter";
 import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
-import { ZERO_BYTES32 } from "@/scripts/utils/constants";
 
 import { OwnableDiamondMock, Diamond, DiamondAccessControlMock } from "@ethers-v6";
 
 describe("DiamondAccessControl", () => {
   const reverter = new Reverter();
 
-  const ADMIN_ROLE = ZERO_BYTES32;
+  const ADMIN_ROLE = ethers.ZeroHash;
   const AGENT_ROLE = "0x0000000000000000000000000000000000000000000000000000000000000001";
 
   let OWNER: SignerWithAddress;

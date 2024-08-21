@@ -3,7 +3,6 @@ import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { Reverter } from "@/test/helpers/reverter";
-import { ZERO_BYTES32 } from "@/scripts/utils/constants";
 
 import { SetHelperMock } from "@ethers-v6";
 
@@ -45,9 +44,9 @@ describe("SetHelper", () => {
     });
 
     it("should add to bytes32 set", async () => {
-      await mock.addToBytes32Set([ZERO_BYTES32]);
+      await mock.addToBytes32Set([ethers.ZeroHash]);
 
-      expect(await mock.getBytes32Set()).to.deep.equal([ZERO_BYTES32]);
+      expect(await mock.getBytes32Set()).to.deep.equal([ethers.ZeroHash]);
     });
 
     it("should add to bytes set", async () => {
@@ -77,9 +76,9 @@ describe("SetHelper", () => {
     });
 
     it("should not strict add to bytes32 set if element already exists", async () => {
-      await expect(mock.strictAddToBytes32Set([ZERO_BYTES32, ZERO_BYTES32]))
+      await expect(mock.strictAddToBytes32Set([ethers.ZeroHash, ethers.ZeroHash]))
         .to.be.revertedWithCustomError(mock, "ElementAlreadyExistsBytes32")
-        .withArgs(ZERO_BYTES32);
+        .withArgs(ethers.ZeroHash);
     });
 
     it("should not strict add to bytes set if element already exists", async () => {
@@ -109,9 +108,9 @@ describe("SetHelper", () => {
     });
 
     it("should strict add to bytes32 set", async () => {
-      await mock.strictAddToBytes32Set([ZERO_BYTES32]);
+      await mock.strictAddToBytes32Set([ethers.ZeroHash]);
 
-      expect(await mock.getBytes32Set()).to.deep.equal([ZERO_BYTES32]);
+      expect(await mock.getBytes32Set()).to.deep.equal([ethers.ZeroHash]);
     });
 
     it("should strict add to bytes set", async () => {
@@ -143,8 +142,8 @@ describe("SetHelper", () => {
     });
 
     it("should remove from bytes32 set", async () => {
-      await mock.addToBytes32Set([ZERO_BYTES32]);
-      await mock.removeFromBytes32Set([ZERO_BYTES32]);
+      await mock.addToBytes32Set([ethers.ZeroHash]);
+      await mock.removeFromBytes32Set([ethers.ZeroHash]);
 
       expect(await mock.getBytes32Set()).to.deep.equal([]);
     });
@@ -185,11 +184,11 @@ describe("SetHelper", () => {
     });
 
     it("should not strict remove from bytes32 set if no such element", async () => {
-      await mock.strictAddToBytes32Set([ZERO_BYTES32]);
+      await mock.strictAddToBytes32Set([ethers.ZeroHash]);
 
-      await expect(mock.strictRemoveFromBytes32Set([ZERO_BYTES32, ZERO_BYTES32]))
+      await expect(mock.strictRemoveFromBytes32Set([ethers.ZeroHash, ethers.ZeroHash]))
         .to.be.revertedWithCustomError(mock, "NoSuchBytes32")
-        .withArgs(ZERO_BYTES32);
+        .withArgs(ethers.ZeroHash);
     });
 
     it("should not strict remove from string set if no such element", async () => {
@@ -225,8 +224,8 @@ describe("SetHelper", () => {
     });
 
     it("should strict remove from bytes32 set", async () => {
-      await mock.strictAddToBytes32Set([ZERO_BYTES32]);
-      await mock.strictRemoveFromBytes32Set([ZERO_BYTES32]);
+      await mock.strictAddToBytes32Set([ethers.ZeroHash]);
+      await mock.strictRemoveFromBytes32Set([ethers.ZeroHash]);
 
       expect(await mock.getBytes32Set()).to.deep.equal([]);
     });

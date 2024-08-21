@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
-import { ETHER_ADDR, ZERO_BYTES32 } from "@/scripts/utils/constants";
+import { ETHER_ADDR } from "@/scripts/utils/constants";
 
 import { TypeCasterMock } from "@ethers-v6";
 
@@ -72,7 +72,7 @@ describe("TypeCaster", () => {
   });
 
   describe("singleton array", () => {
-    const MOCKED_BYTES32 = ZERO_BYTES32.replaceAll("0000", "1234");
+    const MOCKED_BYTES32 = ethers.ZeroHash.replaceAll("0000", "1234");
 
     it("should build singleton arrays properly", async () => {
       expect(await mock.asSingletonArrayFromUint256(123)).to.deep.equal([123n]);

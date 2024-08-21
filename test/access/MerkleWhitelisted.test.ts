@@ -6,7 +6,6 @@ import { MerkleTree } from "merkletreejs";
 
 import { Reverter } from "@/test/helpers/reverter";
 import { getRoot, getProof, buildTree } from "../helpers/merkle-tree-helper";
-import { ZERO_BYTES32 } from "@/scripts/utils/constants";
 
 import { MerkleWhitelistedMock } from "@ethers-v6";
 
@@ -55,7 +54,7 @@ describe("MerkleWhitelisted", () => {
     });
 
     it("should be zero if root is not set yet", async () => {
-      expect(await merkle.getMerkleRoot()).to.equal(ZERO_BYTES32);
+      expect(await merkle.getMerkleRoot()).to.equal(ethers.ZeroHash);
     });
 
     it("should change merkle tree root properly", async () => {

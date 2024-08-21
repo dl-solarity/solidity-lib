@@ -6,7 +6,6 @@ import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
-import { ZERO_BYTES32 } from "@/scripts/utils/constants";
 import { wei } from "@/scripts/utils/utils";
 
 import { OwnableDiamondMock, DummyFacetMock, DummyInitMock, Diamond } from "@ethers-v6";
@@ -190,7 +189,7 @@ describe("Diamond", () => {
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
 
-        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZeroAddress, ZERO_BYTES32))
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZeroAddress, ethers.ZeroHash))
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
       });
@@ -278,7 +277,7 @@ describe("Diamond", () => {
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
 
-        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZeroAddress, ZERO_BYTES32))
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZeroAddress, ethers.ZeroHash))
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
       });
@@ -380,7 +379,7 @@ describe("Diamond", () => {
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
 
-        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZeroAddress, ZERO_BYTES32))
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZeroAddress, ethers.ZeroHash))
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
       });
