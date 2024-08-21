@@ -2,7 +2,6 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 
@@ -102,7 +101,7 @@ describe("PoolContractsRegistry", () => {
       await poolContractsRegistry.setNewImplementations([NAME_1], [await token.getAddress()]);
 
       expect(await poolContractsRegistry.getImplementation(NAME_1)).to.equal(await token.getAddress());
-      expect(await poolContractsRegistry.getProxyBeacon(NAME_1)).not.to.equal(ZeroAddress);
+      expect(await poolContractsRegistry.getProxyBeacon(NAME_1)).not.to.equal(ethers.ZeroAddress);
     });
 
     it("should not get not existing implementation", async () => {
@@ -155,7 +154,7 @@ describe("PoolContractsRegistry", () => {
     it("should inject dependencies", async () => {
       await poolContractsRegistry.addProxyPool(NAME_1, await pool.getAddress());
 
-      expect(await pool.token()).to.equal(ZeroAddress);
+      expect(await pool.token()).to.equal(ethers.ZeroAddress);
 
       await poolContractsRegistry.injectDependenciesToExistingPools(NAME_1, 0, 1);
 
@@ -165,7 +164,7 @@ describe("PoolContractsRegistry", () => {
     it("should inject dependencies with data", async () => {
       await poolContractsRegistry.addProxyPool(NAME_1, await pool.getAddress());
 
-      expect(await pool.token()).to.equal(ZeroAddress);
+      expect(await pool.token()).to.equal(ethers.ZeroAddress);
 
       await poolContractsRegistry.injectDependenciesToExistingPoolsWithData(NAME_1, "0x", 0, 1);
 

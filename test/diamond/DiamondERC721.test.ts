@@ -2,7 +2,6 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
@@ -138,13 +137,13 @@ describe("DiamondERC721 and InitializableStorage", () => {
       it("should mint tokens", async () => {
         const tx = erc721.mint(OWNER.address, 1);
 
-        await expect(tx).to.emit(erc721, "Transfer").withArgs(ZeroAddress, OWNER.address, 1);
+        await expect(tx).to.emit(erc721, "Transfer").withArgs(ethers.ZeroAddress, OWNER.address, 1);
 
         expect(await erc721.balanceOf(OWNER.address)).to.equal(1);
       });
 
       it("should not mint tokens to zero address", async () => {
-        await expect(erc721.mint(ZeroAddress, 1)).to.be.revertedWithCustomError(erc721, "ReceiverIsZeroAddress");
+        await expect(erc721.mint(ethers.ZeroAddress, 1)).to.be.revertedWithCustomError(erc721, "ReceiverIsZeroAddress");
       });
 
       it("should not mint tokens if it's alredy minted", async () => {
@@ -190,7 +189,7 @@ describe("DiamondERC721 and InitializableStorage", () => {
 
         const tx = erc721.burn(1);
 
-        await expect(tx).to.emit(erc721, "Transfer").withArgs(OWNER.address, ZeroAddress, 1);
+        await expect(tx).to.emit(erc721, "Transfer").withArgs(OWNER.address, ethers.ZeroAddress, 1);
 
         expect(await erc721.balanceOf(OWNER.address)).to.equal(0);
       });
@@ -283,7 +282,7 @@ describe("DiamondERC721 and InitializableStorage", () => {
       it("should not transfer tokens to zero address", async () => {
         await erc721.mint(OWNER.address, 1);
 
-        await expect(erc721.transferFromMock(OWNER.address, ZeroAddress, 1)).to.be.revertedWithCustomError(
+        await expect(erc721.transferFromMock(OWNER.address, ethers.ZeroAddress, 1)).to.be.revertedWithCustomError(
           erc721,
           "ReceiverIsZeroAddress",
         );

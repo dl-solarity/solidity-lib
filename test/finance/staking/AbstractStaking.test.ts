@@ -3,7 +3,6 @@ import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 
@@ -167,11 +166,11 @@ describe("AbstractStaking", () => {
       const AbstractStakingMock = await ethers.getContractFactory("AbstractStakingMock");
       let abstractStaking = await AbstractStakingMock.deploy();
 
-      await expect(abstractStaking.__AbstractStakingMock_init(ZeroAddress, rewardsToken, rate, stakingStartTime))
+      await expect(abstractStaking.__AbstractStakingMock_init(ethers.ZeroAddress, rewardsToken, rate, stakingStartTime))
         .to.be.revertedWithCustomError(abstractStaking, "SharesTokenIsZeroAddress")
         .withArgs();
 
-      await expect(abstractStaking.__AbstractStakingMock_init(sharesToken, ZeroAddress, rate, stakingStartTime))
+      await expect(abstractStaking.__AbstractStakingMock_init(sharesToken, ethers.ZeroAddress, rate, stakingStartTime))
         .to.be.revertedWithCustomError(abstractStaking, "RewardsTokenIsZeroAddress")
         .withArgs();
     });

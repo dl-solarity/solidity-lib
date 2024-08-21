@@ -2,7 +2,6 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 
@@ -59,11 +58,13 @@ describe("SBT", () => {
 
       expect(await sbt.tokenURI(1337)).to.equal("");
 
-      expect(tx).to.emit(sbt, "Transfer").withArgs(ZeroAddress, FIRST.address, 1337);
+      expect(tx).to.emit(sbt, "Transfer").withArgs(ethers.ZeroAddress, FIRST.address, 1337);
     });
 
     it("should not mint to null address", async () => {
-      await expect(sbt.mint(ZeroAddress, 1)).to.be.revertedWithCustomError(sbt, "ReceiverIsZeroAddress").withArgs();
+      await expect(sbt.mint(ethers.ZeroAddress, 1))
+        .to.be.revertedWithCustomError(sbt, "ReceiverIsZeroAddress")
+        .withArgs();
     });
 
     it("should not mint token twice", async () => {
@@ -82,11 +83,11 @@ describe("SBT", () => {
       expect(await sbt.tokenExists(0)).to.be.false;
 
       expect(await sbt.balanceOf(FIRST.address)).to.equal(0n);
-      expect(await sbt.ownerOf(0)).to.equal(ZeroAddress);
+      expect(await sbt.ownerOf(0)).to.equal(ethers.ZeroAddress);
 
       expect(await sbt.tokensOf(FIRST.address)).to.deep.equal([]);
 
-      expect(tx).to.emit(sbt, "Transfer").withArgs(FIRST.address, ZeroAddress, 1337);
+      expect(tx).to.emit(sbt, "Transfer").withArgs(FIRST.address, ethers.ZeroAddress, 1337);
     });
 
     it("should not burn SBT that doesn't exist", async () => {

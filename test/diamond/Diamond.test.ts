@@ -2,7 +2,6 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
@@ -59,7 +58,7 @@ describe("Diamond", () => {
     it("should renounce ownership", async () => {
       await diamond.renounceOwnership();
 
-      expect(await diamond.owner()).to.equal(ZeroAddress);
+      expect(await diamond.owner()).to.equal(ethers.ZeroAddress);
     });
 
     it("should not transfer ownership from non-owner", async () => {
@@ -75,7 +74,7 @@ describe("Diamond", () => {
     });
 
     it("should not transfer ownership to zero address", async () => {
-      await expect(diamond.transferOwnership(ZeroAddress))
+      await expect(diamond.transferOwnership(ethers.ZeroAddress))
         .to.be.revertedWithCustomError(diamond, "InvalidOwner")
         .withArgs();
     });
@@ -98,7 +97,7 @@ describe("Diamond", () => {
         expect(await diamond.facets()).to.deep.equal([]);
         expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
         expect(await diamond.facetAddresses()).to.deep.equal([]);
-        expect(await diamond.facetAddress("0x11223344")).to.equal(ZeroAddress);
+        expect(await diamond.facetAddress("0x11223344")).to.equal(ethers.ZeroAddress);
       });
     });
 
@@ -161,17 +160,17 @@ describe("Diamond", () => {
       it("should add facet correctly", async () => {
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZeroAddress, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ethers.ZeroAddress, "0x");
 
         expect(await diamond.facets()).to.deep.equal([[await dummyFacet.getAddress(), selectors]]);
         expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal(selectors);
         expect(await diamond.facetAddresses()).to.deep.equal([await dummyFacet.getAddress()]);
         expect(await diamond.facetAddress(selectors[0])).to.equal(await dummyFacet.getAddress());
-        expect(await diamond.facetAddress("0x11223344")).to.equal(ZeroAddress);
+        expect(await diamond.facetAddress("0x11223344")).to.equal(ethers.ZeroAddress);
       });
 
       it("should not add facet with zero address", async () => {
-        facets[0].facetAddress = ZeroAddress;
+        facets[0].facetAddress = ethers.ZeroAddress;
         await expect(diamond.diamondCutShort(facets))
           .to.be.revertedWithCustomError(diamond, "FacetIsZeroAddress")
           .withArgs();
@@ -189,7 +188,7 @@ describe("Diamond", () => {
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
 
-        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZeroAddress, ethers.ZeroHash))
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ethers.ZeroAddress, ethers.ZeroHash))
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
       });
@@ -222,13 +221,13 @@ describe("Diamond", () => {
         facets[0].functionSelectors = selectors.slice(1);
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZeroAddress, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ethers.ZeroAddress, "0x");
 
         expect(await diamond.facets()).to.deep.equal([[await dummyFacet.getAddress(), [selectors[0]]]]);
         expect(await diamond.facetAddresses()).to.deep.equal([await dummyFacet.getAddress()]);
         expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal([selectors[0]]);
         expect(await diamond.facetAddress(selectors[0])).to.equal(await dummyFacet.getAddress());
-        expect(await diamond.facetAddress(selectors[1])).to.equal(ZeroAddress);
+        expect(await diamond.facetAddress(selectors[1])).to.equal(ethers.ZeroAddress);
       });
 
       it("should fully remove facets", async () => {
@@ -238,16 +237,16 @@ describe("Diamond", () => {
         facets[0].action = FacetAction.Remove;
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZeroAddress, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ethers.ZeroAddress, "0x");
 
         expect(await diamond.facets()).to.deep.equal([]);
         expect(await diamond.facetAddresses()).to.deep.equal([]);
         expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
-        expect(await diamond.facetAddress(selectors[0])).to.equal(ZeroAddress);
+        expect(await diamond.facetAddress(selectors[0])).to.equal(ethers.ZeroAddress);
       });
 
       it("should not remove facet when facet is zero address", async () => {
-        facets[0].facetAddress = ZeroAddress;
+        facets[0].facetAddress = ethers.ZeroAddress;
         await expect(diamond.diamondCutShort(facets))
           .to.be.revertedWithCustomError(diamond, "FacetIsZeroAddress")
           .withArgs();
@@ -277,7 +276,7 @@ describe("Diamond", () => {
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
 
-        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZeroAddress, ethers.ZeroHash))
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ethers.ZeroAddress, ethers.ZeroHash))
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
       });
@@ -307,7 +306,7 @@ describe("Diamond", () => {
 
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZeroAddress, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ethers.ZeroAddress, "0x");
 
         expect(await diamond.facets()).to.deep.equal([
           [await dummyFacet.getAddress(), [selectors[0]]],
@@ -330,7 +329,7 @@ describe("Diamond", () => {
 
         const tx = diamond.diamondCutShort(facets);
 
-        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ZeroAddress, "0x");
+        await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), ethers.ZeroAddress, "0x");
 
         expect(await diamond.facets()).to.deep.equal([[await dummyFacet2.getAddress(), selectors]]);
         expect(await diamond.facetFunctionSelectors(await dummyFacet.getAddress())).to.deep.equal([]);
@@ -339,7 +338,7 @@ describe("Diamond", () => {
       });
 
       it("should not replace facet when facet is zero address", async () => {
-        facets[0].facetAddress = ZeroAddress;
+        facets[0].facetAddress = ethers.ZeroAddress;
         await expect(diamond.diamondCutShort(facets))
           .to.be.revertedWithCustomError(diamond, "FacetIsZeroAddress")
           .withArgs();
@@ -379,7 +378,7 @@ describe("Diamond", () => {
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
 
-        await expect(diamond.connect(SECOND).diamondCutLong(facets, ZeroAddress, ethers.ZeroHash))
+        await expect(diamond.connect(SECOND).diamondCutLong(facets, ethers.ZeroAddress, ethers.ZeroHash))
           .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
           .withArgs(SECOND.address, OWNER.address);
       });

@@ -2,7 +2,6 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 
@@ -53,31 +52,29 @@ describe("ContractsRegistry", () => {
         contractsRegistry.connect(SECOND).injectDependenciesWithData("", "0x"),
       ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
 
-      await expect(contractsRegistry.connect(SECOND).upgradeContract("", ZeroAddress)).to.be.revertedWithCustomError(
-        contractsRegistry,
-        "OwnableUnauthorizedAccount",
-      );
-
       await expect(
-        contractsRegistry.connect(SECOND).upgradeContractAndCall("", ZeroAddress, "0x"),
-      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
-
-      await expect(contractsRegistry.connect(SECOND).addContract("", ZeroAddress)).to.be.revertedWithCustomError(
-        contractsRegistry,
-        "OwnableUnauthorizedAccount",
-      );
-
-      await expect(contractsRegistry.connect(SECOND).addProxyContract("", ZeroAddress)).to.be.revertedWithCustomError(
-        contractsRegistry,
-        "OwnableUnauthorizedAccount",
-      );
-
-      await expect(
-        contractsRegistry.connect(SECOND).addProxyContractAndCall("", ZeroAddress, "0x"),
+        contractsRegistry.connect(SECOND).upgradeContract("", ethers.ZeroAddress),
       ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
 
       await expect(
-        contractsRegistry.connect(SECOND).justAddProxyContract("", ZeroAddress),
+        contractsRegistry.connect(SECOND).upgradeContractAndCall("", ethers.ZeroAddress, "0x"),
+      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+
+      await expect(contractsRegistry.connect(SECOND).addContract("", ethers.ZeroAddress)).to.be.revertedWithCustomError(
+        contractsRegistry,
+        "OwnableUnauthorizedAccount",
+      );
+
+      await expect(
+        contractsRegistry.connect(SECOND).addProxyContract("", ethers.ZeroAddress),
+      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+
+      await expect(
+        contractsRegistry.connect(SECOND).addProxyContractAndCall("", ethers.ZeroAddress, "0x"),
+      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+
+      await expect(
+        contractsRegistry.connect(SECOND).justAddProxyContract("", ethers.ZeroAddress),
       ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
 
       await expect(contractsRegistry.connect(SECOND).removeContract("")).to.be.revertedWithCustomError(
@@ -88,16 +85,16 @@ describe("ContractsRegistry", () => {
   });
 
   describe("contract management", async () => {
-    it("should fail adding ZeroAddress address", async () => {
-      await expect(contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), ZeroAddress))
+    it("should fail adding ethers.ZeroAddress address", async () => {
+      await expect(contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), ethers.ZeroAddress))
         .to.be.revertedWithCustomError(contractsRegistry, "ZeroAddressProvided")
         .withArgs(await contractsRegistry.DEPENDANT_NAME());
 
-      await expect(contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), ZeroAddress))
+      await expect(contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), ethers.ZeroAddress))
         .to.be.revertedWithCustomError(contractsRegistry, "ZeroAddressProvided")
         .withArgs(await contractsRegistry.DEPENDANT_NAME());
 
-      await expect(contractsRegistry.justAddProxyContract(await contractsRegistry.DEPENDANT_NAME(), ZeroAddress))
+      await expect(contractsRegistry.justAddProxyContract(await contractsRegistry.DEPENDANT_NAME(), ethers.ZeroAddress))
         .to.be.revertedWithCustomError(contractsRegistry, "ZeroAddressProvided")
         .withArgs(await contractsRegistry.DEPENDANT_NAME());
     });
@@ -270,7 +267,7 @@ describe("ContractsRegistry", () => {
     });
 
     it("should inject dependencies", async () => {
-      expect(await dependant.token()).to.equal(ZeroAddress);
+      expect(await dependant.token()).to.equal(ethers.ZeroAddress);
 
       await contractsRegistry.injectDependencies(await contractsRegistry.DEPENDANT_NAME());
 
@@ -278,7 +275,7 @@ describe("ContractsRegistry", () => {
     });
 
     it("should inject dependencies with data", async () => {
-      expect(await dependant.token()).to.equal(ZeroAddress);
+      expect(await dependant.token()).to.equal(ethers.ZeroAddress);
 
       await contractsRegistry.injectDependenciesWithData(await contractsRegistry.DEPENDANT_NAME(), "0x112233");
 

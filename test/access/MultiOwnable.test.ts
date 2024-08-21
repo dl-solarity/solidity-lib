@@ -2,7 +2,6 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 
@@ -65,7 +64,10 @@ describe("MultiOwnable", () => {
     });
 
     it("should not add null address", async () => {
-      await expect(multiOwnable.addOwners([ZeroAddress])).to.be.revertedWithCustomError(multiOwnable, "InvalidOwner");
+      await expect(multiOwnable.addOwners([ethers.ZeroAddress])).to.be.revertedWithCustomError(
+        multiOwnable,
+        "InvalidOwner",
+      );
     });
   });
 

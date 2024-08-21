@@ -3,7 +3,6 @@ import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 import { wei } from "@/scripts/utils/utils";
@@ -92,7 +91,7 @@ describe("AbstractValueDistributor", () => {
     });
 
     it("should not allow zero address to add shares", async () => {
-      await expect(abstractValueDistributor.addShares(ZeroAddress, 2))
+      await expect(abstractValueDistributor.addShares(ethers.ZeroAddress, 2))
         .to.be.revertedWithCustomError(abstractValueDistributor, "UserIsZeroAddress")
         .withArgs();
     });
@@ -134,9 +133,9 @@ describe("AbstractValueDistributor", () => {
     });
 
     it("should not allow zero address to remove shares", async () => {
-      await expect(abstractValueDistributor.removeShares(ZeroAddress, 2))
+      await expect(abstractValueDistributor.removeShares(ethers.ZeroAddress, 2))
         .to.be.revertedWithCustomError(abstractValueDistributor, "InsufficientSharesAmount")
-        .withArgs(ZeroAddress, 0, 2);
+        .withArgs(ethers.ZeroAddress, 0, 2);
     });
 
     it("should not allow to remove more shares than it was added", async () => {
@@ -311,9 +310,9 @@ describe("AbstractValueDistributor", () => {
     });
 
     it("should not allow zero address to distribute values", async () => {
-      await expect(abstractValueDistributor.distributeValue(ZeroAddress, 2))
+      await expect(abstractValueDistributor.distributeValue(ethers.ZeroAddress, 2))
         .to.be.revertedWithCustomError(abstractValueDistributor, "InsufficientOwedValue")
-        .withArgs(ZeroAddress, 0, 2);
+        .withArgs(ethers.ZeroAddress, 0, 2);
     });
 
     it("should not allow to distribute more values than owed", async () => {

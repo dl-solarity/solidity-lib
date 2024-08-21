@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { encodeBytes32String, toBeHex, ZeroAddress } from "ethers";
+import { encodeBytes32String, toBeHex } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 
@@ -565,7 +565,7 @@ describe("AvlTree", () => {
       await expect(avlTree.getAddressValue(2))
         .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
         .withArgs(toBeHex(2, 32));
-      expect(await avlTree.tryGetAddress(2)).to.deep.equal([false, ZeroAddress]);
+      expect(await avlTree.tryGetAddress(2)).to.deep.equal([false, ethers.ZeroAddress]);
 
       let traversal = await avlTree.traverseAddress();
       expect(traversal[0]).to.deep.equal([6, 5, 1]);
@@ -595,7 +595,7 @@ describe("AvlTree", () => {
       await expect(avlTree.getAddressValue(5))
         .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
         .withArgs(toBeHex(5, 32));
-      expect(await avlTree.tryGetAddress(5)).to.deep.equal([false, ZeroAddress]);
+      expect(await avlTree.tryGetAddress(5)).to.deep.equal([false, ethers.ZeroAddress]);
 
       traversal = await avlTree.traverseAddress();
       expect(traversal[0]).to.deep.equal([6, 4, 2, 1]);
@@ -618,26 +618,26 @@ describe("AvlTree", () => {
       await expect(avlTree.getAddressValue(1))
         .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
         .withArgs(toBeHex(1, 32));
-      expect(await avlTree.tryGetAddress(1)).to.deep.equal([false, ZeroAddress]);
+      expect(await avlTree.tryGetAddress(1)).to.deep.equal([false, ethers.ZeroAddress]);
 
       await avlTree.insertAddress(1, USER2);
-      await avlTree.insertAddress(2, ZeroAddress);
+      await avlTree.insertAddress(2, ethers.ZeroAddress);
 
       expect(await avlTree.getAddressValue(1)).to.be.equal(USER2);
       expect(await avlTree.tryGetAddress(1)).to.deep.equal([true, USER2.address]);
 
-      expect(await avlTree.getAddressValue(2)).to.be.equal(ZeroAddress);
-      expect(await avlTree.tryGetAddress(2)).to.deep.equal([true, ZeroAddress]);
+      expect(await avlTree.getAddressValue(2)).to.be.equal(ethers.ZeroAddress);
+      expect(await avlTree.tryGetAddress(2)).to.deep.equal([true, ethers.ZeroAddress]);
 
       await expect(avlTree.getAddressValue(5))
         .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
         .withArgs(toBeHex(5, 32));
-      expect(await avlTree.tryGetAddress(5)).to.deep.equal([false, ZeroAddress]);
+      expect(await avlTree.tryGetAddress(5)).to.deep.equal([false, ethers.ZeroAddress]);
 
       await expect(avlTree.getAddressValue(0))
         .to.be.revertedWithCustomError(avlTree, "NodeDoesNotExist")
         .withArgs(toBeHex(0, 32));
-      expect(await avlTree.tryGetAddress(0)).to.deep.equal([false, ZeroAddress]);
+      expect(await avlTree.tryGetAddress(0)).to.deep.equal([false, ethers.ZeroAddress]);
     });
 
     it("should check if custom comparator is set for the address tree correctly", async () => {

@@ -3,7 +3,6 @@ import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 import { precision, wei } from "@/scripts/utils/utils";
@@ -208,7 +207,7 @@ describe("Vesting", () => {
     });
 
     it("should revert if vesting beneficiary is zero address", async () => {
-      defaultVesting.beneficiary = ZeroAddress;
+      defaultVesting.beneficiary = ethers.ZeroAddress;
 
       await expect(vesting.createVesting(defaultVesting))
         .to.be.revertedWithCustomError(vesting, "BeneficiaryIsZeroAddress")
@@ -216,7 +215,7 @@ describe("Vesting", () => {
     });
 
     it("should revert if vesting token is zero address", async () => {
-      defaultVesting.vestingToken = ZeroAddress;
+      defaultVesting.vestingToken = ethers.ZeroAddress;
 
       await expect(vesting.createVesting(defaultVesting))
         .to.be.revertedWithCustomError(vesting, "VestingTokenIsZeroAddress")

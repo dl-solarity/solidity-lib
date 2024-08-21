@@ -9,9 +9,10 @@ import { Hash, LocalStorageDB, Merkletree, Proof, str2Bytes, verifyProof } from 
 import { Reverter } from "@/test/helpers/reverter";
 import { getPoseidon, poseidonHash } from "@/test/helpers/poseidon-hash";
 
-import { SparseMerkleTreeMock, SparseMerkleTree } from "@ethers-v6";
+import { SparseMerkleTreeMock } from "@ethers-v6";
 
 import "mock-local-storage";
+import { SparseMerkleTree } from "@/generated-types/ethers/contracts/mock/libs/data-structures/SparseMerkleTreeMock.sol/SparseMerkleTreeMock";
 
 describe("SparseMerkleTree", () => {
   const reverter = new Reverter();

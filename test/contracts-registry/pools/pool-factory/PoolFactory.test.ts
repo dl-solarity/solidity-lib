@@ -2,7 +2,6 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { ZeroAddress } from "ethers";
 
 import { Reverter } from "@/test/helpers/reverter";
 
@@ -104,7 +103,7 @@ describe("PoolFactory", () => {
         const beaconProxy = <PublicBeaconProxy>PublicBeaconProxy.attach(await pool.getAddress());
 
         expect(await beaconProxy.implementation()).to.equal(await poolImpl.getAddress());
-        expect(await pool.token()).not.to.equal(ZeroAddress);
+        expect(await pool.token()).not.to.equal(ethers.ZeroAddress);
       });
 
       it("should not register pools", async () => {
