@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable
 pragma solidity ^0.8.4;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";

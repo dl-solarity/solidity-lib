@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable
 pragma solidity ^0.8.4;
 
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";

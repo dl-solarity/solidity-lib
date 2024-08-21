@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable
 pragma solidity ^0.8.4;
 
 import {VerifierHelper} from "../../../../libs/zkp/snarkjs/VerifierHelper.sol";

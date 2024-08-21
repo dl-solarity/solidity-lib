@@ -190,6 +190,7 @@ contract Diamond is DiamondStorage {
             return;
         }
 
+        // solhint-disable-next-line
         (bool success_, bytes memory err_) = initFacet_.delegatecall(initData_);
 
         if (!success_) {

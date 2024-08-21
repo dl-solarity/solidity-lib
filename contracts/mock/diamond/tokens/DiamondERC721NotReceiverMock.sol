@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable
 pragma solidity ^0.8.4;
 
 import {DiamondERC721Mock} from "./DiamondERC721Mock.sol";
@@ -13,7 +14,7 @@ contract DiamondERC721NotReceiverMock is DiamondERC721Mock {
         address,
         uint256,
         bytes memory
-    ) internal override returns (bool) {
+    ) internal pure override returns (bool) {
         return false;
     }
 }

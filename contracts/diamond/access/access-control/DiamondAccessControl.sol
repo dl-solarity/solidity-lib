@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+// solhint-disable-next-line no-unused-import
 import {DiamondAccessControlStorage, IAccessControl} from "./DiamondAccessControlStorage.sol";
 
 /**
