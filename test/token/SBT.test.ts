@@ -1,8 +1,9 @@
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
+
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+
 import { Reverter } from "@/test/helpers/reverter";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 import { SBTMock } from "@ethers-v6";
 
@@ -57,17 +58,19 @@ describe("SBT", () => {
 
       expect(await sbt.tokenURI(1337)).to.equal("");
 
-      expect(tx).to.emit(sbt, "Transfer").withArgs(ZERO_ADDR, FIRST.address, 1337);
+      expect(tx).to.emit(sbt, "Transfer").withArgs(ethers.ZeroAddress, FIRST.address, 1337);
     });
 
     it("should not mint to null address", async () => {
-      await expect(sbt.mint(ZERO_ADDR, 1)).to.be.revertedWith("SBT: address(0) receiver");
+      await expect(sbt.mint(ethers.ZeroAddress, 1))
+        .to.be.revertedWithCustomError(sbt, "ReceiverIsZeroAddress")
+        .withArgs();
     });
 
     it("should not mint token twice", async () => {
       await sbt.mint(FIRST.address, 1);
 
-      await expect(sbt.mint(FIRST.address, 1)).to.be.revertedWith("SBT: token already exists");
+      await expect(sbt.mint(FIRST.address, 1)).to.be.revertedWithCustomError(sbt, "TokenAlreadyExists").withArgs(1);
     });
   });
 
@@ -80,15 +83,15 @@ describe("SBT", () => {
       expect(await sbt.tokenExists(0)).to.be.false;
 
       expect(await sbt.balanceOf(FIRST.address)).to.equal(0n);
-      expect(await sbt.ownerOf(0)).to.equal(ZERO_ADDR);
+      expect(await sbt.ownerOf(0)).to.equal(ethers.ZeroAddress);
 
       expect(await sbt.tokensOf(FIRST.address)).to.deep.equal([]);
 
-      expect(tx).to.emit(sbt, "Transfer").withArgs(FIRST.address, ZERO_ADDR, 1337);
+      expect(tx).to.emit(sbt, "Transfer").withArgs(FIRST.address, ethers.ZeroAddress, 1337);
     });
 
     it("should not burn SBT that doesn't exist", async () => {
-      await expect(sbt.burn(1337)).to.be.revertedWith("SBT: token doesn't exist");
+      await expect(sbt.burn(1337)).to.be.revertedWithCustomError(sbt, "TokenDoesNotExist").withArgs(1337);
     });
   });
 
@@ -101,7 +104,7 @@ describe("SBT", () => {
     });
 
     it("should not set uri for non-existent token", async () => {
-      await expect(sbt.setTokenURI(1337, "")).to.be.revertedWith("SBT: token doesn't exist");
+      await expect(sbt.setTokenURI(1337, "")).to.be.revertedWithCustomError(sbt, "TokenDoesNotExist").withArgs(1337);
     });
 
     it("should reset token URI if token is burnder", async () => {

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable
 pragma solidity ^0.8.4;
 
 import {ContractsRegistryPoolMock} from "./ContractsRegistryPoolMock.sol";
@@ -11,8 +12,10 @@ contract PoolContractsRegistryMock is OwnablePoolContractsRegistry {
 
     address internal _poolFactory;
 
+    error CallerNotAFactory(address caller, address factory);
+
     modifier onlyPoolFactory() {
-        require(_poolFactory == msg.sender, "PoolContractsRegistry: not a factory");
+        if (_poolFactory != msg.sender) revert CallerNotAFactory(msg.sender, _poolFactory);
         _;
     }
 

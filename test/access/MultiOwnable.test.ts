@@ -1,8 +1,9 @@
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
+
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+
 import { Reverter } from "@/test/helpers/reverter";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 import { MultiOwnableMock } from "@ethers-v6";
 
@@ -38,18 +39,19 @@ describe("MultiOwnable", () => {
     });
 
     it("only owner should call these functions", async () => {
-      await expect(multiOwnable.connect(SECOND).addOwners([THIRD.address])).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner",
-      );
+      await expect(multiOwnable.connect(SECOND).addOwners([THIRD.address]))
+        .to.be.revertedWithCustomError(multiOwnable, "UnauthorizedAccount")
+        .withArgs(SECOND);
 
       await multiOwnable.addOwners([THIRD.address]);
 
-      await expect(multiOwnable.connect(SECOND).removeOwners([THIRD.address])).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner",
-      );
-      await expect(multiOwnable.connect(SECOND).renounceOwnership()).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner",
-      );
+      await expect(multiOwnable.connect(SECOND).removeOwners([THIRD.address]))
+        .to.be.revertedWithCustomError(multiOwnable, "UnauthorizedAccount")
+        .withArgs(SECOND);
+
+      await expect(multiOwnable.connect(SECOND).renounceOwnership())
+        .to.be.revertedWithCustomError(multiOwnable, "UnauthorizedAccount")
+        .withArgs(SECOND);
     });
   });
 
@@ -62,8 +64,9 @@ describe("MultiOwnable", () => {
     });
 
     it("should not add null address", async () => {
-      await expect(multiOwnable.addOwners([ZERO_ADDR])).to.be.revertedWith(
-        "MultiOwnable: zero address can not be added",
+      await expect(multiOwnable.addOwners([ethers.ZeroAddress])).to.be.revertedWithCustomError(
+        multiOwnable,
+        "InvalidOwner",
       );
     });
   });

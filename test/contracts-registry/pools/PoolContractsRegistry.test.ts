@@ -1,8 +1,9 @@
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
+
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+
 import { Reverter } from "@/test/helpers/reverter";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 import { PoolContractsRegistryMock, ContractsRegistryPoolMock, PoolMock, PoolUpgradeMock, ERC20Mock } from "@ethers-v6";
 
@@ -72,9 +73,11 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("should not set dependencies from non dependant", async () => {
-      await expect(poolContractsRegistry.setDependencies(OWNER.address, "0x")).to.be.rejectedWith(
-        "Dependant: not an injector",
-      );
+      const injector = await poolContractsRegistry.getInjector();
+
+      await expect(poolContractsRegistry.setDependencies(OWNER.address, "0x"))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "NotAnInjector")
+        .withArgs(injector, OWNER.address);
     });
 
     it("only owner should call these functions", async () => {
@@ -98,16 +101,17 @@ describe("PoolContractsRegistry", () => {
       await poolContractsRegistry.setNewImplementations([NAME_1], [await token.getAddress()]);
 
       expect(await poolContractsRegistry.getImplementation(NAME_1)).to.equal(await token.getAddress());
-      expect(await poolContractsRegistry.getProxyBeacon(NAME_1)).not.to.equal(ZERO_ADDR);
+      expect(await poolContractsRegistry.getProxyBeacon(NAME_1)).not.to.equal(ethers.ZeroAddress);
     });
 
     it("should not get not existing implementation", async () => {
-      await expect(poolContractsRegistry.getImplementation(NAME_1)).to.be.revertedWith(
-        "PoolContractsRegistry: this mapping doesn't exist",
-      );
-      await expect(poolContractsRegistry.getProxyBeacon(NAME_1)).to.be.revertedWith(
-        "PoolContractsRegistry: bad ProxyBeacon",
-      );
+      await expect(poolContractsRegistry.getImplementation(NAME_1))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "NoMappingExists")
+        .withArgs(NAME_1);
+
+      await expect(poolContractsRegistry.getProxyBeacon(NAME_1))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "ProxyDoesNotExist")
+        .withArgs(NAME_1);
     });
   });
 
@@ -133,9 +137,9 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("only owner should be able to add pools", async () => {
-      await expect(poolContractsRegistry.connect(POOL_1).addProxyPool(NAME_1, POOL_1.address)).to.be.revertedWith(
-        "PoolContractsRegistry: not a factory",
-      );
+      await expect(poolContractsRegistry.connect(POOL_1).addProxyPool(NAME_1, POOL_1.address))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "CallerNotAFactory")
+        .withArgs(POOL_1, OWNER.address);
     });
   });
 
@@ -150,7 +154,7 @@ describe("PoolContractsRegistry", () => {
     it("should inject dependencies", async () => {
       await poolContractsRegistry.addProxyPool(NAME_1, await pool.getAddress());
 
-      expect(await pool.token()).to.equal(ZERO_ADDR);
+      expect(await pool.token()).to.equal(ethers.ZeroAddress);
 
       await poolContractsRegistry.injectDependenciesToExistingPools(NAME_1, 0, 1);
 
@@ -160,7 +164,7 @@ describe("PoolContractsRegistry", () => {
     it("should inject dependencies with data", async () => {
       await poolContractsRegistry.addProxyPool(NAME_1, await pool.getAddress());
 
-      expect(await pool.token()).to.equal(ZERO_ADDR);
+      expect(await pool.token()).to.equal(ethers.ZeroAddress);
 
       await poolContractsRegistry.injectDependenciesToExistingPoolsWithData(NAME_1, "0x", 0, 1);
 
@@ -168,9 +172,9 @@ describe("PoolContractsRegistry", () => {
     });
 
     it("should not inject dependencies to 0 pools", async () => {
-      await expect(poolContractsRegistry.injectDependenciesToExistingPools(NAME_1, 0, 1)).to.be.revertedWith(
-        "PoolContractsRegistry: no pools to inject",
-      );
+      await expect(poolContractsRegistry.injectDependenciesToExistingPools(NAME_1, 0, 1))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "NoPoolsToInject")
+        .withArgs(NAME_1);
     });
   });
 

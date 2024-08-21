@@ -10,6 +10,8 @@ import {ISolarityTransparentProxy} from "./SolarityTransparentProxy.sol";
  * This is the lightweight helper contract that may be used as a TransparentProxy admin.
  */
 contract TransparentProxyUpgrader is PermanentOwnable {
+    error AddressNotAProxy(address contractAddress);
+
     constructor() PermanentOwnable(msg.sender) {}
 
     /**
@@ -31,7 +33,7 @@ contract TransparentProxyUpgrader is PermanentOwnable {
         // bytes4(keccak256("implementation()")) == 0x5c60da1b
         (bool success_, bytes memory returndata_) = address(what_).staticcall(hex"5c60da1b");
 
-        require(success_, "TransparentProxyUpgrader: not a proxy");
+        if (!success_) revert AddressNotAProxy(what_);
 
         return abi.decode(returndata_, (address));
     }

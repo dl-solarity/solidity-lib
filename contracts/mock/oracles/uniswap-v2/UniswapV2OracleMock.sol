@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable
 pragma solidity ^0.8.4;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {UniswapV2Oracle} from "../../../oracles/UniswapV2Oracle.sol";
-import {UniswapV2PairMock} from "./UniswapV2PairMock.sol";
 
 contract UniswapV2OracleMock is UniswapV2Oracle {
     using EnumerableSet for EnumerableSet.AddressSet;

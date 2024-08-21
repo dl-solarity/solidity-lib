@@ -1,12 +1,13 @@
 import { ethers } from "hardhat";
+import { expect } from "chai";
+
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { expect } from "chai";
+
 import { Reverter } from "@/test/helpers/reverter";
 
 import { AbstractStakingMock, ERC20Mock } from "@ethers-v6";
 import { wei } from "@/scripts/utils/utils";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 describe("AbstractStaking", () => {
   const reverter = new Reverter();
@@ -165,27 +166,36 @@ describe("AbstractStaking", () => {
       const AbstractStakingMock = await ethers.getContractFactory("AbstractStakingMock");
       let abstractStaking = await AbstractStakingMock.deploy();
 
-      await expect(
-        abstractStaking.__AbstractStakingMock_init(ZERO_ADDR, rewardsToken, rate, stakingStartTime),
-      ).to.be.revertedWith("Staking: zero address cannot be the Shares Token");
+      await expect(abstractStaking.__AbstractStakingMock_init(ethers.ZeroAddress, rewardsToken, rate, stakingStartTime))
+        .to.be.revertedWithCustomError(abstractStaking, "SharesTokenIsZeroAddress")
+        .withArgs();
 
-      await expect(
-        abstractStaking.__AbstractStakingMock_init(sharesToken, ZERO_ADDR, rate, stakingStartTime),
-      ).to.be.revertedWith("Staking: zero address cannot be the Rewards Token");
+      await expect(abstractStaking.__AbstractStakingMock_init(sharesToken, ethers.ZeroAddress, rate, stakingStartTime))
+        .to.be.revertedWithCustomError(abstractStaking, "RewardsTokenIsZeroAddress")
+        .withArgs();
     });
   });
 
   describe("timestamps", () => {
     it("should not allow to stake, unstake, withdraw tokens or claim rewards before the start of the staking", async () => {
-      await abstractStaking.setStakingStartTime(1638474321);
+      const stakingStartTime = 1638474321;
+      await abstractStaking.setStakingStartTime(stakingStartTime);
 
-      const revertMessage = "Staking: staking has not started yet";
-
-      await expect(abstractStaking.stake(wei(100, sharesDecimals))).to.be.revertedWith(revertMessage);
-      await expect(abstractStaking.unstake(wei(100, sharesDecimals))).to.be.revertedWith(revertMessage);
-      await expect(abstractStaking.withdraw()).to.be.revertedWith(revertMessage);
-      await expect(abstractStaking.claim(wei(100, sharesDecimals))).to.be.revertedWith(revertMessage);
-      await expect(abstractStaking.claimAll()).to.be.revertedWith(revertMessage);
+      await expect(abstractStaking.stake(wei(100, sharesDecimals)))
+        .to.be.revertedWithCustomError(abstractStaking, "StakingHasNotStarted")
+        .withArgs((await time.latest()) + 1, stakingStartTime);
+      await expect(abstractStaking.unstake(wei(100, sharesDecimals)))
+        .to.be.revertedWithCustomError(abstractStaking, "StakingHasNotStarted")
+        .withArgs((await time.latest()) + 1, stakingStartTime);
+      await expect(abstractStaking.withdraw())
+        .to.be.revertedWithCustomError(abstractStaking, "StakingHasNotStarted")
+        .withArgs((await time.latest()) + 1, stakingStartTime);
+      await expect(abstractStaking.claim(wei(100, sharesDecimals)))
+        .to.be.revertedWithCustomError(abstractStaking, "StakingHasNotStarted")
+        .withArgs((await time.latest()) + 1, stakingStartTime);
+      await expect(abstractStaking.claimAll())
+        .to.be.revertedWithCustomError(abstractStaking, "StakingHasNotStarted")
+        .withArgs((await time.latest()) + 1, stakingStartTime);
     });
 
     it("should work as expected if the staking start time is set to the timestamp in the past", async () => {
@@ -313,9 +323,9 @@ describe("AbstractStaking", () => {
     });
 
     it("should not allow to stake 0 tokens", async () => {
-      await expect(abstractStaking.connect(FIRST).stake(0)).to.be.revertedWith(
-        "ValueDistributor: amount has to be more than 0",
-      );
+      await expect(abstractStaking.connect(FIRST).stake(0))
+        .to.be.revertedWithCustomError(abstractStaking, "AmountIsZero")
+        .withArgs();
     });
   });
 
@@ -382,18 +392,18 @@ describe("AbstractStaking", () => {
     });
 
     it("should not allow to unstake 0 tokens", async () => {
-      await expect(abstractStaking.connect(FIRST).unstake(0)).to.be.revertedWith(
-        "ValueDistributor: amount has to be more than 0",
-      );
+      await expect(abstractStaking.connect(FIRST).unstake(0))
+        .to.be.revertedWithCustomError(abstractStaking, "AmountIsZero")
+        .withArgs();
     });
 
     it("should not allow to unstake more than it was staked", async () => {
       await mintAndApproveTokens(FIRST, sharesToken, wei(100, sharesDecimals));
 
       await abstractStaking.connect(FIRST).stake(wei(100, sharesDecimals));
-      await expect(abstractStaking.connect(FIRST).unstake(wei(150, sharesDecimals))).to.be.revertedWith(
-        "ValueDistributor: insufficient amount",
-      );
+      await expect(abstractStaking.connect(FIRST).unstake(wei(150, sharesDecimals)))
+        .to.be.revertedWithCustomError(abstractStaking, "InsufficientSharesAmount")
+        .withArgs(FIRST.address, wei(100, sharesDecimals), wei(150, sharesDecimals));
     });
   });
 
@@ -478,7 +488,9 @@ describe("AbstractStaking", () => {
           abstractStaking.interface.encodeFunctionData("unstake", [wei(200, sharesDecimals)]),
           abstractStaking.interface.encodeFunctionData("withdraw"),
         ]),
-      ).to.be.revertedWith("ValueDistributor: amount has to be more than 0");
+      )
+        .to.be.revertedWithCustomError(abstractStaking, "AmountIsZero")
+        .withArgs();
     });
   });
 
@@ -584,17 +596,17 @@ describe("AbstractStaking", () => {
     });
 
     it("should not allow to claim 0 rewards", async () => {
-      await expect(abstractStaking.connect(FIRST).claim(0)).to.be.revertedWith(
-        "ValueDistributor: amount has to be more than 0",
-      );
+      await expect(abstractStaking.connect(FIRST).claim(0))
+        .to.be.revertedWithCustomError(abstractStaking, "AmountIsZero")
+        .withArgs();
     });
 
     it("should not allow to claim more rewards than earned", async () => {
       await performStakingManipulations();
 
-      await expect(abstractStaking.connect(FIRST).claim(wei(4, rewardsDecimals))).to.be.revertedWith(
-        "ValueDistributor: insufficient amount",
-      );
+      await expect(abstractStaking.connect(FIRST).claim(wei(4, rewardsDecimals)))
+        .to.be.revertedWithCustomError(abstractStaking, "InsufficientOwedValue")
+        .withArgs(FIRST.address, abstractStaking.getOwedValue(FIRST.address), wei(4, rewardsDecimals));
     });
   });
 
@@ -649,7 +661,9 @@ describe("AbstractStaking", () => {
           abstractStaking.interface.encodeFunctionData("claimAll"),
           abstractStaking.interface.encodeFunctionData("claimAll"),
         ]),
-      ).to.be.revertedWith("ValueDistributor: amount has to be more than 0");
+      )
+        .to.be.revertedWithCustomError(abstractStaking, "AmountIsZero")
+        .withArgs();
     });
   });
 

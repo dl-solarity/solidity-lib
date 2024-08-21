@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 
-import "../../utils/BlockGuard.sol";
+import {BlockGuard} from "../../utils/BlockGuard.sol";
 
 contract BlockGuardMock is Multicall, BlockGuard {
     string public constant DEPOSIT_WITHDRAW_RESOURCE = "DEPOSIT_WITHDRAW";

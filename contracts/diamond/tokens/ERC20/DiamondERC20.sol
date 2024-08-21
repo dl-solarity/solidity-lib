@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+// solhint-disable-next-line no-unused-import
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {DiamondERC20Storage} from "./DiamondERC20Storage.sol";
@@ -12,6 +13,13 @@ import {DiamondERC20Storage} from "./DiamondERC20Storage.sol";
  * by the Diamond Standard.
  */
 contract DiamondERC20 is DiamondERC20Storage {
+    error ApproverIsZeroAddress();
+    error InsufficientAllowance(address spender, uint256 allowance, uint256 needed);
+    error InsufficientBalance(address sender, uint256 balance, uint256 needed);
+    error ReceiverIsZeroAddress();
+    error SenderIsZeroAddress();
+    error SpenderIsZeroAddress();
+
     /**
      * @notice Sets the values for {name} and {symbol}.
      *
@@ -63,8 +71,8 @@ contract DiamondERC20 is DiamondERC20Storage {
      * @notice Moves `amount` of tokens from `from` to `to`.
      */
     function _transfer(address from_, address to_, uint256 amount_) internal virtual {
-        require(from_ != address(0), "ERC20: transfer from the zero address");
-        require(to_ != address(0), "ERC20: transfer to the zero address");
+        if (from_ == address(0)) revert SenderIsZeroAddress();
+        if (to_ == address(0)) revert ReceiverIsZeroAddress();
 
         _beforeTokenTransfer(from_, to_, amount_);
 
@@ -72,7 +80,7 @@ contract DiamondERC20 is DiamondERC20Storage {
 
         uint256 fromBalance_ = _erc20Storage.balances[from_];
 
-        require(fromBalance_ >= amount_, "ERC20: transfer amount exceeds balance");
+        if (fromBalance_ < amount_) revert InsufficientBalance(from_, fromBalance_, amount_);
 
         unchecked {
             _erc20Storage.balances[from_] = fromBalance_ - amount_;
@@ -92,7 +100,7 @@ contract DiamondERC20 is DiamondERC20Storage {
      * the total supply.
      */
     function _mint(address account_, uint256 amount_) internal virtual {
-        require(account_ != address(0), "ERC20: mint to the zero address");
+        if (account_ == address(0)) revert ReceiverIsZeroAddress();
 
         _beforeTokenTransfer(address(0), account_, amount_);
 
@@ -115,14 +123,15 @@ contract DiamondERC20 is DiamondERC20Storage {
      * total supply.
      */
     function _burn(address account_, uint256 amount_) internal virtual {
-        require(account_ != address(0), "ERC20: burn from the zero address");
+        if (account_ == address(0)) revert SenderIsZeroAddress();
 
         _beforeTokenTransfer(account_, address(0), amount_);
 
         DERC20Storage storage _erc20Storage = _getErc20Storage();
 
         uint256 accountBalance_ = _erc20Storage.balances[account_];
-        require(accountBalance_ >= amount_, "ERC20: burn amount exceeds balance");
+        if (accountBalance_ < amount_)
+            revert InsufficientBalance(account_, accountBalance_, amount_);
 
         unchecked {
             _erc20Storage.balances[account_] -= amount_;
@@ -139,8 +148,8 @@ contract DiamondERC20 is DiamondERC20Storage {
      * @notice Sets `amount` as the allowance of `spender` over the `owner` s tokens.
      */
     function _approve(address owner_, address spender_, uint256 amount_) internal virtual {
-        require(owner_ != address(0), "ERC20: approve from the zero address");
-        require(spender_ != address(0), "ERC20: approve to the zero address");
+        if (owner_ == address(0)) revert ApproverIsZeroAddress();
+        if (spender_ == address(0)) revert SpenderIsZeroAddress();
 
         _getErc20Storage().allowances[owner_][spender_] = amount_;
 
@@ -154,7 +163,8 @@ contract DiamondERC20 is DiamondERC20Storage {
         uint256 currentAllowance_ = allowance(owner_, spender_);
 
         if (currentAllowance_ != type(uint256).max) {
-            require(currentAllowance_ >= amount_, "ERC20: insufficient allowance");
+            if (currentAllowance_ < amount_)
+                revert InsufficientAllowance(spender_, currentAllowance_, amount_);
 
             unchecked {
                 _approve(owner_, spender_, currentAllowance_ - amount_);

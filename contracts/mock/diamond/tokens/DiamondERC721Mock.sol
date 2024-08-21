@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable
 pragma solidity ^0.8.4;
 
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
@@ -6,8 +7,8 @@ import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Recei
 import {DiamondERC721} from "../../../diamond/tokens/ERC721/DiamondERC721.sol";
 
 contract DiamondERC721Mock is DiamondERC721 {
-    string baseUri;
-    bool replaceOwner;
+    string internal baseUri;
+    bool internal replaceOwner;
 
     constructor() {
         _disableInitializers(DIAMOND_ERC721_STORAGE_SLOT);
@@ -76,12 +77,14 @@ contract DiamondERC721Mock is DiamondERC721 {
 }
 
 contract NonERC721Receiver is IERC721Receiver {
+    error RevertingOnERC721Received();
+
     function onERC721Received(
         address,
         address,
         uint256,
         bytes calldata
     ) external pure override returns (bytes4) {
-        revert("ERC721Receiver: reverting onERC721Received");
+        revert RevertingOnERC721Received();
     }
 }

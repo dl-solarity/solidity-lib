@@ -17,12 +17,15 @@ contract ProxyBeacon is IBeacon, PermanentOwnable {
 
     event Upgraded(address implementation);
 
+    error NewImplementationNotAContract(address newImplementation);
+
     /**
      * @notice The function to upgrade to implementation contract
      * @param newImplementation_ the new implementation
      */
     function upgradeTo(address newImplementation_) external virtual onlyOwner {
-        require(newImplementation_.code.length > 0, "ProxyBeacon: not a contract");
+        if (newImplementation_.code.length == 0)
+            revert NewImplementationNotAContract(newImplementation_);
 
         _implementation = newImplementation_;
 

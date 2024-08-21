@@ -48,6 +48,10 @@ abstract contract AbstractContractsRegistry is Initializable {
     event ProxyContractUpgraded(string name, address newImplementation);
     event ContractRemoved(string name);
 
+    error NoMappingExists(string contractName);
+    error NotAProxy(string contractName, address contractProxy);
+    error ZeroAddressProvided(string contractName);
+
     /**
      * @notice The initialization function
      */
@@ -63,7 +67,7 @@ abstract contract AbstractContractsRegistry is Initializable {
     function getContract(string memory name_) public view returns (address) {
         address contractAddress_ = _contracts[name_];
 
-        require(contractAddress_ != address(0), "ContractsRegistry: this mapping doesn't exist");
+        _checkIfMappingExist(contractAddress_, name_);
 
         return contractAddress_;
     }
@@ -93,8 +97,9 @@ abstract contract AbstractContractsRegistry is Initializable {
     function getImplementation(string memory name_) public view returns (address) {
         address contractProxy_ = _contracts[name_];
 
-        require(contractProxy_ != address(0), "ContractsRegistry: this mapping doesn't exist");
-        require(_isProxy[contractProxy_], "ContractsRegistry: not a proxy contract");
+        if (contractProxy_ == address(0)) revert NoMappingExists(name_);
+
+        if (!_isProxy[contractProxy_]) revert NotAProxy(name_, contractProxy_);
 
         return _proxyUpgrader.getImplementation(contractProxy_);
     }
@@ -118,7 +123,7 @@ abstract contract AbstractContractsRegistry is Initializable {
     ) internal virtual {
         address contractAddress_ = _contracts[name_];
 
-        require(contractAddress_ != address(0), "ContractsRegistry: this mapping doesn't exist");
+        _checkIfMappingExist(contractAddress_, name_);
 
         AbstractDependant dependant_ = AbstractDependant(contractAddress_);
         dependant_.setDependencies(address(this), data_);
@@ -150,8 +155,9 @@ abstract contract AbstractContractsRegistry is Initializable {
     ) internal virtual {
         address contractToUpgrade_ = _contracts[name_];
 
-        require(contractToUpgrade_ != address(0), "ContractsRegistry: this mapping doesn't exist");
-        require(_isProxy[contractToUpgrade_], "ContractsRegistry: not a proxy contract");
+        if (contractToUpgrade_ == address(0)) revert NoMappingExists(name_);
+
+        if (!_isProxy[contractToUpgrade_]) revert NotAProxy(name_, contractToUpgrade_);
 
         _proxyUpgrader.upgrade(contractToUpgrade_, newImplementation_, data_);
 
@@ -165,7 +171,7 @@ abstract contract AbstractContractsRegistry is Initializable {
      * @param contractAddress_ the address of the contract
      */
     function _addContract(string memory name_, address contractAddress_) internal virtual {
-        require(contractAddress_ != address(0), "ContractsRegistry: zero address is forbidden");
+        if (contractAddress_ == address(0)) revert ZeroAddressProvided(name_);
 
         _contracts[name_] = contractAddress_;
 
@@ -194,7 +200,7 @@ abstract contract AbstractContractsRegistry is Initializable {
         address contractAddress_,
         bytes memory data_
     ) internal virtual {
-        require(contractAddress_ != address(0), "ContractsRegistry: zero address is forbidden");
+        if (contractAddress_ == address(0)) revert ZeroAddressProvided(name_);
 
         address proxyAddr_ = _deployProxy(contractAddress_, address(_proxyUpgrader), data_);
 
@@ -215,7 +221,7 @@ abstract contract AbstractContractsRegistry is Initializable {
         string memory name_,
         address contractAddress_
     ) internal virtual {
-        require(contractAddress_ != address(0), "ContractsRegistry: zero address is forbidden");
+        if (contractAddress_ == address(0)) revert ZeroAddressProvided(name_);
 
         _contracts[name_] = contractAddress_;
         _isProxy[contractAddress_] = true;
@@ -234,7 +240,7 @@ abstract contract AbstractContractsRegistry is Initializable {
     function _removeContract(string memory name_) internal virtual {
         address contractAddress_ = _contracts[name_];
 
-        require(contractAddress_ != address(0), "ContractsRegistry: this mapping doesn't exist");
+        _checkIfMappingExist(contractAddress_, name_);
 
         delete _isProxy[contractAddress_];
         delete _contracts[name_];
@@ -255,5 +261,9 @@ abstract contract AbstractContractsRegistry is Initializable {
         bytes memory data_
     ) internal virtual returns (address) {
         return address(new SolarityTransparentProxy(contractAddress_, admin_, data_));
+    }
+
+    function _checkIfMappingExist(address contractAddress_, string memory name_) internal pure {
+        if (contractAddress_ == address(0)) revert NoMappingExists(name_);
     }
 }

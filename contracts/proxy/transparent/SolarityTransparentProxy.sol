@@ -35,7 +35,8 @@ interface ISolarityTransparentProxy is IERC1967 {
  * For more information about proxy logic, please refer to the OpenZeppelin documentation.
  */
 contract SolarityTransparentProxy is ERC1967Proxy {
-    address private immutable _admin;
+    // solhint-disable-previous-line immutable-vars-naming
+    address private immutable _ADMIN;
 
     error ProxyDeniedAdminAccess();
 
@@ -44,12 +45,12 @@ contract SolarityTransparentProxy is ERC1967Proxy {
         address admin_,
         bytes memory data_
     ) payable ERC1967Proxy(logic_, data_) {
-        _admin = admin_;
+        _ADMIN = admin_;
         ERC1967Utils.changeAdmin(admin_);
     }
 
     function _fallback() internal virtual override {
-        if (msg.sender == _admin) {
+        if (msg.sender == _ADMIN) {
             bytes4 selector_ = msg.sig;
 
             if (selector_ == ISolarityTransparentProxy.upgradeToAndCall.selector) {
