@@ -34,10 +34,9 @@ describe("PermanentOwnable", () => {
     it("should reject zero address during the owner initialization", async () => {
       const permanentOwnableMock = await ethers.getContractFactory("PermanentOwnableMock");
 
-      await expect(permanentOwnableMock.deploy(ethers.ZeroAddress)).to.be.revertedWithCustomError(
-        permanentOwnable,
-        "InvalidOwner",
-      );
+      await expect(permanentOwnableMock.deploy(ethers.ZeroAddress))
+        .to.be.revertedWithCustomError(permanentOwnable, "InvalidOwner")
+        .withArgs();
     });
 
     it("only owner should call this function", async () => {

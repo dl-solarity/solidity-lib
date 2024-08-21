@@ -66,17 +66,15 @@ describe("DiamondERC721 and InitializableStorage", () => {
 
   describe("access", () => {
     it("should initialize only once", async () => {
-      await expect(erc721.__DiamondERC721Mock_init("Mock Token", "MT")).to.be.revertedWithCustomError(
-        erc721,
-        "AlreadyInitialized",
-      );
+      await expect(erc721.__DiamondERC721Mock_init("Mock Token", "MT"))
+        .to.be.revertedWithCustomError(erc721, "AlreadyInitialized")
+        .withArgs();
     });
 
     it("should initialize only by top level contract", async () => {
-      await expect(erc721.__DiamondERC721Direct_init("Mock Token", "MT")).to.be.revertedWithCustomError(
-        erc721,
-        "NotInitializing",
-      );
+      await expect(erc721.__DiamondERC721Direct_init("Mock Token", "MT"))
+        .to.be.revertedWithCustomError(erc721, "NotInitializing")
+        .withArgs();
     });
 
     it("should disable implementation initialization", async () => {

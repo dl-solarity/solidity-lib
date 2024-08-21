@@ -57,8 +57,10 @@ describe("Vesting", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(vesting.__VestingMock_init()).to.be.revertedWithCustomError(vesting, "InvalidInitialization");
-      await expect(vesting.vestingInit()).to.be.revertedWithCustomError(vesting, "NotInitializing");
+      await expect(vesting.__VestingMock_init())
+        .to.be.revertedWithCustomError(vesting, "InvalidInitialization")
+        .withArgs();
+      await expect(vesting.vestingInit()).to.be.revertedWithCustomError(vesting, "NotInitializing").withArgs();
     });
   });
 

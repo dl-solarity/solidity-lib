@@ -31,11 +31,10 @@ describe("MultiOwnable", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(multiOwnable.mockInit()).to.be.revertedWithCustomError(multiOwnable, "NotInitializing");
-      await expect(multiOwnable.__MultiOwnableMock_init()).to.be.revertedWithCustomError(
-        multiOwnable,
-        "InvalidInitialization",
-      );
+      await expect(multiOwnable.mockInit()).to.be.revertedWithCustomError(multiOwnable, "NotInitializing").withArgs();
+      await expect(multiOwnable.__MultiOwnableMock_init())
+        .to.be.revertedWithCustomError(multiOwnable, "InvalidInitialization")
+        .withArgs();
     });
 
     it("only owner should call these functions", async () => {

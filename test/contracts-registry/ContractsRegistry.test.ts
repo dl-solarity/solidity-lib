@@ -30,12 +30,13 @@ describe("ContractsRegistry", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(contractsRegistry.mockInit()).to.be.revertedWithCustomError(contractsRegistry, "NotInitializing");
+      await expect(contractsRegistry.mockInit())
+        .to.be.revertedWithCustomError(contractsRegistry, "NotInitializing")
+        .withArgs();
 
-      await expect(contractsRegistry.__OwnableContractsRegistry_init()).to.be.revertedWithCustomError(
-        contractsRegistry,
-        "InvalidInitialization",
-      );
+      await expect(contractsRegistry.__OwnableContractsRegistry_init())
+        .to.be.revertedWithCustomError(contractsRegistry, "InvalidInitialization")
+        .withArgs();
     });
 
     it("should get proxy upgrader", async () => {
@@ -43,44 +44,41 @@ describe("ContractsRegistry", () => {
     });
 
     it("only owner should call these functions", async () => {
-      await expect(contractsRegistry.connect(SECOND).injectDependencies("")).to.be.revertedWithCustomError(
-        contractsRegistry,
-        "OwnableUnauthorizedAccount",
-      );
+      await expect(contractsRegistry.connect(SECOND).injectDependencies(""))
+        .to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount")
+        .withArgs(SECOND);
 
-      await expect(
-        contractsRegistry.connect(SECOND).injectDependenciesWithData("", "0x"),
-      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+      await expect(contractsRegistry.connect(SECOND).injectDependenciesWithData("", "0x"))
+        .to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount")
+        .withArgs(SECOND);
 
-      await expect(
-        contractsRegistry.connect(SECOND).upgradeContract("", ethers.ZeroAddress),
-      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+      await expect(contractsRegistry.connect(SECOND).upgradeContract("", ethers.ZeroAddress))
+        .to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount")
+        .withArgs(SECOND);
 
-      await expect(
-        contractsRegistry.connect(SECOND).upgradeContractAndCall("", ethers.ZeroAddress, "0x"),
-      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+      await expect(contractsRegistry.connect(SECOND).upgradeContractAndCall("", ethers.ZeroAddress, "0x"))
+        .to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount")
+        .withArgs(SECOND);
 
-      await expect(contractsRegistry.connect(SECOND).addContract("", ethers.ZeroAddress)).to.be.revertedWithCustomError(
-        contractsRegistry,
-        "OwnableUnauthorizedAccount",
-      );
+      await expect(contractsRegistry.connect(SECOND).addContract("", ethers.ZeroAddress))
+        .to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount")
+        .withArgs(SECOND);
 
-      await expect(
-        contractsRegistry.connect(SECOND).addProxyContract("", ethers.ZeroAddress),
-      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+      await expect(contractsRegistry.connect(SECOND).addProxyContract("", ethers.ZeroAddress))
+        .to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount")
+        .withArgs(SECOND);
 
-      await expect(
-        contractsRegistry.connect(SECOND).addProxyContractAndCall("", ethers.ZeroAddress, "0x"),
-      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+      await expect(contractsRegistry.connect(SECOND).addProxyContractAndCall("", ethers.ZeroAddress, "0x"))
+        .to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount")
+        .withArgs(SECOND);
 
-      await expect(
-        contractsRegistry.connect(SECOND).justAddProxyContract("", ethers.ZeroAddress),
-      ).to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount");
+      await expect(contractsRegistry.connect(SECOND).justAddProxyContract("", ethers.ZeroAddress))
+        .to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount")
+        .withArgs(SECOND);
 
-      await expect(contractsRegistry.connect(SECOND).removeContract("")).to.be.revertedWithCustomError(
-        contractsRegistry,
-        "OwnableUnauthorizedAccount",
-      );
+      await expect(contractsRegistry.connect(SECOND).removeContract(""))
+        .to.be.revertedWithCustomError(contractsRegistry, "OwnableUnauthorizedAccount")
+        .withArgs(SECOND);
     });
   });
 

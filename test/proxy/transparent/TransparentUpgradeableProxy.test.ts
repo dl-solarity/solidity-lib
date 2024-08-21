@@ -48,10 +48,9 @@ describe("SolarityTransparentProxy", () => {
     const AMOUNT = 10;
 
     it("proxy admin cannot call delegated functions", async () => {
-      await expect(tokenProxy.connect(PROXY_UPGRADER).mint(OWNER.address, AMOUNT)).to.be.revertedWithCustomError(
-        proxy,
-        "ProxyDeniedAdminAccess",
-      );
+      await expect(tokenProxy.connect(PROXY_UPGRADER).mint(OWNER.address, AMOUNT))
+        .to.be.revertedWithCustomError(proxy, "ProxyDeniedAdminAccess")
+        .withArgs();
     });
 
     it("everyone except proxy admin can call delegated functions", async () => {

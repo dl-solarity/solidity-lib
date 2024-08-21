@@ -53,12 +53,13 @@ describe("UniswapV2Oracle", () => {
     });
 
     it("should not initialize twice", async () => {
-      await expect(
-        oracle.mockInit(await uniswapV2Factory.getAddress(), ORACLE_TIME_WINDOW),
-      ).to.be.revertedWithCustomError(oracle, "NotInitializing");
-      await expect(
-        oracle.__OracleV2Mock_init(await uniswapV2Factory.getAddress(), ORACLE_TIME_WINDOW),
-      ).to.be.revertedWithCustomError(oracle, "InvalidInitialization");
+      await expect(oracle.mockInit(await uniswapV2Factory.getAddress(), ORACLE_TIME_WINDOW))
+        .to.be.revertedWithCustomError(oracle, "NotInitializing")
+        .withArgs();
+
+      await expect(oracle.__OracleV2Mock_init(await uniswapV2Factory.getAddress(), ORACLE_TIME_WINDOW))
+        .to.be.revertedWithCustomError(oracle, "InvalidInitialization")
+        .withArgs();
     });
   });
 

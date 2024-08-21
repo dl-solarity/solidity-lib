@@ -29,10 +29,9 @@ describe("MultiOwnableContractsRegistry", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(contractsRegistry.__MultiOwnableContractsRegistry_init()).to.be.revertedWithCustomError(
-        contractsRegistry,
-        "InvalidInitialization",
-      );
+      await expect(contractsRegistry.__MultiOwnableContractsRegistry_init())
+        .to.be.revertedWithCustomError(contractsRegistry, "InvalidInitialization")
+        .withArgs();
     });
 
     it("only owner should call these functions", async () => {
