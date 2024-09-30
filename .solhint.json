@@ -9,7 +9,6 @@
     "func-visibility": ["warn", { "ignoreConstructors": true }],
     "max-states-count": "warn",
     "not-rely-on-time": "off",
-    "compiler-version": "off",
     "func-name-mixedcase": "off",
     "no-inline-assembly": "off"
   }
