@@ -159,7 +159,6 @@ abstract contract Vesting is Initializable {
         VestingData storage _vesting = _vestings[vestingId_];
 
         if (msg.sender != _vesting.beneficiary) revert UnauthorizedAccount(msg.sender);
-
         if (_vesting.paidAmount >= _vesting.vestingAmount) revert NothingToWithdraw();
 
         uint256 amountToPay_ = getWithdrawableAmount(vestingId_);
@@ -430,11 +429,8 @@ abstract contract Vesting is Initializable {
      */
     function _validateVesting(VestingData memory vesting_) internal pure {
         if (vesting_.vestingStartTime == 0) revert StartTimeIsZero();
-
         if (vesting_.vestingAmount == 0) revert VestingAmountIsZero();
-
         if (vesting_.beneficiary == address(0)) revert BeneficiaryIsZeroAddress();
-
         if (vesting_.vestingToken == address(0)) revert VestingTokenIsZeroAddress();
     }
 

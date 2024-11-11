@@ -185,7 +185,6 @@ abstract contract UniswapV2Oracle is Initializable {
             address tokenIn_ = paths_[i][0];
 
             if (pathLength_ < 2) revert InvalidPath(tokenIn_, pathLength_);
-
             if (_paths[tokenIn_].length != 0) revert PathAlreadyRegistered(tokenIn_);
 
             for (uint256 j = 0; j < pathLength_ - 1; j++) {

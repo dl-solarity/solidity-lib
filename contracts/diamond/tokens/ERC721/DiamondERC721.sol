@@ -128,7 +128,6 @@ contract DiamondERC721 is DiamondERC721Storage {
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
         if (to_ == address(0)) revert ReceiverIsZeroAddress();
-
         if (_exists(tokenId_)) revert TokenAlreadyMinted(tokenId_);
 
         _beforeTokenTransfer(address(0), to_, tokenId_, 1);
@@ -181,7 +180,6 @@ contract DiamondERC721 is DiamondERC721Storage {
      */
     function _transfer(address from_, address to_, uint256 tokenId_) internal virtual {
         if (ownerOf(tokenId_) != from_) revert UnauthorizedAccount(from_);
-
         if (to_ == address(0)) revert ReceiverIsZeroAddress();
 
         _beforeTokenTransfer(from_, to_, tokenId_, 1);

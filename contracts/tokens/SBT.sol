@@ -161,7 +161,6 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      */
     function _mint(address to_, uint256 tokenId_) internal virtual {
         if (to_ == address(0)) revert ReceiverIsZeroAddress();
-
         if (tokenExists(tokenId_)) revert TokenAlreadyExists(tokenId_);
 
         _beforeTokenAction(to_, tokenId_);

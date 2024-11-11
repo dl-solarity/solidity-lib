@@ -204,7 +204,10 @@ contract Diamond is DiamondStorage {
         }
     }
 
-    function _checkIfFacetIsValid(address facet_, bytes4[] memory selectors_) internal pure {
+    function _checkIfFacetIsValid(
+        address facet_,
+        bytes4[] memory selectors_
+    ) internal pure virtual {
         if (facet_ == address(0)) revert FacetIsZeroAddress();
         if (selectors_.length == 0) revert NoSelectorsProvided();
     }

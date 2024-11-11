@@ -115,7 +115,6 @@ abstract contract AbstractValueDistributor {
         UserDistribution storage _userDist = _userDistributions[user_];
 
         if (amount_ == 0) revert AmountIsZero();
-
         if (amount_ > _userDist.shares)
             revert InsufficientSharesAmount(user_, _userDist.shares, amount_);
 
@@ -140,7 +139,6 @@ abstract contract AbstractValueDistributor {
         UserDistribution storage _userDist = _userDistributions[user_];
 
         if (amount_ == 0) revert AmountIsZero();
-
         if (amount_ > _userDist.owedValue)
             revert InsufficientOwedValue(user_, _userDist.owedValue, amount_);
 
