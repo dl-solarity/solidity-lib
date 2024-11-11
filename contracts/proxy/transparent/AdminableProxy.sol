@@ -5,24 +5,7 @@ pragma solidity ^0.8.4;
 
 import {ERC1967Utils} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {IERC1967} from "@openzeppelin/contracts/interfaces/IERC1967.sol";
-
-/**
- * @notice The proxies module
- *
- * Interface for AdminableProxy.
- **/
-interface IAdminableProxy is IERC1967 {
-    /**
-     * @notice The function to upgrade the implementation contract with additional setup call if data is nonempty.
-     */
-    function upgradeToAndCall(address, bytes calldata) external payable;
-
-    /**
-     * @notice The function to return the current implementation address.
-     */
-    function implementation() external returns (address);
-}
+import {IAdminableProxy} from "../../interfaces/proxy/IAdminableProxy.sol";
 
 /**
  * @notice This contract implements a proxy that is upgradeable by an admin.
