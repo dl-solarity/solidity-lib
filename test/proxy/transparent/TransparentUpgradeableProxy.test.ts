@@ -6,37 +6,33 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 import { Reverter } from "@/test/helpers/reverter";
 
-import { TransparentProxyUpgrader, SolarityTransparentProxy, ERC20Mock } from "@ethers-v6";
+import { AdminableProxyUpgrader, AdminableProxy, ERC20Mock } from "@ethers-v6";
 
-describe("SolarityTransparentProxy", () => {
+describe("AdminableProxy", () => {
   const reverter = new Reverter();
 
   let OWNER: SignerWithAddress;
   let PROXY_UPGRADER: SignerWithAddress;
 
-  let proxy: SolarityTransparentProxy;
+  let proxy: AdminableProxy;
   let tokenProxy: ERC20Mock;
 
   before("setup", async () => {
     [OWNER] = await ethers.getSigners();
 
     const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
-    const TransparentProxyUpgrader = await ethers.getContractFactory("TransparentProxyUpgrader");
-    const SolarityTransparentProxy = await ethers.getContractFactory("SolarityTransparentProxy");
+    const AdminableProxyUpgrader = await ethers.getContractFactory("AdminableProxyUpgrader");
+    const AdminableProxy = await ethers.getContractFactory("AdminableProxy");
 
     const token: ERC20Mock = await ERC20Mock.deploy("mock", "mock", 18);
 
-    const transparentProxyUpgrader: TransparentProxyUpgrader = await TransparentProxyUpgrader.deploy();
-    proxy = await SolarityTransparentProxy.deploy(
-      await token.getAddress(),
-      await transparentProxyUpgrader.getAddress(),
-      "0x",
-    );
+    const adminableProxyUpgrader: AdminableProxyUpgrader = await AdminableProxyUpgrader.deploy();
+    proxy = await AdminableProxy.deploy(await token.getAddress(), await adminableProxyUpgrader.getAddress(), "0x");
 
     tokenProxy = <ERC20Mock>token.attach(await proxy.getAddress());
 
-    await impersonateAccount(await transparentProxyUpgrader.getAddress());
-    PROXY_UPGRADER = await ethers.provider.getSigner(await transparentProxyUpgrader.getAddress());
+    await impersonateAccount(await adminableProxyUpgrader.getAddress());
+    PROXY_UPGRADER = await ethers.provider.getSigner(await adminableProxyUpgrader.getAddress());
     await setBalance(await PROXY_UPGRADER.getAddress(), ethers.parseEther("1"));
 
     await reverter.snapshot();

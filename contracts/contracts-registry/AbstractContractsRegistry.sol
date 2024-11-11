@@ -3,8 +3,8 @@ pragma solidity ^0.8.4;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import {TransparentProxyUpgrader} from "../proxy/transparent/TransparentProxyUpgrader.sol";
-import {SolarityTransparentProxy} from "../proxy/transparent/SolarityTransparentProxy.sol";
+import {AdminableProxyUpgrader} from "../proxy/transparent/AdminableProxyUpgrader.sol";
+import {AdminableProxy} from "../proxy/transparent/AdminableProxy.sol";
 import {AbstractDependant} from "./AbstractDependant.sol";
 
 /**
@@ -26,7 +26,7 @@ import {AbstractDependant} from "./AbstractDependant.sol";
  * 2) Making the system contracts-interchangeable
  * 3) Simplifying the contracts management and deployment
  *
- * The ContractsRegistry acts as a TransparentProxy deployer. One can add proxy-compatible implementations to the registry
+ * The ContractsRegistry acts as a AdminableProxy deployer. One can add proxy-compatible implementations to the registry
  * and deploy proxies to them. Then these proxies can be upgraded easily using the provided interface.
  * The ContractsRegistry itself can be deployed behind a proxy as well.
  *
@@ -38,7 +38,7 @@ import {AbstractDependant} from "./AbstractDependant.sol";
  * Users may also fetch all the contracts present in the system as they are now located in a single place.
  */
 abstract contract AbstractContractsRegistry is Initializable {
-    TransparentProxyUpgrader private _proxyUpgrader;
+    AdminableProxyUpgrader private _proxyUpgrader;
 
     mapping(string => address) private _contracts;
     mapping(address => bool) private _isProxy;
@@ -56,7 +56,7 @@ abstract contract AbstractContractsRegistry is Initializable {
      * @notice The initialization function
      */
     function __ContractsRegistry_init() internal onlyInitializing {
-        _proxyUpgrader = new TransparentProxyUpgrader();
+        _proxyUpgrader = new AdminableProxyUpgrader();
     }
 
     /**
@@ -260,7 +260,7 @@ abstract contract AbstractContractsRegistry is Initializable {
         address admin_,
         bytes memory data_
     ) internal virtual returns (address) {
-        return address(new SolarityTransparentProxy(contractAddress_, admin_, data_));
+        return address(new AdminableProxy(contractAddress_, admin_, data_));
     }
 
     function _checkIfMappingExist(address contractAddress_, string memory name_) internal pure {

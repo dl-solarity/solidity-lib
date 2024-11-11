@@ -2,14 +2,14 @@
 pragma solidity ^0.8.4;
 
 import {PermanentOwnable} from "../../access/PermanentOwnable.sol";
-import {ISolarityTransparentProxy} from "./SolarityTransparentProxy.sol";
+import {IAdminableProxy} from "./AdminableProxy.sol";
 
 /**
  * @notice The proxies module
  *
- * This is the lightweight helper contract that may be used as a TransparentProxy admin.
+ * This is the lightweight helper contract that may be used as a AdminableProxy admin.
  */
-contract TransparentProxyUpgrader is PermanentOwnable {
+contract AdminableProxyUpgrader is PermanentOwnable {
     error AddressNotAProxy(address contractAddress);
 
     constructor() PermanentOwnable(msg.sender) {}
@@ -21,7 +21,7 @@ contract TransparentProxyUpgrader is PermanentOwnable {
      * @param data_ arbitrary data the proxy will be called with after the upgrade
      */
     function upgrade(address what_, address to_, bytes calldata data_) external virtual onlyOwner {
-        ISolarityTransparentProxy(payable(what_)).upgradeToAndCall(to_, data_);
+        IAdminableProxy(payable(what_)).upgradeToAndCall(to_, data_);
     }
 
     /**
