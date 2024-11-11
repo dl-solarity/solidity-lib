@@ -10,12 +10,11 @@ import {IAdminableProxy} from "./AdminableProxy.sol";
  * This is the lightweight helper contract that may be used as a AdminableProxy admin.
  */
 contract AdminableProxyUpgrader is PermanentOwnable {
-    error AddressNotAProxy(address contractAddress);
-
     constructor() PermanentOwnable(msg.sender) {}
 
     /**
      * @notice The function to upgrade the implementation contract
+     * @dev an attempt to upgrade a non-proxy contract will result in revert
      * @param what_ the proxy contract to upgrade
      * @param to_ the new implementation contract
      * @param data_ arbitrary data the proxy will be called with after the upgrade
@@ -26,15 +25,11 @@ contract AdminableProxyUpgrader is PermanentOwnable {
 
     /**
      * @notice The function to get the address of the proxy implementation
+     * @dev an attempt to get implementation from a non-proxy contract will result in revert
      * @param what_ the proxy contract to observe
      * @return the implementation address
      */
     function getImplementation(address what_) public view virtual returns (address) {
-        // bytes4(keccak256("implementation()")) == 0x5c60da1b
-        (bool success_, bytes memory returndata_) = address(what_).staticcall(hex"5c60da1b");
-
-        if (!success_) revert AddressNotAProxy(what_);
-
-        return abi.decode(returndata_, (address));
+        return IAdminableProxy(what_).implementation();
     }
 }

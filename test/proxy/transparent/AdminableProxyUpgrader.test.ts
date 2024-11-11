@@ -49,11 +49,5 @@ describe("AdminableProxyUpgrader", () => {
         await token.getAddress(),
       );
     });
-
-    it("should not get implementation", async () => {
-      await expect(adminableProxyUpgrader.getImplementation(await token.getAddress()))
-        .to.be.revertedWithCustomError(adminableProxyUpgrader, "AddressNotAProxy")
-        .withArgs(await token.getAddress());
-    });
   });
 });

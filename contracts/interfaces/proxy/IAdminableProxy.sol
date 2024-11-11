@@ -17,5 +17,5 @@ interface IAdminableProxy is IERC1967 {
     /**
      * @notice The function to return the current implementation address.
      */
-    function implementation() external returns (address);
+    function implementation() external view returns (address);
 }
