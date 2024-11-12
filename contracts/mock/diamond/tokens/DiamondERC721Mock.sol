@@ -49,30 +49,30 @@ contract DiamondERC721Mock is DiamondERC721 {
         safeTransferFrom(from_, to_, tokenId_);
     }
 
-    function beforeTokenTransfer(uint256 batchSize) external {
-        _beforeTokenTransfer(address(this), address(this), 1, batchSize);
+    function update(uint256 batchSize_) external {
+        _update(address(this), 1, batchSize_);
     }
 
     function disableInitializers() external {
         _disableInitializers(DIAMOND_ERC721_STORAGE_SLOT);
     }
 
+    function _update(
+        address to_,
+        uint256 tokenId_,
+        uint256 batchSize_
+    ) internal override returns (address) {
+        if (replaceOwner) {
+            _getErc721Storage().owners[tokenId_] = address(this);
+            return address(this);
+        } else {
+            return super._update(to_, tokenId_, batchSize_);
+        }
+    }
+
     function _baseURI() internal view override returns (string memory) {
         super._baseURI();
         return baseUri;
-    }
-
-    function _beforeTokenTransfer(
-        address from_,
-        address to_,
-        uint256 firstTokenId_,
-        uint256 batchSize_
-    ) internal override {
-        if (replaceOwner) {
-            _getErc721Storage().owners[firstTokenId_] = address(this);
-        } else {
-            super._beforeTokenTransfer(from_, to_, firstTokenId_, batchSize_);
-        }
     }
 }
 

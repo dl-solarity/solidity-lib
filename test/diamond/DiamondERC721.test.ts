@@ -151,7 +151,7 @@ describe("DiamondERC721 and InitializableStorage", () => {
           .withArgs(1);
       });
 
-      it("should not mint tokens if token is minted after `_beforeTokenTransfer` hook", async () => {
+      it("should not mint tokens if token is minted after `_update` hook", async () => {
         await erc721.toggleReplaceOwner();
 
         await expect(erc721.mint(OWNER.address, 1))
@@ -192,21 +192,18 @@ describe("DiamondERC721 and InitializableStorage", () => {
         expect(await erc721.balanceOf(OWNER.address)).to.equal(0);
       });
 
-      it("should not burn an incorrect token", async () => {
+      it("should not burn a not minted token", async () => {
         await expect(erc721.burn(1)).to.be.revertedWithCustomError(erc721, "NonexistentToken").withArgs(1);
       });
     });
 
-    describe("before token transfer hook", () => {
-      it("before token transfer hook should only accept one token", async () => {
-        expect(await erc721.beforeTokenTransfer(1)).not.to.be.reverted;
+    describe("update hook", () => {
+      it("update hook should only accept one token", async () => {
+        expect(await erc721.update(1)).not.to.be.reverted;
       });
 
-      it("before token transfer hook should not accept more than one token", async () => {
-        await expect(erc721.beforeTokenTransfer(2)).to.be.revertedWithCustomError(
-          erc721,
-          "ConsecutiveTransfersNotSupported",
-        );
+      it("update hook should not accept more than one token", async () => {
+        await expect(erc721.update(2)).to.be.revertedWithCustomError(erc721, "ConsecutiveTransfersNotSupported");
       });
     });
 
@@ -286,7 +283,7 @@ describe("DiamondERC721 and InitializableStorage", () => {
         );
       });
 
-      it("should not transfer tokens if owner is changed after `_beforeTokenTransfer` hook", async () => {
+      it("should not transfer tokens if owner is changed after `_update` hook", async () => {
         await erc721.mint(OWNER.address, 1);
 
         await erc721.toggleReplaceOwner();
@@ -305,6 +302,12 @@ describe("DiamondERC721 and InitializableStorage", () => {
         await expect(notReceiverMock.safeTransferFromMock(OWNER.address, await contract.getAddress(), 1))
           .to.be.revertedWithCustomError(notReceiverMock, "NonERC721Receiver")
           .withArgs(await contract.getAddress());
+      });
+
+      it("should not transfer incorrect token", async () => {
+        await expect(erc721.transferFromMock(OWNER.address, SECOND.address, 1))
+          .to.be.revertedWithCustomError(erc721, "NonexistentToken")
+          .withArgs(1);
       });
     });
 
