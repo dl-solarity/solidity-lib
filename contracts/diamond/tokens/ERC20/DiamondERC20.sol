@@ -69,79 +69,73 @@ contract DiamondERC20 is DiamondERC20Storage {
 
     /**
      * @notice Moves `amount` of tokens from `from` to `to`.
+     * @dev This function is not virtual, {_update} should be overridden instead.
      */
-    function _transfer(address from_, address to_, uint256 amount_) internal virtual {
+    function _transfer(address from_, address to_, uint256 amount_) internal {
         if (from_ == address(0)) revert SenderIsZeroAddress();
         if (to_ == address(0)) revert ReceiverIsZeroAddress();
 
-        _beforeTokenTransfer(from_, to_, amount_);
-
-        DERC20Storage storage _erc20Storage = _getErc20Storage();
-
-        uint256 fromBalance_ = _erc20Storage.balances[from_];
-
-        if (fromBalance_ < amount_) revert InsufficientBalance(from_, fromBalance_, amount_);
-
-        unchecked {
-            _erc20Storage.balances[from_] = fromBalance_ - amount_;
-
-            // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
-            // decrementing then incrementing.
-            _erc20Storage.balances[to_] += amount_;
-        }
-
-        emit Transfer(from_, to_, amount_);
-
-        _afterTokenTransfer(from_, to_, amount_);
+        _update(from_, to_, amount_);
     }
 
     /**
      * @notice Creates `amount` tokens and assigns them to `account`, increasing
      * the total supply.
+     * @dev This function is not virtual, {_update} should be overridden instead.
      */
-    function _mint(address account_, uint256 amount_) internal virtual {
+    function _mint(address account_, uint256 amount_) internal {
         if (account_ == address(0)) revert ReceiverIsZeroAddress();
 
-        _beforeTokenTransfer(address(0), account_, amount_);
-
-        DERC20Storage storage _erc20Storage = _getErc20Storage();
-
-        _erc20Storage.totalSupply += amount_;
-
-        unchecked {
-            // Overflow not possible: balance + amount is at most totalSupply + amount, which is checked above.
-            _erc20Storage.balances[account_] += amount_;
-        }
-
-        emit Transfer(address(0), account_, amount_);
-
-        _afterTokenTransfer(address(0), account_, amount_);
+        _update(address(0), account_, amount_);
     }
 
     /**
      * @notice Destroys `amount` tokens from `account`, reducing the
      * total supply.
+     * @dev This function is not virtual, {_update} should be overridden instead.
      */
-    function _burn(address account_, uint256 amount_) internal virtual {
+    function _burn(address account_, uint256 amount_) internal {
         if (account_ == address(0)) revert SenderIsZeroAddress();
 
-        _beforeTokenTransfer(account_, address(0), amount_);
+        _update(account_, address(0), amount_);
+    }
 
+    /**
+     * @dev Transfers a `amount` amount of tokens from `from` to `to`, or alternatively mints (or burns) if `from`
+     * (or `to`) is the zero address. All customizations to transfers, mints, and burns should be done by overriding
+     * this function.
+     * Emits a {Transfer} event.
+     */
+    function _update(address from_, address to_, uint256 amount_) internal virtual {
         DERC20Storage storage _erc20Storage = _getErc20Storage();
 
-        uint256 accountBalance_ = _erc20Storage.balances[account_];
-        if (accountBalance_ < amount_)
-            revert InsufficientBalance(account_, accountBalance_, amount_);
+        if (from_ == address(0)) {
+            // Overflow check required: The rest of the code assumes that totalSupply never overflows
+            _erc20Storage.totalSupply += amount_;
+        } else {
+            uint256 fromBalance_ = _erc20Storage.balances[from_];
 
-        unchecked {
-            _erc20Storage.balances[account_] -= amount_;
-            // Overflow not possible: amount <= accountBalance <= totalSupply.
-            _erc20Storage.totalSupply -= amount_;
+            if (fromBalance_ < amount_) revert InsufficientBalance(from_, fromBalance_, amount_);
+
+            unchecked {
+                // Overflow not possible: amount <= fromBalance <= totalSupply.
+                _erc20Storage.balances[from_] = fromBalance_ - amount_;
+            }
         }
 
-        emit Transfer(account_, address(0), amount_);
+        if (to_ == address(0)) {
+            unchecked {
+                // Overflow not possible: amount <= fromBalance <= totalSupply.
+                _erc20Storage.totalSupply -= amount_;
+            }
+        } else {
+            unchecked {
+                // Overflow not possible: balance + amount is at most totalSupply + amount, which is checked above.
+                _erc20Storage.balances[to_] += amount_;
+            }
+        }
 
-        _afterTokenTransfer(account_, address(0), amount_);
+        emit Transfer(from_, to_, amount_);
     }
 
     /**
@@ -171,16 +165,4 @@ contract DiamondERC20 is DiamondERC20Storage {
             }
         }
     }
-
-    /**
-     * @notice Hook that is called before any transfer of tokens. This includes
-     * minting and burning.
-     */
-    function _beforeTokenTransfer(address from_, address to_, uint256 amount_) internal virtual {}
-
-    /**
-     * @notice Hook that is called after any transfer of tokens. This includes
-     * minting and burning.
-     */
-    function _afterTokenTransfer(address from_, address to_, uint256 amount_) internal virtual {}
 }
