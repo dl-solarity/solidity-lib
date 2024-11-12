@@ -18,4 +18,6 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
       - name: Run tests
+        env:
+          NODE_OPTIONS: "--max_old_space_size=8192"
         run: npm run test
