@@ -4,8 +4,7 @@ pragma solidity ^0.8.4;
 
 import {TypeCaster} from "../../../libs/utils/TypeCaster.sol";
 
-import {AvlTree} from "../../../libs/data-structures/AvlTree.sol";
-import {Traversal} from "../../../libs/data-structures/Traversal.sol";
+import {AvlTree, Traversal} from "../../../libs/data-structures/AvlTree.sol";
 
 contract AvlTreeMock {
     using TypeCaster for *;
