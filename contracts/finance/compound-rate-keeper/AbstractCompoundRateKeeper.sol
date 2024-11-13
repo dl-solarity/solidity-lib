@@ -37,6 +37,10 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
 
     uint256 private _currentRate;
 
+    error CapitalizationPeriodIsZero();
+    error MaxRateIsReached();
+    error RateIsLessThanOne(uint256 rate);
+
     /**
      * @notice The initialization function
      */
@@ -177,7 +181,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      * @notice The private function to update the compound rate
      */
     function _update() private {
-        require(!_isMaxRateReached, "CRK: max rate is reached");
+        if (_isMaxRateReached) revert MaxRateIsReached();
 
         _currentRate = getCompoundRate();
         _lastUpdate = uint64(block.timestamp);
@@ -187,7 +191,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      * @notice The private function that changes to capitalization rate
      */
     function _changeCapitalizationRate(uint256 capitalizationRate_) private {
-        require(capitalizationRate_ >= PRECISION, "CRK: rate is less than 1");
+        if (capitalizationRate_ < PRECISION) revert RateIsLessThanOne(capitalizationRate_);
 
         _capitalizationRate = capitalizationRate_;
 
@@ -198,7 +202,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
      * @notice The private function that changes to capitalization period
      */
     function _changeCapitalizationPeriod(uint64 capitalizationPeriod_) private {
-        require(capitalizationPeriod_ > 0, "CRK: invalid period");
+        if (capitalizationPeriod_ == 0) revert CapitalizationPeriodIsZero();
 
         _capitalizationPeriod = capitalizationPeriod_;
 

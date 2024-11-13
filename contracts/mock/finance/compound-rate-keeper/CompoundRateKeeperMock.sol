@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable
 pragma solidity ^0.8.4;
 
 import {OwnableCompoundRateKeeper} from "../../../finance/compound-rate-keeper/presets/OwnableCompoundRateKeeper.sol";

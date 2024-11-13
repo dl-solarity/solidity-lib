@@ -22,6 +22,8 @@ abstract contract AbstractDependant {
     bytes32 private constant _INJECTOR_SLOT =
         0x3d1f25f1ac447e55e7fec744471c4dab1c6a2b6ffb897825f9ea3d2e8c9be583;
 
+    error NotAnInjector(address injector, address caller);
+
     modifier dependant() {
         _checkInjector();
         _;
@@ -76,6 +78,7 @@ abstract contract AbstractDependant {
     function _checkInjector() internal view {
         address injector_ = getInjector();
 
-        require(injector_ == address(0) || injector_ == msg.sender, "Dependant: not an injector");
+        if (injector_ != address(0) && injector_ != msg.sender)
+            revert NotAnInjector(injector_, msg.sender);
     }
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+// solhint-disable-next-line no-unused-import
 import {DiamondAccessControlStorage, IAccessControl} from "./DiamondAccessControlStorage.sol";
 
 /**
@@ -10,6 +11,9 @@ import {DiamondAccessControlStorage, IAccessControl} from "./DiamondAccessContro
  * by the Diamond Standard.
  */
 abstract contract DiamondAccessControl is DiamondAccessControlStorage {
+    error UnauthorizedAccount(address account);
+    error RoleAlreadyGranted(bytes32 role, address account);
+
     /**
      * @notice Sets `DEFAULT_ADMIN_ROLE` to `msg.sender`
      */
@@ -44,7 +48,7 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      * @inheritdoc IAccessControl
      */
     function renounceRole(bytes32 role_, address account_) public virtual override {
-        require(account_ == msg.sender, "AccessControl: can only renounce roles for self");
+        if (account_ != msg.sender) revert UnauthorizedAccount(msg.sender);
 
         _revokeRole(role_, account_);
     }
@@ -70,7 +74,7 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      * May emit a {RoleGranted} event.
      */
     function _grantRole(bytes32 role_, address account_) internal virtual {
-        require(!hasRole(role_, account_), "AccessControl: role is granted");
+        if (hasRole(role_, account_)) revert RoleAlreadyGranted(role_, account_);
 
         _getAccessControlStorage().roles[role_].members[account_] = true;
 
@@ -85,7 +89,7 @@ abstract contract DiamondAccessControl is DiamondAccessControlStorage {
      * May emit a {RoleRevoked} event.
      */
     function _revokeRole(bytes32 role_, address account_) internal virtual {
-        require(hasRole(role_, account_), "AccessControl: role is not granted");
+        if (!hasRole(role_, account_)) revert RoleNotGranted(role_, account_);
 
         _getAccessControlStorage().roles[role_].members[account_] = false;
 

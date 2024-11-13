@@ -1,12 +1,13 @@
 import { ethers } from "hardhat";
+import { expect } from "chai";
+
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { expect } from "chai";
+
 import { Reverter } from "@/test/helpers/reverter";
 import { wei } from "@/scripts/utils/utils";
 
 import { AbstractValueDistributorMock } from "@ethers-v6";
-import { ZERO_ADDR } from "@/scripts/utils/constants";
 
 describe("AbstractValueDistributor", () => {
   const reverter = new Reverter();
@@ -84,15 +85,15 @@ describe("AbstractValueDistributor", () => {
     });
 
     it("should not allow to add 0 shares", async () => {
-      await expect(abstractValueDistributor.addShares(SECOND, 0)).to.be.revertedWith(
-        "ValueDistributor: amount has to be more than 0",
-      );
+      await expect(abstractValueDistributor.addShares(SECOND, 0))
+        .to.be.revertedWithCustomError(abstractValueDistributor, "AmountIsZero")
+        .withArgs();
     });
 
     it("should not allow zero address to add shares", async () => {
-      await expect(abstractValueDistributor.addShares(ZERO_ADDR, 2)).to.be.revertedWith(
-        "ValueDistributor: zero address is not allowed",
-      );
+      await expect(abstractValueDistributor.addShares(ethers.ZeroAddress, 2))
+        .to.be.revertedWithCustomError(abstractValueDistributor, "UserIsZeroAddress")
+        .withArgs();
     });
   });
 
@@ -126,21 +127,21 @@ describe("AbstractValueDistributor", () => {
     });
 
     it("should not allow to remove 0 shares", async () => {
-      await expect(abstractValueDistributor.removeShares(SECOND, 0)).to.be.revertedWith(
-        "ValueDistributor: amount has to be more than 0",
-      );
+      await expect(abstractValueDistributor.removeShares(SECOND, 0))
+        .to.be.revertedWithCustomError(abstractValueDistributor, "AmountIsZero")
+        .withArgs();
     });
 
     it("should not allow zero address to remove shares", async () => {
-      await expect(abstractValueDistributor.removeShares(ZERO_ADDR, 2)).to.be.revertedWith(
-        "ValueDistributor: insufficient amount",
-      );
+      await expect(abstractValueDistributor.removeShares(ethers.ZeroAddress, 2))
+        .to.be.revertedWithCustomError(abstractValueDistributor, "InsufficientSharesAmount")
+        .withArgs(ethers.ZeroAddress, 0, 2);
     });
 
     it("should not allow to remove more shares than it was added", async () => {
-      await expect(abstractValueDistributor.removeShares(SECOND, 1)).to.be.revertedWith(
-        "ValueDistributor: insufficient amount",
-      );
+      await expect(abstractValueDistributor.removeShares(SECOND, 1))
+        .to.be.revertedWithCustomError(abstractValueDistributor, "InsufficientSharesAmount")
+        .withArgs(SECOND, (await abstractValueDistributor.userDistribution(SECOND)).shares, 1);
     });
   });
 
@@ -303,23 +304,23 @@ describe("AbstractValueDistributor", () => {
     });
 
     it("should not allow to distribute 0 values", async () => {
-      await expect(abstractValueDistributor.distributeValue(FIRST, 0)).to.be.revertedWith(
-        "ValueDistributor: amount has to be more than 0",
-      );
+      await expect(abstractValueDistributor.distributeValue(FIRST, 0))
+        .to.be.revertedWithCustomError(abstractValueDistributor, "AmountIsZero")
+        .withArgs();
     });
 
     it("should not allow zero address to distribute values", async () => {
-      await expect(abstractValueDistributor.distributeValue(ZERO_ADDR, 2)).to.be.revertedWith(
-        "ValueDistributor: insufficient amount",
-      );
+      await expect(abstractValueDistributor.distributeValue(ethers.ZeroAddress, 2))
+        .to.be.revertedWithCustomError(abstractValueDistributor, "InsufficientOwedValue")
+        .withArgs(ethers.ZeroAddress, 0, 2);
     });
 
     it("should not allow to distribute more values than owed", async () => {
       await performSharesManipulations();
 
-      await expect(abstractValueDistributor.distributeValue(FIRST, wei(4))).to.be.revertedWith(
-        "ValueDistributor: insufficient amount",
-      );
+      await expect(abstractValueDistributor.distributeValue(FIRST, wei(4)))
+        .to.be.revertedWithCustomError(abstractValueDistributor, "InsufficientOwedValue")
+        .withArgs(FIRST, abstractValueDistributor.getOwedValue(FIRST), wei(4));
     });
   });
 
