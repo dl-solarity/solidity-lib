@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 
-import {AbstractDependant} from "../../../contracts-registry/AbstractDependant.sol";
-import {AbstractPoolContractsRegistry} from "../AbstractPoolContractsRegistry.sol";
+import {ADependant} from "../../../contracts-registry/ADependant.sol";
+import {APoolContractsRegistry} from "../APoolContractsRegistry.sol";
 
 import {PublicBeaconProxy} from "../../../proxy/beacon/PublicBeaconProxy.sol";
 
@@ -19,7 +19,7 @@ import {PublicBeaconProxy} from "../../../proxy/beacon/PublicBeaconProxy.sol";
  *
  * Both "create1" and "create2" deployment modes are supported.
  */
-abstract contract AbstractPoolFactory is AbstractDependant {
+abstract contract APoolFactory is ADependant {
     address internal _contractsRegistry;
 
     /**
@@ -44,7 +44,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         return
             address(
                 new PublicBeaconProxy(
-                    AbstractPoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
+                    APoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
                     bytes("")
                 )
             );
@@ -62,7 +62,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         return
             address(
                 new PublicBeaconProxy{salt: salt_}(
-                    AbstractPoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
+                    APoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
                     bytes("")
                 )
             );
@@ -76,7 +76,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
         string memory poolType_,
         address poolProxy_
     ) internal virtual {
-        AbstractPoolContractsRegistry(poolRegistry_).addProxyPool(poolType_, poolProxy_);
+        APoolContractsRegistry(poolRegistry_).addProxyPool(poolType_, poolProxy_);
     }
 
     /**
@@ -84,8 +84,8 @@ abstract contract AbstractPoolFactory is AbstractDependant {
      * provided PoolContractsRegistry as an injector
      */
     function _injectDependencies(address poolRegistry_, address proxy_) internal virtual {
-        AbstractDependant(proxy_).setDependencies(_contractsRegistry, bytes(""));
-        AbstractDependant(proxy_).setInjector(poolRegistry_);
+        ADependant(proxy_).setDependencies(_contractsRegistry, bytes(""));
+        ADependant(proxy_).setInjector(poolRegistry_);
     }
 
     /**
@@ -100,7 +100,7 @@ abstract contract AbstractPoolFactory is AbstractDependant {
             abi.encodePacked(
                 type(PublicBeaconProxy).creationCode,
                 abi.encode(
-                    AbstractPoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
+                    APoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
                     bytes("")
                 )
             )

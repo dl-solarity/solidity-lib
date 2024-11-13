@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {ERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import {IERC721Metadata} from "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
@@ -16,7 +16,7 @@ import {ISBT} from "../interfaces/tokens/ISBT.sol";
  *
  * The contract is compatible with Metamask and Opensea.
  */
-abstract contract SBT is ISBT, ERC165Upgradeable {
+abstract contract ASBT is ISBT, ERC165Upgradeable {
     using Strings for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -38,7 +38,7 @@ abstract contract SBT is ISBT, ERC165Upgradeable {
      * @param name_ the name of the contract (can't be changed)
      * @param symbol_ the symbol of the contract (can't be changed)
      */
-    function __SBT_init(string memory name_, string memory symbol_) internal onlyInitializing {
+    function __ASBT_init(string memory name_, string memory symbol_) internal onlyInitializing {
         _name = name_;
         _symbol = symbol_;
     }

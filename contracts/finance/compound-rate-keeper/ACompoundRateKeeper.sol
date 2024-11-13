@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -25,7 +25,7 @@ import {PRECISION} from "../../utils/Globals.sol";
  * The compound rate is calculated with 10\**25 precision.
  * The maximal possible compound rate is (type(uint128).max * 10\**25)
  */
-abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializable {
+abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
     using Math for uint256;
 
     uint256 private _capitalizationRate;
@@ -44,7 +44,7 @@ abstract contract AbstractCompoundRateKeeper is ICompoundRateKeeper, Initializab
     /**
      * @notice The initialization function
      */
-    function __CompoundRateKeeper_init(
+    function __ACompoundRateKeeper_init(
         uint256 capitalizationRate_,
         uint64 capitalizationPeriod_
     ) internal onlyInitializing {

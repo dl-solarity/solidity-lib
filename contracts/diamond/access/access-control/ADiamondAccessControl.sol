@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 // solhint-disable-next-line no-unused-import
-import {DiamondAccessControlStorage, IAccessControl} from "./DiamondAccessControlStorage.sol";
+import {ADiamondAccessControlStorage, IAccessControl} from "./ADiamondAccessControlStorage.sol";
 
 /**
  * @notice The Diamond standard module
@@ -10,14 +10,14 @@ import {DiamondAccessControlStorage, IAccessControl} from "./DiamondAccessContro
  * This is modified version of OpenZeppelin's AccessControl contract to be used as a Storage contract
  * by the Diamond Standard.
  */
-abstract contract DiamondAccessControl is DiamondAccessControlStorage {
+abstract contract ADiamondAccessControl is ADiamondAccessControlStorage {
     error UnauthorizedAccount(address account);
     error RoleAlreadyGranted(bytes32 role, address account);
 
     /**
      * @notice Sets `DEFAULT_ADMIN_ROLE` to `msg.sender`
      */
-    function __DiamondAccessControl_init()
+    function __ADiamondAccessControl_init()
         internal
         onlyInitializing(DIAMOND_ACCESS_CONTROL_STORAGE_SLOT)
     {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -7,7 +7,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {Paginator} from "../../libs/arrays/Paginator.sol";
 
-import {AbstractDependant} from "../../contracts-registry/AbstractDependant.sol";
+import {ADependant} from "../../contracts-registry/ADependant.sol";
 
 import {ProxyBeacon} from "../../proxy/beacon/ProxyBeacon.sol";
 
@@ -24,7 +24,7 @@ import {ProxyBeacon} from "../../proxy/beacon/ProxyBeacon.sol";
  * The factory contract would deploy BeaconProxies that point to these ProxyBeacons, allowing simple and cheap
  * upgradeability mechanics.
  */
-abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDependant {
+abstract contract APoolContractsRegistry is Initializable, ADependant {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Paginator for EnumerableSet.AddressSet;
     using Math for uint256;
@@ -41,7 +41,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
     /**
      * @notice The proxy initializer function
      */
-    function __PoolContractsRegistry_init() internal onlyInitializing {}
+    function __APoolContractsRegistry_init() internal onlyInitializing {}
 
     /**
      * @notice The function that accepts dependencies from the ContractsRegistry, can be overridden
@@ -55,7 +55,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
     }
 
     /**
-     * @notice The function to add new pools into the registry. Gets called from PoolFactory
+     * @notice The function to add new pools into the registry. Gets called from APoolFactory
      *
      * Proper only factory access control must be added in descending contracts + `_addProxyPool()` should be called inside.
      *
@@ -179,7 +179,7 @@ abstract contract AbstractPoolContractsRegistry is Initializable, AbstractDepend
         address contractsRegistry_ = _contractsRegistry;
 
         for (uint256 i = offset_; i < to_; i++) {
-            AbstractDependant(_namedPools.at(i)).setDependencies(contractsRegistry_, data_);
+            ADependant(_namedPools.at(i)).setDependencies(contractsRegistry_, data_);
         }
     }
 

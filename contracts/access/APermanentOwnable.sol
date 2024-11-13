@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 /**
  * @notice The PermanentOwnable module
@@ -12,7 +12,7 @@ pragma solidity ^0.8.4;
  * This module will make available the modifier `onlyOwner`, which can be applied
  * to your functions to restrict their use to the owners.
  */
-abstract contract PermanentOwnable {
+abstract contract APermanentOwnable {
     address private immutable _OWNER;
 
     error InvalidOwner();

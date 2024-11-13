@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -21,7 +21,7 @@ import {IMultiOwnable} from "../interfaces/access/IMultiOwnable.sol";
  * This module will make available the modifier `onlyOwner`, which can be applied
  * to your functions to restrict their use to the owners.
  */
-abstract contract MultiOwnable is IMultiOwnable, Initializable {
+abstract contract AMultiOwnable is IMultiOwnable, Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using TypeCaster for address;
     using SetHelper for EnumerableSet.AddressSet;
@@ -39,7 +39,7 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
     /**
      * @dev Initializes the contract setting the msg.sender as the initial owner.
      */
-    function __MultiOwnable_init() internal onlyInitializing {
+    function __AMultiOwnable_init() internal onlyInitializing {
         _addOwners(msg.sender.asSingletonArray());
     }
 

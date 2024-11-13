@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
-import {InitializableStorage} from "../../utils/InitializableStorage.sol";
+import {AInitializableStorage} from "../../utils/AInitializableStorage.sol";
 
 /**
  * @notice The Diamond standard module
  *
  * This is an AccessControl Storage contract with Diamond Standard support
  */
-abstract contract DiamondAccessControlStorage is IAccessControl, InitializableStorage {
+abstract contract ADiamondAccessControlStorage is IAccessControl, AInitializableStorage {
     bytes32 public constant DIAMOND_ACCESS_CONTROL_STORAGE_SLOT =
         keccak256("diamond.standard.diamond.access.control.storage");
 

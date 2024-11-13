@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
@@ -68,7 +68,7 @@ import {PRECISION} from "../../utils/Globals.sol";
  *
  * It's not possible to create a schedule with an exponent equal to 0.
  */
-abstract contract Vesting is Initializable {
+abstract contract AVesting is Initializable {
     using Math for uint256;
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -149,7 +149,7 @@ abstract contract Vesting is Initializable {
     /**
      * @notice Constructor.
      */
-    function __Vesting_init() internal onlyInitializing {}
+    function __AVesting_init() internal onlyInitializing {}
 
     /**
      * @notice Withdraws funds from a vesting contract.

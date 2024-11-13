@@ -21,7 +21,7 @@ describe("MultiOwnablePoolContractsRegistry", () => {
     );
     poolContractsRegistry = await MultiOwnablePoolContractsRegistryMock.deploy();
 
-    await poolContractsRegistry.__MultiOwnablePoolContractsRegistry_init();
+    await poolContractsRegistry.__AMultiOwnablePoolContractsRegistry_init();
 
     await reverter.snapshot();
   });
@@ -30,7 +30,7 @@ describe("MultiOwnablePoolContractsRegistry", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(poolContractsRegistry.__MultiOwnablePoolContractsRegistry_init())
+      await expect(poolContractsRegistry.__AMultiOwnablePoolContractsRegistry_init())
         .to.be.revertedWithCustomError(poolContractsRegistry, "InvalidInitialization")
         .withArgs();
     });

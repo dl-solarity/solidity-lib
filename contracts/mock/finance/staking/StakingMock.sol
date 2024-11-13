@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AbstractStaking} from "../../../finance/staking/AbstractStaking.sol";
+import {AStaking} from "../../../finance/staking/AStaking.sol";
 
-contract AbstractStakingMock is AbstractStaking, Multicall {
-    function __AbstractStakingMock_init(
+contract StakingMock is AStaking, Multicall {
+    function __StakingMock_init(
         address sharesToken_,
         address rewardsToken_,
         uint256 rate_,
         uint256 stakingStartTime_
     ) external initializer {
-        __AbstractStaking_init(sharesToken_, rewardsToken_, rate_, stakingStartTime_);
+        __AStaking_init(sharesToken_, rewardsToken_, rate_, stakingStartTime_);
     }
 
     function mockInit(
@@ -23,7 +23,7 @@ contract AbstractStakingMock is AbstractStaking, Multicall {
         uint256 rate_,
         uint256 stakingStartTime_
     ) external {
-        __AbstractStaking_init(sharesToken_, rewardsToken_, rate_, stakingStartTime_);
+        __AStaking_init(sharesToken_, rewardsToken_, rate_, stakingStartTime_);
     }
 
     function setStakingStartTime(uint256 stakingStartTime_) external {
@@ -68,10 +68,10 @@ contract StakersFactory is Multicall {
 contract Staker {
     function stake(address stakingContract_, address token_, uint256 amount_) external {
         IERC20(token_).approve(stakingContract_, amount_);
-        AbstractStakingMock(stakingContract_).stake(amount_);
+        StakingMock(stakingContract_).stake(amount_);
     }
 
     function unstake(address stakingContract_, uint256 amount_) external {
-        AbstractStakingMock(stakingContract_).unstake(amount_);
+        StakingMock(stakingContract_).unstake(amount_);
     }
 }

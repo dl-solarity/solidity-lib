@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
-import {MerkleWhitelisted} from "../../access/MerkleWhitelisted.sol";
+import {AMerkleWhitelisted} from "../../access/AMerkleWhitelisted.sol";
 
-contract MerkleWhitelistedMock is MerkleWhitelisted {
+contract MerkleWhitelistedMock is AMerkleWhitelisted {
     event WhitelistedUser();
     event WhitelistedData();
 

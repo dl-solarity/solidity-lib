@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
-import {AbstractContractsRegistry} from "../AbstractContractsRegistry.sol";
-import {MultiOwnable} from "../../access/MultiOwnable.sol";
+import {AContractsRegistry} from "../AContractsRegistry.sol";
+import {AMultiOwnable} from "../../access/AMultiOwnable.sol";
 
 /**
  * @notice The MultiOwnable preset of ContractsRegistry
  */
-contract MultiOwnableContractsRegistry is AbstractContractsRegistry, MultiOwnable {
+contract MultiOwnableContractsRegistry is AContractsRegistry, AMultiOwnable {
     /**
      * @notice The initialization function
      */
     function __MultiOwnableContractsRegistry_init() public initializer {
-        __MultiOwnable_init();
-        __ContractsRegistry_init();
+        __AMultiOwnable_init();
+        __AContractsRegistry_init();
     }
 
     /**

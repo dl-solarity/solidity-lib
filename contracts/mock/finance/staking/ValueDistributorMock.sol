@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 
-import {AbstractValueDistributor} from "../../../finance/staking/AbstractValueDistributor.sol";
+import {AValueDistributor} from "../../../finance/staking/AValueDistributor.sol";
 import {DECIMAL} from "../../../utils/Globals.sol";
 
-contract AbstractValueDistributorMock is AbstractValueDistributor, Multicall {
+contract ValueDistributorMock is AValueDistributor, Multicall {
     function addShares(address user_, uint256 amount_) external {
         _addShares(user_, amount_);
     }
