@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 
-import {BlockGuard} from "../../utils/BlockGuard.sol";
+import {ABlockGuard} from "../../utils/ABlockGuard.sol";
 
-contract BlockGuardMock is Multicall, BlockGuard {
+contract BlockGuardMock is Multicall, ABlockGuard {
     string public constant DEPOSIT_WITHDRAW_RESOURCE = "DEPOSIT_WITHDRAW";
     string public constant LOCK_LOCK_RESOURCE = "LOCK_LOCK";
 

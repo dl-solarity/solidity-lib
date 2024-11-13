@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 /**
  * @notice The ContractsRegistry module
@@ -8,9 +8,9 @@ pragma solidity ^0.8.4;
  * Upon the injection, the Injector (ContractsRegistry most of the time) will call the `setDependencies()` function.
  * The dependant contract will have to pull the required addresses from the supplied ContractsRegistry as a parameter.
  *
- * The AbstractDependant is fully compatible with proxies courtesy of custom storage slot.
+ * The ADependant is fully compatible with proxies courtesy of custom storage slot.
  */
-abstract contract AbstractDependant {
+abstract contract ADependant {
     /**
      * @notice The slot where the dependency injector is located.
      *

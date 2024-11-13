@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -8,15 +8,15 @@ import {IERC721Metadata} from "@openzeppelin/contracts/token/ERC721/extensions/I
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 import {DiamondERC165} from "../../introspection/DiamondERC165.sol";
-import {InitializableStorage} from "../../utils/InitializableStorage.sol";
+import {AInitializableStorage} from "../../utils/AInitializableStorage.sol";
 
 /**
  * @notice The Diamond standard module
  *
  * This is an ERC721 token Storage contract with Diamond Standard support
  */
-abstract contract DiamondERC721Storage is
-    InitializableStorage,
+abstract contract ADiamondERC721Storage is
+    AInitializableStorage,
     DiamondERC165,
     IERC721,
     IERC721Metadata

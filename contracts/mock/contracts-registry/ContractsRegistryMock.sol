@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {OwnableContractsRegistry} from "../../contracts-registry/presets/OwnableContractsRegistry.sol";
 
@@ -9,7 +9,7 @@ contract ContractsRegistryMock is OwnableContractsRegistry {
     string public constant TOKEN_NAME = "TOKEN";
 
     function mockInit() external {
-        __ContractsRegistry_init();
+        __AContractsRegistry_init();
     }
 
     function getDependantContract() external view returns (address) {

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import {AdminableProxyUpgrader} from "../proxy/adminable/AdminableProxyUpgrader.sol";
 import {AdminableProxy} from "../proxy/adminable/AdminableProxy.sol";
-import {AbstractDependant} from "./AbstractDependant.sol";
+import {ADependant} from "./ADependant.sol";
 
 /**
  * @notice The ContractsRegistry module
@@ -17,7 +17,7 @@ import {AbstractDependant} from "./AbstractDependant.sol";
  *
  * The ContractsRegistry should be used as the highest level smart contract that is aware of any other
  * contract present in the system. The contracts that demand other system's contracts would then inherit
- * special `AbstractDependant` contract and override `setDependencies()` function to enable ContractsRegistry
+ * special `ADependant` contract and override `setDependencies()` function to enable ContractsRegistry
  * to inject dependencies into them.
  *
  * The ContractsRegistry will help with the following use cases:
@@ -37,7 +37,7 @@ import {AbstractDependant} from "./AbstractDependant.sol";
  *
  * Users may also fetch all the contracts present in the system as they are now located in a single place.
  */
-abstract contract AbstractContractsRegistry is Initializable {
+abstract contract AContractsRegistry is Initializable {
     AdminableProxyUpgrader private _proxyUpgrader;
 
     mapping(string => address) private _contracts;
@@ -55,7 +55,7 @@ abstract contract AbstractContractsRegistry is Initializable {
     /**
      * @notice The initialization function
      */
-    function __ContractsRegistry_init() internal onlyInitializing {
+    function __AContractsRegistry_init() internal onlyInitializing {
         _proxyUpgrader = new AdminableProxyUpgrader();
     }
 
@@ -124,7 +124,7 @@ abstract contract AbstractContractsRegistry is Initializable {
 
         _checkIfMappingExist(contractAddress_, name_);
 
-        AbstractDependant dependant_ = AbstractDependant(contractAddress_);
+        ADependant dependant_ = ADependant(contractAddress_);
         dependant_.setDependencies(address(this), data_);
     }
 

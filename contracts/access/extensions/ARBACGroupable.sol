@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {IRBACGroupable} from "../../interfaces/access/extensions/IRBACGroupable.sol";
 
 import {DynamicSet} from "../../libs/data-structures/DynamicSet.sol";
 import {SetHelper} from "../../libs/arrays/SetHelper.sol";
 
-import {RBAC} from "../RBAC.sol";
+import {ARBAC} from "../ARBAC.sol";
 
 /**
  * @notice The Role Based Access Control (RBAC) module
@@ -22,7 +22,7 @@ import {RBAC} from "../RBAC.sol";
  *
  * Where ROLE and GROUP are assignable to users
  */
-abstract contract RBACGroupable is IRBACGroupable, RBAC {
+abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
     using DynamicSet for DynamicSet.StringSet;
     using SetHelper for DynamicSet.StringSet;
 
@@ -36,8 +36,8 @@ abstract contract RBACGroupable is IRBACGroupable, RBAC {
     /**
      * @notice The initialization function
      */
-    function __RBACGroupable_init() internal onlyInitializing {
-        __RBAC_init();
+    function __ARBACGroupable_init() internal onlyInitializing {
+        __ARBAC_init();
     }
 
     /**

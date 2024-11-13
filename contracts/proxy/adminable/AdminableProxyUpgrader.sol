@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
-import {PermanentOwnable} from "../../access/PermanentOwnable.sol";
+import {APermanentOwnable} from "../../access/APermanentOwnable.sol";
 import {IAdminableProxy} from "./AdminableProxy.sol";
 
 /**
@@ -9,8 +9,8 @@ import {IAdminableProxy} from "./AdminableProxy.sol";
  *
  * This is the lightweight helper contract that may be used as a AdminableProxy admin.
  */
-contract AdminableProxyUpgrader is PermanentOwnable {
-    constructor() PermanentOwnable(msg.sender) {}
+contract AdminableProxyUpgrader is APermanentOwnable {
+    constructor() APermanentOwnable(msg.sender) {}
 
     /**
      * @notice The function to upgrade the implementation contract

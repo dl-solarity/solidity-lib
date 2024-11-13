@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {ContractsRegistryPoolMock} from "../ContractsRegistryPoolMock.sol";
 import {PoolContractsRegistryMock} from "../PoolContractsRegistryMock.sol";
 
-import {AbstractPoolFactory} from "../../../../contracts-registry/pools/pool-factory/AbstractPoolFactory.sol";
+import {APoolFactory} from "../../../../contracts-registry/pools/pool-factory/APoolFactory.sol";
 
-contract PoolFactoryMock is AbstractPoolFactory {
+contract PoolFactoryMock is APoolFactory {
     address public poolContractsRegistry;
 
     function setDependencies(address contractsRegistry_, bytes memory data_) public override {

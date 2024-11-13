@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 /**
  * @notice The Diamond standard module
@@ -7,7 +7,7 @@ pragma solidity ^0.8.4;
  * This is a modified version of the OpenZeppelin Initializable contract to be compatible
  * with the Diamond Standard.
  */
-abstract contract InitializableStorage {
+abstract contract AInitializableStorage {
     bytes32 internal constant INITIALIZABLE_STORAGE_SLOT =
         keccak256("diamond.standard.initializable.storage");
 

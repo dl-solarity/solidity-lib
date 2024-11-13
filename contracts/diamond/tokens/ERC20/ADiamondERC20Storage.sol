@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import {InitializableStorage} from "../../utils/InitializableStorage.sol";
+import {AInitializableStorage} from "../../utils/AInitializableStorage.sol";
 
 /**
  * @notice The Diamond standard module
  *
  * This is an ERC20 token Storage contract with Diamond Standard support
  */
-abstract contract DiamondERC20Storage is InitializableStorage, IERC20, IERC20Metadata {
+abstract contract ADiamondERC20Storage is AInitializableStorage, IERC20, IERC20Metadata {
     bytes32 public constant DIAMOND_ERC20_STORAGE_SLOT =
         keccak256("diamond.standard.diamond.erc20.storage");
 

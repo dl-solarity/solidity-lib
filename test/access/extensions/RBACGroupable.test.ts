@@ -6,7 +6,7 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import { RBACGroupableMock } from "@ethers-v6";
 
-describe("RBAC", () => {
+describe("RBACGroupable", () => {
   const reverter = new Reverter();
 
   let OWNER: SignerWithAddress;
@@ -27,7 +27,7 @@ describe("RBAC", () => {
 
   afterEach(reverter.revert);
 
-  describe("__RBACGroupable_init", () => {
+  describe("__ARBACGroupable_init", () => {
     it("should not initialize twice", async () => {
       await expect(rbac.mockInit()).to.be.revertedWithCustomError(rbac, "NotInitializing").withArgs();
     });

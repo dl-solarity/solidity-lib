@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 contract DummyStorageMock {
     bytes32 public constant DUMMY_STORAGE_SLOT = keccak256("diamond.standard.dummyfacet.storage");

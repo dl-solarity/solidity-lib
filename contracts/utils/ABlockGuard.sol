@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 /**
  * @notice The BlockGuard module
@@ -21,7 +21,7 @@ pragma solidity ^0.8.4;
  * }
  * ```
  */
-abstract contract BlockGuard {
+abstract contract ABlockGuard {
     mapping(string => mapping(address => uint256)) private _lockedInBlocks;
 
     error BlockGuardLocked(string resource, address key);

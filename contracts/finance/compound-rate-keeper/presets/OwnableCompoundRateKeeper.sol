@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {AbstractCompoundRateKeeper} from "../AbstractCompoundRateKeeper.sol";
+import {ACompoundRateKeeper} from "../ACompoundRateKeeper.sol";
 
 /**
  * @notice The Ownable preset of CompoundRateKeeper
  */
-contract OwnableCompoundRateKeeper is AbstractCompoundRateKeeper, OwnableUpgradeable {
+contract OwnableCompoundRateKeeper is ACompoundRateKeeper, OwnableUpgradeable {
     /**
      * @notice The initialization function
      * @param capitalizationRate_ the compound interest rate with 10\**25 precision
@@ -19,7 +19,7 @@ contract OwnableCompoundRateKeeper is AbstractCompoundRateKeeper, OwnableUpgrade
         uint64 capitalizationPeriod_
     ) public initializer {
         __Ownable_init(msg.sender);
-        __CompoundRateKeeper_init(capitalizationRate_, capitalizationPeriod_);
+        __ACompoundRateKeeper_init(capitalizationRate_, capitalizationPeriod_);
     }
 
     /**

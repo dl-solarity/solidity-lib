@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
@@ -17,7 +17,7 @@ import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProo
  *
  * Note: the branch nodes are sorted numerically.
  */
-abstract contract MerkleWhitelisted {
+abstract contract AMerkleWhitelisted {
     using MerkleProof for bytes32[];
 
     bytes32 private _merkleRoot;

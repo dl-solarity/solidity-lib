@@ -58,7 +58,7 @@ describe("PoolFactory", () => {
     );
     poolFactory = <PoolFactoryMock>PoolFactory.attach(await contractsRegistry.getPoolFactoryContract());
 
-    await poolContractsRegistry.__OwnablePoolContractsRegistry_init();
+    await poolContractsRegistry.__AOwnablePoolContractsRegistry_init();
 
     await contractsRegistry.injectDependencies(await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME());
     await contractsRegistry.injectDependencies(await contractsRegistry.POOL_FACTORY_NAME());

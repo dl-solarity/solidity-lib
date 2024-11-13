@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {IncrementalMerkleTree} from "../../../libs/data-structures/IncrementalMerkleTree.sol";
 
