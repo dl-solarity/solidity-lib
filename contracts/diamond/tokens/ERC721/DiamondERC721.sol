@@ -43,7 +43,6 @@ contract DiamondERC721 is DiamondERC721Storage {
     function approve(address to_, uint256 tokenId_) public virtual override {
         address owner_ = ownerOf(tokenId_);
         if (to_ == owner_) revert ApprovalToCurrentOwner(owner_, tokenId_);
-
         if (msg.sender != owner_ && !isApprovedForAll(owner_, msg.sender))
             revert InvalidApprover(msg.sender, owner_);
 

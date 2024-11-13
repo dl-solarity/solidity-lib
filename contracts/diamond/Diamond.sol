@@ -162,7 +162,6 @@ contract Diamond is DiamondStorage {
             address oldFacet_ = facetAddress(selector_);
 
             if (oldFacet_ == facet_) revert SelectorIsAlreadyInThisFaucet(selector_, facet_);
-
             if (oldFacet_ == address(0)) revert NoFacetForSelector(selector_);
 
             // replace old facet address

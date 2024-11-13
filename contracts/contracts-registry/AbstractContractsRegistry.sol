@@ -98,7 +98,6 @@ abstract contract AbstractContractsRegistry is Initializable {
         address contractProxy_ = _contracts[name_];
 
         if (contractProxy_ == address(0)) revert NoMappingExists(name_);
-
         if (!_isProxy[contractProxy_]) revert NotAProxy(name_, contractProxy_);
 
         return _proxyUpgrader.getImplementation(contractProxy_);
@@ -156,7 +155,6 @@ abstract contract AbstractContractsRegistry is Initializable {
         address contractToUpgrade_ = _contracts[name_];
 
         if (contractToUpgrade_ == address(0)) revert NoMappingExists(name_);
-
         if (!_isProxy[contractToUpgrade_]) revert NotAProxy(name_, contractToUpgrade_);
 
         _proxyUpgrader.upgrade(contractToUpgrade_, newImplementation_, data_);

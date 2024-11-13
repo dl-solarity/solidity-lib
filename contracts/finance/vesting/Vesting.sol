@@ -415,7 +415,6 @@ abstract contract Vesting is Initializable {
                 schedule_.durationInPeriods,
                 schedule_.secondsInPeriod
             );
-
         if (schedule_.cliffInPeriods >= schedule_.durationInPeriods)
             revert ScheduleCliffGreaterThanDuration(
                 schedule_.cliffInPeriods,
