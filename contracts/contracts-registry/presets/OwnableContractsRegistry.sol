@@ -13,7 +13,7 @@ contract OwnableContractsRegistry is AbstractContractsRegistry, OwnableUpgradeab
      * @notice The initialization function
      */
     function __OwnableContractsRegistry_init() public initializer {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __ContractsRegistry_init();
     }
 
@@ -73,7 +73,7 @@ contract OwnableContractsRegistry is AbstractContractsRegistry, OwnableUpgradeab
     }
 
     /**
-     * @notice The function to add the proxy contract to the registry (deploys TransparentProxy on top)
+     * @notice The function to add the proxy contract to the registry (deploys AdminableProxy on top)
      * @param name_ the associative name of the contract
      * @param contractAddress_ the address of the implementation contract to add
      */
@@ -82,7 +82,7 @@ contract OwnableContractsRegistry is AbstractContractsRegistry, OwnableUpgradeab
     }
 
     /**
-     * @notice The function to add the proxy contract to the registry with immediate call (deploys TransparentProxy on top)
+     * @notice The function to add the proxy contract to the registry with immediate call (deploys AdminableProxy on top)
      * @param name_ the associative name of the contract
      * @param contractAddress_ the address of the implementation contract to add
      * @param data_ the data the proxy contract will be called after the addition

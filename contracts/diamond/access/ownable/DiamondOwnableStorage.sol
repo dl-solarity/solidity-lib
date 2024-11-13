@@ -16,6 +16,8 @@ abstract contract DiamondOwnableStorage is InitializableStorage {
         address owner;
     }
 
+    error CallerNotOwner(address caller, address owner);
+
     modifier onlyOwner() {
         _onlyOwner();
         _;
@@ -41,6 +43,6 @@ abstract contract DiamondOwnableStorage is InitializableStorage {
      * @notice The function to check if `msg.sender` is the owner
      */
     function _onlyOwner() internal view virtual {
-        require(owner() == msg.sender, "DiamondOwnable: not an owner");
+        if (owner() != msg.sender) revert CallerNotOwner(msg.sender, owner());
     }
 }

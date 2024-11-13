@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+
 import { Reverter } from "@/test/helpers/reverter";
 
 import { MultiOwnablePoolContractsRegistryMock } from "@ethers-v6";
@@ -29,23 +30,23 @@ describe("MultiOwnablePoolContractsRegistry", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(poolContractsRegistry.__MultiOwnablePoolContractsRegistry_init()).to.be.revertedWith(
-        "Initializable: contract is already initialized",
-      );
+      await expect(poolContractsRegistry.__MultiOwnablePoolContractsRegistry_init())
+        .to.be.revertedWithCustomError(poolContractsRegistry, "InvalidInitialization")
+        .withArgs();
     });
 
     it("only owner should call these functions", async () => {
-      await expect(poolContractsRegistry.connect(SECOND).setNewImplementations([], [])).to.be.revertedWith(
-        "MultiOwnable: caller is not the owner",
-      );
+      await expect(poolContractsRegistry.connect(SECOND).setNewImplementations([], []))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "UnauthorizedAccount")
+        .withArgs(SECOND.address);
 
-      await expect(
-        poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPools("", 0, 0),
-      ).to.be.revertedWith("MultiOwnable: caller is not the owner");
+      await expect(poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPools("", 0, 0))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "UnauthorizedAccount")
+        .withArgs(SECOND.address);
 
-      await expect(
-        poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPoolsWithData("", "0x", 0, 0),
-      ).to.be.revertedWith("MultiOwnable: caller is not the owner");
+      await expect(poolContractsRegistry.connect(SECOND).injectDependenciesToExistingPoolsWithData("", "0x", 0, 0))
+        .to.be.revertedWithCustomError(poolContractsRegistry, "UnauthorizedAccount")
+        .withArgs(SECOND.address);
     });
   });
 

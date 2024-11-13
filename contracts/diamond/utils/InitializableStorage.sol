@@ -18,6 +18,10 @@ abstract contract InitializableStorage {
 
     event Initialized(bytes32 storageSlot);
 
+    error AlreadyInitialized();
+    error InvalidInitialization();
+    error NotInitializing();
+
     /**
      * @dev A modifier that defines a protected initializer function that can be invoked at most
      * once for a particular storage in a Diamond proxy that begins with {storageSlot_}.
@@ -28,7 +32,7 @@ abstract contract InitializableStorage {
     modifier initializer(bytes32 storageSlot_) {
         uint8 initializing_ = _getInitializing(storageSlot_);
 
-        require(initializing_ == 0, "Initializable: contract is already initialized");
+        if (initializing_ != 0) revert AlreadyInitialized();
 
         _setInitializing(storageSlot_, 1);
         _;
@@ -42,10 +46,7 @@ abstract contract InitializableStorage {
      * {initializer} modifier, directly or indirectly.
      */
     modifier onlyInitializing(bytes32 storageSlot_) {
-        require(
-            _getInitializing(storageSlot_) == 1,
-            "Initializable: contract is not initializing"
-        );
+        if (_getInitializing(storageSlot_) != 1) revert NotInitializing();
         _;
     }
 
@@ -66,7 +67,7 @@ abstract contract InitializableStorage {
     function _disableInitializers(bytes32 storageSlot_) internal virtual {
         uint8 initializing_ = _getInitializing(storageSlot_);
 
-        require(initializing_ == 0, "Initializable: contract is initializing");
+        if (initializing_ != 0) revert InvalidInitialization();
 
         _setInitializing(storageSlot_, 2);
 

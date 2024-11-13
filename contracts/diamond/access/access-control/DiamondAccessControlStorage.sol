@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 import {InitializableStorage} from "../../utils/InitializableStorage.sol";
 
@@ -26,13 +25,11 @@ abstract contract DiamondAccessControlStorage is IAccessControl, InitializableSt
         mapping(bytes32 => RoleData) roles;
     }
 
+    error RoleNotGranted(bytes32 role, address account);
+
     /**
      * @dev Modifier that checks that an account has a specific role. Reverts
-     * with a standardized message including the required role.
-     *
-     * The format of the revert reason is given by the following regular expression:
-     *
-     *  /^AccessControl: account (0x[0-9a-f]{40}) is missing role (0x[0-9a-f]{64})$/
+     * with a custom error including the required role.
      */
     modifier onlyRole(bytes32 role_) {
         _checkRole(role_);
@@ -62,34 +59,17 @@ abstract contract DiamondAccessControlStorage is IAccessControl, InitializableSt
     }
 
     /**
-     * @dev Revert with a standard message if `_msgSender()` is missing `role`.
+     * @dev Revert with a custom error if `_msgSender()` is missing `role`.
      * Overriding this function changes the behavior of the {onlyRole} modifier.
-     *
-     * Format of the revert message is described in {_checkRole}.
      */
     function _checkRole(bytes32 role_) internal view virtual {
         _checkRole(role_, msg.sender);
     }
 
     /**
-     * @dev Revert with a standard message if `account` is missing `role`.
-     *
-     * The format of the revert reason is given by the following regular expression:
-     *
-     *  /^AccessControl: account (0x[0-9a-f]{40}) is missing role (0x[0-9a-f]{64})$/
+     * @dev Revert with a custom error if `account` is missing `role`.
      */
     function _checkRole(bytes32 role_, address account_) internal view virtual {
-        if (!hasRole(role_, account_)) {
-            revert(
-                string(
-                    abi.encodePacked(
-                        "AccessControl: account ",
-                        Strings.toHexString(account_),
-                        " is missing role ",
-                        Strings.toHexString(uint256(role_), 32)
-                    )
-                )
-            );
-        }
+        if (!hasRole(role_, account_)) revert RoleNotGranted(role_, account_);
     }
 }

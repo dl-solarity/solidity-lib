@@ -2,10 +2,10 @@
 pragma solidity ^0.8.4;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {MathUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {PRECISION} from "../../utils/Globals.sol";
 
@@ -69,7 +69,7 @@ import {PRECISION} from "../../utils/Globals.sol";
  * It's not possible to create a schedule with an exponent equal to 0.
  */
 abstract contract Vesting is Initializable {
-    using MathUpgradeable for uint256;
+    using Math for uint256;
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -135,6 +135,17 @@ abstract contract Vesting is Initializable {
      */
     event WithdrawnFromVesting(uint256 indexed vestingId, uint256 amount);
 
+    error BeneficiaryIsZeroAddress();
+    error ExponentIsZero();
+    error NothingToWithdraw();
+    error StartTimeIsZero();
+    error ScheduleInvalidPeriodParameter(uint256 durationInPeriods, uint256 secondsInPeriod);
+    error ScheduleCliffGreaterThanDuration(uint256 cliffInPeriods, uint256 durationInPeriods);
+    error UnauthorizedAccount(address account);
+    error VestingAmountIsZero();
+    error VestingTokenIsZeroAddress();
+    error VestingPastDate();
+
     /**
      * @notice Constructor.
      */
@@ -147,14 +158,8 @@ abstract contract Vesting is Initializable {
     function withdrawFromVesting(uint256 vestingId_) public virtual {
         VestingData storage _vesting = _vestings[vestingId_];
 
-        require(
-            msg.sender == _vesting.beneficiary,
-            "VestingWallet: only beneficiary can withdraw from his vesting"
-        );
-        require(
-            _vesting.paidAmount < _vesting.vestingAmount,
-            "VestingWallet: nothing to withdraw"
-        );
+        if (msg.sender != _vesting.beneficiary) revert UnauthorizedAccount(msg.sender);
+        if (_vesting.paidAmount >= _vesting.vestingAmount) revert NothingToWithdraw();
 
         uint256 amountToPay_ = getWithdrawableAmount(vestingId_);
         address token_ = _vesting.vestingToken;
@@ -258,10 +263,7 @@ abstract contract Vesting is Initializable {
      * @return The ID of the created schedule.
      */
     function _createSchedule(Schedule memory schedule_) internal virtual returns (uint256) {
-        require(
-            schedule_.exponent > 0,
-            "VestingWallet: cannot create schedule with zero exponent"
-        );
+        if (schedule_.exponent == 0) revert ExponentIsZero();
 
         _validateSchedule(schedule_.scheduleData);
 
@@ -282,13 +284,12 @@ abstract contract Vesting is Initializable {
 
         Schedule storage _schedule = _schedules[vesting_.scheduleId];
 
-        require(
+        if (
             vesting_.vestingStartTime +
                 _schedule.scheduleData.durationInPeriods *
-                _schedule.scheduleData.secondsInPeriod >
-                block.timestamp,
-            "VestingWallet: cannot create vesting for a past date"
-        );
+                _schedule.scheduleData.secondsInPeriod <=
+            block.timestamp
+        ) revert VestingPastDate();
 
         uint256 _currentVestingId = ++vestingId;
 
@@ -409,14 +410,16 @@ abstract contract Vesting is Initializable {
      * @param schedule_ Base schedule data to be validated.
      */
     function _validateSchedule(BaseSchedule memory schedule_) internal pure {
-        require(
-            schedule_.durationInPeriods > 0 && schedule_.secondsInPeriod > 0,
-            "VestingWallet: cannot create schedule with zero duration or zero seconds in period"
-        );
-        require(
-            schedule_.cliffInPeriods < schedule_.durationInPeriods,
-            "VestingWallet: cliff cannot be greater than duration"
-        );
+        if (schedule_.durationInPeriods == 0 || schedule_.secondsInPeriod == 0)
+            revert ScheduleInvalidPeriodParameter(
+                schedule_.durationInPeriods,
+                schedule_.secondsInPeriod
+            );
+        if (schedule_.cliffInPeriods >= schedule_.durationInPeriods)
+            revert ScheduleCliffGreaterThanDuration(
+                schedule_.cliffInPeriods,
+                schedule_.durationInPeriods
+            );
     }
 
     /**
@@ -424,22 +427,10 @@ abstract contract Vesting is Initializable {
      * @param vesting_ Vesting data to be validated.
      */
     function _validateVesting(VestingData memory vesting_) internal pure {
-        require(
-            vesting_.vestingStartTime > 0,
-            "VestingWallet: cannot create vesting for zero time"
-        );
-        require(
-            vesting_.vestingAmount > 0,
-            "VestingWallet: cannot create vesting for zero amount"
-        );
-        require(
-            vesting_.beneficiary != address(0),
-            "VestingWallet: cannot create vesting for zero address"
-        );
-        require(
-            vesting_.vestingToken != address(0),
-            "VestingWallet: vesting token cannot be zero address"
-        );
+        if (vesting_.vestingStartTime == 0) revert StartTimeIsZero();
+        if (vesting_.vestingAmount == 0) revert VestingAmountIsZero();
+        if (vesting_.beneficiary == address(0)) revert BeneficiaryIsZeroAddress();
+        if (vesting_.vestingToken == address(0)) revert VestingTokenIsZeroAddress();
     }
 
     /**

@@ -28,6 +28,9 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
 
     EnumerableSet.AddressSet private _owners;
 
+    error InvalidOwner();
+    error UnauthorizedAccount(address account);
+
     modifier onlyOwner() {
         _checkOwner();
         _;
@@ -91,7 +94,7 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
     function _addOwners(address[] memory newOwners_) private {
         _owners.add(newOwners_);
 
-        require(!_owners.contains(address(0)), "MultiOwnable: zero address can not be added");
+        if (_owners.contains(address(0))) revert InvalidOwner();
 
         emit OwnersAdded(newOwners_);
     }
@@ -115,6 +118,6 @@ abstract contract MultiOwnable is IMultiOwnable, Initializable {
      * @dev Throws if the sender is not the owner.
      */
     function _checkOwner() private view {
-        require(isOwner(msg.sender), "MultiOwnable: caller is not the owner");
+        if (!isOwner(msg.sender)) revert UnauthorizedAccount(msg.sender);
     }
 }
