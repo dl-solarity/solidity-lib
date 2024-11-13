@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {DiamondERC20} from "../../../diamond/tokens/ERC20/DiamondERC20.sol";
 

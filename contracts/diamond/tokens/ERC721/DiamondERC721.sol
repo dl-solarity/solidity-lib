@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 // solhint-disable-next-line no-unused-import
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";

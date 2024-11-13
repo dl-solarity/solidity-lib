@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {PermanentOwnable} from "../../access/PermanentOwnable.sol";
 import {IAdminableProxy} from "./AdminableProxy.sol";

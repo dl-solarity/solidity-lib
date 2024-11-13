@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {Vesting} from "../../../finance/vesting/Vesting.sol";
 import {ERC20Mock} from "../../tokens/ERC20Mock.sol";

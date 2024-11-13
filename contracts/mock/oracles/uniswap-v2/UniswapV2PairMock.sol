@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 contract UniswapV2PairMock {
     address public token0;
