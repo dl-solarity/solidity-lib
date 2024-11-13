@@ -21,7 +21,7 @@ pragma solidity ^0.8.21;
  * }
  * ```
  */
-abstract contract BlockGuard {
+abstract contract ABlockGuard {
     mapping(string => mapping(address => uint256)) private _lockedInBlocks;
 
     error BlockGuardLocked(string resource, address key);

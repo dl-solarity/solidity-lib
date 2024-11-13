@@ -3,18 +3,18 @@ pragma solidity ^0.8.21;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {AbstractContractsRegistry} from "../AbstractContractsRegistry.sol";
+import {AContractsRegistry} from "../AContractsRegistry.sol";
 
 /**
  * @notice The Ownable preset of ContractsRegistry
  */
-contract OwnableContractsRegistry is AbstractContractsRegistry, OwnableUpgradeable {
+contract OwnableContractsRegistry is AContractsRegistry, OwnableUpgradeable {
     /**
      * @notice The initialization function
      */
     function __OwnableContractsRegistry_init() public initializer {
         __Ownable_init(msg.sender);
-        __ContractsRegistry_init();
+        __AContractsRegistry_init();
     }
 
     /**

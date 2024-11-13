@@ -4,7 +4,7 @@ pragma solidity ^0.8.21;
 // solhint-disable-next-line no-unused-import
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {DiamondERC20Storage} from "./DiamondERC20Storage.sol";
+import {ADiamondERC20Storage} from "./ADiamondERC20Storage.sol";
 
 /**
  * @notice The Diamond standard module
@@ -12,7 +12,7 @@ import {DiamondERC20Storage} from "./DiamondERC20Storage.sol";
  * This is modified version of OpenZeppelin's ERC20 contract to be used as a Storage contract
  * by the Diamond Standard.
  */
-contract DiamondERC20 is DiamondERC20Storage {
+contract DiamondERC20 is ADiamondERC20Storage {
     error ApproverIsZeroAddress();
     error InsufficientAllowance(address spender, uint256 allowance, uint256 needed);
     error InsufficientBalance(address sender, uint256 balance, uint256 needed);

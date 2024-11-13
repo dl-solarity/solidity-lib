@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import {InitializableStorage} from "../../utils/InitializableStorage.sol";
+import {AInitializableStorage} from "../../utils/AInitializableStorage.sol";
 
 /**
  * @notice The Diamond standard module
  *
  * This is an Ownable Storage contract with Diamond Standard support
  */
-abstract contract DiamondOwnableStorage is InitializableStorage {
+abstract contract ADiamondOwnableStorage is AInitializableStorage {
     bytes32 public constant DIAMOND_OWNABLE_STORAGE_SLOT =
         keccak256("diamond.standard.diamond.ownable.storage");
 

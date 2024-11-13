@@ -47,7 +47,7 @@ describe("PoolContractsRegistry", () => {
       PoolContractsRegistry.attach(await contractsRegistry.getPoolContractsRegistryContract())
     );
 
-    await poolContractsRegistry.__OwnablePoolContractsRegistry_init();
+    await poolContractsRegistry.__AOwnablePoolContractsRegistry_init();
 
     await contractsRegistry.injectDependencies(await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME());
 
@@ -61,7 +61,7 @@ describe("PoolContractsRegistry", () => {
 
   describe("access", () => {
     it("should not initialize twice", async () => {
-      await expect(poolContractsRegistry.__OwnablePoolContractsRegistry_init())
+      await expect(poolContractsRegistry.__AOwnablePoolContractsRegistry_init())
         .to.be.revertedWithCustomError(poolContractsRegistry, "InvalidInitialization")
         .withArgs();
 

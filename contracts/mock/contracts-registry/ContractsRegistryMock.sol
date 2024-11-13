@@ -9,7 +9,7 @@ contract ContractsRegistryMock is OwnableContractsRegistry {
     string public constant TOKEN_NAME = "TOKEN";
 
     function mockInit() external {
-        __ContractsRegistry_init();
+        __AContractsRegistry_init();
     }
 
     function getDependantContract() external view returns (address) {

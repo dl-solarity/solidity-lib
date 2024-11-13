@@ -3,7 +3,7 @@ pragma solidity ^0.8.21;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {DiamondStorage} from "./DiamondStorage.sol";
+import {ADiamondStorage} from "./ADiamondStorage.sol";
 
 /**
  * @notice The Diamond standard module
@@ -18,7 +18,7 @@ import {DiamondStorage} from "./DiamondStorage.sol";
  *
  * If you wish to add a receive() function, attach a "0x00000000" selector to a facet that has such a function.
  */
-contract Diamond is DiamondStorage {
+contract Diamond is ADiamondStorage {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableSet for EnumerableSet.AddressSet;
 

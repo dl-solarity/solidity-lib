@@ -30,7 +30,7 @@ import {DynamicSet} from "../libs/data-structures/DynamicSet.sol";
  *
  * Where ROLE is assignable to users
  */
-abstract contract RBAC is IRBAC, Initializable {
+abstract contract ARBAC is IRBAC, Initializable {
     using DynamicSet for DynamicSet.StringSet;
     using SetHelper for DynamicSet.StringSet;
     using TypeCaster for string;
@@ -65,7 +65,7 @@ abstract contract RBAC is IRBAC, Initializable {
     /**
      * @notice The initialization function
      */
-    function __RBAC_init() internal onlyInitializing {
+    function __ARBAC_init() internal onlyInitializing {
         _addPermissionsToRole(MASTER_ROLE, ALL_RESOURCE, ALL_PERMISSION.asSingletonArray(), true);
     }
 

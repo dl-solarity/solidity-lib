@@ -17,7 +17,7 @@ import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProo
  *
  * Note: the branch nodes are sorted numerically.
  */
-abstract contract MerkleWhitelisted {
+abstract contract AMerkleWhitelisted {
     using MerkleProof for bytes32[];
 
     bytes32 private _merkleRoot;

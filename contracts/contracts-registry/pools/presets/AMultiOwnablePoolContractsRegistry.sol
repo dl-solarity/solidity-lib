@@ -1,22 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import {AbstractPoolContractsRegistry} from "../AbstractPoolContractsRegistry.sol";
-import {MultiOwnable} from "../../../access/MultiOwnable.sol";
+import {APoolContractsRegistry} from "../APoolContractsRegistry.sol";
+import {AMultiOwnable} from "../../../access/AMultiOwnable.sol";
 
 /**
  * @notice The MultiOwnable preset of PoolContractsRegistry
  */
-abstract contract MultiOwnablePoolContractsRegistry is
-    AbstractPoolContractsRegistry,
-    MultiOwnable
-{
+abstract contract AMultiOwnablePoolContractsRegistry is APoolContractsRegistry, AMultiOwnable {
     /**
      * @notice The initialization function
      */
-    function __MultiOwnablePoolContractsRegistry_init() public initializer {
-        __MultiOwnable_init();
-        __PoolContractsRegistry_init();
+    function __AMultiOwnablePoolContractsRegistry_init() public initializer {
+        __AMultiOwnable_init();
+        __APoolContractsRegistry_init();
     }
 
     /**

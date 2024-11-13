@@ -3,21 +3,18 @@ pragma solidity ^0.8.21;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {AbstractPoolContractsRegistry} from "../AbstractPoolContractsRegistry.sol";
+import {APoolContractsRegistry} from "../APoolContractsRegistry.sol";
 
 /**
  * @notice The Ownable preset of PoolContractsRegistry
  */
-abstract contract OwnablePoolContractsRegistry is
-    AbstractPoolContractsRegistry,
-    OwnableUpgradeable
-{
+abstract contract AOwnablePoolContractsRegistry is APoolContractsRegistry, OwnableUpgradeable {
     /**
      * @notice The initialization function
      */
-    function __OwnablePoolContractsRegistry_init() public initializer {
+    function __AOwnablePoolContractsRegistry_init() public initializer {
         __Ownable_init(msg.sender);
-        __PoolContractsRegistry_init();
+        __APoolContractsRegistry_init();
     }
 
     /**

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import {DiamondOwnableStorage} from "./DiamondOwnableStorage.sol";
+import {ADiamondOwnableStorage} from "./ADiamondOwnableStorage.sol";
 
 /**
  * @notice The Diamond standard module
@@ -9,7 +9,7 @@ import {DiamondOwnableStorage} from "./DiamondOwnableStorage.sol";
  * This is modified version of OpenZeppelin's Ownable contract to be used as a Storage contract
  * by the Diamond Standard.
  */
-contract DiamondOwnable is DiamondOwnableStorage {
+contract DiamondOwnable is ADiamondOwnableStorage {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     error InvalidOwner();

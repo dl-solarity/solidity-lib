@@ -5,7 +5,7 @@ pragma solidity ^0.8.21;
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-import {DiamondERC721Storage} from "./DiamondERC721Storage.sol";
+import {ADiamondERC721Storage} from "./ADiamondERC721Storage.sol";
 
 /**
  * @notice The Diamond standard module
@@ -13,7 +13,7 @@ import {DiamondERC721Storage} from "./DiamondERC721Storage.sol";
  * This is modified version of OpenZeppelin's ERC721 contract to be used as a Storage contract
  * by the Diamond Standard.
  */
-contract DiamondERC721 is DiamondERC721Storage {
+contract DiamondERC721 is ADiamondERC721Storage {
     error ApproveToCaller(address caller);
     error ApprovalToCurrentOwner(address owner, uint256 tokenId);
     error ConsecutiveTransfersNotSupported();
@@ -42,7 +42,7 @@ contract DiamondERC721 is DiamondERC721Storage {
      */
     function approve(address to_, uint256 tokenId_) public virtual override {
         address owner_ = ownerOf(tokenId_);
-        
+
         if (to_ == owner_) revert ApprovalToCurrentOwner(owner_, tokenId_);
         if (msg.sender != owner_ && !isApprovedForAll(owner_, msg.sender))
             revert InvalidApprover(msg.sender, owner_);

@@ -8,7 +8,7 @@ import { Reverter } from "@/test/helpers/reverter";
 import { precision, wei } from "@/scripts/utils/utils";
 import { MAX_UINT256 } from "@/scripts/utils/constants";
 
-import { ERC20Mock, ERC20Mock__factory, Vesting, VestingMock, VestingMock__factory } from "@ethers-v6";
+import { ERC20Mock, ERC20Mock__factory, AVesting, VestingMock, VestingMock__factory } from "@ethers-v6";
 
 describe("Vesting", () => {
   let reverter = new Reverter();
@@ -19,9 +19,9 @@ describe("Vesting", () => {
   let vesting: VestingMock;
   let erc20: ERC20Mock;
 
-  type BaseSchedule = Vesting.BaseScheduleStruct;
-  type Schedule = Vesting.ScheduleStruct;
-  type Vesting = Vesting.VestingDataStruct;
+  type BaseSchedule = AVesting.BaseScheduleStruct;
+  type Schedule = AVesting.ScheduleStruct;
+  type Vesting = AVesting.VestingDataStruct;
 
   const LINEAR_EXPONENT = 1n;
 

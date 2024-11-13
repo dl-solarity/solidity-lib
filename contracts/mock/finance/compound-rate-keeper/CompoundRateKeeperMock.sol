@@ -6,7 +6,7 @@ import {OwnableCompoundRateKeeper} from "../../../finance/compound-rate-keeper/p
 
 contract CompoundRateKeeperMock is OwnableCompoundRateKeeper {
     function mockInit(uint256 capitalizationRate_, uint64 capitalizationPeriod_) external {
-        __CompoundRateKeeper_init(capitalizationRate_, capitalizationPeriod_);
+        __ACompoundRateKeeper_init(capitalizationRate_, capitalizationPeriod_);
     }
 
     function setCapitalizationRateAndPeriod(

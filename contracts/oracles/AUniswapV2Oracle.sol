@@ -20,7 +20,7 @@ import {ArrayHelper} from "../libs/arrays/ArrayHelper.sol";
  *
  * From time to time `updatePrices()` function has to be called in order to calculate correct TWAP.
  */
-abstract contract UniswapV2Oracle is Initializable {
+abstract contract AUniswapV2Oracle is Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using ArrayHelper for uint256[];
     using Math for uint256;

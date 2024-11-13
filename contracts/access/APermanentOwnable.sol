@@ -12,7 +12,7 @@ pragma solidity ^0.8.21;
  * This module will make available the modifier `onlyOwner`, which can be applied
  * to your functions to restrict their use to the owners.
  */
-abstract contract PermanentOwnable {
+abstract contract APermanentOwnable {
     address private immutable _OWNER;
 
     error InvalidOwner();
