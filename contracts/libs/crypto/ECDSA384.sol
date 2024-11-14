@@ -1102,7 +1102,7 @@ library U384 {
 
             // r3
             current_ := add(shl(128, curry_), shr(128, current_))
-            curry_ := callvalue() // same as := 0 but less expensive
+            curry_ := 0
 
             temp_ := mul(a0_, b2_)
             current_ := add(current_, temp_)
@@ -1120,7 +1120,7 @@ library U384 {
 
             // r2
             current_ := add(shl(128, curry_), shr(128, current_))
-            curry_ := callvalue()
+            curry_ := 0
 
             temp_ := mul(a0_, b1_)
             current_ := add(current_, temp_)
