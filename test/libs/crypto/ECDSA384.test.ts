@@ -158,7 +158,7 @@ describe("ECDSA384", () => {
 
     describe("U384", () => {
       it("should compare correctly if aWord_ < bWord_", async () => {
-        expect(await ecdsa384.cmp(99, 100)).to.be.equal(-1);
+        expect(await ecdsa384.cmpMock()).to.be.equal(-1);
       });
     });
   });

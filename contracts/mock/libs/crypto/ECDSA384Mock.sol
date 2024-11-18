@@ -47,7 +47,20 @@ contract ECDSA384Mock {
         return _curveParams.verify(abi.encodePacked(hashedMessage_), signature_, pubKey_);
     }
 
-    function cmp(uint256 a_, uint256 b_) external pure returns (int256 cmp_) {
+    function cmpMock() external pure returns (int256 cmp_) {
+        uint256 a_;
+        uint256 b_;
+
+        assembly {
+            a_ := mload(0x40)
+            b_ := add(a_, 0x40)
+
+            mstore(add(a_, 0x20), 0x1234)
+            mstore(add(b_, 0x20), 0x5678)
+
+            mstore(0x40, add(b_, 0x40))
+        }
+
         return U384.cmp(a_, b_);
     }
 }
