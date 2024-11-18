@@ -6,12 +6,8 @@ import {ECDSA384} from "../../../libs/crypto/ECDSA384.sol";
 contract ECDSA384Mock {
     using ECDSA384 for *;
 
-    function verifySECP384r1(
-        bytes calldata message_,
-        bytes calldata signature_,
-        bytes calldata pubKey_
-    ) external view returns (bool) {
-        ECDSA384.Parameters memory curveParams_ = ECDSA384.Parameters({
+    ECDSA384.Parameters private _curveParams =
+        ECDSA384.Parameters({
             a: hex"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000fffffffc",
             b: hex"b3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef",
             gx: hex"aa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7",
@@ -21,6 +17,33 @@ contract ECDSA384Mock {
             lowSmax: hex"7fffffffffffffffffffffffffffffffffffffffffffffffe3b1a6c0fa1b96efac0d06d9245853bd76760cb5666294b9"
         });
 
+    function verifySECP384r1(
+        bytes calldata message_,
+        bytes calldata signature_,
+        bytes calldata pubKey_
+    ) external view returns (bool) {
+        return _curveParams.verify(abi.encodePacked(sha256(message_)), signature_, pubKey_);
+    }
+
+    function verifySECP384r1CustomCurveParameters(
+        bytes calldata message_,
+        bytes calldata signature_,
+        bytes calldata pubKey_,
+        bytes calldata customA_,
+        bytes calldata customB_
+    ) external view returns (bool) {
+        ECDSA384.Parameters memory curveParams_ = _curveParams;
+        curveParams_.a = customA_;
+        curveParams_.b = customB_;
+
         return curveParams_.verify(abi.encodePacked(sha256(message_)), signature_, pubKey_);
+    }
+
+    function verifySECP384r1WithoutHashing(
+        bytes calldata hashedMessage_,
+        bytes calldata signature_,
+        bytes calldata pubKey_
+    ) external view returns (bool) {
+        return _curveParams.verify(abi.encodePacked(hashedMessage_), signature_, pubKey_);
     }
 }
