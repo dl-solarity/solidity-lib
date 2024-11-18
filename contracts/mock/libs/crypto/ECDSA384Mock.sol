@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {ECDSA384} from "../../../libs/crypto/ECDSA384.sol";
+import {ECDSA384, U384} from "../../../libs/crypto/ECDSA384.sol";
 
 contract ECDSA384Mock {
     using ECDSA384 for *;
@@ -45,5 +45,9 @@ contract ECDSA384Mock {
         bytes calldata pubKey_
     ) external view returns (bool) {
         return _curveParams.verify(abi.encodePacked(hashedMessage_), signature_, pubKey_);
+    }
+
+    function cmp(uint256 a_, uint256 b_) external pure returns (int256 cmp_) {
+        return U384.cmp(a_, b_);
     }
 }
