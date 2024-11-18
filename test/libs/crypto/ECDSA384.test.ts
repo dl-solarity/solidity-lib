@@ -2,9 +2,33 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
 
-import { getModifiedSigOrPubKey } from "@/test/helpers/signature-helper";
-
 import { ECDSA384Mock } from "@ethers-v6";
+
+function modifyLeft(signature: string, value: string): string {
+  let newSignature = "0x";
+
+  if (value != "0") {
+    newSignature += value;
+  }
+
+  newSignature = newSignature.padEnd(98, "0");
+
+  newSignature += signature.substring(98, 194);
+
+  return newSignature;
+}
+
+function modifyRight(signature: string, value: string): string {
+  let newSignature = signature.substring(0, 98);
+
+  if (value != "0") {
+    newSignature += value;
+  }
+
+  newSignature = newSignature.padEnd(194, "0");
+
+  return newSignature;
+}
 
 describe("ECDSA384", () => {
   const reverter = new Reverter();
@@ -41,13 +65,13 @@ describe("ECDSA384", () => {
       });
 
       it("should not verify if U384.eqInteger(inputs_.r, 0) is true", async () => {
-        const sigWithZeroR = getModifiedSigOrPubKey(true, "0");
+        const sigWithZeroR = modifyLeft(signature, "0");
 
         expect(await ecdsa384.verifySECP384r1(message, sigWithZeroR, pubKey)).to.be.false;
       });
 
       it("should not verify if U384.eqInteger(inputs_.s, 0) is true", async () => {
-        const sigWithZeroS = getModifiedSigOrPubKey(false, "0");
+        const sigWithZeroS = modifyRight(signature, "0");
 
         expect(await ecdsa384.verifySECP384r1(message, sigWithZeroS, pubKey)).to.be.false;
       });
@@ -55,18 +79,18 @@ describe("ECDSA384", () => {
       it("should not verify if U384.cmp(inputs_.r, params_.n) >= 0", async () => {
         const n = "ffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973";
 
-        const signature = getModifiedSigOrPubKey(true, n);
+        const modifiedSig = modifyLeft(signature, n);
 
-        expect(await ecdsa384.verifySECP384r1(message, signature, pubKey)).to.be.false;
+        expect(await ecdsa384.verifySECP384r1(message, modifiedSig, pubKey)).to.be.false;
       });
 
       it("should not verify if U384.cmp(inputs_.s, params_.lowSmax) > 0", async () => {
         const lowSmaxPlusOne =
           "7fffffffffffffffffffffffffffffffffffffffffffffffe3b1a6c0fa1b96efac0d06d9245853bd76760cb5666294ba";
 
-        const signature = getModifiedSigOrPubKey(false, lowSmaxPlusOne);
+        const modifiedSig = modifyRight(signature, lowSmaxPlusOne);
 
-        expect(await ecdsa384.verifySECP384r1(message, signature, pubKey)).to.be.false;
+        expect(await ecdsa384.verifySECP384r1(message, modifiedSig, pubKey)).to.be.false;
       });
 
       it("should revert if curve parameters have an invalid length", async () => {
@@ -99,27 +123,27 @@ describe("ECDSA384", () => {
       const p = "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff";
 
       it("should not verify if U384.eqInteger(x, 0) is true", async () => {
-        const pubKey = getModifiedSigOrPubKey(true, "0");
+        const modifiedPubKey = modifyLeft(pubKey, "0");
 
-        expect(await ecdsa384.verifySECP384r1(message, signature, pubKey)).to.be.false;
+        expect(await ecdsa384.verifySECP384r1(message, signature, modifiedPubKey)).to.be.false;
       });
 
       it("should not verify if U384.eqInteger(y, 0) is true", async () => {
-        const pubKey = getModifiedSigOrPubKey(false, "0");
+        const modifiedPubKey = modifyRight(pubKey, "0");
 
-        expect(await ecdsa384.verifySECP384r1(message, signature, pubKey)).to.be.false;
+        expect(await ecdsa384.verifySECP384r1(message, signature, modifiedPubKey)).to.be.false;
       });
 
       it("should not verify if U384.eq(x, p) is true", async () => {
-        const pubKey = getModifiedSigOrPubKey(true, p);
+        const modifiedPubKey = modifyLeft(pubKey, p);
 
-        expect(await ecdsa384.verifySECP384r1(message, signature, pubKey)).to.be.false;
+        expect(await ecdsa384.verifySECP384r1(message, signature, modifiedPubKey)).to.be.false;
       });
 
       it("should not verify if U384.eq(y, p) is true", async () => {
-        const pubKey = getModifiedSigOrPubKey(false, p);
+        const modifiedPubKey = modifyRight(pubKey, p);
 
-        expect(await ecdsa384.verifySECP384r1(message, signature, pubKey)).to.be.false;
+        expect(await ecdsa384.verifySECP384r1(message, signature, modifiedPubKey)).to.be.false;
       });
 
       it("should not revert if the a or b curve parameters are zero", async () => {
