@@ -111,9 +111,7 @@ library RSASSAPSS {
             uint256 sigBytes_ = signature_.length;
             uint256 sigBits_ = (sigBytes_ * 8 - 1) & 7;
 
-            if (message_.length > 2 ** 61 - 1) {
-                return false;
-            }
+            assert(message_.length < 2 ** 61);
 
             bytes memory messageHash_ = params_.hasher(message_);
 
@@ -158,7 +156,7 @@ library RSASSAPSS {
                 ++zeroBytes_
             ) {}
 
-            if (db_[zeroBytes_++] != hex"01") {
+            if (db_[zeroBytes_] != hex"01") {
                 return false;
             }
 
@@ -194,7 +192,7 @@ library RSASSAPSS {
 
             bytes memory cnt_ = new bytes(4);
 
-            require(maskLen_ <= (2 ** 32) * hashLength_, "RSASSAPSS: mask too long");
+            assert(maskLen_ <= (2 ** 32) * hashLength_);
 
             for (uint256 i = 0; i < (maskLen_ + hashLength_ - 1) / hashLength_; ++i) {
                 cnt_[0] = bytes1(uint8((i >> 24) & 255));
