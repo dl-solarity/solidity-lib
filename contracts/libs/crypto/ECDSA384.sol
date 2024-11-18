@@ -884,20 +884,6 @@ library U384 {
         }
     }
 
-    function modshl1(uint256 a_, uint256 m_) internal pure returns (uint256 r_) {
-        unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            _shl1(a_, r_);
-
-            if (cmp(r_, m_) >= 0) {
-                _subFrom(r_, m_);
-            }
-
-            return r_;
-        }
-    }
-
     function modshl1Assign(uint256 a_, uint256 m_) internal pure {
         unchecked {
             _shl1To(a_);
@@ -959,43 +945,6 @@ library U384 {
 
                 pop(staticcall(gas(), 0x5, call_, 0x0120, r_, 0x40))
             }
-        }
-    }
-
-    function mod(uint256 call_, uint256 a_, uint256 m_) internal view returns (uint256 r_) {
-        unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            assembly {
-                mstore(call_, 0x40)
-                mstore(add(0x20, call_), 0x20)
-                mstore(add(0x40, call_), 0x40)
-                mstore(add(0x60, call_), mload(a_))
-                mstore(add(0x80, call_), mload(add(a_, 0x20)))
-                mstore(add(0xA0, call_), 0x01)
-                mstore(add(0xC0, call_), mload(m_))
-                mstore(add(0xE0, call_), mload(add(m_, 0x20)))
-
-                pop(staticcall(gas(), 0x5, call_, 0x0100, r_, 0x40))
-            }
-
-            return r_;
-        }
-    }
-
-    function toBytes(uint256 handler_) internal pure returns (bytes memory bytes_) {
-        unchecked {
-            uint256 bytesHandler_ = _allocate(LONG_ALLOCATION);
-
-            assembly {
-                bytes_ := bytesHandler_
-
-                mstore(bytes_, 0x40)
-                mstore(add(0x20, bytes_), mload(handler_))
-                mstore(add(0x40, bytes_), mload(add(handler_, 0x20)))
-            }
-
-            return bytes_;
         }
     }
 
