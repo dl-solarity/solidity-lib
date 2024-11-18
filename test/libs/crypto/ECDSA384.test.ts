@@ -4,25 +4,25 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import { ECDSA384Mock } from "@ethers-v6";
 
-function modifyLeft(signature: string, value: string): string {
+function modifyLeft(value: string, modifier: string): string {
   let newSignature = "0x";
 
-  if (value != "0") {
-    newSignature += value;
+  if (modifier != "0") {
+    newSignature += modifier;
   }
 
   newSignature = newSignature.padEnd(98, "0");
 
-  newSignature += signature.substring(98, 194);
+  newSignature += value.substring(98, 194);
 
   return newSignature;
 }
 
-function modifyRight(signature: string, value: string): string {
-  let newSignature = signature.substring(0, 98);
+function modifyRight(value: string, modifier: string): string {
+  let newSignature = value.substring(0, 98);
 
-  if (value != "0") {
-    newSignature += value;
+  if (modifier != "0") {
+    newSignature += modifier;
   }
 
   newSignature = newSignature.padEnd(194, "0");
