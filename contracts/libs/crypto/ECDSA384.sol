@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
+// solhint-disable-previous-line one-contract-per-file
 
 import {MemoryUtils} from "../utils/MemoryUtils.sol";
 
@@ -28,6 +29,7 @@ library ECDSA384 {
         bytes lowSmax;
     }
 
+    // solhint-disable-next-line contract-name-camelcase
     struct _Parameters {
         uint256 a;
         uint256 b;
@@ -38,6 +40,7 @@ library ECDSA384 {
         uint256 lowSmax;
     }
 
+    // solhint-disable-next-line contract-name-camelcase
     struct _Inputs {
         uint256 r;
         uint256 s;
@@ -159,7 +162,9 @@ library ECDSA384 {
                 return false;
             }
 
+            // solhint-disable-next-line var-name-mixedcase
             uint256 LHS = U384.modexp(call, y, 2);
+            // solhint-disable-next-line var-name-mixedcase
             uint256 RHS = U384.modexp(call, x, 3);
 
             if (!U384.eqInteger(a, 0)) {
@@ -608,6 +613,9 @@ library U384 {
     uint256 private constant MUL_OFFSET = 288;
     uint256 private constant EXP_OFFSET = 2 * 288;
 
+    error Not384();
+    error Not768();
+
     function init(uint256 from_) internal pure returns (uint256 handler_) {
         unchecked {
             handler_ = _allocate(SHORT_ALLOCATION);
@@ -623,7 +631,7 @@ library U384 {
 
     function init(bytes memory from_) internal pure returns (uint256 handler_) {
         unchecked {
-            require(from_.length == 48, "U384: not 384");
+            if (from_.length != 48) revert Not384();
 
             handler_ = _allocate(SHORT_ALLOCATION);
 
@@ -641,7 +649,7 @@ library U384 {
         bytes memory from2_
     ) internal pure returns (uint256 handler1_, uint256 handler2_) {
         unchecked {
-            require(from2_.length == 96, "U384: not 768");
+            if (from2_.length != 96) revert Not768();
 
             handler1_ = _allocate(SHORT_ALLOCATION);
             handler2_ = _allocate(SHORT_ALLOCATION);
