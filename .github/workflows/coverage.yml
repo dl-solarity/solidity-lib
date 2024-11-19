@@ -18,6 +18,10 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
       - name: Run coverage
+        env:
+          NODE_OPTIONS: "--max_old_space_size=8192"
         run: npm run coverage
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
