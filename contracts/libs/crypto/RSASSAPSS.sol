@@ -7,6 +7,7 @@ pragma solidity ^0.8.4;
  * This library provides functionality to verify RSASSA-PSS signatures with MGF1 mask generation function.
  *
  * Users may provide custom hash functions via `Parameters` struct. However, the usage of `sha256` is recommended.
+ * The RSASSA-PSS signature verification costs ~340k gas.
  *
  * Learn more about the algorithm [here](https://datatracker.ietf.org/doc/html/rfc3447#section-8.1).
  */
