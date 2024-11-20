@@ -20,7 +20,7 @@ Solidity modules and utilities that **go far beyond mediocre solidity**.
 - Lightweight SBT implementation
 - Utilities to ease work with memory, types, ERC20 decimals, arrays, sets, and ZK proofs
 
-Built with the help of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (5.1.0).
+Built leveraging [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (5.1.0).
 
 ## Overview
 
