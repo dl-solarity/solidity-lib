@@ -10,16 +10,17 @@
 Solidity modules and utilities that **go far beyond mediocre solidity**.
 
 - Implementation of [**Contracts Registry**](https://eips.ethereum.org/EIPS/eip-6224) pattern
-- Versatile access control smart contracts (**Merkle whitelists**, **RBAC**)
-- Enhanced and simplified [**Diamond**](https://eips.ethereum.org/EIPS/eip-2535) pattern
+- State-of-the-art cryptography primitives (**ECDSA over 384 bit curves**, **RSASSA-PSS**)
 - Advanced data structures (**Vector**, **DynamicSet**, **PriorityQueue**, **AVLTree**)
 - ZK-friendly [**Sparse Merkle Tree**](https://docs.iden3.io/publications/pdfs/Merkle-Tree.pdf) and [**Incremental Merkle Tree**](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf) implementations
-- Flexible finance primitives (**Staking**, **Vesting**)
+- Versatile access control smart contracts (**Merkle whitelists**, **RBAC**)
+- Enhanced and simplified [**Diamond**](https://eips.ethereum.org/EIPS/eip-2535) pattern
+- Flexible finance instruments (**Staking**, **Vesting**)
 - Robust UniswapV2 and UniswapV3 oracles
 - Lightweight SBT implementation
-- Utilities to ease work with memory, ERC20 decimals, arrays, sets, and ZK proofs
+- Utilities to ease work with memory, types, ERC20 decimals, arrays, sets, and ZK proofs
 
-Built with the help of [Openzeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (5.1.0).
+Built leveraging [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (5.1.0).
 
 ## Overview
 
