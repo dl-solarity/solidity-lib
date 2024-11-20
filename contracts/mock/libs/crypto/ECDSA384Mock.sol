@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {ECDSA384, U384} from "../../../libs/crypto/ECDSA384.sol";
 
