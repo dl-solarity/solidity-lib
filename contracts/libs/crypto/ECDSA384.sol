@@ -53,7 +53,7 @@ library ECDSA384 {
      * @param pubKey_ the full public key of a signer. Equals to `bytes(x) + bytes(y)`.
      *
      * Note that signatures only from the lower part of the curve are accepted.
-     * If your `s >= n / 2`, change it to `s = n - s`.
+     * If your `s > n / 2`, change it to `s = n - s`.
      */
     function verify(
         Parameters memory curveParams_,
