@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: MIT
-<<<<<<< HEAD
-pragma solidity ^0.8.4;
-=======
 pragma solidity ^0.8.21;
->>>>>>> d614b0a (Updated crypto libs for v3.0.0 (#118))
 
 /**
  * @notice Cryptography module
