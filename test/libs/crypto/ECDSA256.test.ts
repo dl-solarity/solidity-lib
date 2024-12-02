@@ -38,12 +38,11 @@ describe("ECDSA256", () => {
       });
 
       it("should revert if signature or public key is invalid", async () => {
-        const wrongSig =
-          "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000434e0fb7de61341e129aca1d45380752";
+        const wrongSig = ethers.toBeHex(0, 0x40);
 
         expect(await ecdsa256.verifySECP256r1(message, wrongSig, pubKey)).to.be.false;
 
-        const wrongPubKey = ethers.hexlify(ethers.randomBytes(0x40));
+        const wrongPubKey = ethers.toBeHex(0, 0x40);
 
         expect(await ecdsa256.verifySECP256r1(message, signature, wrongPubKey)).to.be.false;
       });
