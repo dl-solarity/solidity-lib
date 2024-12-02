@@ -105,8 +105,8 @@ library ECDSA256 {
         uint256 p_
     ) private pure returns (bool result_) {
         assembly ("memory-safe") {
-            let lhs_ := mulmod(y_, y_, p_) // y^2
-            let rhs_ := addmod(mulmod(addmod(mulmod(x_, x_, p_), a_, p_), x_, p_), b_, p_) // ((x^2 + a) * x) + b = x^3 + ax + b
+            let lhs_ := mulmod(y_, y_, p_)
+            let rhs_ := addmod(mulmod(addmod(mulmod(x_, x_, p_), a_, p_), x_, p_), b_, p_)
 
             result_ := and(and(lt(x_, p_), lt(y_, p_)), eq(lhs_, rhs_)) // Should conform with the Weierstrass equation
         }
@@ -158,7 +158,7 @@ library ECDSA256 {
         uint256 a_
     ) private pure returns (uint256 resX_, uint256 resY_, uint256 resZ_) {
         assembly ("memory-safe") {
-            let zz1_ := mulmod(mload(add(point1_, 0x40)), mload(add(point1_, 0x40)), p_) // zz1 = z1²
+            let zz1_ := mulmod(mload(add(point1_, 0x40)), mload(add(point1_, 0x40)), p_)
             let s1_ := mulmod(
                 mload(add(point1_, 0x20)),
                 mulmod(
@@ -167,38 +167,35 @@ library ECDSA256 {
                     p_
                 ),
                 p_
-            ) // s1 = y1*z2³
+            )
             let r_ := addmod(
                 mulmod(mload(add(point2_, 0x20)), mulmod(zz1_, mload(add(point1_, 0x40)), p_), p_),
                 sub(p_, s1_),
                 p_
-            ) // r = s2-s1 = y2*z1³-s1 = y2*z1³-y1*z2³
+            )
             let u1_ := mulmod(
                 mload(point1_),
                 mulmod(mload(add(point2_, 0x40)), mload(add(point2_, 0x40)), p_),
                 p_
-            ) // u1 = x1*z2²
-            let h_ := addmod(mulmod(mload(point2_), zz1_, p_), sub(p_, u1_), p_) // h = u2-u1 = x2*z1²-u1 = x2*z1²-x1*z2²
+            )
+            let h_ := addmod(mulmod(mload(point2_), zz1_, p_), sub(p_, u1_), p_)
 
             // detect edge cases where inputs are identical
             switch and(iszero(r_), iszero(h_))
             // case 0: points are different
             case 0 {
-                let hh_ := mulmod(h_, h_, p_) // h²
+                let hh_ := mulmod(h_, h_, p_)
 
-                // x' = r²-h³-2*u1*h²
                 resX_ := addmod(
                     addmod(mulmod(r_, r_, p_), sub(p_, mulmod(h_, hh_, p_)), p_),
                     sub(p_, mulmod(2, mulmod(u1_, hh_, p_), p_)),
                     p_
                 )
-                // y' = r*(u1*h²-x')-s1*h³
                 resY_ := addmod(
                     mulmod(r_, addmod(mulmod(u1_, hh_, p_), sub(p_, resX_), p_), p_),
                     sub(p_, mulmod(s1_, mulmod(h_, hh_, p_), p_)),
                     p_
                 )
-                // z' = h*z1*z2
                 resZ_ := mulmod(
                     h_,
                     mulmod(mload(add(point1_, 0x40)), mload(add(point2_, 0x40)), p_),
@@ -210,19 +207,16 @@ library ECDSA256 {
                 let yy_ := mulmod(mload(add(point2_, 0x20)), mload(add(point2_, 0x20)), p_)
                 let zz_ := mulmod(mload(add(point2_, 0x40)), mload(add(point2_, 0x40)), p_)
                 let xx_ := mulmod(mload(point2_), mload(point2_), p_)
-                let m_ := addmod(mulmod(3, xx_, p_), mulmod(a_, mulmod(zz_, zz_, p_), p_), p_) // m = 3*x²+a*z⁴
-                let s_ := mulmod(4, mulmod(mload(point2_), yy_, p_), p_) // s = 4*x*y²
+                let m_ := addmod(mulmod(3, xx_, p_), mulmod(a_, mulmod(zz_, zz_, p_), p_), p_)
+                let s_ := mulmod(4, mulmod(mload(point2_), yy_, p_), p_)
 
-                // x' = t = m²-2*s
                 resX_ := addmod(mulmod(m_, m_, p_), sub(p_, mulmod(2, s_, p_)), p_)
 
-                // y' = m*(s-t)-8*y⁴ = m*(s-x')-8*y⁴
                 // cut the computation to avoid stack too deep
-                let rytmp1_ := sub(p_, mulmod(8, mulmod(yy_, yy_, p_), p_)) // -8*y⁴
-                let rytmp2_ := addmod(s_, sub(p_, resX_), p_) // s-x'
-                resY_ := addmod(mulmod(m_, rytmp2_, p_), rytmp1_, p_) // m*(s-x')-8*y⁴
+                let rytmp1_ := sub(p_, mulmod(8, mulmod(yy_, yy_, p_), p_))
+                let rytmp2_ := addmod(s_, sub(p_, resX_), p_)
+                resY_ := addmod(mulmod(m_, rytmp2_, p_), rytmp1_, p_)
 
-                // z' = 2*y*z
                 resZ_ := mulmod(
                     2,
                     mulmod(mload(add(point2_, 0x20)), mload(add(point2_, 0x40)), p_),
@@ -250,18 +244,15 @@ library ECDSA256 {
                 mulmod(3, mulmod(x_, x_, p_), p_),
                 mulmod(a_, mulmod(zz_, zz_, p_), p_),
                 p_
-            ) // m = 3*x²+a*z⁴
-            let s_ := mulmod(4, mulmod(x_, yy_, p_), p_) // s = 4*x*y²
+            )
+            let s_ := mulmod(4, mulmod(x_, yy_, p_), p_)
 
-            // x' = t = m²-2*s
             resX_ := addmod(mulmod(m_, m_, p_), sub(p_, mulmod(2, s_, p_)), p_)
-            // y' = m*(s-t)-8*y⁴ = m*(s-x')-8*y⁴
             resY_ := addmod(
                 mulmod(m_, addmod(s_, sub(p_, resX_), p_), p_),
                 sub(p_, mulmod(8, mulmod(yy_, yy_, p_), p_)),
                 p_
             )
-            // z' = 2*y*z
             resZ_ := mulmod(2, mulmod(y_, z_, p_), p_)
         }
     }
@@ -336,22 +327,22 @@ library ECDSA256 {
         uint256 p_,
         uint256 a_
     ) private pure returns (_JPoint[16] memory points_) {
-        points_[0x00] = _JPoint(0, 0, 0); // 0,0
-        points_[0x01] = _JPoint(x_, y_, 1); // 1,0 (p)
-        points_[0x04] = _JPoint(gx_, gy_, 1); // 0,1 (g)
-        points_[0x02] = _jDoublePoint(points_[0x01], p_, a_); // 2,0 (2p)
-        points_[0x08] = _jDoublePoint(points_[0x04], p_, a_); // 0,2 (2g)
-        points_[0x03] = _jAddPoint(points_[0x01], points_[0x02], p_, a_); // 3,0 (p+2p = 3p)
-        points_[0x05] = _jAddPoint(points_[0x01], points_[0x04], p_, a_); // 1,1 (p+g)
-        points_[0x06] = _jAddPoint(points_[0x02], points_[0x04], p_, a_); // 2,1 (2p+g)
-        points_[0x07] = _jAddPoint(points_[0x03], points_[0x04], p_, a_); // 3,1 (3p+g)
-        points_[0x09] = _jAddPoint(points_[0x01], points_[0x08], p_, a_); // 1,2 (p+2g)
-        points_[0x0a] = _jAddPoint(points_[0x02], points_[0x08], p_, a_); // 2,2 (2p+2g)
-        points_[0x0b] = _jAddPoint(points_[0x03], points_[0x08], p_, a_); // 3,2 (3p+2g)
-        points_[0x0c] = _jAddPoint(points_[0x04], points_[0x08], p_, a_); // 0,3 (g+2g = 3g)
-        points_[0x0d] = _jAddPoint(points_[0x01], points_[0x0c], p_, a_); // 1,3 (p+3g)
-        points_[0x0e] = _jAddPoint(points_[0x02], points_[0x0c], p_, a_); // 2,3 (2p+3g)
-        points_[0x0f] = _jAddPoint(points_[0x03], points_[0x0c], p_, a_); // 3,3 (3p+3g)
+        points_[0x00] = _JPoint(0, 0, 0);
+        points_[0x01] = _JPoint(x_, y_, 1);
+        points_[0x04] = _JPoint(gx_, gy_, 1);
+        points_[0x02] = _jDoublePoint(points_[0x01], p_, a_);
+        points_[0x08] = _jDoublePoint(points_[0x04], p_, a_);
+        points_[0x03] = _jAddPoint(points_[0x01], points_[0x02], p_, a_);
+        points_[0x05] = _jAddPoint(points_[0x01], points_[0x04], p_, a_);
+        points_[0x06] = _jAddPoint(points_[0x02], points_[0x04], p_, a_);
+        points_[0x07] = _jAddPoint(points_[0x03], points_[0x04], p_, a_);
+        points_[0x09] = _jAddPoint(points_[0x01], points_[0x08], p_, a_);
+        points_[0x0a] = _jAddPoint(points_[0x02], points_[0x08], p_, a_);
+        points_[0x0b] = _jAddPoint(points_[0x03], points_[0x08], p_, a_);
+        points_[0x0c] = _jAddPoint(points_[0x04], points_[0x08], p_, a_);
+        points_[0x0d] = _jAddPoint(points_[0x01], points_[0x0c], p_, a_);
+        points_[0x0e] = _jAddPoint(points_[0x02], points_[0x0c], p_, a_);
+        points_[0x0f] = _jAddPoint(points_[0x03], points_[0x0c], p_, a_);
     }
 
     function _jAddPoint(
@@ -413,8 +404,6 @@ library ECDSA256 {
     ) private view returns (uint256 result_) {
         require(modulus_ != 0, "ECDSA256: division by zero");
 
-        bool success_;
-
         assembly ("memory-safe") {
             let pointer_ := mload(0x40)
 
@@ -425,11 +414,9 @@ library ECDSA256 {
             mstore(add(pointer_, 0x80), exponent_)
             mstore(add(pointer_, 0xa0), modulus_)
 
-            success_ := staticcall(gas(), 0x05, pointer_, 0xc0, 0x00, 0x20)
+            pop(staticcall(gas(), 0x05, pointer_, 0xc0, 0x00, 0x20))
             result_ := mload(0x00)
         }
-
-        require(success_, "ECDSA256: division by zero");
 
         return result_;
     }
