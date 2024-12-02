@@ -59,14 +59,8 @@ library ECDSA256 {
             (inputs_.x, inputs_.y) = _split(pubKey_);
 
             if (
-                !isProperSignature(inputs_.r, inputs_.s, curveParams_.n, curveParams_.lowSmax) ||
-                !isValidPublicKey(
-                    inputs_.x,
-                    inputs_.y,
-                    curveParams_.a,
-                    curveParams_.b,
-                    curveParams_.p
-                )
+                !_isProperSignature(inputs_.r, inputs_.s, curveParams_.n, curveParams_.lowSmax) ||
+                !_isOnCurve(inputs_.x, inputs_.y, curveParams_.a, curveParams_.b, curveParams_.p)
             ) {
                 return false;
             }
@@ -95,7 +89,7 @@ library ECDSA256 {
                 (x_, ) = _jMultShamir(points_, u1_, u2_, curveParams_.p, curveParams_.a);
             }
 
-            return ((x_ % curveParams_.n) == inputs_.r);
+            return x_ % curveParams_.n == inputs_.r;
         }
     }
 
@@ -103,13 +97,13 @@ library ECDSA256 {
      * @dev Checks if (x, y) are valid coordinates of a point on the curve.
      * In particular this function checks that x < P and y < P.
      */
-    function isValidPublicKey(
+    function _isOnCurve(
         uint256 x_,
         uint256 y_,
         uint256 a_,
         uint256 b_,
         uint256 p_
-    ) internal pure returns (bool result_) {
+    ) private pure returns (bool result_) {
         assembly ("memory-safe") {
             let lhs_ := mulmod(y_, y_, p_) // y^2
             let rhs_ := addmod(mulmod(addmod(mulmod(x_, x_, p_), a_, p_), x_, p_), b_, p_) // ((x^2 + a) * x) + b = x^3 + ax + b
@@ -122,12 +116,12 @@ library ECDSA256 {
      * @dev Checks if (r, s) is a proper signature.
      * In particular, this checks that `s` is in the "lower-range", making the signature non-malleable
      */
-    function isProperSignature(
+    function _isProperSignature(
         uint256 r_,
         uint256 s_,
         uint256 n_,
         uint256 lowSmax_
-    ) internal pure returns (bool) {
+    ) private pure returns (bool) {
         return r_ > 0 && r_ < n_ && s_ > 0 && s_ <= lowSmax_;
     }
 
@@ -400,10 +394,8 @@ library ECDSA256 {
     }
 
     /**
-     * @dev Calculate the modular multiplicative inverse, only works if `modulus_` is known to be a prime greater than `2`
-     *
-     * Source: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.1.0/contracts/utils/math/Math.sol#L300.
-     * For more information, please refer to the OpenZeppelin documentation.
+     * @dev Calculate the modular multiplicative inverse via Fermat's little theorem.
+     * Only works if `modulus_` is known to be a prime greater than `2`.
      */
     function _invModPrime(uint256 base_, uint256 modulus_) private view returns (uint256) {
         unchecked {
@@ -413,36 +405,15 @@ library ECDSA256 {
 
     /**
      * @dev Returns the modular exponentiation of the specified base, exponent and modulus (b ** e % m).
-     *
-     * Source: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.1.0/contracts/utils/math/Math.sol#L319.
-     * For more information, please refer to the OpenZeppelin documentation
      */
     function _modExp(
         uint256 base_,
         uint256 exponent_,
         uint256 modulus_
-    ) private view returns (uint256) {
-        (bool success_, uint256 result_) = _tryModExp(base_, exponent_, modulus_);
+    ) private view returns (uint256 result_) {
+        require(modulus_ != 0, "ECDSA256: division by zero");
 
-        require(success_, "ECDSA256: division by zero");
-
-        return result_;
-    }
-
-    /**
-     * @dev Returns the modular exponentiation of the specified base, exponent and modulus (b ** e % m).
-     * It includes a success flag indicating if the operation succeeded. Operation will be marked as failed if trying
-     * to operate modulo 0 or if the underlying precompile reverted.
-     *
-     * Source: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.1.0/contracts/utils/math/Math.sol#L337.
-     * For more information, please refer to the OpenZeppelin documentation
-     */
-    function _tryModExp(
-        uint256 base_,
-        uint256 exponent_,
-        uint256 modulus_
-    ) private view returns (bool success_, uint256 result_) {
-        if (modulus_ == 0) return (false, 0);
+        bool success_;
 
         assembly ("memory-safe") {
             let pointer_ := mload(0x40)
@@ -457,5 +428,9 @@ library ECDSA256 {
             success_ := staticcall(gas(), 0x05, pointer_, 0xc0, 0x00, 0x20)
             result_ := mload(0x00)
         }
+
+        require(success_, "ECDSA256: division by zero");
+
+        return result_;
     }
 }
