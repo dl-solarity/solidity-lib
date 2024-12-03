@@ -6,26 +6,13 @@ import { CartesianMerkleTreeMock } from "@ethers-v6";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 import { Reverter } from "@/test/helpers/reverter";
-import { ZERO_BYTES32 } from "@/scripts/utils/constants";
 
-describe.only("Treap", () => {
+describe.only("CartesianMerkleTree", () => {
   const reverter = new Reverter();
 
   let USER1: SignerWithAddress;
 
   let treap: CartesianMerkleTreeMock;
-
-  before("setup", async () => {
-    [USER1] = await ethers.getSigners();
-
-    treap = await ethers.deployContract("CartesianMerkleTreeMock");
-
-    await reverter.snapshot();
-  });
-
-  afterEach("cleanup", async () => {
-    await reverter.revert();
-  });
 
   type Node = {
     key: string;
@@ -37,6 +24,16 @@ describe.only("Treap", () => {
   type Tree = {
     [nodeId: string]: Node;
   };
+
+  function createRandomArray(length: number): string[] {
+    const resultArr: string[] = [];
+
+    for (let i = 0; i < length; i++) {
+      resultArr.push(ethers.hexlify(ethers.randomBytes(32)));
+    }
+
+    return resultArr;
+  }
 
   async function displayTreapTopDown(tree: Tree, rootId: string): Promise<void> {
     if (rootId === "0") {
@@ -92,6 +89,81 @@ describe.only("Treap", () => {
     }
   }
 
+  before("setup", async () => {
+    [USER1] = await ethers.getSigners();
+
+    treap = await ethers.deployContract("CartesianMerkleTreeMock");
+
+    await reverter.snapshot();
+  });
+
+  afterEach("cleanup", async () => {
+    await reverter.revert();
+  });
+
+  describe("property checks", () => {
+    it("should has deterministic property", async () => {
+      const randomElements: string[] = createRandomArray(50);
+      let treapRoot: string = "";
+
+      for (let i = 0; i < 100; i++) {
+        const tmpTreap = await ethers.deployContract("CartesianMerkleTreeMock");
+
+        for (let i = 0; i < randomElements.length; i++) {
+          await tmpTreap.insertUint(randomElements[i]);
+        }
+
+        // console.log(`${i}. Treap root - ${await tmpTreap.getRootUint()}`);
+
+        if (i === 0) {
+          treapRoot = await tmpTreap.getRootUint();
+        } else {
+          expect(await tmpTreap.getRootUint()).to.be.eq(treapRoot);
+        }
+
+        shuffle(randomElements);
+      }
+    });
+
+    it("should has idempotent property", async () => {
+      const randomElements: string[] = createRandomArray(100);
+
+      for (let i = 0; i < randomElements.length; i++) {
+        await treap.insertUint(randomElements[i]);
+      }
+
+      const treapRoot: string = await treap.getRootUint();
+      const usedIndexes: number[] = [];
+
+      for (let i = 0; i < 100; i++) {
+        let randIndex: number = -1;
+
+        while (true) {
+          const newRandIndex = Math.floor(Math.random() * (Number(await treap.getNodesCount()) - 1));
+
+          if (!usedIndexes.includes(newRandIndex)) {
+            randIndex = newRandIndex;
+            usedIndexes.push(newRandIndex);
+
+            break;
+          }
+        }
+
+        // console.log(`${i}. Rand index - ${randIndex}`);
+
+        const currentNode = await treap.getNode(randIndex);
+
+        await treap.removeUint(currentNode.key);
+
+        expect(await treap.getRootUint()).to.be.not.eq(treapRoot);
+
+        await treap.insertUint(currentNode.key);
+
+        expect(await treap.getRootUint()).to.be.eq(treapRoot);
+      }
+    });
+  });
+
   describe.only("test", () => {
     it.only("test", async () => {
       // const values = [[2, 10], [10, 20], [5, 7], [15, 3], [1, 8]];
@@ -104,14 +176,14 @@ describe.only("Treap", () => {
         [7, 18],
         [5, 30],
       ];
-      // shuffle(values);
+      shuffle(values);
       // console.log(values);
 
       for (let i = 0; i < values.length; i++) {
-        await treap.insert(values[i][0], values[i][1]);
+        await treap.insertUint(values[i][0], values[i][1]);
       }
 
-      console.log(`Root - ${await treap.getTreeRootNodeId()}`);
+      console.log(`Root - ${await treap.getRootNodeIdUint()}`);
       console.log(`Nodes Count - ${await treap.getNodesCount()}`);
 
       const tree: Tree = {};
@@ -129,11 +201,11 @@ describe.only("Treap", () => {
         console.log(`${i} - Merkle hash - ${node.merkleHash}`);
       }
 
-      await displayTreapTopDown(tree, (await treap.getTreeRootNodeId()).toString());
+      await displayTreapTopDown(tree, (await treap.getRootNodeIdUint()).toString());
 
-      const proof = await treap.proof(14);
+      // const proof = await treap.proof(14, 20);
 
-      console.log(JSON.stringify(proof));
+      // console.log(JSON.stringify(proof));
 
       // await treap.remove(5);
 

@@ -6,29 +6,38 @@ import {CartesianMerkleTree} from "../../../libs/data-structures/CartesianMerkle
 contract CartesianMerkleTreeMock {
     using CartesianMerkleTree for *;
 
-    CartesianMerkleTree.CMT internal _treap;
+    CartesianMerkleTree.UintCMT internal _uintCMT;
+    CartesianMerkleTree.Bytes32CMT internal _bytes32CMT;
+    CartesianMerkleTree.AddressCMT internal _addressCMT;
 
-    function insert(uint256 key_, uint128 value_) external {
-        _treap.insert(bytes32(key_), bytes16(value_));
+    function insertUint(uint256 key_, uint128 value_) external {
+        _uintCMT.insert(key_, value_);
     }
 
-    function remove(uint256 key_) external {
-        _treap.remove(bytes32(key_));
+    function removeUint(uint256 key_) external {
+        _uintCMT.remove(key_);
     }
 
-    function proof(uint256 key_) external view returns (CartesianMerkleTree.Proof memory) {
-        return _treap.proof(bytes32(key_), 10);
+    function proof(
+        uint256 key_,
+        uint32 desiredProofSize_
+    ) external view returns (CartesianMerkleTree.Proof memory) {
+        return _uintCMT.getProof(key_, desiredProofSize_);
     }
 
     function getNode(uint64 nodeId_) external view returns (CartesianMerkleTree.Node memory) {
-        return _treap.nodes[nodeId_];
+        return _uintCMT.getNode(nodeId_);
     }
 
     function getNodesCount() external view returns (uint64) {
-        return _treap.nodesCount;
+        return _uintCMT.getNodesCount();
     }
 
-    function getTreeRootNodeId() external view returns (uint64) {
-        return _treap.merkleRootId;
+    function getRootNodeIdUint() external view returns (uint256) {
+        return _uintCMT.getRootNodeId();
+    }
+
+    function getRootUint() external view returns (bytes32) {
+        return _uintCMT.getRoot();
     }
 }
