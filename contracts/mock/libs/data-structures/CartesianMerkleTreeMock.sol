@@ -3,6 +3,10 @@ pragma solidity ^0.8.4;
 
 import {CartesianMerkleTree} from "../../../libs/data-structures/CartesianMerkleTree.sol";
 
+library PoseidonUnit3L {
+    function poseidon(uint256[3] calldata) public pure returns (uint256) {}
+}
+
 contract CartesianMerkleTreeMock {
     using CartesianMerkleTree for *;
 
@@ -10,8 +14,12 @@ contract CartesianMerkleTreeMock {
     CartesianMerkleTree.Bytes32CMT internal _bytes32CMT;
     CartesianMerkleTree.AddressCMT internal _addressCMT;
 
-    function insertUint(uint256 key_, uint128 value_) external {
-        _uintCMT.insert(key_, value_);
+    function setUintPoseidonHasher() external {
+        _uintCMT.setHashers(_hash3);
+    }
+
+    function insertUint(uint256 key_) external {
+        _uintCMT.insert(key_);
     }
 
     function removeUint(uint256 key_) external {
@@ -39,5 +47,18 @@ contract CartesianMerkleTreeMock {
 
     function getRootUint() external view returns (bytes32) {
         return _uintCMT.getRoot();
+    }
+
+    function _hash3(
+        bytes32 element1_,
+        bytes32 element2_,
+        bytes32 element3_
+    ) internal pure returns (bytes32) {
+        return
+            bytes32(
+                PoseidonUnit3L.poseidon(
+                    [uint256(element1_), uint256(element2_), uint256(element3_)]
+                )
+            );
     }
 }

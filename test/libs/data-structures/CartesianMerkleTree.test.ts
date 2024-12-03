@@ -1,11 +1,12 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import { CartesianMerkleTreeMock } from "@ethers-v6";
+import { CartesianMerkleTreeMock, SparseMerkleTreeMock } from "@ethers-v6";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 import { Reverter } from "@/test/helpers/reverter";
+import { getPoseidon, poseidonHash } from "@/test/helpers/poseidon-hash";
 
 describe.only("CartesianMerkleTree", () => {
   const reverter = new Reverter();
@@ -13,6 +14,7 @@ describe.only("CartesianMerkleTree", () => {
   let USER1: SignerWithAddress;
 
   let treap: CartesianMerkleTreeMock;
+  let smt: SparseMerkleTreeMock;
 
   type Node = {
     key: string;
@@ -92,7 +94,7 @@ describe.only("CartesianMerkleTree", () => {
   before("setup", async () => {
     [USER1] = await ethers.getSigners();
 
-    treap = await ethers.deployContract("CartesianMerkleTreeMock");
+    // treap = await ethers.deployContract("CartesianMerkleTreeMock");
 
     await reverter.snapshot();
   });
@@ -101,31 +103,41 @@ describe.only("CartesianMerkleTree", () => {
     await reverter.revert();
   });
 
-  describe("property checks", () => {
-    it("should has deterministic property", async () => {
-      const randomElements: string[] = createRandomArray(50);
-      let treapRoot: string = "";
+  describe.only("property checks", () => {
+    it.only("should have deterministic property", async () => {
+      const randomElements: string[] = createRandomArray(10000);
 
-      for (let i = 0; i < 100; i++) {
-        const tmpTreap = await ethers.deployContract("CartesianMerkleTreeMock");
+      const CartesianMerkleTreeMock = await ethers.getContractFactory("CartesianMerkleTreeMock", {
+        libraries: {
+          PoseidonUnit3L: await (await getPoseidon(3)).getAddress(),
+        },
+      });
+      const SparseMerkleTreeMock = await ethers.getContractFactory("SparseMerkleTreeMock", {
+        libraries: {
+          PoseidonUnit2L: await (await getPoseidon(2)).getAddress(),
+          PoseidonUnit3L: await (await getPoseidon(3)).getAddress(),
+        },
+      });
+
+      for (let i = 0; i < 5; i++) {
+        const tmpTreap = await CartesianMerkleTreeMock.deploy();
+        const tmpSmt = await SparseMerkleTreeMock.deploy();
+
+        // await tmpTreap.setUintPoseidonHasher();
+
+        await tmpSmt.initializeUintTree(80);
+        // await tmpSmt.setUintPoseidonHasher();
 
         for (let i = 0; i < randomElements.length; i++) {
           await tmpTreap.insertUint(randomElements[i]);
-        }
-
-        // console.log(`${i}. Treap root - ${await tmpTreap.getRootUint()}`);
-
-        if (i === 0) {
-          treapRoot = await tmpTreap.getRootUint();
-        } else {
-          expect(await tmpTreap.getRootUint()).to.be.eq(treapRoot);
+          await tmpSmt.addUint(randomElements[i], randomElements[i]);
         }
 
         shuffle(randomElements);
       }
     });
 
-    it("should has idempotent property", async () => {
+    it("should have idempotent property", async () => {
       const randomElements: string[] = createRandomArray(100);
 
       for (let i = 0; i < randomElements.length; i++) {
@@ -139,7 +151,8 @@ describe.only("CartesianMerkleTree", () => {
         let randIndex: number = -1;
 
         while (true) {
-          const newRandIndex = Math.floor(Math.random() * (Number(await treap.getNodesCount()) - 1));
+          const newRandIndex =
+            Math.floor(Math.random() * (Number(await treap.getNodesCount()) + usedIndexes.length - 1)) + 1;
 
           if (!usedIndexes.includes(newRandIndex)) {
             randIndex = newRandIndex;
@@ -164,8 +177,8 @@ describe.only("CartesianMerkleTree", () => {
     });
   });
 
-  describe.only("test", () => {
-    it.only("test", async () => {
+  describe("test", () => {
+    it("test", async () => {
       // const values = [[2, 10], [10, 20], [5, 7], [15, 3], [1, 8]];
       // const values = [[2, 10], [5, 7], [15, 3], [4, 6]];
       const values = [

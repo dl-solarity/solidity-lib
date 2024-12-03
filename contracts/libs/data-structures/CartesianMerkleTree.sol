@@ -25,8 +25,8 @@ library CartesianMerkleTree {
         _setHashers(treap._treap, hash3_);
     }
 
-    function insert(UintCMT storage treap, uint256 key_, uint128 value_) internal {
-        _insert(treap._treap, bytes32(key_), bytes16(value_));
+    function insert(UintCMT storage treap, uint256 key_) internal {
+        _insert(treap._treap, bytes32(key_));
     }
 
     function remove(UintCMT storage treap, uint256 key_) internal {
@@ -253,13 +253,14 @@ library CartesianMerkleTree {
         treap.hash3 = hash3_;
     }
 
-    function _insert(CMT storage treap, bytes32 key_, bytes16 value_) private {
+    function _insert(CMT storage treap, bytes32 key_) private {
+        require(key_ != 0, "CartesianMerkleTree: the key can't be zero");
+
         Node memory node_ = Node({
             childLeft: 0,
             childRight: 0,
-            // priority: bytes16(_hash1(key_)),
-            priority: value_,
-            merkleHash: key_,
+            priority: bytes16(keccak256(abi.encodePacked(key_))),
+            merkleHash: _getNodesHash(treap, key_, 0, 0),
             key: key_
         });
 
@@ -278,15 +279,24 @@ library CartesianMerkleTree {
     }
 
     function _remove(CMT storage treap, bytes32 key_) private {
+        require(key_ != 0, "CartesianMerkleTree: the key can't be zero");
+
         if (treap.merkleRootId == 0) {
             return;
         }
 
         (uint256 left_, uint256 tmp_) = _split(treap, treap.merkleRootId, key_);
+
         (uint256 toRemove_, uint256 right_) = _split(treap, tmp_, bytes32(uint256(key_) + 1));
+
+        require(
+            treap.nodes[uint64(toRemove_)].key == key_,
+            "CartesianMerkleTree: the node does not exist"
+        );
 
         treap.merkleRootId = uint64(_merge(treap, left_, right_));
 
+        ++treap.deletedNodesCount;
         delete treap.nodes[uint64(toRemove_)];
     }
 
@@ -383,7 +393,7 @@ library CartesianMerkleTree {
             (leftNodeId_, rightNodeId_) = (leftSplit_, nodeId_);
         }
 
-        _updateNodeMerkleHash(treap, nodeId_);
+        node_.merkleHash = _hashNodes(treap, nodeId_);
 
         return (leftNodeId_, rightNodeId_);
     }
@@ -415,13 +425,9 @@ library CartesianMerkleTree {
             nodeId_ = rightNodeId_;
         }
 
-        _updateNodeMerkleHash(treap, nodeId_);
+        treap.nodes[uint64(nodeId_)].merkleHash = _hashNodes(treap, nodeId_);
 
         return nodeId_;
-    }
-
-    function _updateNodeMerkleHash(CMT storage treap, uint256 nodeId_) private {
-        treap.nodes[uint64(nodeId_)].merkleHash = _hashNodes(treap, nodeId_);
     }
 
     function _addProofSibling(
@@ -431,7 +437,7 @@ library CartesianMerkleTree {
     ) private pure {
         require(
             currentSiblingsIndex_ < proof_.siblings.length,
-            "CartesianMerkleTree: desired proof size is too low"
+            "CartesianMerkleTree: proof too lengthy"
         );
 
         proof_.siblings[currentSiblingsIndex_] = siblingToAdd_;
@@ -472,14 +478,6 @@ library CartesianMerkleTree {
             mstore(add(freePtr_, 64), c)
 
             result_ := keccak256(freePtr_, 96)
-        }
-    }
-
-    function _hash1(bytes32 a_) private pure returns (bytes32 result_) {
-        assembly {
-            mstore(0, a_)
-
-            result_ := keccak256(0, 32)
         }
     }
 
