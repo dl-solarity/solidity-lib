@@ -145,8 +145,8 @@ describe.only("CartesianMerkleTree", () => {
       }
     });
 
-    it("should have idempotent property", async () => {
-      const randomElements: string[] = createRandomArray(10);
+    it.only("should have idempotent property", async () => {
+      const randomElements: string[] = createRandomArray(100);
 
       for (let i = 0; i < randomElements.length; i++) {
         await treap.insertUintV2(randomElements[i]);
@@ -155,7 +155,7 @@ describe.only("CartesianMerkleTree", () => {
       const treapRoot: string = await treap.getRootUintV2();
       const usedIndexes: number[] = [];
 
-      for (let i = 0; i < 1; i++) {
+      for (let i = 0; i < 5; i++) {
         let randIndex: number = -1;
 
         while (true) {

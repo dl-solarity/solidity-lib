@@ -281,12 +281,14 @@ library CartesianMerkleTreeV2 {
 
             if (treap.nodes[rootNode.childLeft].priority > rootNode.priority) {
                 rootNodeId_ = _rightRotate(treap, rootNodeId_);
+                rootNode = treap.nodes[uint64(rootNodeId_)];
             }
         } else {
             rootNode.childRight = uint64(_insert(treap, rootNode.childRight, key_));
 
             if (treap.nodes[rootNode.childRight].priority > rootNode.priority) {
                 rootNodeId_ = _leftRotate(treap, rootNodeId_);
+                rootNode = treap.nodes[uint64(rootNodeId_)];
             }
         }
 
@@ -314,31 +316,32 @@ library CartesianMerkleTreeV2 {
             rootNode.childRight = uint64(_remove(treap, rootNode.childRight, key_));
         }
 
-        uint64 nodeIdToRemove_ = uint64(rootNodeId_);
-
         if (rootNode.key == key_) {
             Node storage leftRootChildNode = treap.nodes[rootNode.childLeft];
             Node storage rightRootChildNode = treap.nodes[rootNode.childRight];
 
             if (leftRootChildNode.key == 0 || rightRootChildNode.key == 0) {
+                uint64 nodeIdToRemove_ = uint64(rootNodeId_);
                 rootNodeId_ = leftRootChildNode.key == 0
                     ? rootNode.childRight
                     : rootNode.childLeft;
+
+                delete treap.nodes[nodeIdToRemove_];
+                treap.deletedNodesCount++;
             } else if (leftRootChildNode.priority < rightRootChildNode.priority) {
                 rootNodeId_ = _leftRotate(treap, rootNodeId_);
+                rootNode = treap.nodes[uint64(rootNodeId_)];
+
                 rootNode.childLeft = uint64(_remove(treap, rootNode.childLeft, key_));
             } else {
                 rootNodeId_ = _rightRotate(treap, rootNodeId_);
+                rootNode = treap.nodes[uint64(rootNodeId_)];
+
                 rootNode.childRight = uint64(_remove(treap, rootNode.childRight, key_));
             }
-
-            delete treap.nodes[nodeIdToRemove_];
-            treap.deletedNodesCount++;
         }
 
-        if (nodeIdToRemove_ == rootNodeId_) {
-            rootNode.merkleHash = _hashNodes(treap, rootNodeId_);
-        }
+        rootNode.merkleHash = _hashNodes(treap, rootNodeId_);
 
         return rootNodeId_;
     }
