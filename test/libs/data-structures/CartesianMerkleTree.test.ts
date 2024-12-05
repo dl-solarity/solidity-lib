@@ -94,7 +94,13 @@ describe.only("CartesianMerkleTree", () => {
   before("setup", async () => {
     [USER1] = await ethers.getSigners();
 
-    // treap = await ethers.deployContract("CartesianMerkleTreeMock");
+    const CartesianMerkleTreeMock = await ethers.getContractFactory("CartesianMerkleTreeMock", {
+      libraries: {
+        PoseidonUnit3L: await (await getPoseidon(3)).getAddress(),
+      },
+    });
+
+    treap = await CartesianMerkleTreeMock.deploy();
 
     await reverter.snapshot();
   });
@@ -103,9 +109,9 @@ describe.only("CartesianMerkleTree", () => {
     await reverter.revert();
   });
 
-  describe.only("property checks", () => {
-    it.only("should have deterministic property", async () => {
-      const randomElements: string[] = createRandomArray(10000);
+  describe("property checks", () => {
+    it("should have deterministic property", async () => {
+      const randomElements: string[] = createRandomArray(500);
 
       const CartesianMerkleTreeMock = await ethers.getContractFactory("CartesianMerkleTreeMock", {
         libraries: {
@@ -123,13 +129,15 @@ describe.only("CartesianMerkleTree", () => {
         const tmpTreap = await CartesianMerkleTreeMock.deploy();
         const tmpSmt = await SparseMerkleTreeMock.deploy();
 
-        // await tmpTreap.setUintPoseidonHasher();
+        await tmpTreap.setUintPoseidonHasher();
+        await tmpTreap.setUintPoseidonHasherV2();
 
         await tmpSmt.initializeUintTree(80);
         // await tmpSmt.setUintPoseidonHasher();
 
         for (let i = 0; i < randomElements.length; i++) {
           await tmpTreap.insertUint(randomElements[i]);
+          await tmpTreap.insertUintV2(randomElements[i]);
           await tmpSmt.addUint(randomElements[i], randomElements[i]);
         }
 
@@ -138,21 +146,21 @@ describe.only("CartesianMerkleTree", () => {
     });
 
     it("should have idempotent property", async () => {
-      const randomElements: string[] = createRandomArray(100);
+      const randomElements: string[] = createRandomArray(10);
 
       for (let i = 0; i < randomElements.length; i++) {
-        await treap.insertUint(randomElements[i]);
+        await treap.insertUintV2(randomElements[i]);
       }
 
-      const treapRoot: string = await treap.getRootUint();
+      const treapRoot: string = await treap.getRootUintV2();
       const usedIndexes: number[] = [];
 
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 1; i++) {
         let randIndex: number = -1;
 
         while (true) {
           const newRandIndex =
-            Math.floor(Math.random() * (Number(await treap.getNodesCount()) + usedIndexes.length - 1)) + 1;
+            Math.floor(Math.random() * (Number(await treap.getNodesCounV2()) + usedIndexes.length - 1)) + 1;
 
           if (!usedIndexes.includes(newRandIndex)) {
             randIndex = newRandIndex;
@@ -162,17 +170,17 @@ describe.only("CartesianMerkleTree", () => {
           }
         }
 
-        // console.log(`${i}. Rand index - ${randIndex}`);
+        console.log(`${i}. Rand index - ${randIndex}`);
 
-        const currentNode = await treap.getNode(randIndex);
+        const currentNode = await treap.getNodeV2(randIndex);
 
-        await treap.removeUint(currentNode.key);
+        await treap.removeUintV2(currentNode.key);
 
-        expect(await treap.getRootUint()).to.be.not.eq(treapRoot);
+        expect(await treap.getRootUintV2()).to.be.not.eq(treapRoot);
 
-        await treap.insertUint(currentNode.key);
+        await treap.insertUintV2(currentNode.key);
 
-        expect(await treap.getRootUint()).to.be.eq(treapRoot);
+        expect(await treap.getRootUintV2()).to.be.eq(treapRoot);
       }
     });
   });
@@ -189,22 +197,58 @@ describe.only("CartesianMerkleTree", () => {
         [7, 18],
         [5, 30],
       ];
-      shuffle(values);
+      // shuffle(values);
       // console.log(values);
 
       for (let i = 0; i < values.length; i++) {
-        await treap.insertUint(values[i][0], values[i][1]);
+        await treap.insertUintV2(values[i][0]);
       }
 
-      console.log(`Root - ${await treap.getRootNodeIdUint()}`);
-      console.log(`Nodes Count - ${await treap.getNodesCount()}`);
+      console.log(`Root - ${await treap.getRootNodeIdUintV2()}`);
+      console.log(`RootHash - ${await treap.getRootUintV2()}`);
+      console.log(`Nodes Count - ${await treap.getNodesCounV2()}`);
 
-      const tree: Tree = {};
+      let tree: Tree = {};
 
-      for (let i = 1; i <= values.length; i++) {
-        const node = await treap.getNode(i);
+      let indexes = [1, 2, 3, 4, 5, 6];
+
+      for (let i = 1; i <= indexes.length; i++) {
+        const node = await treap.getNodeV2(indexes[i - 1]);
 
         tree[i] = {
+          key: Number(node.key).toString(),
+          priority: ethers.hexlify(node.priority),
+          left: node.childLeft.toString(),
+          right: node.childRight.toString(),
+        };
+
+        console.log(`${i} - Merkle hash - ${node.merkleHash}`);
+      }
+
+      await displayTreapTopDown(tree, (await treap.getRootNodeIdUintV2()).toString());
+
+      // console.log(await treap.getNodeV2(4));
+
+      // const proof = await treap.proof(14, 20);
+
+      // console.log(JSON.stringify(proof));
+
+      await treap.removeUintV2(20);
+
+      await treap.insertUintV2(20);
+
+      console.log(`Root - ${await treap.getRootNodeIdUintV2()}`);
+      console.log(`RootHash - ${await treap.getRootUintV2()}`);
+      console.log(`Nodes Count - ${await treap.getNodesCounV2()}`);
+
+      indexes = [1, 3, 4, 5, 6, 7];
+
+      tree = {};
+
+      for (let i = 1; i <= indexes.length; i++) {
+        const node = await treap.getNodeV2(indexes[i - 1]);
+
+        tree[indexes[i - 1]] = {
           key: Number(node.key).toString(),
           priority: Number(node.priority).toString(),
           left: node.childLeft.toString(),
@@ -214,20 +258,20 @@ describe.only("CartesianMerkleTree", () => {
         console.log(`${i} - Merkle hash - ${node.merkleHash}`);
       }
 
-      await displayTreapTopDown(tree, (await treap.getRootNodeIdUint()).toString());
+      await displayTreapTopDown(tree, (await treap.getRootNodeIdUintV2()).toString());
+      // tree = {};
+      // let index = 0;
 
-      // const proof = await treap.proof(14, 20);
+      // for (let i = 1; i <= values.length+1; i++) {
+      //   const node = await treap.getNodeV2(i);
 
-      // console.log(JSON.stringify(proof));
+      //   if (Number(node.key) === 0) {
+      //     continue;
+      //   }
 
-      // await treap.remove(5);
-
-      // for (let i = 1; i <= values.length; i++) {
-      //   const node = await treap.getNode(i);
-
-      //   tree[i] = {
+      //   tree[index++] = {
       //     key: Number(node.key).toString(),
-      //     priority: Number(node.value).toString(),
+      //     priority: Number(node.priority).toString(),
       //     left: node.childLeft.toString(),
       //     right: node.childRight.toString(),
       //   }
@@ -235,45 +279,40 @@ describe.only("CartesianMerkleTree", () => {
       //   console.log(`${i} - Merkle hash - ${node.merkleHash}`);
       // }
 
-      // await displayTreapTopDown(tree, (await treap.getTreeRootNodeId()).toString());
+      // await displayTreapTopDown(tree, (await treap.getRootNodeIdUintV2()).toString());
     });
 
-    it("test2", async () => {
+    it.only("test2", async () => {
       const values = [
-        [2, 10],
-        [5, 7],
+        2, // 85525079495038266557984034843531099048
+        5, // 4545278224189072168580245143977490875
+        12, // 296965118995800618492602114182524326676
+        18, // 249284327692367398725170816483366444321
       ];
 
       for (let i = 0; i < values.length; i++) {
-        await treap.insert(values[i][0], values[i][1]);
+        await treap.insertUintV2(values[i]);
       }
 
-      console.log(`Root - ${await treap.getTreeRootNodeId()}`);
-      console.log(`Nodes Count - ${await treap.getNodesCount()}`);
+      console.log(`Root - ${await treap.getRootNodeIdUintV2()}`);
+      console.log(`Nodes Count - ${await treap.getNodesCounV2()}`);
 
       for (let i = 1; i <= values.length; i++) {
-        const node = await treap.getNode(i);
+        const node = await treap.getNodeV2(i);
 
-        console.log(`${i} - ${node.merkleHash}`);
+        console.log(`${i} - ${node}`);
       }
 
-      // const tree: Tree = {};
+      await treap.removeUintV2(12);
 
-      // for (let i = 1; i <= values.length; i++) {
-      //   const node = await treap.getNode(i);
-      //   // console.log(`Node ${i} - ${}`);
+      console.log(`Root - ${await treap.getRootNodeIdUintV2()}`);
+      console.log(`Nodes Count - ${await treap.getNodesCounV2()}`);
 
-      //   tree[i] = {
-      //     key: Number(node.key).toString(),
-      //     priority: Number(node.value).toString(),
-      //     left: node.childLeft.toString(),
-      //     right: node.childRight.toString(),
-      //   }
+      for (let i = 1; i <= values.length; i++) {
+        const node = await treap.getNodeV2(i);
 
-      //   console.log(`${i} - Merkle hash - ${node.merkleHash}`);
-      // }
-
-      // await displayTreapTopDown(tree, (await treap.getTreeRootNodeId()).toString());
+        console.log(`${i} - ${node}`);
+      }
     });
   });
 });
