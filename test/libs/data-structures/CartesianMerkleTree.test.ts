@@ -129,8 +129,8 @@ describe.only("CartesianMerkleTree", () => {
         const tmpTreap = await CartesianMerkleTreeMock.deploy();
         const tmpSmt = await SparseMerkleTreeMock.deploy();
 
-        await tmpTreap.setUintPoseidonHasher();
-        await tmpTreap.setUintPoseidonHasherV2();
+        // await tmpTreap.setUintPoseidonHasher();
+        // await tmpTreap.setUintPoseidonHasherV2();
 
         await tmpSmt.initializeUintTree(80);
         // await tmpSmt.setUintPoseidonHasher();
@@ -170,7 +170,7 @@ describe.only("CartesianMerkleTree", () => {
           }
         }
 
-        console.log(`${i}. Rand index - ${randIndex}`);
+        // console.log(`${i}. Rand index - ${randIndex}`);
 
         const currentNode = await treap.getNodeV2(randIndex);
 
@@ -282,7 +282,7 @@ describe.only("CartesianMerkleTree", () => {
       // await displayTreapTopDown(tree, (await treap.getRootNodeIdUintV2()).toString());
     });
 
-    it.only("test2", async () => {
+    it("test2", async () => {
       const values = [
         2, // 85525079495038266557984034843531099048
         5, // 4545278224189072168580245143977490875

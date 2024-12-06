@@ -304,8 +304,6 @@ library CartesianMerkleTreeV2 {
     ) private returns (uint256) {
         Node storage rootNode = treap.nodes[uint64(rootNodeId_)];
 
-        console.logBytes32(key_);
-
         if (rootNode.key == 0) {
             return rootNodeId_;
         }
@@ -322,6 +320,7 @@ library CartesianMerkleTreeV2 {
 
             if (leftRootChildNode.key == 0 || rightRootChildNode.key == 0) {
                 uint64 nodeIdToRemove_ = uint64(rootNodeId_);
+
                 rootNodeId_ = leftRootChildNode.key == 0
                     ? rootNode.childRight
                     : rootNode.childLeft;
@@ -346,11 +345,45 @@ library CartesianMerkleTreeV2 {
         return rootNodeId_;
     }
 
+    function _rightRotate(CMT storage treap, uint256 nodeId_) private returns (uint256) {
+        Node storage node = treap.nodes[uint64(nodeId_)];
+
+        uint64 leftId_ = node.childLeft;
+
+        Node storage leftNode = treap.nodes[leftId_];
+
+        uint64 leftRightId_ = leftNode.childRight;
+
+        leftNode.childRight = uint64(nodeId_);
+        node.childLeft = leftRightId_;
+
+        node.merkleHash = _hashNodes(treap, nodeId_);
+
+        return leftId_;
+    }
+
+    function _leftRotate(CMT storage treap, uint256 nodeId_) private returns (uint256) {
+        Node storage node = treap.nodes[uint64(nodeId_)];
+
+        uint64 rightId_ = node.childRight;
+
+        Node storage rightNode = treap.nodes[rightId_];
+
+        uint64 rightLeftId_ = rightNode.childLeft;
+
+        rightNode.childLeft = uint64(nodeId_);
+        node.childRight = rightLeftId_;
+
+        node.merkleHash = _hashNodes(treap, nodeId_);
+
+        return rightId_;
+    }
+
     function _newNode(CMT storage treap, bytes32 key_) private returns (uint256) {
         Node memory node_ = Node({
             childLeft: 0,
             childRight: 0,
-            priority: bytes16(_hash1(key_)),
+            priority: bytes16(keccak256(abi.encodePacked(key_))),
             merkleHash: _getNodesHash(treap, key_, 0, 0),
             key: key_
         });
@@ -430,10 +463,6 @@ library CartesianMerkleTreeV2 {
         return proof_;
     }
 
-    function _updateNodeMerkleHash(CMT storage treap, uint256 nodeId_) private {
-        treap.nodes[uint64(nodeId_)].merkleHash = _hashNodes(treap, nodeId_);
-    }
-
     function _addProofSibling(
         Proof memory proof_,
         uint256 currentSiblingsIndex_,
@@ -450,14 +479,14 @@ library CartesianMerkleTreeV2 {
     function _hashNodes(CMT storage treap, uint256 nodeId_) private view returns (bytes32) {
         Node storage node = treap.nodes[uint64(nodeId_)];
 
-        bytes32 left_ = treap.nodes[node.childLeft].merkleHash;
-        bytes32 right_ = treap.nodes[node.childRight].merkleHash;
+        bytes32 leftHash_ = treap.nodes[node.childLeft].merkleHash;
+        bytes32 rightHash_ = treap.nodes[node.childRight].merkleHash;
 
-        if (left_ > right_) {
-            (left_, right_) = (right_, left_);
+        if (leftHash_ > rightHash_) {
+            (leftHash_, rightHash_) = (rightHash_, leftHash_);
         }
 
-        return _getNodesHash(treap, node.key, left_, right_);
+        return _getNodesHash(treap, node.key, leftHash_, rightHash_);
     }
 
     function _getNodesHash(
@@ -473,42 +502,6 @@ library CartesianMerkleTreeV2 {
         return hash3_(nodeKey_, leftNodeKey_, rightNodeKey_);
     }
 
-    function _rightRotate(CMT storage treap, uint256 nodeId_) private returns (uint256) {
-        Node storage node = treap.nodes[uint64(nodeId_)];
-
-        uint64 leftChildNodeId_ = node.childLeft;
-
-        Node storage leftChildNode = treap.nodes[leftChildNodeId_];
-
-        uint64 tmpNodeId_ = leftChildNode.childRight;
-
-        leftChildNode.childRight = uint64(nodeId_);
-        node.childLeft = tmpNodeId_;
-
-        node.merkleHash = _hashNodes(treap, nodeId_);
-        leftChildNode.merkleHash = _hashNodes(treap, leftChildNodeId_);
-
-        return leftChildNodeId_;
-    }
-
-    function _leftRotate(CMT storage treap, uint256 nodeId_) private returns (uint256) {
-        Node storage x = treap.nodes[uint64(nodeId_)];
-
-        uint64 rightChildNodeId_ = x.childRight;
-
-        Node storage y = treap.nodes[rightChildNodeId_];
-
-        uint64 T2 = y.childLeft;
-
-        y.childLeft = uint64(nodeId_);
-        x.childRight = T2;
-
-        x.merkleHash = _hashNodes(treap, nodeId_);
-        y.merkleHash = _hashNodes(treap, rightChildNodeId_);
-
-        return rightChildNodeId_;
-    }
-
     function _hash3(bytes32 a_, bytes32 b_, bytes32 c) private pure returns (bytes32 result_) {
         assembly {
             let freePtr_ := mload(64)
@@ -518,14 +511,6 @@ library CartesianMerkleTreeV2 {
             mstore(add(freePtr_, 64), c)
 
             result_ := keccak256(freePtr_, 96)
-        }
-    }
-
-    function _hash1(bytes32 a_) private pure returns (bytes32 result_) {
-        assembly {
-            mstore(0, a_)
-
-            result_ := keccak256(0, 32)
         }
     }
 
