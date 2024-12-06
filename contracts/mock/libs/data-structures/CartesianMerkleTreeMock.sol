@@ -42,39 +42,48 @@ contract CartesianMerkleTreeMock {
         _uintCMTV2.remove(key_);
     }
 
-    function proof(
+    function proofUint(
         uint256 key_,
         uint32 desiredProofSize_
     ) external view returns (CartesianMerkleTree.Proof memory) {
         return _uintCMT.getProof(key_, desiredProofSize_);
     }
 
-    function getNode(uint64 nodeId_) external view returns (CartesianMerkleTree.Node memory) {
+    function proofUintV2(
+        uint256 key_,
+        uint32 desiredProofSize_
+    ) external view returns (CartesianMerkleTreeV2.Proof memory) {
+        return _uintCMTV2.getProof(key_, desiredProofSize_);
+    }
+
+    function getNodeUint(uint64 nodeId_) external view returns (CartesianMerkleTree.Node memory) {
         return _uintCMT.getNode(nodeId_);
     }
 
-    function getNodesCount() external view returns (uint64) {
+    function getNodeUintV2(
+        uint64 nodeId_
+    ) external view returns (CartesianMerkleTreeV2.Node memory) {
+        return _uintCMTV2.getNode(nodeId_);
+    }
+
+    function getNodesCountUint() external view returns (uint64) {
         return _uintCMT.getNodesCount();
+    }
+
+    function getNodesCountUintV2() external view returns (uint64) {
+        return _uintCMTV2.getNodesCount();
     }
 
     function getRootNodeIdUint() external view returns (uint256) {
         return _uintCMT.getRootNodeId();
     }
 
-    function getRootUint() external view returns (bytes32) {
-        return _uintCMT.getRoot();
-    }
-
-    function getNodeV2(uint64 nodeId_) external view returns (CartesianMerkleTreeV2.Node memory) {
-        return _uintCMTV2.getNode(nodeId_);
-    }
-
-    function getNodesCounV2() external view returns (uint64) {
-        return _uintCMTV2.getNodesCount();
-    }
-
     function getRootNodeIdUintV2() external view returns (uint256) {
         return _uintCMTV2.getRootNodeId();
+    }
+
+    function getRootUint() external view returns (bytes32) {
+        return _uintCMT.getRoot();
     }
 
     function getRootUintV2() external view returns (bytes32) {

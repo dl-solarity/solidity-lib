@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "hardhat/console.sol";
-
 library CartesianMerkleTreeV2 {
     /**
      *********************
@@ -82,9 +80,9 @@ library CartesianMerkleTreeV2 {
         _setHashers(treap._treap, hash3_);
     }
 
-    // function insert(Bytes32CMT storage treap, bytes32 key_) internal {
-    //     _insert(treap._treap, key_);
-    // }
+    function insert(Bytes32CMT storage treap, bytes32 key_) internal {
+        _insert(treap._treap, key_);
+    }
 
     function remove(Bytes32CMT storage treap, bytes32 key_) internal {
         _remove(treap._treap, key_);
@@ -142,9 +140,9 @@ library CartesianMerkleTreeV2 {
         _setHashers(treap._treap, hash3_);
     }
 
-    // function insert(AddressCMT storage treap, address key_) internal {
-    //     _insert(treap._treap, _fromAddressToBytes32(key_));
-    // }
+    function insert(AddressCMT storage treap, address key_) internal {
+        _insert(treap._treap, _fromAddressToBytes32(key_));
+    }
 
     function remove(AddressCMT storage treap, address key_) internal {
         _remove(treap._treap, _fromAddressToBytes32(key_));
@@ -325,8 +323,8 @@ library CartesianMerkleTreeV2 {
                     ? rootNode.childRight
                     : rootNode.childLeft;
 
-                delete treap.nodes[nodeIdToRemove_];
                 treap.deletedNodesCount++;
+                delete treap.nodes[nodeIdToRemove_];
             } else if (leftRootChildNode.priority < rightRootChildNode.priority) {
                 rootNodeId_ = _leftRotate(treap, rootNodeId_);
                 rootNode = treap.nodes[uint64(rootNodeId_)];
@@ -379,22 +377,6 @@ library CartesianMerkleTreeV2 {
         return rightId_;
     }
 
-    function _newNode(CMT storage treap, bytes32 key_) private returns (uint256) {
-        Node memory node_ = Node({
-            childLeft: 0,
-            childRight: 0,
-            priority: bytes16(keccak256(abi.encodePacked(key_))),
-            merkleHash: _getNodesHash(treap, key_, 0, 0),
-            key: key_
-        });
-
-        uint64 nodeId_ = ++treap.nodesCount;
-
-        treap.nodes[nodeId_] = node_;
-
-        return nodeId_;
-    }
-
     function _proof(
         CMT storage treap,
         bytes32 key_,
@@ -419,11 +401,15 @@ library CartesianMerkleTreeV2 {
             node = treap.nodes[uint64(nextNodeId_)];
 
             if (node.key == key_) {
-                _addProofSibling(proof_, currentSiblingsIndex_++, treap.nodes[node.childLeft].key);
                 _addProofSibling(
                     proof_,
                     currentSiblingsIndex_++,
-                    treap.nodes[node.childRight].key
+                    treap.nodes[node.childLeft].merkleHash
+                );
+                _addProofSibling(
+                    proof_,
+                    currentSiblingsIndex_++,
+                    treap.nodes[node.childRight].merkleHash
                 );
 
                 proof_.existence = true;
@@ -431,8 +417,6 @@ library CartesianMerkleTreeV2 {
 
                 break;
             }
-
-            _addProofSibling(proof_, currentSiblingsIndex_++, node.key);
 
             uint64 otherNodeId_;
 
@@ -445,7 +429,16 @@ library CartesianMerkleTreeV2 {
             }
 
             if (nextNodeId_ == 0) {
-                _addProofSibling(proof_, currentSiblingsIndex_++, key_);
+                _addProofSibling(
+                    proof_,
+                    currentSiblingsIndex_++,
+                    treap.nodes[node.childLeft].merkleHash
+                );
+                _addProofSibling(
+                    proof_,
+                    currentSiblingsIndex_++,
+                    treap.nodes[node.childRight].merkleHash
+                );
 
                 proof_.nonExistenceKey = node.key;
                 proof_.siblingsLength = currentSiblingsIndex_;
@@ -453,6 +446,7 @@ library CartesianMerkleTreeV2 {
                 break;
             }
 
+            _addProofSibling(proof_, currentSiblingsIndex_++, node.key);
             _addProofSibling(
                 proof_,
                 currentSiblingsIndex_++,
@@ -461,6 +455,20 @@ library CartesianMerkleTreeV2 {
         }
 
         return proof_;
+    }
+
+    function _newNode(CMT storage treap, bytes32 key_) private returns (uint256) {
+        uint64 nodeId_ = ++treap.nodesCount;
+
+        treap.nodes[nodeId_] = Node({
+            childLeft: 0,
+            childRight: 0,
+            priority: bytes16(keccak256(abi.encodePacked(key_))),
+            merkleHash: _getNodesHash(treap, key_, 0, 0),
+            key: key_
+        });
+
+        return nodeId_;
     }
 
     function _addProofSibling(
