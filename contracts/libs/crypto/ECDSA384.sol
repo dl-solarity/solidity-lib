@@ -675,16 +675,6 @@ library U384 {
         }
     }
 
-    function modaddAssignTo(uint256 to_, uint256 a_, uint256 b_, uint256 m_) internal pure {
-        unchecked {
-            _add(a_, b_, to_);
-
-            if (cmp(to_, m_) >= 0) {
-                return _subFrom(to_, m_);
-            }
-        }
-    }
-
     function modmul(uint256 call_, uint256 a_, uint256 b_) internal view returns (uint256 r_) {
         unchecked {
             r_ = _allocate(SHORT_ALLOCATION);
@@ -709,18 +699,6 @@ library U384 {
                 call_ := add(call_, MUL_OFFSET)
 
                 pop(staticcall(gas(), 0x5, call_, 0x0120, a_, 0x40))
-            }
-        }
-    }
-
-    function modmulAssignTo(uint256 call_, uint256 to_, uint256 a_, uint256 b_) internal view {
-        unchecked {
-            _mul(a_, b_, call_ + MUL_OFFSET + 0x60);
-
-            assembly {
-                call_ := add(call_, MUL_OFFSET)
-
-                pop(staticcall(gas(), 0x5, call_, 0x0120, to_, 0x40))
             }
         }
     }
@@ -761,26 +739,6 @@ library U384 {
         }
 
         return r_;
-    }
-
-    function modshl1Assign(uint256 a_, uint256 m_) internal pure {
-        unchecked {
-            _shl1To(a_);
-
-            if (cmp(a_, m_) >= 0) {
-                _subFrom(a_, m_);
-            }
-        }
-    }
-
-    function modshl1AssignTo(uint256 to_, uint256 a_, uint256 m_) internal pure {
-        unchecked {
-            _shl1(a_, to_);
-
-            if (cmp(to_, m_) >= 0) {
-                _subFrom(to_, m_);
-            }
-        }
     }
 
     /// @dev Stores modinv into `b_` and moddiv into `a_`.
@@ -849,15 +807,6 @@ library U384 {
 
             mstore(r_, or(shl(1, mload(a_)), shr(255, a1_)))
             mstore(add(r_, 0x20), shl(1, a1_))
-        }
-    }
-
-    function _shl1To(uint256 a_) internal pure {
-        assembly {
-            let a1_ := mload(add(a_, 0x20))
-
-            mstore(a_, or(shl(1, mload(a_)), shr(255, a1_)))
-            mstore(add(a_, 0x20), shl(1, a1_))
         }
     }
 
