@@ -784,22 +784,19 @@ library U384 {
         }
     }
 
+    /// @dev Stores modinv into `b_` and moddiv into `a_`.
     function moddivAssign(uint256 call_, uint256 a_, uint256 b_) internal view {
         unchecked {
-            uint256 r_ = _allocate(SHORT_ALLOCATION);
-
             assembly {
                 call_ := add(call_, INV_OFFSET)
 
                 mstore(add(0x60, call_), mload(b_))
                 mstore(add(0x80, call_), mload(add(b_, 0x20)))
 
-                pop(staticcall(gas(), 0x5, call_, 0x0120, r_, 0x40))
-
-                call_ := sub(call_, INV_OFFSET)
+                pop(staticcall(gas(), 0x5, call_, 0x0120, b_, 0x40))
             }
 
-            modmulAssign(call_, a_, r_);
+            modmulAssign(call_ - INV_OFFSET, a_, b_);
         }
     }
 
@@ -921,7 +918,7 @@ library U384 {
         }
     }
 
-    function _mul(uint256 a_, uint256 b_, uint256 r_) private view {
+    function _mul(uint256 a_, uint256 b_, uint256 r_) private pure {
         assembly {
             let a0_ := mload(a_)
             let a1_ := shr(128, mload(add(a_, 0x20)))
