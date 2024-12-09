@@ -197,17 +197,15 @@ library ECDSA384 {
             }
 
             for (uint256 word = 2; word <= 184; word += 2) {
-                (x, y) = _twiceProj(call, p, three, a, x, y);
-                (x, y) = _twiceProj(call, p, three, a, x, y);
+                (x, y) = _twiceAffine(call, p, three, a, x, y);
+                (x, y) = _twiceAffine(call, p, three, a, x, y);
 
                 mask_ =
                     (((scalar1Bits_ >> (184 - word)) & 0x03) << 2) |
                     ((scalar2Bits_ >> (184 - word)) & 0x03);
 
                 if (mask_ != 0) {
-                    uint256[2] memory maskedPoints_ = points[mask_];
-
-                    (x, y) = _addProj(call, p, three, a, maskedPoints_[0], maskedPoints_[1], x, y);
+                    (x, y) = _addAffine(call, p, points[mask_][0], points[mask_][1], x, y);
                 }
             }
 
@@ -217,27 +215,24 @@ library ECDSA384 {
             }
 
             for (uint256 word = 2; word <= 256; word += 2) {
-                (x, y) = _twiceProj(call, p, three, a, x, y);
-                (x, y) = _twiceProj(call, p, three, a, x, y);
+                (x, y) = _twiceAffine(call, p, three, a, x, y);
+                (x, y) = _twiceAffine(call, p, three, a, x, y);
 
                 mask_ =
                     (((scalar1Bits_ >> (256 - word)) & 0x03) << 2) |
                     ((scalar2Bits_ >> (256 - word)) & 0x03);
 
                 if (mask_ != 0) {
-                    uint256[2] memory maskedPoints_ = points[mask_];
-
-                    (x, y) = _addProj(call, p, three, a, maskedPoints_[0], maskedPoints_[1], x, y);
+                    (x, y) = _addAffine(call, p, points[mask_][0], points[mask_][1], x, y);
                 }
             }
         }
     }
 
     /**
-     * @dev Double an elliptic curve point in projective coordinates. See
-     * https://www.nayuki.io/page/elliptic-curve-point-addition-in-projective-coordinates
+     * @dev Double an elliptic curve point in affine coordinates.
      */
-    function _twiceProj(
+    function _twiceAffine(
         uint256 call,
         uint256 p,
         uint256 three,
@@ -246,7 +241,7 @@ library ECDSA384 {
         uint256 y1
     ) private view returns (uint256 x2, uint256 y2) {
         unchecked {
-            if (x1 == 0 && y1 == 0) {
+            if (x1 == 0) {
                 return (0, 0);
             }
 
@@ -254,68 +249,62 @@ library ECDSA384 {
                 return (0, 0);
             }
 
-            uint256 m = U384.modexp(call, x1, 2);
-            m = U384.modmul(call, m, three);
-            m = U384.modadd(call, m, a);
+            uint256 m1 = U384.modexp(call, x1, 2);
+            U384.modmulAssign(call, m1, three);
+            U384.modaddAssign(m1, a, p);
 
-            uint256 n = U384.modshl1(y1, p);
-            m = U384.moddiv(call, m, n, p);
+            uint256 m2 = U384.modshl1(y1, p);
+            U384.moddivAssign(call, m1, m2);
 
-            x2 = U384.modexp(call, m, 2);
-            x2 = U384.modsub(x2, U384.modshl1(x1, p), p);
+            x2 = U384.modexp(call, m1, 2);
+            U384.modsubAssign(x2, U384.modshl1(x1, p), p);
 
             y2 = U384.modsub(x1, x2, p);
-            y2 = U384.modmul(call, m, y2);
-            y2 = U384.modsub(y2, y1, p);
+            U384.modmulAssign(call, y2, m1);
+            U384.modsubAssign(y2, y1, p);
         }
     }
 
     /**
-     * @dev Add two elliptic curve points in projective coordinates. See
-     * https://www.nayuki.io/page/elliptic-curve-point-addition-in-projective-coordinates
+     * @dev Add two elliptic curve points in affine coordinates.
      */
-    function _addProj(
+    function _addAffine(
         uint256 call,
         uint256 p,
-        uint256 three,
-        uint256 a,
         uint256 x1,
         uint256 y1,
         uint256 x2,
         uint256 y2
     ) private view returns (uint256 x3, uint256 y3) {
         unchecked {
-            if (x1 == 0 && y1 == 0) {
-                if (x2 == 0 && y2 == 0) {
-                    return (0, 0);
-                }
+            if (x1 == 0 && x2 == 0) {
+                return (0, 0);
+            }
+
+            if (x1 == 0) {
                 return (x2.copy(), y2.copy());
             }
 
-            if (x2 == 0 && y2 == 0) {
+            if (x2 == 0) {
                 return (x1.copy(), y1.copy());
             }
 
             if (U384.eq(x1, x2)) {
-                if (U384.eq(y1, y2)) {
-                    return _twiceProj(call, p, three, a, x1, y1);
-                }
-
                 return (0, 0);
             }
 
-            uint256 dx = U384.modsub(x1, x2, p);
-            uint256 dy = U384.modsub(y1, y2, p);
+            uint256 m1 = U384.modsub(y1, y2, p);
+            uint256 m2 = U384.modsub(x1, x2, p);
 
-            uint256 m = U384.moddiv(call, dy, dx, p);
+            U384.moddivAssign(call, m1, m2);
 
-            x3 = U384.modexp(call, m, 2);
-            x3 = U384.modsub(x3, x1, p);
-            x3 = U384.modsub(x3, x2, p);
+            x3 = U384.modexp(call, m1, 2);
+            U384.modsubAssign(x3, x1, p);
+            U384.modsubAssign(x3, x2, p);
 
             y3 = U384.modsub(x1, x3, p);
-            y3 = U384.modmul(call, m, y3);
-            y3 = U384.modsub(y3, y1, p);
+            U384.modmulAssign(call, y3, m1);
+            U384.modsubAssign(y3, y1, p);
         }
     }
 
@@ -332,7 +321,7 @@ library ECDSA384 {
         /// 0b0100: 1G + 0H
         (points_[0x04][0], points_[0x04][1]) = (gx.copy(), gy.copy());
         /// 0b1000: 2G + 0H
-        (points_[0x08][0], points_[0x08][1]) = _twiceProj(
+        (points_[0x08][0], points_[0x08][1]) = _twiceAffine(
             call,
             p,
             three,
@@ -341,11 +330,9 @@ library ECDSA384 {
             points_[0x04][1]
         );
         /// 0b1100: 3G + 0H
-        (points_[0x0C][0], points_[0x0C][1]) = _addProj(
+        (points_[0x0C][0], points_[0x0C][1]) = _addAffine(
             call,
             p,
-            three,
-            a,
             points_[0x04][0],
             points_[0x04][1],
             points_[0x08][0],
@@ -354,7 +341,7 @@ library ECDSA384 {
         /// 0b0001: 0G + 1H
         (points_[0x01][0], points_[0x01][1]) = (hx.copy(), hy.copy());
         /// 0b0010: 0G + 2H
-        (points_[0x02][0], points_[0x02][1]) = _twiceProj(
+        (points_[0x02][0], points_[0x02][1]) = _twiceAffine(
             call,
             p,
             three,
@@ -363,110 +350,90 @@ library ECDSA384 {
             points_[0x01][1]
         );
         /// 0b0011: 0G + 3H
-        (points_[0x03][0], points_[0x03][1]) = _addProj(
+        (points_[0x03][0], points_[0x03][1]) = _addAffine(
             call,
             p,
-            three,
-            a,
             points_[0x01][0],
             points_[0x01][1],
             points_[0x02][0],
             points_[0x02][1]
         );
         /// 0b0101: 1G + 1H
-        (points_[0x05][0], points_[0x05][1]) = _addProj(
+        (points_[0x05][0], points_[0x05][1]) = _addAffine(
             call,
             p,
-            three,
-            a,
             points_[0x04][0],
             points_[0x04][1],
             points_[0x01][0],
             points_[0x01][1]
         );
         /// 0b0110: 1G + 2H
-        (points_[0x06][0], points_[0x06][1]) = _addProj(
+        (points_[0x06][0], points_[0x06][1]) = _addAffine(
             call,
             p,
-            three,
-            a,
             points_[0x04][0],
             points_[0x04][1],
             points_[0x02][0],
             points_[0x02][1]
         );
         /// 0b0111: 1G + 3H
-        (points_[0x07][0], points_[0x07][1]) = _addProj(
+        (points_[0x07][0], points_[0x07][1]) = _addAffine(
             call,
             p,
-            three,
-            a,
             points_[0x04][0],
             points_[0x04][1],
             points_[0x03][0],
             points_[0x03][1]
         );
         /// 0b1001: 2G + 1H
-        (points_[0x09][0], points_[0x09][1]) = _addProj(
+        (points_[0x09][0], points_[0x09][1]) = _addAffine(
             call,
             p,
-            three,
-            a,
             points_[0x08][0],
             points_[0x08][1],
             points_[0x01][0],
             points_[0x01][1]
         );
         /// 0b1010: 2G + 2H
-        (points_[0x0A][0], points_[0x0A][1]) = _addProj(
+        (points_[0x0A][0], points_[0x0A][1]) = _addAffine(
             call,
             p,
-            three,
-            a,
             points_[0x08][0],
             points_[0x08][1],
             points_[0x02][0],
             points_[0x02][1]
         );
         /// 0b1011: 2G + 3H
-        (points_[0x0B][0], points_[0x0B][1]) = _addProj(
+        (points_[0x0B][0], points_[0x0B][1]) = _addAffine(
             call,
             p,
-            three,
-            a,
             points_[0x08][0],
             points_[0x08][1],
             points_[0x03][0],
             points_[0x03][1]
         );
         /// 0b1101: 3G + 1H
-        (points_[0x0D][0], points_[0x0D][1]) = _addProj(
+        (points_[0x0D][0], points_[0x0D][1]) = _addAffine(
             call,
             p,
-            three,
-            a,
             points_[0x0C][0],
             points_[0x0C][1],
             points_[0x01][0],
             points_[0x01][1]
         );
         /// 0b1110: 3G + 2H
-        (points_[0x0E][0], points_[0x0E][1]) = _addProj(
+        (points_[0x0E][0], points_[0x0E][1]) = _addAffine(
             call,
             p,
-            three,
-            a,
             points_[0x0C][0],
             points_[0x0C][1],
             points_[0x02][0],
             points_[0x02][1]
         );
         /// 0b1111: 3G + 3H
-        (points_[0x0F][0], points_[0x0F][1]) = _addProj(
+        (points_[0x0F][0], points_[0x0F][1]) = _addAffine(
             call,
             p,
-            three,
-            a,
             points_[0x0C][0],
             points_[0x0C][1],
             points_[0x03][0],
@@ -482,12 +449,12 @@ library ECDSA384 {
  */
 library U384 {
     uint256 private constant SHORT_ALLOCATION = 64;
-    uint256 private constant LONG_ALLOCATION = 96;
 
-    uint256 private constant CALL_ALLOCATION = 3 * 288;
+    uint256 private constant CALL_ALLOCATION = 4 * 288;
 
     uint256 private constant MUL_OFFSET = 288;
     uint256 private constant EXP_OFFSET = 2 * 288;
+    uint256 private constant INV_OFFSET = 3 * 288;
 
     function init(uint256 from_) internal pure returns (uint256 handler_) {
         unchecked {
@@ -545,6 +512,8 @@ library U384 {
         unchecked {
             handler_ = _allocate(CALL_ALLOCATION);
 
+            _sub(m_, init(2), handler_ + INV_OFFSET + 0xA0);
+
             assembly {
                 let call_ := add(handler_, MUL_OFFSET)
 
@@ -562,6 +531,14 @@ library U384 {
                 mstore(add(0x40, call_), 0x40)
                 mstore(add(0xC0, call_), mload(m_))
                 mstore(add(0xE0, call_), mload(add(m_, 0x20)))
+
+                call_ := add(handler_, INV_OFFSET)
+
+                mstore(call_, 0x40)
+                mstore(add(0x20, call_), 0x40)
+                mstore(add(0x40, call_), 0x40)
+                mstore(add(0xE0, call_), mload(m_))
+                mstore(add(0x0100, call_), mload(add(m_, 0x20)))
             }
         }
     }
@@ -750,27 +727,28 @@ library U384 {
     }
 
     function modsub(uint256 a_, uint256 b_, uint256 m_) internal pure returns (uint256 r_) {
-        if (cmp(a_, b_) >= 0) {
-            return sub(a_, b_);
-        }
-
-        r_ = copy(m_);
-        _subFrom(r_, sub(b_, a_));
-    }
-
-    function sub(uint256 a_, uint256 b_) internal pure returns (uint256 r_) {
         unchecked {
             r_ = _allocate(SHORT_ALLOCATION);
 
-            _sub(a_, b_, r_);
+            if (cmp(a_, b_) >= 0) {
+                _sub(a_, b_, r_);
+                return r_;
+            }
 
-            return r_;
+            _add(a_, m_, r_);
+            _subFrom(r_, b_);
         }
     }
 
-    function subAssignTo(uint256 to_, uint256 a_, uint256 b_) internal pure {
+    function modsubAssign(uint256 a_, uint256 b_, uint256 m_) internal pure {
         unchecked {
-            _sub(a_, b_, to_);
+            if (cmp(a_, b_) >= 0) {
+                _subFrom(a_, b_);
+                return;
+            }
+
+            _addTo(a_, m_);
+            _subFrom(a_, b_);
         }
     }
 
@@ -803,6 +781,25 @@ library U384 {
             if (cmp(to_, m_) >= 0) {
                 _subFrom(to_, m_);
             }
+        }
+    }
+
+    function moddivAssign(uint256 call_, uint256 a_, uint256 b_) internal view {
+        unchecked {
+            uint256 r_ = _allocate(SHORT_ALLOCATION);
+
+            assembly {
+                call_ := add(call_, INV_OFFSET)
+
+                mstore(add(0x60, call_), mload(b_))
+                mstore(add(0x80, call_), mload(add(b_, 0x20)))
+
+                pop(staticcall(gas(), 0x5, call_, 0x0120, r_, 0x40))
+
+                call_ := sub(call_, INV_OFFSET)
+            }
+
+            modmulAssign(call_, a_, r_);
         }
     }
 
