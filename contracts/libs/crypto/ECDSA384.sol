@@ -200,8 +200,7 @@ library ECDSA384 {
             }
 
             for (uint256 word = 2; word <= 184; word += 2) {
-                (x, y) = _twiceAffine(call, p, three, a, x, y);
-                (x, y) = _twiceAffine(call, p, three, a, x, y);
+                (x, y) = _qaudAffine(call, p, three, a, x, y);
 
                 mask_ =
                     (((scalar1Bits_ >> (184 - word)) & 0x03) << 2) |
@@ -218,8 +217,7 @@ library ECDSA384 {
             }
 
             for (uint256 word = 2; word <= 256; word += 2) {
-                (x, y) = _twiceAffine(call, p, three, a, x, y);
-                (x, y) = _twiceAffine(call, p, three, a, x, y);
+                (x, y) = _qaudAffine(call, p, three, a, x, y);
 
                 mask_ =
                     (((scalar1Bits_ >> (256 - word)) & 0x03) << 2) |
@@ -260,9 +258,69 @@ library ECDSA384 {
             U384.moddivAssign(call, m1, m2);
 
             x2 = U384.modexp(call, m1, 2);
-            U384.modsubAssign(x2, U384.modshl1(x1, p), p);
+            U384.modsubAssign(x2, x1, p);
+            U384.modsubAssign(x2, x1, p);
 
             y2 = U384.modsub(x1, x2, p);
+            U384.modmulAssign(call, y2, m1);
+            U384.modsubAssign(y2, y1, p);
+        }
+    }
+
+    /**
+     * @dev Quads an elliptic curve point in affine coordinates.
+     */
+    function _qaudAffine(
+        uint256 call,
+        uint256 p,
+        uint256 three,
+        uint256 a,
+        uint256 x1,
+        uint256 y1
+    ) private view returns (uint256 x2, uint256 y2) {
+        unchecked {
+            if (x1 == 0) {
+                return (0, 0);
+            }
+
+            if (U384.eqInteger(y1, 0)) {
+                return (0, 0);
+            }
+
+            uint256 m1 = U384.modexp(call, x1, 2);
+            U384.modmulAssign(call, m1, three);
+            U384.modaddAssign(m1, a, p);
+
+            uint256 m2 = U384.modshl1(y1, p);
+            U384.moddivAssign(call, m1, m2);
+
+            x2 = U384.modexp(call, m1, 2);
+            U384.modsubAssign(x2, x1, p);
+            U384.modsubAssign(x2, x1, p);
+
+            y2 = U384.modsub(x1, x2, p);
+            U384.modmulAssign(call, y2, m1);
+            U384.modsubAssign(y2, y1, p);
+
+            x1 = x2.copy();
+            y1 = y2.copy();
+
+            if (U384.eqInteger(y1, 0)) {
+                return (0, 0);
+            }
+
+            U384.modexpAssignTo(call, m1, x1, 2);
+            U384.modmulAssign(call, m1, three);
+            U384.modaddAssign(m1, a, p);
+
+            U384.modshl1AssignTo(m2, y1, p);
+            U384.moddivAssign(call, m1, m2);
+
+            U384.modexpAssignTo(call, x2, m1, 2);
+            U384.modsubAssign(x2, x1, p);
+            U384.modsubAssign(x2, x1, p);
+
+            U384.modsubAssignTo(y2, x1, x2, p);
             U384.modmulAssign(call, y2, m1);
             U384.modsubAssign(y2, y1, p);
         }
@@ -729,16 +787,40 @@ library U384 {
         }
     }
 
-    function modshl1(uint256 a_, uint256 m_) internal pure returns (uint256 r_) {
-        r_ = _allocate(SHORT_ALLOCATION);
+    function modsubAssignTo(uint256 to_, uint256 a_, uint256 b_, uint256 m_) internal pure {
+        unchecked {
+            if (cmp(a_, b_) >= 0) {
+                _sub(a_, b_, to_);
+                return;
+            }
 
-        _shl1(a_, r_);
-
-        if (cmp(r_, m_) >= 0) {
-            _subFrom(r_, m_);
+            _add(a_, m_, to_);
+            _subFrom(to_, b_);
         }
+    }
 
-        return r_;
+    function modshl1(uint256 a_, uint256 m_) internal pure returns (uint256 r_) {
+        unchecked {
+            r_ = _allocate(SHORT_ALLOCATION);
+
+            _shl1(a_, r_);
+
+            if (cmp(r_, m_) >= 0) {
+                _subFrom(r_, m_);
+            }
+
+            return r_;
+        }
+    }
+
+    function modshl1AssignTo(uint256 to_, uint256 a_, uint256 m_) internal pure {
+        unchecked {
+            _shl1(a_, to_);
+
+            if (cmp(to_, m_) >= 0) {
+                _subFrom(to_, m_);
+            }
+        }
     }
 
     /// @dev Stores modinv into `b_` and moddiv into `a_`.
@@ -807,6 +889,15 @@ library U384 {
 
             mstore(r_, or(shl(1, mload(a_)), shr(255, a1_)))
             mstore(add(r_, 0x20), shl(1, a1_))
+        }
+    }
+
+    function _shl1To(uint256 a_) internal pure {
+        assembly {
+            let a1_ := mload(add(a_, 0x20))
+
+            mstore(a_, or(shl(1, mload(a_)), shr(255, a1_)))
+            mstore(add(a_, 0x20), shl(1, a1_))
         }
     }
 
