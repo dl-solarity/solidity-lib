@@ -302,27 +302,26 @@ library ECDSA384 {
             U384.modmulAssign(call, y2, m1);
             U384.modsubAssign(y2, y1, p);
 
-            x1 = x2.copy();
-            y1 = y2.copy();
-
-            if (U384.eqInteger(y1, 0)) {
+            if (U384.eqInteger(y2, 0)) {
                 return (0, 0);
             }
 
-            U384.modexpAssignTo(call, m1, x1, 2);
+            U384.modexpAssignTo(call, m1, x2, 2);
             U384.modmulAssign(call, m1, three);
             U384.modaddAssign(m1, a, p);
 
-            U384.modshl1AssignTo(m2, y1, p);
+            U384.modshl1AssignTo(m2, y2, p);
             U384.moddivAssign(call, m1, m2);
 
-            U384.modexpAssignTo(call, x2, m1, 2);
-            U384.modsubAssign(x2, x1, p);
-            U384.modsubAssign(x2, x1, p);
+            U384.modexpAssignTo(call, x1, m1, 2);
+            U384.modsubAssign(x1, x2, p);
+            U384.modsubAssign(x1, x2, p);
 
-            U384.modsubAssignTo(y2, x1, x2, p);
-            U384.modmulAssign(call, y2, m1);
-            U384.modsubAssign(y2, y1, p);
+            U384.modsubAssignTo(y1, x2, x1, p);
+            U384.modmulAssign(call, y1, m1);
+            U384.modsubAssign(y1, y2, p);
+
+            return (x1, y1);
         }
     }
 
