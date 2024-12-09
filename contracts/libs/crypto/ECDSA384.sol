@@ -7,9 +7,12 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
  * @notice Cryptography module
  *
  * This library provides functionality for ECDSA verification over any 384-bit curve. Currently,
- * this is the most efficient implementation out there, consuming ~9 million gas per call.
+ * this is the most efficient implementation out there, consuming ~8.25 million gas per call.
  *
- * The approach is Strauss-Shamir double scalar multiplication with 4 bits of precompute + projective points.
+ * The approach is Strauss-Shamir double scalar multiplication with 4 bits of precompute + affine coordinates.
+ * For reference, naive implementation uses ~400 billion gas, which is 48000 times more expensive.
+ *
+ * We also tried using projective coordinates, however, the gas consumption rose to ~9 million gas.
  */
 library ECDSA384 {
     using MemoryUtils for *;
@@ -277,16 +280,12 @@ library ECDSA384 {
         uint256 y2
     ) private view returns (uint256 x3, uint256 y3) {
         unchecked {
-            if (x1 == 0 && x2 == 0) {
-                return (0, 0);
-            }
+            if (x1 == 0 || x2 == 0) {
+                if (x1 == 0 && x2 == 0) {
+                    return (0, 0);
+                }
 
-            if (x1 == 0) {
-                return (x2.copy(), y2.copy());
-            }
-
-            if (x2 == 0) {
-                return (x1.copy(), y1.copy());
+                return x1 == 0 ? (x2.copy(), y2.copy()) : (x1.copy(), y1.copy());
             }
 
             if (U384.eq(x1, x2)) {
