@@ -31,7 +31,7 @@ describe.only("CartesianMerkleTree", () => {
     expectedExistence: boolean = true,
     desiredProofSize = 40,
   ) {
-    const proof = await cmt.proofUintV2(keyToVerify, desiredProofSize);
+    const proof = await cmt.getUintProof(keyToVerify, desiredProofSize);
 
     expect(proof.existence).to.be.eq(expectedExistence);
 
@@ -70,7 +70,7 @@ describe.only("CartesianMerkleTree", () => {
       }
     }
 
-    expect(await cmt.getRootUintV2()).to.be.eq(finalHash);
+    expect(await cmt.getUintRoot()).to.be.eq(finalHash);
   }
 
   function shuffle(array: any): any {
@@ -95,6 +95,8 @@ describe.only("CartesianMerkleTree", () => {
 
     treap = await CartesianMerkleTreeMock.deploy();
 
+    await treap.initializeUintTreap(40);
+
     await reverter.snapshot();
   });
 
@@ -116,18 +118,17 @@ describe.only("CartesianMerkleTree", () => {
 
       for (let i = 0; i < 5; i++) {
         const tmpTreap = await CartesianMerkleTreeMock.deploy();
+        await tmpTreap.initializeUintTreap(40);
 
         for (let i = 0; i < randomElements.length; i++) {
-          await tmpTreap.insertUint(randomElements[i]);
-          await tmpTreap.insertUintV2(randomElements[i]);
+          await tmpTreap.addUint(randomElements[i]);
         }
 
         if (i == 0) {
-          treapRoot = await tmpTreap.getRootUint();
+          treapRoot = await tmpTreap.getUintRoot();
         }
 
-        expect(treapRoot).to.be.eq(await tmpTreap.getRootUint());
-        expect(treapRoot).to.be.eq(await tmpTreap.getRootUintV2());
+        expect(treapRoot).to.be.eq(await tmpTreap.getUintRoot());
 
         shuffle(randomElements);
       }
@@ -137,11 +138,10 @@ describe.only("CartesianMerkleTree", () => {
       const randomElements: string[] = createRandomArray(100);
 
       for (let i = 0; i < randomElements.length; i++) {
-        await treap.insertUint(randomElements[i]);
-        await treap.insertUintV2(randomElements[i]);
+        await treap.addUint(randomElements[i]);
       }
 
-      const treapRoot: string = await treap.getRootUintV2();
+      const treapRoot: string = await treap.getUintRoot();
       const usedIndexes: number[] = [];
 
       for (let i = 0; i < 5; i++) {
@@ -149,7 +149,7 @@ describe.only("CartesianMerkleTree", () => {
 
         while (true) {
           const newRandIndex =
-            Math.floor(Math.random() * (Number(await treap.getNodesCountUintV2()) + usedIndexes.length - 1)) + 1;
+            Math.floor(Math.random() * (Number(await treap.getUintNodesCount()) + usedIndexes.length - 1)) + 1;
 
           if (!usedIndexes.includes(newRandIndex)) {
             randIndex = newRandIndex;
@@ -159,20 +159,15 @@ describe.only("CartesianMerkleTree", () => {
           }
         }
 
-        let currentNode = await treap.getNodeUint(randIndex);
-        let currentNodeV2 = await treap.getNodeUintV2(randIndex);
+        let currentNode = await treap.getUintNode(randIndex);
 
         await treap.removeUint(currentNode.key);
-        await treap.removeUintV2(currentNodeV2.key);
 
-        expect(await treap.getRootUint()).to.be.not.eq(treapRoot);
-        expect(await treap.getRootUintV2()).to.be.not.eq(treapRoot);
+        expect(await treap.getUintRoot()).to.be.not.eq(treapRoot);
 
-        await treap.insertUint(currentNode.key);
-        await treap.insertUintV2(currentNodeV2.key);
+        await treap.addUint(currentNode.key);
 
-        expect(await treap.getRootUint()).to.be.eq(treapRoot);
-        expect(await treap.getRootUintV2()).to.be.eq(treapRoot);
+        expect(await treap.getUintRoot()).to.be.eq(treapRoot);
       }
     });
   });
@@ -200,8 +195,7 @@ describe.only("CartesianMerkleTree", () => {
         await tmpSmt.initializeUintTree(80);
 
         for (let i = 0; i < randomElements.length; i++) {
-          await tmpTreap.insertUint(randomElements[i]);
-          await tmpTreap.insertUintV2(randomElements[i]);
+          await tmpTreap.addUint(randomElements[i]);
           await tmpSmt.addUint(randomElements[i], randomElements[i]);
         }
 
@@ -229,14 +223,12 @@ describe.only("CartesianMerkleTree", () => {
         const tmpSmt = await SparseMerkleTreeMock.deploy();
 
         await tmpTreap.setUintPoseidonHasher();
-        await tmpTreap.setUintPoseidonHasherV2();
 
         await tmpSmt.initializeUintTree(80);
         await tmpSmt.setUintPoseidonHasher();
 
         for (let i = 0; i < randomElements.length; i++) {
-          await tmpTreap.insertUint(randomElements[i]);
-          await tmpTreap.insertUintV2(randomElements[i]);
+          await tmpTreap.addUint(randomElements[i]);
           await tmpSmt.addUint(randomElements[i], randomElements[i]);
         }
 
@@ -250,12 +242,11 @@ describe.only("CartesianMerkleTree", () => {
       const randomElements: string[] = createRandomArray(100);
 
       for (let i = 0; i < randomElements.length; i++) {
-        await treap.insertUint(randomElements[i]);
-        await treap.insertUintV2(randomElements[i]);
+        await treap.addUint(randomElements[i]);
       }
 
       for (let i = 0; i < 100; i++) {
-        const randIndex = Math.floor(Math.random() * (Number(await treap.getNodesCountUintV2()) - 1)) + 1;
+        const randIndex = Math.floor(Math.random() * (Number(await treap.getUintNodesCount()) - 1)) + 1;
 
         await verifyCMTProof(treap, randomElements[randIndex]);
       }

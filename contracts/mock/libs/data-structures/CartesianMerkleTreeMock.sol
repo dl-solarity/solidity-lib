@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import {CartesianMerkleTree} from "../../../libs/data-structures/CartesianMerkleTree.sol";
-import {CartesianMerkleTreeV2} from "../../../libs/data-structures/CartesianMerkleTreeV2.sol";
 
 library PoseidonUnit3L {
     function poseidon(uint256[3] calldata) public pure returns (uint256) {}
@@ -10,84 +9,184 @@ library PoseidonUnit3L {
 
 contract CartesianMerkleTreeMock {
     using CartesianMerkleTree for *;
-    using CartesianMerkleTreeV2 for *;
 
     CartesianMerkleTree.UintCMT internal _uintCMT;
-    CartesianMerkleTreeV2.UintCMT internal _uintCMTV2;
-
     CartesianMerkleTree.Bytes32CMT internal _bytes32CMT;
     CartesianMerkleTree.AddressCMT internal _addressCMT;
 
+    function initializeUintTreap(uint32 maxDepth_) external {
+        _uintCMT.initialize(maxDepth_);
+    }
+
+    function initializeBytes32Treap(uint32 maxDepth_) external {
+        _bytes32CMT.initialize(maxDepth_);
+    }
+
+    function initializeAddressTreap(uint32 maxDepth_) external {
+        _addressCMT.initialize(maxDepth_);
+    }
+
+    function setDesiredProofSizeUintTreap(uint32 maxDepth_) external {
+        _uintCMT.setDesiredProofSize(maxDepth_);
+    }
+
+    function setDesiredProofSizeBytes32Treap(uint32 maxDepth_) external {
+        _bytes32CMT.setDesiredProofSize(maxDepth_);
+    }
+
+    function setDesiredProofSizeAddressTreap(uint32 maxDepth_) external {
+        _addressCMT.setDesiredProofSize(maxDepth_);
+    }
+
     function setUintPoseidonHasher() external {
-        _uintCMT.setHashers(_hash3);
+        _uintCMT.setHasher(_hash3);
     }
 
-    function setUintPoseidonHasherV2() external {
-        _uintCMTV2.setHashers(_hash3);
+    function setBytes32PoseidonHasher() external {
+        _bytes32CMT.setHasher(_hash3);
     }
 
-    function insertUint(uint256 key_) external {
-        _uintCMT.insert(key_);
+    function setAddressPoseidonHasher() external {
+        _addressCMT.setHasher(_hash3);
     }
 
-    function insertUintV2(uint256 key_) external {
-        _uintCMTV2.insert(key_);
+    function addUint(uint256 key_) external {
+        _uintCMT.add(key_);
     }
 
     function removeUint(uint256 key_) external {
         _uintCMT.remove(key_);
     }
 
-    function removeUintV2(uint256 key_) external {
-        _uintCMTV2.remove(key_);
+    function addBytes32(bytes32 key_) external {
+        _bytes32CMT.add(key_);
     }
 
-    function proofUint(
+    function removeBytes32(bytes32 key_) external {
+        _bytes32CMT.remove(key_);
+    }
+
+    function addAddress(address key_) external {
+        _addressCMT.add(key_);
+    }
+
+    function removeAddress(address key_) external {
+        _addressCMT.remove(key_);
+    }
+
+    function getUintProof(
         uint256 key_,
         uint32 desiredProofSize_
     ) external view returns (CartesianMerkleTree.Proof memory) {
         return _uintCMT.getProof(key_, desiredProofSize_);
     }
 
-    function proofUintV2(
-        uint256 key_,
+    function getBytes32Proof(
+        bytes32 key_,
         uint32 desiredProofSize_
-    ) external view returns (CartesianMerkleTreeV2.Proof memory) {
-        return _uintCMTV2.getProof(key_, desiredProofSize_);
+    ) external view returns (CartesianMerkleTree.Proof memory) {
+        return _bytes32CMT.getProof(key_, desiredProofSize_);
     }
 
-    function getNodeUint(uint64 nodeId_) external view returns (CartesianMerkleTree.Node memory) {
-        return _uintCMT.getNode(nodeId_);
+    function getAddressProof(
+        address key_,
+        uint32 desiredProofSize_
+    ) external view returns (CartesianMerkleTree.Proof memory) {
+        return _addressCMT.getProof(key_, desiredProofSize_);
     }
 
-    function getNodeUintV2(
-        uint64 nodeId_
-    ) external view returns (CartesianMerkleTreeV2.Node memory) {
-        return _uintCMTV2.getNode(nodeId_);
-    }
-
-    function getNodesCountUint() external view returns (uint64) {
-        return _uintCMT.getNodesCount();
-    }
-
-    function getNodesCountUintV2() external view returns (uint64) {
-        return _uintCMTV2.getNodesCount();
-    }
-
-    function getRootNodeIdUint() external view returns (uint256) {
+    function getUintRootNodeId() external view returns (uint256) {
         return _uintCMT.getRootNodeId();
     }
 
-    function getRootNodeIdUintV2() external view returns (uint256) {
-        return _uintCMTV2.getRootNodeId();
+    function getBytes32RootNodeId() external view returns (uint256) {
+        return _bytes32CMT.getRootNodeId();
     }
 
-    function getRootUint() external view returns (bytes32) {
+    function getAddressRootNodeId() external view returns (uint256) {
+        return _addressCMT.getRootNodeId();
+    }
+
+    function getUintRoot() external view returns (bytes32) {
         return _uintCMT.getRoot();
     }
 
-    function getRootUintV2() external view returns (bytes32) {
-        return _uintCMTV2.getRoot();
+    function getBytes32Root() external view returns (bytes32) {
+        return _bytes32CMT.getRoot();
+    }
+
+    function getAddressRoot() external view returns (bytes32) {
+        return _addressCMT.getRoot();
+    }
+
+    function getUintNode(uint256 nodeId_) external view returns (CartesianMerkleTree.Node memory) {
+        return _uintCMT.getNode(nodeId_);
+    }
+
+    function getBytes32Node(
+        uint256 nodeId_
+    ) external view returns (CartesianMerkleTree.Node memory) {
+        return _bytes32CMT.getNode(nodeId_);
+    }
+
+    function getAddressNode(
+        uint256 nodeId_
+    ) external view returns (CartesianMerkleTree.Node memory) {
+        return _addressCMT.getNode(nodeId_);
+    }
+
+    function getUintNodeByKey(
+        uint256 key_
+    ) external view returns (CartesianMerkleTree.Node memory) {
+        return _uintCMT.getNodeByKey(key_);
+    }
+
+    function getBytes32NodeByKey(
+        bytes32 key_
+    ) external view returns (CartesianMerkleTree.Node memory) {
+        return _bytes32CMT.getNodeByKey(key_);
+    }
+
+    function getAddressNodeByKey(
+        address key_
+    ) external view returns (CartesianMerkleTree.Node memory) {
+        return _addressCMT.getNodeByKey(key_);
+    }
+
+    function getUintDesiredProofSize() external view returns (uint256) {
+        return _uintCMT.getDesiredProofSize();
+    }
+
+    function getBytes32DesiredProofSize() external view returns (uint256) {
+        return _bytes32CMT.getDesiredProofSize();
+    }
+
+    function getAddressDesiredProofSize() external view returns (uint256) {
+        return _addressCMT.getDesiredProofSize();
+    }
+
+    function getUintNodesCount() external view returns (uint256) {
+        return _uintCMT.getNodesCount();
+    }
+
+    function getBytes32NodesCount() external view returns (uint256) {
+        return _bytes32CMT.getNodesCount();
+    }
+
+    function getAddressNodesCount() external view returns (uint256) {
+        return _addressCMT.getNodesCount();
+    }
+
+    function isUintCustomHasherSet() external view returns (bool) {
+        return _uintCMT.isCustomHasherSet();
+    }
+
+    function isBytes32CustomHasherSet() external view returns (bool) {
+        return _bytes32CMT.isCustomHasherSet();
+    }
+
+    function isAddressCustomHasherSet() external view returns (bool) {
+        return _addressCMT.isCustomHasherSet();
     }
 
     function _hash3(
