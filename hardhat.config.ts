@@ -55,7 +55,7 @@ const config: HardhatUserConfig = {
   contractSizer: {
     alphaSort: false,
     disambiguatePaths: false,
-    runOnCompile: true,
+    // runOnCompile: true,
     strict: false,
   },
   gasReporter: {
