@@ -679,18 +679,6 @@ library U384 {
         }
     }
 
-    function modexpAssign(uint256 call_, uint256 b_, uint256 eInteger_) internal view {
-        assembly {
-            call_ := add(call_, EXP_OFFSET)
-
-            mstore(add(0x60, call_), mload(b_))
-            mstore(add(0x80, call_), mload(add(b_, 0x20)))
-            mstore(add(0xA0, call_), eInteger_)
-
-            pop(staticcall(gas(), 0x5, call_, 0x0100, b_, 0x40))
-        }
-    }
-
     function modexpAssignTo(
         uint256 call_,
         uint256 to_,
@@ -888,15 +876,6 @@ library U384 {
 
             mstore(r_, or(shl(1, mload(a_)), shr(255, a1_)))
             mstore(add(r_, 0x20), shl(1, a1_))
-        }
-    }
-
-    function _shl1To(uint256 a_) internal pure {
-        assembly {
-            let a1_ := mload(add(a_, 0x20))
-
-            mstore(a_, or(shl(1, mload(a_)), shr(255, a1_)))
-            mstore(add(a_, 0x20), shl(1, a1_))
         }
     }
 
