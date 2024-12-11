@@ -4,7 +4,10 @@ pragma solidity ^0.8.4;
 /**
  * @notice Cartesian Merkle Tree Module
  *
- * Gas usage for adding and removing 5,000 elements to a treap on the Poseidon and Keccak256 Hash functions is detailed below:
+ * A magnificent ZK-friendly data structure based on a Binary Search Tree + Heap + Merkle Tree. Short names: CMT, Treaple.
+ * Possesses deterministic and idemponent properties. Can be used as a substitute for a Sparse Merkle Tree (SMT).
+ *
+ * Gas usage for adding and removing 5,000 elements to a CMT with the keccak256 and poseidon hash functions is detailed below:
  *
  * Keccak256:
  * - CMT.add - 249k
@@ -19,19 +22,19 @@ pragma solidity ^0.8.4;
  * ```solidity
  * using CartesianMerkleTree for CartesianMerkleTree.UintCMT;
  *
- * CartesianMerkleTree.UintCMT internal uintTreap;
+ * CartesianMerkleTree.UintCMT internal uintTreaple;
  * ...
- * uintTreap.initialize(80);
+ * uintTreaple.initialize(80);
  *
- * uintTreap.add(100);
+ * uintTreaple.add(100);
  *
- * uintTreap.getRoot();
+ * uintTreaple.getRoot();
  *
- * CartesianMerkleTree.Proof memory proof = uintTreap.getProof(100);
+ * CartesianMerkleTree.Proof memory proof = uintTreaple.getProof(100);
  *
- * uintTreap.getNodeByKey(100);
+ * uintTreaple.getNodeByKey(100);
  *
- * uintTreap.remove(100);
+ * uintTreaple.remove(100);
  * ```
  */
 library CartesianMerkleTree {
@@ -42,7 +45,7 @@ library CartesianMerkleTree {
      */
 
     struct UintCMT {
-        CMT _treap;
+        CMT _treaple;
     }
 
     /**
@@ -53,11 +56,11 @@ library CartesianMerkleTree {
      * Requirements:
      * - The desired proof size value must be greater than 0.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param desiredProofSize_ The desired proof size of the CMT proofs.
      */
-    function initialize(UintCMT storage treap, uint32 desiredProofSize_) internal {
-        _initialize(treap._treap, desiredProofSize_);
+    function initialize(UintCMT storage treaple, uint32 desiredProofSize_) internal {
+        _initialize(treaple._treaple, desiredProofSize_);
     }
 
     /**
@@ -66,14 +69,14 @@ library CartesianMerkleTree {
      * Requirements:
      * - The tree must be empty.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param hash3_ The hash function that accepts three arguments.
      */
     function setHasher(
-        UintCMT storage treap,
+        UintCMT storage treaple,
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
     ) internal {
-        _setHasher(treap._treap, hash3_);
+        _setHasher(treaple._treaple, hash3_);
     }
 
     /**
@@ -82,118 +85,121 @@ library CartesianMerkleTree {
      * Requirements:
      * - The desired proof size value must be greater than 0.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param desiredProofSize_ The desired proof size of the CMT proofs.
      */
-    function setDesiredProofSize(UintCMT storage treap, uint32 desiredProofSize_) internal {
-        _setDesiredProofSize(treap._treap, desiredProofSize_);
+    function setDesiredProofSize(UintCMT storage treaple, uint32 desiredProofSize_) internal {
+        _setDesiredProofSize(treaple._treaple, desiredProofSize_);
     }
 
     /**
-     * @notice The function to add a new element to the uint256 treap.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * @notice The function to add a new element to the uint256 treaple.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      */
-    function add(UintCMT storage treap, uint256 key_) internal {
-        _add(treap._treap, bytes32(key_));
+    function add(UintCMT storage treaple, uint256 key_) internal {
+        _add(treaple._treaple, bytes32(key_));
     }
 
     /**
-     * @notice The function to remove an element from the uint256 treap.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * @notice The function to remove an element from the uint256 treaple.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      */
-    function remove(UintCMT storage treap, uint256 key_) internal {
-        _remove(treap._treap, bytes32(key_));
+    function remove(UintCMT storage treaple, uint256 key_) internal {
+        _remove(treaple._treaple, bytes32(key_));
     }
 
     /**
      * @notice The function to get the proof if a node with specific key exists or not exists in the CMT.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      * @param desiredProofSize_ The desired siblings length in the proof.
      * @return CMT proof struct.
      */
     function getProof(
-        UintCMT storage treap,
+        UintCMT storage treaple,
         uint256 key_,
         uint32 desiredProofSize_
     ) internal view returns (Proof memory) {
-        return _proof(treap._treap, bytes32(key_), desiredProofSize_);
+        return _proof(treaple._treaple, bytes32(key_), desiredProofSize_);
     }
 
     /**
      * @notice The function to get the root of the Cartesian Merkle Tree.
      * Complexity is O(1).
      *
-     * @param treap self.
+     * @param treaple self.
      * @return The root of the Cartesian Merkle Tree.
      */
-    function getRoot(UintCMT storage treap) internal view returns (bytes32) {
-        return _rootMerkleHash(treap._treap);
+    function getRoot(UintCMT storage treaple) internal view returns (bytes32) {
+        return _rootMerkleHash(treaple._treaple);
     }
 
     /**
      * @notice The function to get the node by its index.
      * Complexity is O(1).
      *
-     * @param treap self.
+     * @param treaple self.
      * @param nodeId_ The index of the node.
      * @return The node.
      */
-    function getNode(UintCMT storage treap, uint256 nodeId_) internal view returns (Node memory) {
-        return _node(treap._treap, nodeId_);
+    function getNode(
+        UintCMT storage treaple,
+        uint256 nodeId_
+    ) internal view returns (Node memory) {
+        return _node(treaple._treaple, nodeId_);
     }
 
     /**
      * @notice The function to get the node by its key.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      * @return The node.
      */
     function getNodeByKey(
-        UintCMT storage treap,
+        UintCMT storage treaple,
         uint256 key_
     ) internal view returns (Node memory) {
-        return _nodeByKey(treap._treap, bytes32(key_));
+        return _nodeByKey(treaple._treaple, bytes32(key_));
     }
 
     /**
      * @notice The function to get the desired proof size value.
      *
-     * @param treap self.
+     * @param treaple self.
      * @return The desired proof size value.
      */
-    function getDesiredProofSize(UintCMT storage treap) internal view returns (uint256) {
-        return _desiredProofSize(treap._treap);
+    function getDesiredProofSize(UintCMT storage treaple) internal view returns (uint256) {
+        return _desiredProofSize(treaple._treaple);
     }
 
     /**
      * @notice The function to get the number of nodes in the Cartesian Merkle Tree.
      *
-     * @param treap self.
+     * @param treaple self.
      * @return The number of nodes in the Cartesian Merkle Tree.
      */
-    function getNodesCount(UintCMT storage treap) internal view returns (uint64) {
-        return uint64(_nodesCount(treap._treap));
+    function getNodesCount(UintCMT storage treaple) internal view returns (uint64) {
+        return uint64(_nodesCount(treaple._treaple));
     }
 
     /**
      * @notice The function to check if custom hash function is set.
      *
-     * @param treap self.
+     * @param treaple self.
      * @return True if custom hash function is set, otherwise false.
      */
-    function isCustomHasherSet(UintCMT storage treap) internal view returns (bool) {
-        return _isCustomHasherSet(treap._treap);
+    function isCustomHasherSet(UintCMT storage treaple) internal view returns (bool) {
+        return _isCustomHasherSet(treaple._treaple);
     }
 
     /**
@@ -203,7 +209,7 @@ library CartesianMerkleTree {
      */
 
     struct Bytes32CMT {
-        CMT _treap;
+        CMT _treaple;
     }
 
     /**
@@ -214,11 +220,11 @@ library CartesianMerkleTree {
      * Requirements:
      * - The desired proof size value must be greater than 0.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param desiredProofSize_ The desired proof size of the CMT proofs.
      */
-    function initialize(Bytes32CMT storage treap, uint32 desiredProofSize_) internal {
-        _initialize(treap._treap, desiredProofSize_);
+    function initialize(Bytes32CMT storage treaple, uint32 desiredProofSize_) internal {
+        _initialize(treaple._treaple, desiredProofSize_);
     }
 
     /**
@@ -227,14 +233,14 @@ library CartesianMerkleTree {
      * Requirements:
      * - The tree must be empty.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param hash3_ The hash function that accepts three arguments.
      */
     function setHasher(
-        Bytes32CMT storage treap,
+        Bytes32CMT storage treaple,
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
     ) internal {
-        _setHasher(treap._treap, hash3_);
+        _setHasher(treaple._treaple, hash3_);
     }
 
     /**
@@ -243,121 +249,121 @@ library CartesianMerkleTree {
      * Requirements:
      * - The desired proof size value must be greater than 0.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param desiredProofSize_ The desired proof size of the CMT proofs.
      */
-    function setDesiredProofSize(Bytes32CMT storage treap, uint32 desiredProofSize_) internal {
-        _setDesiredProofSize(treap._treap, desiredProofSize_);
+    function setDesiredProofSize(Bytes32CMT storage treaple, uint32 desiredProofSize_) internal {
+        _setDesiredProofSize(treaple._treaple, desiredProofSize_);
     }
 
     /**
-     * @notice The function to add a new element to the bytes32 treap.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * @notice The function to add a new element to the bytes32 treaple.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      */
-    function add(Bytes32CMT storage treap, bytes32 key_) internal {
-        _add(treap._treap, key_);
+    function add(Bytes32CMT storage treaple, bytes32 key_) internal {
+        _add(treaple._treaple, key_);
     }
 
     /**
-     * @notice The function to remove an element from the bytes32 treap.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * @notice The function to remove an element from the bytes32 treaple.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      */
-    function remove(Bytes32CMT storage treap, bytes32 key_) internal {
-        _remove(treap._treap, key_);
+    function remove(Bytes32CMT storage treaple, bytes32 key_) internal {
+        _remove(treaple._treaple, key_);
     }
 
     /**
      * @notice The function to get the proof if a node with specific key exists or not exists in the CMT.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      * @param desiredProofSize_ The desired siblings length in the proof.
      * @return CMT proof struct.
      */
     function getProof(
-        Bytes32CMT storage treap,
+        Bytes32CMT storage treaple,
         bytes32 key_,
         uint32 desiredProofSize_
     ) internal view returns (Proof memory) {
-        return _proof(treap._treap, key_, desiredProofSize_);
+        return _proof(treaple._treaple, key_, desiredProofSize_);
     }
 
     /**
      * @notice The function to get the root of the Cartesian Merkle Tree.
      * Complexity is O(1).
      *
-     * @param treap self.
+     * @param treaple self.
      * @return The root of the Cartesian Merkle Tree.
      */
-    function getRoot(Bytes32CMT storage treap) internal view returns (bytes32) {
-        return _rootMerkleHash(treap._treap);
+    function getRoot(Bytes32CMT storage treaple) internal view returns (bytes32) {
+        return _rootMerkleHash(treaple._treaple);
     }
 
     /**
      * @notice The function to get the node by its index.
      * Complexity is O(1).
      *
-     * @param treap self.
+     * @param treaple self.
      * @param nodeId_ The index of the node.
      * @return The node.
      */
     function getNode(
-        Bytes32CMT storage treap,
+        Bytes32CMT storage treaple,
         uint256 nodeId_
     ) internal view returns (Node memory) {
-        return _node(treap._treap, nodeId_);
+        return _node(treaple._treaple, nodeId_);
     }
 
     /**
      * @notice The function to get the node by its key.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      * @return The node.
      */
     function getNodeByKey(
-        Bytes32CMT storage treap,
+        Bytes32CMT storage treaple,
         bytes32 key_
     ) internal view returns (Node memory) {
-        return _nodeByKey(treap._treap, key_);
+        return _nodeByKey(treaple._treaple, key_);
     }
 
     /**
      * @notice The function to get the desired proof size value.
      *
-     * @param treap self.
+     * @param treaple self.
      * @return The desired proof size value.
      */
-    function getDesiredProofSize(Bytes32CMT storage treap) internal view returns (uint256) {
-        return _desiredProofSize(treap._treap);
+    function getDesiredProofSize(Bytes32CMT storage treaple) internal view returns (uint256) {
+        return _desiredProofSize(treaple._treaple);
     }
 
     /**
      * @notice The function to get the number of nodes in the Cartesian Merkle Tree.
      *
-     * @param treap self.
+     * @param treaple self.
      * @return The number of nodes in the Cartesian Merkle Tree.
      */
-    function getNodesCount(Bytes32CMT storage treap) internal view returns (uint64) {
-        return uint64(_nodesCount(treap._treap));
+    function getNodesCount(Bytes32CMT storage treaple) internal view returns (uint64) {
+        return uint64(_nodesCount(treaple._treaple));
     }
 
     /**
      * @notice The function to check if custom hash function is set.
      *
-     * @param treap self.
+     * @param treaple self.
      * @return True if custom hash function is set, otherwise false.
      */
-    function isCustomHasherSet(Bytes32CMT storage treap) internal view returns (bool) {
-        return _isCustomHasherSet(treap._treap);
+    function isCustomHasherSet(Bytes32CMT storage treaple) internal view returns (bool) {
+        return _isCustomHasherSet(treaple._treaple);
     }
 
     /**
@@ -367,7 +373,7 @@ library CartesianMerkleTree {
      */
 
     struct AddressCMT {
-        CMT _treap;
+        CMT _treaple;
     }
 
     /**
@@ -378,11 +384,11 @@ library CartesianMerkleTree {
      * Requirements:
      * - The desired proof size value must be greater than 0.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param desiredProofSize_ The desired proof size of the CMT proofs.
      */
-    function initialize(AddressCMT storage treap, uint32 desiredProofSize_) internal {
-        _initialize(treap._treap, desiredProofSize_);
+    function initialize(AddressCMT storage treaple, uint32 desiredProofSize_) internal {
+        _initialize(treaple._treaple, desiredProofSize_);
     }
 
     /**
@@ -391,14 +397,14 @@ library CartesianMerkleTree {
      * Requirements:
      * - The tree must be empty.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param hash3_ The hash function that accepts three arguments.
      */
     function setHasher(
-        AddressCMT storage treap,
+        AddressCMT storage treaple,
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
     ) internal {
-        _setHasher(treap._treap, hash3_);
+        _setHasher(treaple._treaple, hash3_);
     }
 
     /**
@@ -407,121 +413,121 @@ library CartesianMerkleTree {
      * Requirements:
      * - The desired proof size value must be greater than 0.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param desiredProofSize_ The desired proof size of the CMT proofs.
      */
-    function setDesiredProofSize(AddressCMT storage treap, uint32 desiredProofSize_) internal {
-        _setDesiredProofSize(treap._treap, desiredProofSize_);
+    function setDesiredProofSize(AddressCMT storage treaple, uint32 desiredProofSize_) internal {
+        _setDesiredProofSize(treaple._treaple, desiredProofSize_);
     }
 
     /**
-     * @notice The function to add a new element to the address treap.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * @notice The function to add a new element to the address treaple.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      */
-    function add(AddressCMT storage treap, address key_) internal {
-        _add(treap._treap, _fromAddressToBytes32(key_));
+    function add(AddressCMT storage treaple, address key_) internal {
+        _add(treaple._treaple, _fromAddressToBytes32(key_));
     }
 
     /**
-     * @notice The function to remove an element from the address treap.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * @notice The function to remove an element from the address treaple.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      */
-    function remove(AddressCMT storage treap, address key_) internal {
-        _remove(treap._treap, _fromAddressToBytes32(key_));
+    function remove(AddressCMT storage treaple, address key_) internal {
+        _remove(treaple._treaple, _fromAddressToBytes32(key_));
     }
 
     /**
      * @notice The function to get the proof if a node with specific key exists or not exists in the CMT.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      * @param desiredProofSize_ The desired siblings length in the proof.
      * @return CMT proof struct.
      */
     function getProof(
-        AddressCMT storage treap,
+        AddressCMT storage treaple,
         address key_,
         uint32 desiredProofSize_
     ) internal view returns (Proof memory) {
-        return _proof(treap._treap, _fromAddressToBytes32(key_), desiredProofSize_);
+        return _proof(treaple._treaple, _fromAddressToBytes32(key_), desiredProofSize_);
     }
 
     /**
      * @notice The function to get the root of the Cartesian Merkle Tree.
      * Complexity is O(1).
      *
-     * @param treap self.
+     * @param treaple self.
      * @return The root of the Cartesian Merkle Tree.
      */
-    function getRoot(AddressCMT storage treap) internal view returns (bytes32) {
-        return _rootMerkleHash(treap._treap);
+    function getRoot(AddressCMT storage treaple) internal view returns (bytes32) {
+        return _rootMerkleHash(treaple._treaple);
     }
 
     /**
      * @notice The function to get the node by its index.
      * Complexity is O(1).
      *
-     * @param treap self.
+     * @param treaple self.
      * @param nodeId_ The index of the node.
      * @return The node.
      */
     function getNode(
-        AddressCMT storage treap,
+        AddressCMT storage treaple,
         uint256 nodeId_
     ) internal view returns (Node memory) {
-        return _node(treap._treap, nodeId_);
+        return _node(treaple._treaple, nodeId_);
     }
 
     /**
      * @notice The function to get the node by its key.
-     * Complexity is O(log(n)), where n is the max depth of the treap.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
      *
-     * @param treap self.
+     * @param treaple self.
      * @param key_ The key of the element.
      * @return The node.
      */
     function getNodeByKey(
-        AddressCMT storage treap,
+        AddressCMT storage treaple,
         address key_
     ) internal view returns (Node memory) {
-        return _nodeByKey(treap._treap, _fromAddressToBytes32(key_));
+        return _nodeByKey(treaple._treaple, _fromAddressToBytes32(key_));
     }
 
     /**
      * @notice The function to get the desired proof size value.
      *
-     * @param treap self.
+     * @param treaple self.
      * @return The desired proof size value.
      */
-    function getDesiredProofSize(AddressCMT storage treap) internal view returns (uint256) {
-        return _desiredProofSize(treap._treap);
+    function getDesiredProofSize(AddressCMT storage treaple) internal view returns (uint256) {
+        return _desiredProofSize(treaple._treaple);
     }
 
     /**
      * @notice The function to get the number of nodes in the Cartesian Merkle Tree.
      *
-     * @param treap self.
+     * @param treaple self.
      * @return The number of nodes in the Cartesian Merkle Tree.
      */
-    function getNodesCount(AddressCMT storage treap) internal view returns (uint64) {
-        return uint64(_nodesCount(treap._treap));
+    function getNodesCount(AddressCMT storage treaple) internal view returns (uint64) {
+        return uint64(_nodesCount(treaple._treaple));
     }
 
     /**
      * @notice The function to check if custom hash function is set.
      *
-     * @param treap self.
+     * @param treaple self.
      * @return True if custom hash function is set, otherwise false.
      */
-    function isCustomHasherSet(AddressCMT storage treap) internal view returns (bool) {
-        return _isCustomHasherSet(treap._treap);
+    function isCustomHasherSet(AddressCMT storage treaple) internal view returns (bool) {
+        return _isCustomHasherSet(treaple._treaple);
     }
 
     function _fromAddressToBytes32(address key_) private pure returns (bytes32 result_) {
@@ -539,7 +545,7 @@ library CartesianMerkleTree {
     /**
      * @notice Defines the structure of the Cartesian Merkle Tree.
      *
-     * @param nodes A mapping of the treap's nodes, where the key is the node's index, starting from 1 upon node addition.
+     * @param nodes A mapping of the treaple's nodes, where the key is the node's index, starting from 1 upon node addition.
      *
      * @param merkleRootId The index of the root node.
      * @param nodesCount The total number of nodes within the Cartesian Merkle Tree.
@@ -599,97 +605,101 @@ library CartesianMerkleTree {
 
     bytes32 internal constant ZERO_HASH = bytes32(0);
 
-    modifier onlyInitialized(CMT storage treap) {
-        require(_isInitialized(treap), "CartesianMerkleTree: treap is not initialized");
+    modifier onlyInitialized(CMT storage treaple) {
+        require(_isInitialized(treaple), "CartesianMerkleTree: treaple is not initialized");
         _;
     }
 
-    function _initialize(CMT storage treap, uint32 desiredProofSize_) private {
-        require(!_isInitialized(treap), "CartesianMerkleTree: treap is already initialized");
+    function _initialize(CMT storage treaple, uint32 desiredProofSize_) private {
+        require(!_isInitialized(treaple), "CartesianMerkleTree: treaple is already initialized");
 
-        _setDesiredProofSize(treap, desiredProofSize_);
+        _setDesiredProofSize(treaple, desiredProofSize_);
     }
 
-    function _setDesiredProofSize(CMT storage treap, uint32 desiredProofSize_) private {
+    function _setDesiredProofSize(CMT storage treaple, uint32 desiredProofSize_) private {
         require(
             desiredProofSize_ > 0,
             "CartesianMerkleTree: desired proof size must be greater than zero"
         );
 
-        treap.desiredProofSize = desiredProofSize_;
+        treaple.desiredProofSize = desiredProofSize_;
     }
 
     function _setHasher(
-        CMT storage treap,
+        CMT storage treaple,
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
     ) private {
-        require(_nodesCount(treap) == 0, "CartesianMerkleTree: treap is not empty");
+        require(_nodesCount(treaple) == 0, "CartesianMerkleTree: treaple is not empty");
 
-        treap.isCustomHasherSet = true;
+        treaple.isCustomHasherSet = true;
 
-        treap.hash3 = hash3_;
+        treaple.hash3 = hash3_;
     }
 
-    function _add(CMT storage treap, bytes32 key_) private onlyInitialized(treap) {
+    function _add(CMT storage treaple, bytes32 key_) private onlyInitialized(treaple) {
         require(key_ != 0, "CartesianMerkleTree: the key can't be zero");
 
-        treap.merkleRootId = uint64(_add(treap, treap.merkleRootId, key_));
+        treaple.merkleRootId = uint64(_add(treaple, treaple.merkleRootId, key_));
     }
 
-    function _remove(CMT storage treap, bytes32 key_) private onlyInitialized(treap) {
+    function _remove(CMT storage treaple, bytes32 key_) private onlyInitialized(treaple) {
         require(key_ != 0, "CartesianMerkleTree: the key can't be zero");
 
-        treap.merkleRootId = uint64(_remove(treap, treap.merkleRootId, key_));
+        treaple.merkleRootId = uint64(_remove(treaple, treaple.merkleRootId, key_));
     }
 
-    function _add(CMT storage treap, uint256 rootNodeId_, bytes32 key_) private returns (uint256) {
-        Node storage rootNode = treap.nodes[uint64(rootNodeId_)];
+    function _add(
+        CMT storage treaple,
+        uint256 rootNodeId_,
+        bytes32 key_
+    ) private returns (uint256) {
+        Node storage rootNode = treaple.nodes[uint64(rootNodeId_)];
 
         if (rootNode.key == 0) {
-            return _newNode(treap, key_);
+            return _newNode(treaple, key_);
         }
 
         require(rootNode.key != key_, "CartesianMerkleTree: the key already exists");
 
         if (rootNode.key > key_) {
-            rootNode.childLeft = uint64(_add(treap, rootNode.childLeft, key_));
+            rootNode.childLeft = uint64(_add(treaple, rootNode.childLeft, key_));
 
-            if (treap.nodes[rootNode.childLeft].priority > rootNode.priority) {
-                rootNodeId_ = _rightRotate(treap, rootNodeId_);
-                rootNode = treap.nodes[uint64(rootNodeId_)];
+            if (treaple.nodes[rootNode.childLeft].priority > rootNode.priority) {
+                rootNodeId_ = _rightRotate(treaple, rootNodeId_);
+                rootNode = treaple.nodes[uint64(rootNodeId_)];
             }
         } else {
-            rootNode.childRight = uint64(_add(treap, rootNode.childRight, key_));
+            rootNode.childRight = uint64(_add(treaple, rootNode.childRight, key_));
 
-            if (treap.nodes[rootNode.childRight].priority > rootNode.priority) {
-                rootNodeId_ = _leftRotate(treap, rootNodeId_);
-                rootNode = treap.nodes[uint64(rootNodeId_)];
+            if (treaple.nodes[rootNode.childRight].priority > rootNode.priority) {
+                rootNodeId_ = _leftRotate(treaple, rootNodeId_);
+                rootNode = treaple.nodes[uint64(rootNodeId_)];
             }
         }
 
-        rootNode.merkleHash = _hashNodes(treap, rootNodeId_);
+        rootNode.merkleHash = _hashNodes(treaple, rootNodeId_);
 
         return rootNodeId_;
     }
 
     function _remove(
-        CMT storage treap,
+        CMT storage treaple,
         uint256 rootNodeId_,
         bytes32 key_
     ) private returns (uint256) {
-        Node storage rootNode = treap.nodes[uint64(rootNodeId_)];
+        Node storage rootNode = treaple.nodes[uint64(rootNodeId_)];
 
         require(rootNode.key != 0, "CartesianMerkleTree: the node does not exist");
 
         if (key_ < rootNode.key) {
-            rootNode.childLeft = uint64(_remove(treap, rootNode.childLeft, key_));
+            rootNode.childLeft = uint64(_remove(treaple, rootNode.childLeft, key_));
         } else if (key_ > rootNode.key) {
-            rootNode.childRight = uint64(_remove(treap, rootNode.childRight, key_));
+            rootNode.childRight = uint64(_remove(treaple, rootNode.childRight, key_));
         }
 
         if (rootNode.key == key_) {
-            Node storage leftRootChildNode = treap.nodes[rootNode.childLeft];
-            Node storage rightRootChildNode = treap.nodes[rootNode.childRight];
+            Node storage leftRootChildNode = treaple.nodes[rootNode.childLeft];
+            Node storage rightRootChildNode = treaple.nodes[rootNode.childRight];
 
             if (leftRootChildNode.key == 0 || rightRootChildNode.key == 0) {
                 uint64 nodeIdToRemove_ = uint64(rootNodeId_);
@@ -698,69 +708,71 @@ library CartesianMerkleTree {
                     ? rootNode.childRight
                     : rootNode.childLeft;
 
-                treap.deletedNodesCount++;
-                delete treap.nodes[nodeIdToRemove_];
+                treaple.deletedNodesCount++;
+                delete treaple.nodes[nodeIdToRemove_];
             } else if (leftRootChildNode.priority < rightRootChildNode.priority) {
-                rootNodeId_ = _leftRotate(treap, rootNodeId_);
-                rootNode = treap.nodes[uint64(rootNodeId_)];
+                rootNodeId_ = _leftRotate(treaple, rootNodeId_);
+                rootNode = treaple.nodes[uint64(rootNodeId_)];
 
-                rootNode.childLeft = uint64(_remove(treap, rootNode.childLeft, key_));
+                rootNode.childLeft = uint64(_remove(treaple, rootNode.childLeft, key_));
             } else {
-                rootNodeId_ = _rightRotate(treap, rootNodeId_);
-                rootNode = treap.nodes[uint64(rootNodeId_)];
+                rootNodeId_ = _rightRotate(treaple, rootNodeId_);
+                rootNode = treaple.nodes[uint64(rootNodeId_)];
 
-                rootNode.childRight = uint64(_remove(treap, rootNode.childRight, key_));
+                rootNode.childRight = uint64(_remove(treaple, rootNode.childRight, key_));
             }
         }
 
-        rootNode.merkleHash = _hashNodes(treap, rootNodeId_);
+        rootNode.merkleHash = _hashNodes(treaple, rootNodeId_);
 
         return rootNodeId_;
     }
 
-    function _rightRotate(CMT storage treap, uint256 nodeId_) private returns (uint256) {
-        Node storage node = treap.nodes[uint64(nodeId_)];
+    function _rightRotate(CMT storage treaple, uint256 nodeId_) private returns (uint256) {
+        Node storage node = treaple.nodes[uint64(nodeId_)];
 
         uint64 leftId_ = node.childLeft;
 
-        Node storage leftNode = treap.nodes[leftId_];
+        Node storage leftNode = treaple.nodes[leftId_];
 
         uint64 leftRightId_ = leftNode.childRight;
 
         leftNode.childRight = uint64(nodeId_);
         node.childLeft = leftRightId_;
 
-        node.merkleHash = _hashNodes(treap, nodeId_);
+        node.merkleHash = _hashNodes(treaple, nodeId_);
 
         return leftId_;
     }
 
-    function _leftRotate(CMT storage treap, uint256 nodeId_) private returns (uint256) {
-        Node storage node = treap.nodes[uint64(nodeId_)];
+    function _leftRotate(CMT storage treaple, uint256 nodeId_) private returns (uint256) {
+        Node storage node = treaple.nodes[uint64(nodeId_)];
 
         uint64 rightId_ = node.childRight;
 
-        Node storage rightNode = treap.nodes[rightId_];
+        Node storage rightNode = treaple.nodes[rightId_];
 
         uint64 rightLeftId_ = rightNode.childLeft;
 
         rightNode.childLeft = uint64(nodeId_);
         node.childRight = rightLeftId_;
 
-        node.merkleHash = _hashNodes(treap, nodeId_);
+        node.merkleHash = _hashNodes(treaple, nodeId_);
 
         return rightId_;
     }
 
     function _proof(
-        CMT storage treap,
+        CMT storage treaple,
         bytes32 key_,
         uint256 desiredProofSize_
     ) private view returns (Proof memory) {
-        desiredProofSize_ = desiredProofSize_ == 0 ? _desiredProofSize(treap) : desiredProofSize_;
+        desiredProofSize_ = desiredProofSize_ == 0
+            ? _desiredProofSize(treaple)
+            : desiredProofSize_;
 
         Proof memory proof_ = Proof({
-            root: _rootMerkleHash(treap),
+            root: _rootMerkleHash(treaple),
             siblings: new bytes32[](desiredProofSize_),
             siblingsLength: 0,
             existence: false,
@@ -768,27 +780,27 @@ library CartesianMerkleTree {
             nonExistenceKey: ZERO_HASH
         });
 
-        if (treap.merkleRootId == 0) {
+        if (treaple.merkleRootId == 0) {
             return proof_;
         }
 
         Node storage node;
         uint256 currentSiblingsIndex_;
-        uint256 nextNodeId_ = treap.merkleRootId;
+        uint256 nextNodeId_ = treaple.merkleRootId;
 
         while (true) {
-            node = treap.nodes[uint64(nextNodeId_)];
+            node = treaple.nodes[uint64(nextNodeId_)];
 
             if (node.key == key_) {
                 _addProofSibling(
                     proof_,
                     currentSiblingsIndex_++,
-                    treap.nodes[node.childLeft].merkleHash
+                    treaple.nodes[node.childLeft].merkleHash
                 );
                 _addProofSibling(
                     proof_,
                     currentSiblingsIndex_++,
-                    treap.nodes[node.childRight].merkleHash
+                    treaple.nodes[node.childRight].merkleHash
                 );
 
                 proof_.existence = true;
@@ -811,12 +823,12 @@ library CartesianMerkleTree {
                 _addProofSibling(
                     proof_,
                     currentSiblingsIndex_++,
-                    treap.nodes[node.childLeft].merkleHash
+                    treaple.nodes[node.childLeft].merkleHash
                 );
                 _addProofSibling(
                     proof_,
                     currentSiblingsIndex_++,
-                    treap.nodes[node.childRight].merkleHash
+                    treaple.nodes[node.childRight].merkleHash
                 );
 
                 proof_.nonExistenceKey = node.key;
@@ -829,21 +841,21 @@ library CartesianMerkleTree {
             _addProofSibling(
                 proof_,
                 currentSiblingsIndex_++,
-                treap.nodes[otherNodeId_].merkleHash
+                treaple.nodes[otherNodeId_].merkleHash
             );
         }
 
         return proof_;
     }
 
-    function _newNode(CMT storage treap, bytes32 key_) private returns (uint256) {
-        uint64 nodeId_ = ++treap.nodesCount;
+    function _newNode(CMT storage treaple, bytes32 key_) private returns (uint256) {
+        uint64 nodeId_ = ++treaple.nodesCount;
 
-        treap.nodes[nodeId_] = Node({
+        treaple.nodes[nodeId_] = Node({
             childLeft: 0,
             childRight: 0,
             priority: bytes16(keccak256(abi.encodePacked(key_))),
-            merkleHash: _getNodesHash(treap, key_, 0, 0),
+            merkleHash: _getNodesHash(treaple, key_, 0, 0),
             key: key_
         });
 
@@ -863,42 +875,43 @@ library CartesianMerkleTree {
         proof_.siblings[currentSiblingsIndex_] = siblingToAdd_;
     }
 
-    function _hashNodes(CMT storage treap, uint256 nodeId_) private view returns (bytes32) {
-        Node storage node = treap.nodes[uint64(nodeId_)];
+    function _hashNodes(CMT storage treaple, uint256 nodeId_) private view returns (bytes32) {
+        Node storage node = treaple.nodes[uint64(nodeId_)];
 
-        bytes32 leftHash_ = treap.nodes[node.childLeft].merkleHash;
-        bytes32 rightHash_ = treap.nodes[node.childRight].merkleHash;
+        bytes32 leftHash_ = treaple.nodes[node.childLeft].merkleHash;
+        bytes32 rightHash_ = treaple.nodes[node.childRight].merkleHash;
 
         if (leftHash_ > rightHash_) {
             (leftHash_, rightHash_) = (rightHash_, leftHash_);
         }
 
-        return _getNodesHash(treap, node.key, leftHash_, rightHash_);
+        return _getNodesHash(treaple, node.key, leftHash_, rightHash_);
     }
 
     function _getNodesHash(
-        CMT storage treap,
+        CMT storage treaple,
         bytes32 nodeKey_,
         bytes32 leftNodeKey_,
         bytes32 rightNodeKey_
     ) private view returns (bytes32) {
-        function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_ = treap.isCustomHasherSet
-            ? treap.hash3
+        function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_ = treaple
+            .isCustomHasherSet
+            ? treaple.hash3
             : _hash3;
 
         return hash3_(nodeKey_, leftNodeKey_, rightNodeKey_);
     }
 
     function _nodeByKey(
-        CMT storage treap,
+        CMT storage treaple,
         bytes32 key_
     ) private view returns (Node memory result_) {
-        uint256 nextNodeId_ = treap.merkleRootId;
+        uint256 nextNodeId_ = treaple.merkleRootId;
 
         Node storage currentNode;
 
         while (true) {
-            currentNode = treap.nodes[uint64(nextNodeId_)];
+            currentNode = treaple.nodes[uint64(nextNodeId_)];
 
             if (currentNode.key == 0) {
                 break;
@@ -926,27 +939,27 @@ library CartesianMerkleTree {
         }
     }
 
-    function _rootMerkleHash(CMT storage treap) private view returns (bytes32) {
-        return treap.nodes[treap.merkleRootId].merkleHash;
+    function _rootMerkleHash(CMT storage treaple) private view returns (bytes32) {
+        return treaple.nodes[treaple.merkleRootId].merkleHash;
     }
 
-    function _node(CMT storage treap, uint256 nodeId_) private view returns (Node memory) {
-        return treap.nodes[uint64(nodeId_)];
+    function _node(CMT storage treaple, uint256 nodeId_) private view returns (Node memory) {
+        return treaple.nodes[uint64(nodeId_)];
     }
 
-    function _desiredProofSize(CMT storage treap) private view returns (uint256) {
-        return treap.desiredProofSize;
+    function _desiredProofSize(CMT storage treaple) private view returns (uint256) {
+        return treaple.desiredProofSize;
     }
 
-    function _nodesCount(CMT storage treap) private view returns (uint256) {
-        return treap.nodesCount - treap.deletedNodesCount;
+    function _nodesCount(CMT storage treaple) private view returns (uint256) {
+        return treaple.nodesCount - treaple.deletedNodesCount;
     }
 
-    function _isInitialized(CMT storage treap) private view returns (bool) {
-        return treap.desiredProofSize > 0;
+    function _isInitialized(CMT storage treaple) private view returns (bool) {
+        return treaple.desiredProofSize > 0;
     }
 
-    function _isCustomHasherSet(CMT storage treap) private view returns (bool) {
-        return treap.isCustomHasherSet;
+    function _isCustomHasherSet(CMT storage treaple) private view returns (bool) {
+        return treaple.isCustomHasherSet;
     }
 }

@@ -14,27 +14,27 @@ contract CartesianMerkleTreeMock {
     CartesianMerkleTree.Bytes32CMT internal _bytes32CMT;
     CartesianMerkleTree.AddressCMT internal _addressCMT;
 
-    function initializeUintTreap(uint32 maxDepth_) external {
+    function initializeUintTreaple(uint32 maxDepth_) external {
         _uintCMT.initialize(maxDepth_);
     }
 
-    function initializeBytes32Treap(uint32 maxDepth_) external {
+    function initializeBytes32Treaple(uint32 maxDepth_) external {
         _bytes32CMT.initialize(maxDepth_);
     }
 
-    function initializeAddressTreap(uint32 maxDepth_) external {
+    function initializeAddressTreaple(uint32 maxDepth_) external {
         _addressCMT.initialize(maxDepth_);
     }
 
-    function setDesiredProofSizeUintTreap(uint32 maxDepth_) external {
+    function setDesiredProofSizeUintTreaple(uint32 maxDepth_) external {
         _uintCMT.setDesiredProofSize(maxDepth_);
     }
 
-    function setDesiredProofSizeBytes32Treap(uint32 maxDepth_) external {
+    function setDesiredProofSizeBytes32Treaple(uint32 maxDepth_) external {
         _bytes32CMT.setDesiredProofSize(maxDepth_);
     }
 
-    function setDesiredProofSizeAddressTreap(uint32 maxDepth_) external {
+    function setDesiredProofSizeAddressTreaple(uint32 maxDepth_) external {
         _addressCMT.setDesiredProofSize(maxDepth_);
     }
 

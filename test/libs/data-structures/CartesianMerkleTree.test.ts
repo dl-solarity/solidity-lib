@@ -17,7 +17,7 @@ describe("CartesianMerkleTree", () => {
 
   let USER1: SignerWithAddress;
 
-  let treap: CartesianMerkleTreeMock;
+  let treaple: CartesianMerkleTreeMock;
 
   function createRandomArray(length: number, bytesCount: number = 32): string[] {
     const resultArr: string[] = [];
@@ -68,7 +68,7 @@ describe("CartesianMerkleTree", () => {
       let nodeHash: string = "";
 
       if (isPoseidonHash) {
-        nodeHash = await treap.hash3(valuesToHash[0], valuesToHash[1], valuesToHash[2]);
+        nodeHash = await treaple.hash3(valuesToHash[0], valuesToHash[1], valuesToHash[2]);
       } else {
         nodeHash = ethers.solidityPackedKeccak256(["bytes32", "bytes32", "bytes32"], valuesToHash);
       }
@@ -104,7 +104,7 @@ describe("CartesianMerkleTree", () => {
       },
     });
 
-    treap = await CartesianMerkleTreeMock.deploy();
+    treaple = await CartesianMerkleTreeMock.deploy();
 
     await reverter.snapshot();
   });
@@ -115,29 +115,29 @@ describe("CartesianMerkleTree", () => {
 
   describe("Uint CMT", () => {
     beforeEach("setup", async () => {
-      await treap.initializeUintTreap(40);
-      await treap.setUintPoseidonHasher();
+      await treaple.initializeUintTreaple(40);
+      await treaple.setUintPoseidonHasher();
     });
 
     it("should not initialize twice", async () => {
-      await expect(treap.initializeUintTreap(20)).to.be.rejectedWith(
-        "CartesianMerkleTree: treap is already initialized",
+      await expect(treaple.initializeUintTreaple(20)).to.be.rejectedWith(
+        "CartesianMerkleTree: treaple is already initialized",
       );
     });
 
     it("should revert if trying to set incorrect desired proof size", async () => {
-      await expect(treap.setDesiredProofSizeUintTreap(0)).to.be.rejectedWith(
+      await expect(treaple.setDesiredProofSizeUintTreaple(0)).to.be.rejectedWith(
         "CartesianMerkleTree: desired proof size must be greater than zero",
       );
     });
 
     it("should correctly set new desired proof size", async () => {
-      await treap.setDesiredProofSizeUintTreap(20);
+      await treaple.setDesiredProofSizeUintTreaple(20);
 
-      expect(await treap.getUintDesiredProofSize()).to.equal(20);
+      expect(await treaple.getUintDesiredProofSize()).to.equal(20);
     });
 
-    it("should revert if trying to call add/remove functions on non-initialized treap", async () => {
+    it("should revert if trying to call add/remove functions on non-initialized treaple", async () => {
       const CartesianMerkleTreeMock = await ethers.getContractFactory("CartesianMerkleTreeMock", {
         libraries: {
           PoseidonUnit3L: await (await getPoseidon(3)).getAddress(),
@@ -145,8 +145,8 @@ describe("CartesianMerkleTree", () => {
       });
       const newTreap = await CartesianMerkleTreeMock.deploy();
 
-      await expect(newTreap.addUint(13n)).to.be.rejectedWith("CartesianMerkleTree: treap is not initialized");
-      await expect(newTreap.removeUint(13n)).to.be.rejectedWith("CartesianMerkleTree: treap is not initialized");
+      await expect(newTreap.addUint(13n)).to.be.rejectedWith("CartesianMerkleTree: treaple is not initialized");
+      await expect(newTreap.removeUint(13n)).to.be.rejectedWith("CartesianMerkleTree: treaple is not initialized");
     });
 
     it("should add and full remove elements from the CMT correctly", async () => {
@@ -154,21 +154,21 @@ describe("CartesianMerkleTree", () => {
       const keys: string[] = createRandomArray(keysCount);
 
       for (let i = 0; i < keysCount; i++) {
-        await treap.addUint(keys[i]);
+        await treaple.addUint(keys[i]);
       }
 
       shuffle(keys);
 
       for (let i = 0; i < keysCount; i++) {
-        await treap.removeUint(keys[i]);
+        await treaple.removeUint(keys[i]);
       }
 
-      expect(await treap.getUintRoot()).to.equal(ZERO_BYTES32);
+      expect(await treaple.getUintRoot()).to.equal(ZERO_BYTES32);
 
-      expect(await treap.getUintNodesCount()).to.equal(0);
+      expect(await treaple.getUintNodesCount()).to.equal(0);
 
-      expect(await treap.isUintCustomHasherSet()).to.be.true;
-      expect(treap.setUintPoseidonHasher()).to.not.be.rejected;
+      expect(await treaple.isUintCustomHasherSet()).to.be.true;
+      expect(treaple.setUintPoseidonHasher()).to.not.be.rejected;
     });
 
     it("should maintain deterministic property", async () => {
@@ -181,21 +181,21 @@ describe("CartesianMerkleTree", () => {
         },
       });
 
-      let treapRoot: string = "";
+      let treapleRoot: string = "";
 
       for (let i = 0; i < 5; i++) {
-        const tmpTreap = await CartesianMerkleTreeMock.deploy();
-        await tmpTreap.initializeUintTreap(40);
+        const tmpTreaple = await CartesianMerkleTreeMock.deploy();
+        await tmpTreaple.initializeUintTreaple(40);
 
         for (let i = 0; i < keysCount; i++) {
-          await tmpTreap.addUint(keys[i]);
+          await tmpTreaple.addUint(keys[i]);
         }
 
         if (i == 0) {
-          treapRoot = await tmpTreap.getUintRoot();
+          treapleRoot = await tmpTreaple.getUintRoot();
         }
 
-        expect(treapRoot).to.be.eq(await tmpTreap.getUintRoot());
+        expect(treapleRoot).to.be.eq(await tmpTreaple.getUintRoot());
 
         shuffle(keys);
       }
@@ -206,10 +206,10 @@ describe("CartesianMerkleTree", () => {
       const keys: string[] = createRandomArray(keysCount);
 
       for (let i = 0; i < keysCount; i++) {
-        await treap.addUint(keys[i]);
+        await treaple.addUint(keys[i]);
       }
 
-      const treapRoot: string = await treap.getUintRoot();
+      const treapleRoot: string = await treaple.getUintRoot();
       const usedIndexes: number[] = [];
 
       for (let i = 0; i < 10; i++) {
@@ -217,7 +217,7 @@ describe("CartesianMerkleTree", () => {
 
         while (true) {
           const newRandIndex =
-            Math.floor(Math.random() * (Number(await treap.getUintNodesCount()) + usedIndexes.length - 1)) + 1;
+            Math.floor(Math.random() * (Number(await treaple.getUintNodesCount()) + usedIndexes.length - 1)) + 1;
 
           if (!usedIndexes.includes(newRandIndex)) {
             randIndex = newRandIndex;
@@ -227,15 +227,15 @@ describe("CartesianMerkleTree", () => {
           }
         }
 
-        let currentNode = await treap.getUintNode(randIndex);
+        let currentNode = await treaple.getUintNode(randIndex);
 
-        await treap.removeUint(currentNode.key);
+        await treaple.removeUint(currentNode.key);
 
-        expect(await treap.getUintRoot()).to.be.not.eq(treapRoot);
+        expect(await treaple.getUintRoot()).to.be.not.eq(treapleRoot);
 
-        await treap.addUint(currentNode.key);
+        await treaple.addUint(currentNode.key);
 
-        expect(await treap.getUintRoot()).to.be.eq(treapRoot);
+        expect(await treaple.getUintRoot()).to.be.eq(treapleRoot);
       }
     });
 
@@ -245,17 +245,17 @@ describe("CartesianMerkleTree", () => {
       for (let key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
 
-        await treap.addUint(hexKey);
+        await treaple.addUint(hexKey);
       }
 
-      await expect(treap.removeUint(ethers.toBeHex(8, 32))).to.be.revertedWith(
+      await expect(treaple.removeUint(ethers.toBeHex(8, 32))).to.be.revertedWith(
         "CartesianMerkleTree: the node does not exist",
       );
     });
 
     it("should generate empty proof on empty tree", async () => {
       const desiredProofSize = 20;
-      const proof = await treap.getUintProof(ethers.toBeHex(1n, 32), desiredProofSize);
+      const proof = await treaple.getUintProof(ethers.toBeHex(1n, 32), desiredProofSize);
 
       expect(proof.siblingsLength).to.be.eq(0);
       expect(proof.siblings).to.be.deep.eq(new Array(desiredProofSize).fill(0));
@@ -267,16 +267,16 @@ describe("CartesianMerkleTree", () => {
       const keys: string[] = createRandomArray(keysCount);
 
       for (let i = 0; i < keys.length; i++) {
-        await treap.addUint(keys[i]);
+        await treaple.addUint(keys[i]);
       }
 
-      const treapRoot: string = await treap.getUintRoot();
+      const treapleRoot: string = await treaple.getUintRoot();
 
       for (let i = 0; i < keysCount; i++) {
-        const randIndex = Math.floor(Math.random() * (Number(await treap.getUintNodesCount()) - 1)) + 1;
-        const proof = await treap.getUintProof(keys[randIndex], 40);
+        const randIndex = Math.floor(Math.random() * (Number(await treaple.getUintNodesCount()) - 1)) + 1;
+        const proof = await treaple.getUintProof(keys[randIndex], 40);
 
-        await verifyCMTProof(proof, treapRoot, keys[randIndex], true, true);
+        await verifyCMTProof(proof, treapleRoot, keys[randIndex], true, true);
       }
     });
 
@@ -285,54 +285,54 @@ describe("CartesianMerkleTree", () => {
       const keys: string[] = createRandomArray(keysCount);
 
       for (let i = 0; i < keys.length; i++) {
-        await treap.addUint(keys[i]);
+        await treaple.addUint(keys[i]);
       }
 
       const desiredProofSize = 50;
 
-      await treap.setDesiredProofSizeUintTreap(desiredProofSize);
+      await treaple.setDesiredProofSizeUintTreaple(desiredProofSize);
 
-      const treapRoot: string = await treap.getUintRoot();
+      const treapleRoot: string = await treaple.getUintRoot();
 
       for (let i = 0; i < keysCount; i++) {
         const randKey = ethers.hexlify(ethers.randomBytes(32));
-        const proof = await treap.getUintProof(randKey, 0);
+        const proof = await treaple.getUintProof(randKey, 0);
 
         expect(proof.siblings.length).to.be.eq(desiredProofSize);
 
-        await verifyCMTProof(proof, treapRoot, randKey, false, true);
+        await verifyCMTProof(proof, treapleRoot, randKey, false, true);
       }
     });
 
     it("should revert if trying to add/remove zero key", async () => {
       const reason = "CartesianMerkleTree: the key can't be zero";
 
-      await expect(treap.addUint(ZERO_BYTES32)).to.be.rejectedWith(reason);
-      await expect(treap.removeUint(ZERO_BYTES32)).to.be.rejectedWith(reason);
+      await expect(treaple.addUint(ZERO_BYTES32)).to.be.rejectedWith(reason);
+      await expect(treaple.removeUint(ZERO_BYTES32)).to.be.rejectedWith(reason);
     });
 
-    it("should revert if trying to set hasher with non-empty treap", async () => {
+    it("should revert if trying to set hasher with non-empty treaple", async () => {
       const key = poseidonHash(ethers.toBeHex(2341n));
 
-      await treap.addUint(key);
+      await treaple.addUint(key);
 
-      await expect(treap.setUintPoseidonHasher()).to.be.rejectedWith("CartesianMerkleTree: treap is not empty");
+      await expect(treaple.setUintPoseidonHasher()).to.be.rejectedWith("CartesianMerkleTree: treaple is not empty");
     });
 
     it("should revert if trying to add a node with the same key", async () => {
       const key = poseidonHash(ethers.toBeHex(2341n));
 
-      await treap.addUint(key);
+      await treaple.addUint(key);
 
-      await expect(treap.addUint(key)).to.be.rejectedWith("CartesianMerkleTree: the key already exists");
+      await expect(treaple.addUint(key)).to.be.rejectedWith("CartesianMerkleTree: the key already exists");
     });
 
     it("should get empty Node by non-existing key", async () => {
-      expect((await treap.getUintNodeByKey(1n)).key).to.be.equal(ZERO_BYTES32);
+      expect((await treaple.getUintNodeByKey(1n)).key).to.be.equal(ZERO_BYTES32);
 
-      await treap.addUint(ethers.toBeHex(7n, 32));
+      await treaple.addUint(ethers.toBeHex(7n, 32));
 
-      expect((await treap.getUintNodeByKey(5n)).key).to.be.equal(ZERO_BYTES32);
+      expect((await treaple.getUintNodeByKey(5n)).key).to.be.equal(ZERO_BYTES32);
     });
 
     it("should get exception if desired size is too low", async () => {
@@ -340,10 +340,10 @@ describe("CartesianMerkleTree", () => {
       const keys: string[] = createRandomArray(keysCount);
 
       for (let i = 0; i < keys.length; i++) {
-        await treap.addUint(keys[i]);
+        await treaple.addUint(keys[i]);
       }
 
-      await expect(treap.getUintProof(keys[0], 1)).to.be.rejectedWith(
+      await expect(treaple.getUintProof(keys[0], 1)).to.be.rejectedWith(
         "CartesianMerkleTree: desired proof size is too low",
       );
     });
@@ -351,35 +351,35 @@ describe("CartesianMerkleTree", () => {
 
   describe("Bytes32 CMT", () => {
     beforeEach("setup", async () => {
-      await treap.initializeBytes32Treap(15);
-      await treap.setBytes32PoseidonHasher();
+      await treaple.initializeBytes32Treaple(15);
+      await treaple.setBytes32PoseidonHasher();
     });
 
     it("should not initialize twice", async () => {
-      await expect(treap.initializeBytes32Treap(20)).to.be.rejectedWith(
-        "CartesianMerkleTree: treap is already initialized",
+      await expect(treaple.initializeBytes32Treaple(20)).to.be.rejectedWith(
+        "CartesianMerkleTree: treaple is already initialized",
       );
     });
 
     it("should correctly set new desired proof size", async () => {
-      await treap.setDesiredProofSizeBytes32Treap(20);
+      await treaple.setDesiredProofSizeBytes32Treaple(20);
 
-      expect(await treap.getBytes32DesiredProofSize()).to.equal(20);
+      expect(await treaple.getBytes32DesiredProofSize()).to.equal(20);
     });
 
     it("should build a Cartesian Merkle Tree correctly with multiple elements", async () => {
       for (let i = 1n; i < 20n; i++) {
         const key = poseidonHash(ethers.toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32));
 
-        await treap.addBytes32(key);
+        await treaple.addBytes32(key);
 
-        expect((await treap.getBytes32NodeByKey(key)).key).to.be.eq(BigInt(key));
+        expect((await treaple.getBytes32NodeByKey(key)).key).to.be.eq(BigInt(key));
 
-        const proof = await treap.getBytes32Proof(key, 35);
-        await verifyCMTProof(proof, await treap.getBytes32Root(), key, true, true);
+        const proof = await treaple.getBytes32Proof(key, 35);
+        await verifyCMTProof(proof, await treaple.getBytes32Root(), key, true, true);
       }
 
-      expect(await treap.isBytes32CustomHasherSet()).to.be.true;
+      expect(await treaple.isBytes32CustomHasherSet()).to.be.true;
     });
 
     it("should maintain deterministic property", async () => {
@@ -392,21 +392,21 @@ describe("CartesianMerkleTree", () => {
         },
       });
 
-      let treapRoot: string = "";
+      let treapleRoot: string = "";
 
       for (let i = 0; i < 5; i++) {
-        const tmpTreap = await CartesianMerkleTreeMock.deploy();
-        await tmpTreap.initializeBytes32Treap(40);
+        const tmpTreaple = await CartesianMerkleTreeMock.deploy();
+        await tmpTreaple.initializeBytes32Treaple(40);
 
         for (let i = 0; i < keysCount; i++) {
-          await tmpTreap.addBytes32(keys[i]);
+          await tmpTreaple.addBytes32(keys[i]);
         }
 
         if (i == 0) {
-          treapRoot = await tmpTreap.getBytes32Root();
+          treapleRoot = await tmpTreaple.getBytes32Root();
         }
 
-        expect(treapRoot).to.be.eq(await tmpTreap.getBytes32Root());
+        expect(treapleRoot).to.be.eq(await tmpTreaple.getBytes32Root());
 
         shuffle(keys);
       }
@@ -417,10 +417,10 @@ describe("CartesianMerkleTree", () => {
       const keys: string[] = createRandomArray(keysCount);
 
       for (let i = 0; i < keysCount; i++) {
-        await treap.addBytes32(keys[i]);
+        await treaple.addBytes32(keys[i]);
       }
 
-      const treapRoot: string = await treap.getBytes32Root();
+      const treapleRoot: string = await treaple.getBytes32Root();
       const usedIndexes: number[] = [];
 
       for (let i = 0; i < 10; i++) {
@@ -428,7 +428,7 @@ describe("CartesianMerkleTree", () => {
 
         while (true) {
           const newRandIndex =
-            Math.floor(Math.random() * (Number(await treap.getBytes32NodesCount()) + usedIndexes.length - 1)) + 1;
+            Math.floor(Math.random() * (Number(await treaple.getBytes32NodesCount()) + usedIndexes.length - 1)) + 1;
 
           if (!usedIndexes.includes(newRandIndex)) {
             randIndex = newRandIndex;
@@ -438,15 +438,15 @@ describe("CartesianMerkleTree", () => {
           }
         }
 
-        let currentNode = await treap.getBytes32Node(randIndex);
+        let currentNode = await treaple.getBytes32Node(randIndex);
 
-        await treap.removeBytes32(currentNode.key);
+        await treaple.removeBytes32(currentNode.key);
 
-        expect(await treap.getBytes32Root()).to.be.not.eq(treapRoot);
+        expect(await treaple.getBytes32Root()).to.be.not.eq(treapleRoot);
 
-        await treap.addBytes32(currentNode.key);
+        await treaple.addBytes32(currentNode.key);
 
-        expect(await treap.getBytes32Root()).to.be.eq(treapRoot);
+        expect(await treaple.getBytes32Root()).to.be.eq(treapleRoot);
       }
     });
 
@@ -455,51 +455,51 @@ describe("CartesianMerkleTree", () => {
       const keys: string[] = createRandomArray(keysCount);
 
       for (let i = 0; i < keys.length; i++) {
-        await treap.addBytes32(keys[i]);
+        await treaple.addBytes32(keys[i]);
       }
 
-      const treapRoot: string = await treap.getBytes32Root();
+      const treapleRoot: string = await treaple.getBytes32Root();
 
       for (let i = 0; i < keysCount; i++) {
-        const randIndex = Math.floor(Math.random() * (Number(await treap.getBytes32NodesCount()) - 1)) + 1;
-        const proof = await treap.getBytes32Proof(keys[randIndex], 40);
+        const randIndex = Math.floor(Math.random() * (Number(await treaple.getBytes32NodesCount()) - 1)) + 1;
+        const proof = await treaple.getBytes32Proof(keys[randIndex], 40);
 
-        await verifyCMTProof(proof, treapRoot, keys[randIndex], true, true);
+        await verifyCMTProof(proof, treapleRoot, keys[randIndex], true, true);
       }
     });
   });
 
   describe("Address CMT", () => {
     beforeEach("setup", async () => {
-      await treap.initializeAddressTreap(15);
-      await treap.setAddressPoseidonHasher();
+      await treaple.initializeAddressTreaple(15);
+      await treaple.setAddressPoseidonHasher();
     });
 
     it("should not initialize twice", async () => {
-      await expect(treap.initializeAddressTreap(20)).to.be.rejectedWith(
-        "CartesianMerkleTree: treap is already initialized",
+      await expect(treaple.initializeAddressTreaple(20)).to.be.rejectedWith(
+        "CartesianMerkleTree: treaple is already initialized",
       );
     });
 
     it("should correctly set new desired proof size", async () => {
-      await treap.setDesiredProofSizeAddressTreap(20);
+      await treaple.setDesiredProofSizeAddressTreaple(20);
 
-      expect(await treap.getAddressDesiredProofSize()).to.equal(20);
+      expect(await treaple.getAddressDesiredProofSize()).to.equal(20);
     });
 
     it("should build a Cartesian Merkle Tree correctly with multiple elements", async () => {
       for (let i = 1n; i < 20n; i++) {
         const key = ethers.toBeHex(BigInt(await USER1.getAddress()) + i);
 
-        await treap.addAddress(key);
+        await treaple.addAddress(key);
 
-        expect((await treap.getAddressNodeByKey(key)).key).to.be.eq(BigInt(key));
+        expect((await treaple.getAddressNodeByKey(key)).key).to.be.eq(BigInt(key));
 
-        const proof = await treap.getAddressProof(key, 35);
-        await verifyCMTProof(proof, await treap.getAddressRoot(), key, true, true);
+        const proof = await treaple.getAddressProof(key, 35);
+        await verifyCMTProof(proof, await treaple.getAddressRoot(), key, true, true);
       }
 
-      expect(await treap.isAddressCustomHasherSet()).to.be.true;
+      expect(await treaple.isAddressCustomHasherSet()).to.be.true;
     });
 
     it("should maintain deterministic property", async () => {
@@ -512,21 +512,21 @@ describe("CartesianMerkleTree", () => {
         },
       });
 
-      let treapRoot: string = "";
+      let treapleRoot: string = "";
 
       for (let i = 0; i < 5; i++) {
-        const tmpTreap = await CartesianMerkleTreeMock.deploy();
-        await tmpTreap.initializeAddressTreap(40);
+        const tmpTreaple = await CartesianMerkleTreeMock.deploy();
+        await tmpTreaple.initializeAddressTreaple(40);
 
         for (let i = 0; i < keysCount; i++) {
-          await tmpTreap.addAddress(keys[i]);
+          await tmpTreaple.addAddress(keys[i]);
         }
 
         if (i == 0) {
-          treapRoot = await tmpTreap.getAddressRoot();
+          treapleRoot = await tmpTreaple.getAddressRoot();
         }
 
-        expect(treapRoot).to.be.eq(await tmpTreap.getAddressRoot());
+        expect(treapleRoot).to.be.eq(await tmpTreaple.getAddressRoot());
 
         shuffle(keys);
       }
@@ -537,10 +537,10 @@ describe("CartesianMerkleTree", () => {
       const keys: string[] = createRandomArray(keysCount, 20);
 
       for (let i = 0; i < keysCount; i++) {
-        await treap.addAddress(keys[i]);
+        await treaple.addAddress(keys[i]);
       }
 
-      const treapRoot: string = await treap.getAddressRoot();
+      const treapleRoot: string = await treaple.getAddressRoot();
       const usedIndexes: number[] = [];
 
       for (let i = 0; i < 10; i++) {
@@ -548,7 +548,7 @@ describe("CartesianMerkleTree", () => {
 
         while (true) {
           const newRandIndex =
-            Math.floor(Math.random() * (Number(await treap.getAddressNodesCount()) + usedIndexes.length - 1)) + 1;
+            Math.floor(Math.random() * (Number(await treaple.getAddressNodesCount()) + usedIndexes.length - 1)) + 1;
 
           if (!usedIndexes.includes(newRandIndex)) {
             randIndex = newRandIndex;
@@ -557,16 +557,16 @@ describe("CartesianMerkleTree", () => {
             break;
           }
         }
-        let currentNode = await treap.getAddressNode(randIndex);
+        let currentNode = await treaple.getAddressNode(randIndex);
         const currentNodeKey = `0x${currentNode.key.slice(26)}`;
 
-        await treap.removeAddress(currentNodeKey);
+        await treaple.removeAddress(currentNodeKey);
 
-        expect(await treap.getAddressRoot()).to.be.not.eq(treapRoot);
+        expect(await treaple.getAddressRoot()).to.be.not.eq(treapleRoot);
 
-        await treap.addAddress(currentNodeKey);
+        await treaple.addAddress(currentNodeKey);
 
-        expect(await treap.getAddressRoot()).to.be.eq(treapRoot);
+        expect(await treaple.getAddressRoot()).to.be.eq(treapleRoot);
       }
     });
 
@@ -575,16 +575,16 @@ describe("CartesianMerkleTree", () => {
       const keys: string[] = createRandomArray(keysCount, 20);
 
       for (let i = 0; i < keys.length; i++) {
-        await treap.addAddress(keys[i]);
+        await treaple.addAddress(keys[i]);
       }
 
-      const treapRoot: string = await treap.getAddressRoot();
+      const treapleRoot: string = await treaple.getAddressRoot();
 
       for (let i = 0; i < keysCount; i++) {
-        const randIndex = Math.floor(Math.random() * (Number(await treap.getAddressNodesCount()) - 1)) + 1;
-        const proof = await treap.getAddressProof(keys[randIndex], 40);
+        const randIndex = Math.floor(Math.random() * (Number(await treaple.getAddressNodesCount()) - 1)) + 1;
+        const proof = await treaple.getAddressProof(keys[randIndex], 40);
 
-        await verifyCMTProof(proof, treapRoot, keys[randIndex], true, true);
+        await verifyCMTProof(proof, treapleRoot, keys[randIndex], true, true);
       }
     });
   });
