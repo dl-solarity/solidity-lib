@@ -95,18 +95,6 @@ contract CartesianMerkleTreeMock {
         return _addressCMT.getProof(key_, desiredProofSize_);
     }
 
-    function getUintRootNodeId() external view returns (uint256) {
-        return _uintCMT.getRootNodeId();
-    }
-
-    function getBytes32RootNodeId() external view returns (uint256) {
-        return _bytes32CMT.getRootNodeId();
-    }
-
-    function getAddressRootNodeId() external view returns (uint256) {
-        return _addressCMT.getRootNodeId();
-    }
-
     function getUintRoot() external view returns (bytes32) {
         return _uintCMT.getRoot();
     }
@@ -187,6 +175,14 @@ contract CartesianMerkleTreeMock {
 
     function isAddressCustomHasherSet() external view returns (bool) {
         return _addressCMT.isCustomHasherSet();
+    }
+
+    function hash3(
+        bytes32 element1_,
+        bytes32 element2_,
+        bytes32 element3_
+    ) external pure returns (bytes32) {
+        return _hash3(element1_, element2_, element3_);
     }
 
     function _hash3(

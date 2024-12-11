@@ -43,10 +43,6 @@ library CartesianMerkleTree {
         return _proof(treap._treap, bytes32(key_), desiredProofSize_);
     }
 
-    function getRootNodeId(UintCMT storage treap) internal view returns (uint256) {
-        return _rootNodeId(treap._treap);
-    }
-
     function getRoot(UintCMT storage treap) internal view returns (bytes32) {
         return _rootMerkleHash(treap._treap);
     }
@@ -113,10 +109,6 @@ library CartesianMerkleTree {
         uint32 desiredProofSize_
     ) internal view returns (Proof memory) {
         return _proof(treap._treap, key_, desiredProofSize_);
-    }
-
-    function getRootNodeId(Bytes32CMT storage treap) internal view returns (uint256) {
-        return _rootNodeId(treap._treap);
     }
 
     function getRoot(Bytes32CMT storage treap) internal view returns (bytes32) {
@@ -188,10 +180,6 @@ library CartesianMerkleTree {
         uint32 desiredProofSize_
     ) internal view returns (Proof memory) {
         return _proof(treap._treap, _fromAddressToBytes32(key_), desiredProofSize_);
-    }
-
-    function getRootNodeId(AddressCMT storage treap) internal view returns (uint256) {
-        return _rootNodeId(treap._treap);
     }
 
     function getRoot(AddressCMT storage treap) internal view returns (bytes32) {
@@ -315,7 +303,9 @@ library CartesianMerkleTree {
             return _newNode(treap, key_);
         }
 
-        if (key_ <= rootNode.key) {
+        require(rootNode.key != key_, "CartesianMerkleTree: the key already exists");
+
+        if (rootNode.key > key_) {
             rootNode.childLeft = uint64(_add(treap, rootNode.childLeft, key_));
 
             if (treap.nodes[rootNode.childLeft].priority > rootNode.priority) {
@@ -343,9 +333,7 @@ library CartesianMerkleTree {
     ) private returns (uint256) {
         Node storage rootNode = treap.nodes[uint64(rootNodeId_)];
 
-        if (rootNode.key == 0) {
-            return rootNodeId_;
-        }
+        require(rootNode.key != 0, "CartesianMerkleTree: the node does not exist");
 
         if (key_ < rootNode.key) {
             rootNode.childLeft = uint64(_remove(treap, rootNode.childLeft, key_));
@@ -433,6 +421,10 @@ library CartesianMerkleTree {
             key: key_,
             nonExistenceKey: ZERO_HASH
         });
+
+        if (treap.merkleRootId == 0) {
+            return proof_;
+        }
 
         Node storage node;
         uint256 currentSiblingsIndex_;
@@ -586,10 +578,6 @@ library CartesianMerkleTree {
 
             result_ := keccak256(freePtr_, 96)
         }
-    }
-
-    function _rootNodeId(CMT storage treap) private view returns (uint64) {
-        return treap.merkleRootId;
     }
 
     function _rootMerkleHash(CMT storage treap) private view returns (bytes32) {
