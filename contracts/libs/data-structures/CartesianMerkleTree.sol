@@ -1,6 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+/**
+ * @notice Cartesian Merkle Tree Module
+ *
+ * ## Usage Example:
+ *
+ * ```solidity
+ * using CartesianMerkleTree for CartesianMerkleTree.UintCMT;
+ *
+ * CartesianMerkleTree.UintCMT internal uintTreap;
+ * ...
+ * uintTreap.initialize(80);
+ *
+ * uintTreap.add(100);
+ *
+ * uintTreap.getRoot();
+ *
+ * CartesianMerkleTree.Proof memory proof = uintTreap.getProof(100);
+ *
+ * uintTreap.getNodeByKey(100);
+ *
+ * uintTreap.remove(100);
+ * ```
+ */
 library CartesianMerkleTree {
     /**
      *********************
@@ -12,10 +35,30 @@ library CartesianMerkleTree {
         CMT _treap;
     }
 
+    /**
+     * @notice The function to initialize the Cartesian Merkle tree.
+     * Under the hood it sets the desired proof size of the CMT proofs, therefore can be considered
+     * alias function for the `setDesiredProofSize`.
+     *
+     * Requirements:
+     * - The desired proof size value must be greater than 0.
+     *
+     * @param treap self.
+     * @param desiredProofSize_ The desired proof size of the CMT proofs.
+     */
     function initialize(UintCMT storage treap, uint32 desiredProofSize_) internal {
         _initialize(treap._treap, desiredProofSize_);
     }
 
+    /**
+     * @notice The function to set a custom hash function, that will be used to build the Cartesian Merkle Tree.
+     *
+     * Requirements:
+     * - The tree must be empty.
+     *
+     * @param treap self.
+     * @param hash3_ The hash function that accepts three arguments.
+     */
     function setHasher(
         UintCMT storage treap,
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
@@ -23,18 +66,50 @@ library CartesianMerkleTree {
         _setHasher(treap._treap, hash3_);
     }
 
+    /**
+     * @notice The function to set a desired proof size, that will be used to build the Cartesian Merkle Tree proofs.
+     *
+     * Requirements:
+     * - The desired proof size value must be greater than 0.
+     *
+     * @param treap self.
+     * @param desiredProofSize_ The desired proof size of the CMT proofs.
+     */
     function setDesiredProofSize(UintCMT storage treap, uint32 desiredProofSize_) internal {
         _setDesiredProofSize(treap._treap, desiredProofSize_);
     }
 
+    /**
+     * @notice The function to add a new element to the uint256 treap.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     */
     function add(UintCMT storage treap, uint256 key_) internal {
         _add(treap._treap, bytes32(key_));
     }
 
+    /**
+     * @notice The function to remove an element from the uint256 treap.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     */
     function remove(UintCMT storage treap, uint256 key_) internal {
         _remove(treap._treap, bytes32(key_));
     }
 
+    /**
+     * @notice The function to get the proof if a node with specific key exists or not exists in the CMT.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     * @param desiredProofSize_ The desired siblings length in the proof.
+     * @return CMT proof struct.
+     */
     function getProof(
         UintCMT storage treap,
         uint256 key_,
@@ -43,14 +118,37 @@ library CartesianMerkleTree {
         return _proof(treap._treap, bytes32(key_), desiredProofSize_);
     }
 
+    /**
+     * @notice The function to get the root of the Cartesian Merkle Tree.
+     * Complexity is O(1).
+     *
+     * @param treap self.
+     * @return The root of the Cartesian Merkle Tree.
+     */
     function getRoot(UintCMT storage treap) internal view returns (bytes32) {
         return _rootMerkleHash(treap._treap);
     }
 
+    /**
+     * @notice The function to get the node by its index.
+     * Complexity is O(1).
+     *
+     * @param treap self.
+     * @param nodeId_ The index of the node.
+     * @return The node.
+     */
     function getNode(UintCMT storage treap, uint256 nodeId_) internal view returns (Node memory) {
         return _node(treap._treap, nodeId_);
     }
 
+    /**
+     * @notice The function to get the node by its key.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     * @return The node.
+     */
     function getNodeByKey(
         UintCMT storage treap,
         uint256 key_
@@ -58,14 +156,32 @@ library CartesianMerkleTree {
         return _nodeByKey(treap._treap, bytes32(key_));
     }
 
+    /**
+     * @notice The function to get the desired proof size value.
+     *
+     * @param treap self.
+     * @return The desired proof size value.
+     */
     function getDesiredProofSize(UintCMT storage treap) internal view returns (uint256) {
         return _desiredProofSize(treap._treap);
     }
 
+    /**
+     * @notice The function to get the number of nodes in the Cartesian Merkle Tree.
+     *
+     * @param treap self.
+     * @return The number of nodes in the Cartesian Merkle Tree.
+     */
     function getNodesCount(UintCMT storage treap) internal view returns (uint64) {
         return uint64(_nodesCount(treap._treap));
     }
 
+    /**
+     * @notice The function to check if custom hash function is set.
+     *
+     * @param treap self.
+     * @return True if custom hash function is set, otherwise false.
+     */
     function isCustomHasherSet(UintCMT storage treap) internal view returns (bool) {
         return _isCustomHasherSet(treap._treap);
     }
@@ -80,10 +196,30 @@ library CartesianMerkleTree {
         CMT _treap;
     }
 
+    /**
+     * @notice The function to initialize the Cartesian Merkle tree.
+     * Under the hood it sets the desired proof size of the CMT proofs, therefore can be considered
+     * alias function for the `setDesiredProofSize`.
+     *
+     * Requirements:
+     * - The desired proof size value must be greater than 0.
+     *
+     * @param treap self.
+     * @param desiredProofSize_ The desired proof size of the CMT proofs.
+     */
     function initialize(Bytes32CMT storage treap, uint32 desiredProofSize_) internal {
         _initialize(treap._treap, desiredProofSize_);
     }
 
+    /**
+     * @notice The function to set a custom hash function, that will be used to build the Cartesian Merkle Tree.
+     *
+     * Requirements:
+     * - The tree must be empty.
+     *
+     * @param treap self.
+     * @param hash3_ The hash function that accepts three arguments.
+     */
     function setHasher(
         Bytes32CMT storage treap,
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
@@ -91,18 +227,50 @@ library CartesianMerkleTree {
         _setHasher(treap._treap, hash3_);
     }
 
+    /**
+     * @notice The function to set a desired proof size, that will be used to build the Cartesian Merkle Tree proofs.
+     *
+     * Requirements:
+     * - The desired proof size value must be greater than 0.
+     *
+     * @param treap self.
+     * @param desiredProofSize_ The desired proof size of the CMT proofs.
+     */
     function setDesiredProofSize(Bytes32CMT storage treap, uint32 desiredProofSize_) internal {
         _setDesiredProofSize(treap._treap, desiredProofSize_);
     }
 
+    /**
+     * @notice The function to add a new element to the bytes32 treap.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     */
     function add(Bytes32CMT storage treap, bytes32 key_) internal {
         _add(treap._treap, key_);
     }
 
+    /**
+     * @notice The function to remove an element from the bytes32 treap.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     */
     function remove(Bytes32CMT storage treap, bytes32 key_) internal {
         _remove(treap._treap, key_);
     }
 
+    /**
+     * @notice The function to get the proof if a node with specific key exists or not exists in the CMT.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     * @param desiredProofSize_ The desired siblings length in the proof.
+     * @return CMT proof struct.
+     */
     function getProof(
         Bytes32CMT storage treap,
         bytes32 key_,
@@ -111,10 +279,25 @@ library CartesianMerkleTree {
         return _proof(treap._treap, key_, desiredProofSize_);
     }
 
+    /**
+     * @notice The function to get the root of the Cartesian Merkle Tree.
+     * Complexity is O(1).
+     *
+     * @param treap self.
+     * @return The root of the Cartesian Merkle Tree.
+     */
     function getRoot(Bytes32CMT storage treap) internal view returns (bytes32) {
         return _rootMerkleHash(treap._treap);
     }
 
+    /**
+     * @notice The function to get the node by its index.
+     * Complexity is O(1).
+     *
+     * @param treap self.
+     * @param nodeId_ The index of the node.
+     * @return The node.
+     */
     function getNode(
         Bytes32CMT storage treap,
         uint256 nodeId_
@@ -122,6 +305,14 @@ library CartesianMerkleTree {
         return _node(treap._treap, nodeId_);
     }
 
+    /**
+     * @notice The function to get the node by its key.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     * @return The node.
+     */
     function getNodeByKey(
         Bytes32CMT storage treap,
         bytes32 key_
@@ -129,14 +320,32 @@ library CartesianMerkleTree {
         return _nodeByKey(treap._treap, key_);
     }
 
+    /**
+     * @notice The function to get the desired proof size value.
+     *
+     * @param treap self.
+     * @return The desired proof size value.
+     */
     function getDesiredProofSize(Bytes32CMT storage treap) internal view returns (uint256) {
         return _desiredProofSize(treap._treap);
     }
 
+    /**
+     * @notice The function to get the number of nodes in the Cartesian Merkle Tree.
+     *
+     * @param treap self.
+     * @return The number of nodes in the Cartesian Merkle Tree.
+     */
     function getNodesCount(Bytes32CMT storage treap) internal view returns (uint64) {
         return uint64(_nodesCount(treap._treap));
     }
 
+    /**
+     * @notice The function to check if custom hash function is set.
+     *
+     * @param treap self.
+     * @return True if custom hash function is set, otherwise false.
+     */
     function isCustomHasherSet(Bytes32CMT storage treap) internal view returns (bool) {
         return _isCustomHasherSet(treap._treap);
     }
@@ -151,10 +360,30 @@ library CartesianMerkleTree {
         CMT _treap;
     }
 
+    /**
+     * @notice The function to initialize the Cartesian Merkle tree.
+     * Under the hood it sets the desired proof size of the CMT proofs, therefore can be considered
+     * alias function for the `setDesiredProofSize`.
+     *
+     * Requirements:
+     * - The desired proof size value must be greater than 0.
+     *
+     * @param treap self.
+     * @param desiredProofSize_ The desired proof size of the CMT proofs.
+     */
     function initialize(AddressCMT storage treap, uint32 desiredProofSize_) internal {
         _initialize(treap._treap, desiredProofSize_);
     }
 
+    /**
+     * @notice The function to set a custom hash function, that will be used to build the Cartesian Merkle Tree.
+     *
+     * Requirements:
+     * - The tree must be empty.
+     *
+     * @param treap self.
+     * @param hash3_ The hash function that accepts three arguments.
+     */
     function setHasher(
         AddressCMT storage treap,
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
@@ -162,18 +391,50 @@ library CartesianMerkleTree {
         _setHasher(treap._treap, hash3_);
     }
 
+    /**
+     * @notice The function to set a desired proof size, that will be used to build the Cartesian Merkle Tree proofs.
+     *
+     * Requirements:
+     * - The desired proof size value must be greater than 0.
+     *
+     * @param treap self.
+     * @param desiredProofSize_ The desired proof size of the CMT proofs.
+     */
     function setDesiredProofSize(AddressCMT storage treap, uint32 desiredProofSize_) internal {
         _setDesiredProofSize(treap._treap, desiredProofSize_);
     }
 
+    /**
+     * @notice The function to add a new element to the address treap.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     */
     function add(AddressCMT storage treap, address key_) internal {
         _add(treap._treap, _fromAddressToBytes32(key_));
     }
 
+    /**
+     * @notice The function to remove an element from the address treap.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     */
     function remove(AddressCMT storage treap, address key_) internal {
         _remove(treap._treap, _fromAddressToBytes32(key_));
     }
 
+    /**
+     * @notice The function to get the proof if a node with specific key exists or not exists in the CMT.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     * @param desiredProofSize_ The desired siblings length in the proof.
+     * @return CMT proof struct.
+     */
     function getProof(
         AddressCMT storage treap,
         address key_,
@@ -182,10 +443,25 @@ library CartesianMerkleTree {
         return _proof(treap._treap, _fromAddressToBytes32(key_), desiredProofSize_);
     }
 
+    /**
+     * @notice The function to get the root of the Cartesian Merkle Tree.
+     * Complexity is O(1).
+     *
+     * @param treap self.
+     * @return The root of the Cartesian Merkle Tree.
+     */
     function getRoot(AddressCMT storage treap) internal view returns (bytes32) {
         return _rootMerkleHash(treap._treap);
     }
 
+    /**
+     * @notice The function to get the node by its index.
+     * Complexity is O(1).
+     *
+     * @param treap self.
+     * @param nodeId_ The index of the node.
+     * @return The node.
+     */
     function getNode(
         AddressCMT storage treap,
         uint256 nodeId_
@@ -193,6 +469,14 @@ library CartesianMerkleTree {
         return _node(treap._treap, nodeId_);
     }
 
+    /**
+     * @notice The function to get the node by its key.
+     * Complexity is O(log(n)), where n is the max depth of the treap.
+     *
+     * @param treap self.
+     * @param key_ The key of the element.
+     * @return The node.
+     */
     function getNodeByKey(
         AddressCMT storage treap,
         address key_
@@ -200,14 +484,32 @@ library CartesianMerkleTree {
         return _nodeByKey(treap._treap, _fromAddressToBytes32(key_));
     }
 
+    /**
+     * @notice The function to get the desired proof size value.
+     *
+     * @param treap self.
+     * @return The desired proof size value.
+     */
     function getDesiredProofSize(AddressCMT storage treap) internal view returns (uint256) {
         return _desiredProofSize(treap._treap);
     }
 
+    /**
+     * @notice The function to get the number of nodes in the Cartesian Merkle Tree.
+     *
+     * @param treap self.
+     * @return The number of nodes in the Cartesian Merkle Tree.
+     */
     function getNodesCount(AddressCMT storage treap) internal view returns (uint64) {
         return uint64(_nodesCount(treap._treap));
     }
 
+    /**
+     * @notice The function to check if custom hash function is set.
+     *
+     * @param treap self.
+     * @return True if custom hash function is set, otherwise false.
+     */
     function isCustomHasherSet(AddressCMT storage treap) internal view returns (bool) {
         return _isCustomHasherSet(treap._treap);
     }
@@ -224,6 +526,18 @@ library CartesianMerkleTree {
      ************************
      */
 
+    /**
+     * @notice Defines the structure of the Cartesian Merkle Tree.
+     *
+     * @param nodes A mapping of the treap's nodes, where the key is the node's index, starting from 1 upon node addition.
+     *
+     * @param merkleRootId The index of the root node.
+     * @param nodesCount The total number of nodes within the Cartesian Merkle Tree.
+     * @param deletedNodesCount The total number of the deleted nodes within the Cartesian Merkle Tree.
+     * @param desiredProofSize The desired proof size of the CMT proofs.
+     * @param isCustomHasherSet Indicates whether custom hash function has been configured (true) or not (false).
+     * @param hash3 A hash function accepting three arguments.
+     */
     struct CMT {
         mapping(uint64 => Node) nodes;
         uint64 merkleRootId;
@@ -234,6 +548,18 @@ library CartesianMerkleTree {
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3;
     }
 
+    /**
+     * @notice Describes a node within the Cartesian Merkle tree, including its children, hash, priority and key.
+     *
+     * @param childLeft The index of the left child node.
+     * @param childRight The index of the right child node.
+     * @param priority The priority of the node that counts as `keccak256(key)`
+     * @param merkleHash The hash of the node, calculated as follows:
+     * - H(k || child1 || child2) where k is the current node key;
+     * child1 and child2 are merkleHash values of child nodes that were sorted in ascending order
+     *
+     * @param key The key associated with the node.
+     */
     struct Node {
         uint64 childLeft;
         uint64 childRight;
@@ -242,6 +568,16 @@ library CartesianMerkleTree {
         bytes32 key;
     }
 
+    /**
+     * @notice Represents the proof of a node's (non-)existence within the Cartesian Merkle tree.
+     *
+     * @param root The root hash of the Cartesian Merkle tree.
+     * @param siblings An array of sibling hashes can be used to get the Cartesian Merkle Root.
+     * @param siblingsLength The number of siblings to be used for evidence.
+     * @param existence Indicates the presence (true) or absence (false) of the node.
+     * @param key The key associated with the node.
+     * @param nonExistenceKey The non-existence key of the auxiliary node in case when existence is false.
+     */
     struct Proof {
         bytes32 root;
         bytes32[] siblings;
