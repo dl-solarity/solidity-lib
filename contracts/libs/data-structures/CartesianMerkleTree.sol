@@ -4,6 +4,16 @@ pragma solidity ^0.8.4;
 /**
  * @notice Cartesian Merkle Tree Module
  *
+ * Gas usage for adding and removing 5,000 elements to a treap on the Poseidon and Keccak256 Hash functions is detailed below:
+ *
+ * Keccak256:
+ * - CMT.add - 249k
+ * - CMT.remove - 181k
+ *
+ * Poseidon:
+ * - CMT.add - 896k
+ * - CMT.remove - 746k
+ *
  * ## Usage Example:
  *
  * ```solidity
