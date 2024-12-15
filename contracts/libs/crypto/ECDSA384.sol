@@ -177,6 +177,7 @@ library ECDSA384 {
         }
     }
 
+    
     /**
      * @dev Compute the Strauss-Shamir double scalar multiplication scalar1*G + scalar2*H.
      */
@@ -207,7 +208,12 @@ library ECDSA384 {
                     ((scalar2Bits_ >> (184 - word)) & 0x03);
 
                 if (mask_ != 0) {
+                    if((points[mask_][0]==x)&&(points[mask_][1]==y)){
+                       (x, y) =_twiceAffine(call, p, three, a, x, y); 
+                    }
+                    else{
                     (x, y) = _addAffine(call, p, points[mask_][0], points[mask_][1], x, y);
+                    }
                 }
             }
 
@@ -223,8 +229,13 @@ library ECDSA384 {
                     (((scalar1Bits_ >> (256 - word)) & 0x03) << 2) |
                     ((scalar2Bits_ >> (256 - word)) & 0x03);
 
-                if (mask_ != 0) {
+                 if (mask_ != 0) {
+                    if((points[mask_][0]==x)&&(points[mask_][1]==y)){
+                       (x, y) =_twiceAffine(call, p, three, a, x, y); 
+                    }
+                    else{
                     (x, y) = _addAffine(call, p, points[mask_][0], points[mask_][1], x, y);
+                    }
                 }
             }
         }
@@ -344,7 +355,8 @@ library ECDSA384 {
 
                 return x1 == 0 ? (x2.copy(), y2.copy()) : (x1.copy(), y1.copy());
             }
-
+            
+            //this test assumes P=-Q, it means addAffine will return a wrong result when P=Q, must be tested by callee
             if (U384.eq(x1, x2)) {
                 return (0, 0);
             }
