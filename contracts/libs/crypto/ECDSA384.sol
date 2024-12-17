@@ -119,8 +119,8 @@ library ECDSA384 {
             {
                 uint256 three = U384.init(3);
 
-                /// We use 4-bit masks where the first 2 bits refer to `scalar1` and the last 2 bits refer to `scalar2`.
-                uint256[2][16] memory points_ = _precomputePointsTable(
+                /// We use 6-bit masks where the first 3 bits refer to `scalar1` and the last 3 bits refer to `scalar2`.
+                uint256[2][64] memory points_ = _precomputePointsTable(
                     call,
                     params_.p,
                     three,
@@ -141,6 +141,8 @@ library ECDSA384 {
                     scalar2
                 );
             }
+
+            U384.modAssign(call, scalar1, params_.n);
 
             return U384.eq(scalar1, inputs_.r);
         }
@@ -185,7 +187,7 @@ library ECDSA384 {
         uint256 p,
         uint256 three,
         uint256 a,
-        uint256[2][16] memory points,
+        uint256[2][64] memory points,
         uint256 scalar1,
         uint256 scalar2
     ) private view returns (uint256 x, uint256 y) {
@@ -199,15 +201,32 @@ library ECDSA384 {
                 scalar2Bits_ := mload(scalar2)
             }
 
-            for (uint256 word = 2; word <= 184; word += 2) {
-                (x, y) = _qaudAffine(call, p, three, a, x, y);
+            (x, y) = _twiceAffine(call, p, three, a, x, y);
+
+            mask_ = ((scalar1Bits_ >> 183) << 3) | (scalar2Bits_ >> 183);
+
+            if (mask_ != 0) {
+                (x, y) = _addAffine(call, p, three, a, points[mask_][0], points[mask_][1], x, y);
+            }
+
+            for (uint256 word = 4; word <= 184; word += 3) {
+                (x, y) = _twice3Affine(call, p, three, a, x, y);
 
                 mask_ =
-                    (((scalar1Bits_ >> (184 - word)) & 0x03) << 2) |
-                    ((scalar2Bits_ >> (184 - word)) & 0x03);
+                    (((scalar1Bits_ >> (184 - word)) & 0x07) << 3) |
+                    ((scalar2Bits_ >> (184 - word)) & 0x07);
 
                 if (mask_ != 0) {
-                    (x, y) = _addAffine(call, p, points[mask_][0], points[mask_][1], x, y);
+                    (x, y) = _addAffine(
+                        call,
+                        p,
+                        three,
+                        a,
+                        points[mask_][0],
+                        points[mask_][1],
+                        x,
+                        y
+                    );
                 }
             }
 
@@ -216,15 +235,32 @@ library ECDSA384 {
                 scalar2Bits_ := mload(add(scalar2, 0x20))
             }
 
-            for (uint256 word = 2; word <= 256; word += 2) {
-                (x, y) = _qaudAffine(call, p, three, a, x, y);
+            (x, y) = _twiceAffine(call, p, three, a, x, y);
+
+            mask_ = ((scalar1Bits_ >> 255) << 3) | (scalar2Bits_ >> 255);
+
+            if (mask_ != 0) {
+                (x, y) = _addAffine(call, p, three, a, points[mask_][0], points[mask_][1], x, y);
+            }
+
+            for (uint256 word = 4; word <= 256; word += 3) {
+                (x, y) = _twice3Affine(call, p, three, a, x, y);
 
                 mask_ =
-                    (((scalar1Bits_ >> (256 - word)) & 0x03) << 2) |
-                    ((scalar2Bits_ >> (256 - word)) & 0x03);
+                    (((scalar1Bits_ >> (256 - word)) & 0x07) << 3) |
+                    ((scalar2Bits_ >> (256 - word)) & 0x07);
 
                 if (mask_ != 0) {
-                    (x, y) = _addAffine(call, p, points[mask_][0], points[mask_][1], x, y);
+                    (x, y) = _addAffine(
+                        call,
+                        p,
+                        three,
+                        a,
+                        points[mask_][0],
+                        points[mask_][1],
+                        x,
+                        y
+                    );
                 }
             }
         }
@@ -268,9 +304,9 @@ library ECDSA384 {
     }
 
     /**
-     * @dev Quads an elliptic curve point in affine coordinates.
+     * @dev Doubles an elliptic curve point 3 times in affine coordinates.
      */
-    function _qaudAffine(
+    function _twice3Affine(
         uint256 call,
         uint256 p,
         uint256 three,
@@ -321,7 +357,24 @@ library ECDSA384 {
             U384.modmulAssign(call, y1, m1);
             U384.modsubAssign(y1, y2, p);
 
-            return (x1, y1);
+            if (U384.eqInteger(y1, 0)) {
+                return (0, 0);
+            }
+
+            U384.modexpAssignTo(call, m1, x1, 2);
+            U384.modmulAssign(call, m1, three);
+            U384.modaddAssign(m1, a, p);
+
+            U384.modshl1AssignTo(m2, y1, p);
+            U384.moddivAssign(call, m1, m2);
+
+            U384.modexpAssignTo(call, x2, m1, 2);
+            U384.modsubAssign(x2, x1, p);
+            U384.modsubAssign(x2, x1, p);
+
+            U384.modsubAssignTo(y2, x1, x2, p);
+            U384.modmulAssign(call, y2, m1);
+            U384.modsubAssign(y2, y1, p);
         }
     }
 
@@ -331,6 +384,8 @@ library ECDSA384 {
     function _addAffine(
         uint256 call,
         uint256 p,
+        uint256 three,
+        uint256 a,
         uint256 x1,
         uint256 y1,
         uint256 x2,
@@ -346,6 +401,10 @@ library ECDSA384 {
             }
 
             if (U384.eq(x1, x2)) {
+                if (U384.eq(y1, y2)) {
+                    return _twiceAffine(call, p, three, a, x1, y1);
+                }
+
                 return (0, 0);
             }
 
@@ -373,128 +432,49 @@ library ECDSA384 {
         uint256 gy,
         uint256 hx,
         uint256 hy
-    ) private view returns (uint256[2][16] memory points_) {
-        /// 0b0100: 1G + 0H
-        (points_[0x04][0], points_[0x04][1]) = (gx.copy(), gy.copy());
-        /// 0b1000: 2G + 0H
-        (points_[0x08][0], points_[0x08][1]) = _twiceAffine(
-            call,
-            p,
-            three,
-            a,
-            points_[0x04][0],
-            points_[0x04][1]
-        );
-        /// 0b1100: 3G + 0H
-        (points_[0x0C][0], points_[0x0C][1]) = _addAffine(
-            call,
-            p,
-            points_[0x04][0],
-            points_[0x04][1],
-            points_[0x08][0],
-            points_[0x08][1]
-        );
-        /// 0b0001: 0G + 1H
-        (points_[0x01][0], points_[0x01][1]) = (hx.copy(), hy.copy());
-        /// 0b0010: 0G + 2H
-        (points_[0x02][0], points_[0x02][1]) = _twiceAffine(
-            call,
-            p,
-            three,
-            a,
-            points_[0x01][0],
-            points_[0x01][1]
-        );
-        /// 0b0011: 0G + 3H
-        (points_[0x03][0], points_[0x03][1]) = _addAffine(
-            call,
-            p,
-            points_[0x01][0],
-            points_[0x01][1],
-            points_[0x02][0],
-            points_[0x02][1]
-        );
-        /// 0b0101: 1G + 1H
-        (points_[0x05][0], points_[0x05][1]) = _addAffine(
-            call,
-            p,
-            points_[0x04][0],
-            points_[0x04][1],
-            points_[0x01][0],
-            points_[0x01][1]
-        );
-        /// 0b0110: 1G + 2H
-        (points_[0x06][0], points_[0x06][1]) = _addAffine(
-            call,
-            p,
-            points_[0x04][0],
-            points_[0x04][1],
-            points_[0x02][0],
-            points_[0x02][1]
-        );
-        /// 0b0111: 1G + 3H
-        (points_[0x07][0], points_[0x07][1]) = _addAffine(
-            call,
-            p,
-            points_[0x04][0],
-            points_[0x04][1],
-            points_[0x03][0],
-            points_[0x03][1]
-        );
-        /// 0b1001: 2G + 1H
-        (points_[0x09][0], points_[0x09][1]) = _addAffine(
-            call,
-            p,
-            points_[0x08][0],
-            points_[0x08][1],
-            points_[0x01][0],
-            points_[0x01][1]
-        );
-        /// 0b1010: 2G + 2H
-        (points_[0x0A][0], points_[0x0A][1]) = _addAffine(
-            call,
-            p,
-            points_[0x08][0],
-            points_[0x08][1],
-            points_[0x02][0],
-            points_[0x02][1]
-        );
-        /// 0b1011: 2G + 3H
-        (points_[0x0B][0], points_[0x0B][1]) = _addAffine(
-            call,
-            p,
-            points_[0x08][0],
-            points_[0x08][1],
-            points_[0x03][0],
-            points_[0x03][1]
-        );
-        /// 0b1101: 3G + 1H
-        (points_[0x0D][0], points_[0x0D][1]) = _addAffine(
-            call,
-            p,
-            points_[0x0C][0],
-            points_[0x0C][1],
-            points_[0x01][0],
-            points_[0x01][1]
-        );
-        /// 0b1110: 3G + 2H
-        (points_[0x0E][0], points_[0x0E][1]) = _addAffine(
-            call,
-            p,
-            points_[0x0C][0],
-            points_[0x0C][1],
-            points_[0x02][0],
-            points_[0x02][1]
-        );
-        /// 0b1111: 3G + 3H
-        (points_[0x0F][0], points_[0x0F][1]) = _addAffine(
-            call,
-            p,
-            points_[0x0C][0],
-            points_[0x0C][1],
-            points_[0x03][0],
-            points_[0x03][1]
-        );
+    ) private view returns (uint256[2][64] memory points_) {
+        unchecked {
+            (points_[0x01][0], points_[0x01][1]) = (hx.copy(), hy.copy());
+            (points_[0x08][0], points_[0x08][1]) = (gx.copy(), gy.copy());
+
+            for (uint256 i = 0; i < 8; ++i) {
+                for (uint256 j = 0; j < 8; ++j) {
+                    if (i + j < 2) {
+                        continue;
+                    }
+
+                    uint256 maskTo = (i << 3) | j;
+
+                    if (i != 0) {
+                        uint256 maskFrom = ((i - 1) << 3) | j;
+
+                        (points_[maskTo][0], points_[maskTo][1]) = _addAffine(
+                            call,
+                            p,
+                            three,
+                            a,
+                            points_[maskFrom][0],
+                            points_[maskFrom][1],
+                            gx,
+                            gy
+                        );
+                    } else {
+                        uint256 maskFrom = (i << 3) | (j - 1);
+
+                        (points_[maskTo][0], points_[maskTo][1]) = _addAffine(
+                            call,
+                            p,
+                            three,
+                            a,
+                            points_[maskFrom][0],
+                            points_[maskFrom][1],
+                            hx,
+                            hy
+                        );
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -654,6 +634,21 @@ library U384 {
             if (aWord_ < bWord_) {
                 return -1;
             }
+        }
+    }
+
+    function modAssign(uint256 call_, uint256 a_, uint256 m_) internal view {
+        assembly {
+            mstore(call_, 0x40)
+            mstore(add(0x20, call_), 0x20)
+            mstore(add(0x40, call_), 0x40)
+            mstore(add(0x60, call_), mload(a_))
+            mstore(add(0x80, call_), mload(add(a_, 0x20)))
+            mstore(add(0xA0, call_), 0x01)
+            mstore(add(0xC0, call_), mload(m_))
+            mstore(add(0xE0, call_), mload(add(m_, 0x20)))
+
+            pop(staticcall(gas(), 0x5, call_, 0x0100, a_, 0x40))
         }
     }
 
