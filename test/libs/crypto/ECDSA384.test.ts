@@ -58,6 +58,17 @@ describe("ECDSA384", () => {
         expect(await ecdsa384.verifySECP384r1(message, signature, pubKey)).to.be.true;
       });
 
+      it("should verify the signature sha384", async () => {
+        const message =
+          "0xfc000000009322da48a8586f26f148003932f6d4c0d1ce3a21798f7b651dab7642188c9061a66dc9b190e00b0290e264";
+        const signature =
+          "0xe14f41a5fc83aa4725a9ea60ab5b0b9de27f519af4b557a601f1fee0243f8eee5180f8c531414f3473f4457430cb7a261047ed2bf1f98e3ce93e8fdbdc63cc79f238998fee74e1bb6cd708694950bbffe3945066064da043f04d7083d0a596ec";
+        const pubKey =
+          "0x2da57dda1089276a543f9ffdac0bff0d976cad71eb7280e7d9bfd9fee4bdb2f20f47ff888274389772d98cc5752138aa4b6d054d69dcf3e25ec49df870715e34883b1836197d76f8ad962e78f6571bbc7407b0d6091f9e4d88f014274406174f";
+
+        expect(await ecdsa384.verifySECP384r1WithoutHashing(message, signature, pubKey)).to.be.true;
+      });
+
       it("should not verify invalid signature", async () => {
         const message = "0x0123456789";
 
