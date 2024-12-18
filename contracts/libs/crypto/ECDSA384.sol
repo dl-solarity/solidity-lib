@@ -10,7 +10,7 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
  * this is the most efficient implementation out there, consuming ~8.025 million gas per call.
  *
  * The approach is Strauss-Shamir double scalar multiplication with 6 bits of precompute + affine coordinates.
- * For reference, naive implementation uses ~400 billion gas, which is 48000 times more expensive.
+ * For reference, naive implementation uses ~400 billion gas, which is 50000 times more expensive.
  *
  * We also tried using projective coordinates, however, the gas consumption rose to ~9 million gas.
  */
