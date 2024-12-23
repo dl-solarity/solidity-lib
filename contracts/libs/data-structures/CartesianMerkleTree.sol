@@ -7,7 +7,7 @@ pragma solidity ^0.8.4;
  * A magnificent ZK-friendly data structure based on a Binary Search Tree + Heap + Merkle Tree. Short names: CMT, Treaple.
  * Possesses deterministic and idemponent properties. Can be used as a substitute for a Sparse Merkle Tree (SMT).
  *
- * Gas usage for adding and removing 5,000 elements to a CMT with the keccak256 and poseidon hash functions is detailed below:
+ * Gas usage for adding and removing 1,000 elements to a CMT with the keccak256 and poseidon hash functions is detailed below:
  *
  * Keccak256:
  * - CMT.add - 249k
