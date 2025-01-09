@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {ECDSA384, U384} from "../../../libs/crypto/ECDSA384.sol";
+import "../../../libs/crypto/bn/U512.sol";
+import {ECDSA384} from "../../../libs/crypto/ECDSA384.sol";
 
 contract ECDSA384Mock {
     using ECDSA384 for *;
@@ -73,8 +74,8 @@ contract ECDSA384Mock {
     }
 
     function cmpMock() external pure returns (int256 cmp_) {
-        uint256 a_;
-        uint256 b_;
+        uint512 a_;
+        uint512 b_;
 
         assembly {
             a_ := mload(0x40)
@@ -86,6 +87,6 @@ contract ECDSA384Mock {
             mstore(0x40, add(b_, 0x40))
         }
 
-        return U384.cmp(a_, b_);
+        return U512.cmp(a_, b_);
     }
 }

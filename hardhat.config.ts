@@ -61,7 +61,7 @@ const config: HardhatUserConfig = {
   gasReporter: {
     currency: "USD",
     gasPrice: 50,
-    enabled: false,
+    enabled: true,
     reportPureAndViewMethods: true,
     coinmarketcap: `${process.env.COINMARKETCAP_KEY}`,
   },

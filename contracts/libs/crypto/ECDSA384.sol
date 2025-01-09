@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import {U512} from "./bn/U512.sol";
+import {uint512} from "./bn/U512.sol";
 import {MemoryUtils} from "../utils/MemoryUtils.sol";
-
+import "hardhat/console.sol";
 /**
  * @notice Cryptography module
  *
@@ -16,7 +18,7 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
  */
 library ECDSA384 {
     using MemoryUtils for *;
-    using U384 for *;
+    using U512 for *;
 
     /**
      * @notice 384-bit curve parameters.
@@ -32,20 +34,20 @@ library ECDSA384 {
     }
 
     struct _Parameters {
-        uint256 a;
-        uint256 b;
-        uint256 gx;
-        uint256 gy;
-        uint256 p;
-        uint256 n;
-        uint256 lowSmax;
+        uint512 a;
+        uint512 b;
+        uint512 gx;
+        uint512 gy;
+        uint512 p;
+        uint512 n;
+        uint512 lowSmax;
     }
 
     struct _Inputs {
-        uint256 r;
-        uint256 s;
-        uint256 x;
-        uint256 y;
+        uint512 r;
+        uint512 s;
+        uint512 x;
+        uint512 y;
     }
 
     /**
@@ -67,8 +69,8 @@ library ECDSA384 {
         unchecked {
             _Inputs memory inputs_;
 
-            (inputs_.r, inputs_.s) = U384.init2(signature_);
-            (inputs_.x, inputs_.y) = U384.init2(pubKey_);
+            (inputs_.r, inputs_.s) = U512.init2(signature_);
+            (inputs_.x, inputs_.y) = U512.init2(pubKey_);
 
             _Parameters memory params_ = _Parameters({
                 a: curveParams_.a.init(),
@@ -80,14 +82,14 @@ library ECDSA384 {
                 lowSmax: curveParams_.lowSmax.init()
             });
 
-            uint256 call = U384.initCall(params_.p);
+            uint256 call = U512.initCall(params_.p);
 
             /// accept s only from the lower part of the curve
             if (
-                U384.eqInteger(inputs_.r, 0) ||
-                U384.cmp(inputs_.r, params_.n) >= 0 ||
-                U384.eqInteger(inputs_.s, 0) ||
-                U384.cmp(inputs_.s, params_.lowSmax) > 0
+                U512.eqInteger(inputs_.r, 0) ||
+                U512.cmp(inputs_.r, params_.n) >= 0 ||
+                U512.eqInteger(inputs_.s, 0) ||
+                U512.cmp(inputs_.s, params_.lowSmax) > 0
             ) {
                 return false;
             }
@@ -113,14 +115,14 @@ library ECDSA384 {
                 }
             }
 
-            uint256 scalar1 = U384.moddiv(call, hashedMessage_.init(), inputs_.s, params_.n);
-            uint256 scalar2 = U384.moddiv(call, inputs_.r, inputs_.s, params_.n);
+            uint512 scalar1 = U512.moddiv(call, hashedMessage_.init(), inputs_.s, params_.n);
+            uint512 scalar2 = U512.moddiv(call, inputs_.r, inputs_.s, params_.n);
 
             {
-                uint256 three = U384.init(3);
+                uint512 three = U512.init(3);
 
                 /// We use 6-bit masks where the first 3 bits refer to `scalar1` and the last 3 bits refer to `scalar2`.
-                uint256[2][64] memory points_ = _precomputePointsTable(
+                uint512[2][64] memory points_ = _precomputePointsTable(
                     call,
                     params_.p,
                     three,
@@ -142,9 +144,9 @@ library ECDSA384 {
                 );
             }
 
-            U384.modAssign(call, scalar1, params_.n);
+            U512.modAssign(call, scalar1, params_.n);
 
-            return U384.eq(scalar1, inputs_.r);
+            return U512.eq(scalar1, inputs_.r);
         }
     }
 
@@ -153,29 +155,29 @@ library ECDSA384 {
      */
     function _isOnCurve(
         uint256 call,
-        uint256 p,
-        uint256 a,
-        uint256 b,
-        uint256 x,
-        uint256 y
+        uint512 p,
+        uint512 a,
+        uint512 b,
+        uint512 x,
+        uint512 y
     ) private view returns (bool) {
         unchecked {
-            if (U384.eqInteger(x, 0) || U384.eq(x, p) || U384.eqInteger(y, 0) || U384.eq(y, p)) {
+            if (U512.eqInteger(x, 0) || U512.eq(x, p) || U512.eqInteger(y, 0) || U512.eq(y, p)) {
                 return false;
             }
 
-            uint256 LHS = U384.modexp(call, y, 2);
-            uint256 RHS = U384.modexp(call, x, 3);
+            uint512 LHS = U512.modexp(call, y, 2);
+            uint512 RHS = U512.modexp(call, x, 3);
 
-            if (!U384.eqInteger(a, 0)) {
-                RHS = U384.modadd(RHS, U384.modmul(call, x, a), p); // x^3 + a*x
+            if (!U512.eqInteger(a, 0)) {
+                RHS = U512.modadd(RHS, U512.modmul(call, x, a), p); // x^3 + a*x
             }
 
-            if (!U384.eqInteger(b, 0)) {
-                RHS = U384.modadd(RHS, b, p); // x^3 + a*x + b
+            if (!U512.eqInteger(b, 0)) {
+                RHS = U512.modadd(RHS, b, p); // x^3 + a*x + b
             }
 
-            return U384.eq(LHS, RHS);
+            return U512.eq(LHS, RHS);
         }
     }
 
@@ -184,39 +186,38 @@ library ECDSA384 {
      */
     function _doubleScalarMultiplication(
         uint256 call,
-        uint256 p,
-        uint256 three,
-        uint256 a,
-        uint256[2][64] memory points,
-        uint256 scalar1,
-        uint256 scalar2
-    ) private view returns (uint256 x, uint256 y) {
+        uint512 p,
+        uint512 three,
+        uint512 a,
+        uint512[2][64] memory points,
+        uint512 scalar1,
+        uint512 scalar2
+    ) private view returns (uint512 x, uint512 y) {
         unchecked {
+            x = U512.init();
+            y = U512.init();
+
             uint256 mask_;
-            uint256 scalar1Bits_;
-            uint256 scalar2Bits_;
+            uint256 mask1_;
+            uint256 mask2_;
+            //
+            //            console.logBytes(scalar1.toBytes());
+            //            console.logBytes(scalar2.toBytes());
+            //
+            //            console.log(_getWord(scalar1, 384));
+            //            console.log(_getWord(scalar2, 384));
+            //
+            //            console.log(_getWord(scalar1, 383));
+            //            console.log(_getWord(scalar2, 383));
 
-            assembly {
-                scalar1Bits_ := mload(scalar1)
-                scalar2Bits_ := mload(scalar2)
-            }
+            for (uint256 bit = 3; bit <= 384; bit += 3) {
+                mask1_ = _getWord(scalar1, 384 - bit);
+                mask2_ = _getWord(scalar2, 384 - bit);
 
-            (x, y) = _twiceAffine(call, p, three, a, x, y);
-
-            mask_ = ((scalar1Bits_ >> 183) << 3) | (scalar2Bits_ >> 183);
-
-            if (mask_ != 0) {
-                (x, y) = _addAffine(call, p, three, a, points[mask_][0], points[mask_][1], x, y);
-            }
-
-            for (uint256 word = 4; word <= 184; word += 3) {
-                (x, y) = _twice3Affine(call, p, three, a, x, y);
-
-                mask_ =
-                    (((scalar1Bits_ >> (184 - word)) & 0x07) << 3) |
-                    ((scalar2Bits_ >> (184 - word)) & 0x07);
+                mask_ = (mask1_ << 3) | mask2_;
 
                 if (mask_ != 0) {
+                    (x, y) = _twice3Affine(call, p, three, a, x, y);
                     (x, y) = _addAffine(
                         call,
                         p,
@@ -229,40 +230,25 @@ library ECDSA384 {
                     );
                 }
             }
+        }
+    }
+
+    function _getWord(uint512 scalar_, uint256 bit_) private pure returns (uint256) {
+        unchecked {
+            uint256 word_;
+            if (bit_ <= 253) {
+                assembly {
+                    word_ := mload(add(scalar_, 0x20))
+                }
+
+                return (word_ >> bit_) & 0x07;
+            }
 
             assembly {
-                scalar1Bits_ := mload(add(scalar1, 0x20))
-                scalar2Bits_ := mload(add(scalar2, 0x20))
+                word_ := mload(add(scalar_, 0x10))
             }
 
-            (x, y) = _twiceAffine(call, p, three, a, x, y);
-
-            mask_ = ((scalar1Bits_ >> 255) << 3) | (scalar2Bits_ >> 255);
-
-            if (mask_ != 0) {
-                (x, y) = _addAffine(call, p, three, a, points[mask_][0], points[mask_][1], x, y);
-            }
-
-            for (uint256 word = 4; word <= 256; word += 3) {
-                (x, y) = _twice3Affine(call, p, three, a, x, y);
-
-                mask_ =
-                    (((scalar1Bits_ >> (256 - word)) & 0x07) << 3) |
-                    ((scalar2Bits_ >> (256 - word)) & 0x07);
-
-                if (mask_ != 0) {
-                    (x, y) = _addAffine(
-                        call,
-                        p,
-                        three,
-                        a,
-                        points[mask_][0],
-                        points[mask_][1],
-                        x,
-                        y
-                    );
-                }
-            }
+            return (word_ >> (bit_ - 128)) & 0x07;
         }
     }
 
@@ -271,35 +257,38 @@ library ECDSA384 {
      */
     function _twiceAffine(
         uint256 call,
-        uint256 p,
-        uint256 three,
-        uint256 a,
-        uint256 x1,
-        uint256 y1
-    ) private view returns (uint256 x2, uint256 y2) {
+        uint512 p,
+        uint512 three,
+        uint512 a,
+        uint512 x1,
+        uint512 y1
+    ) private view returns (uint512 x2, uint512 y2) {
         unchecked {
-            if (x1 == 0) {
-                return (0, 0);
+            x2 = U512.init();
+            y2 = U512.init();
+
+            if (x1.isNull()) {
+                return (U512.init(), U512.init());
             }
 
-            if (U384.eqInteger(y1, 0)) {
-                return (0, 0);
+            if (U512.eqInteger(y1, 0)) {
+                return (U512.init(), U512.init());
             }
 
-            uint256 m1 = U384.modexp(call, x1, 2);
-            U384.modmulAssign(call, m1, three);
-            U384.modaddAssign(m1, a, p);
+            uint512 m1 = U512.modexp(call, x1, 2);
+            U512.modmulAssign(call, m1, three);
+            U512.modaddAssign(m1, a, p);
 
-            uint256 m2 = U384.modshl1(y1, p);
-            U384.moddivAssign(call, m1, m2);
+            uint512 m2 = U512.modshl1(y1, p);
+            U512.moddivAssign(call, m1, m2);
 
-            x2 = U384.modexp(call, m1, 2);
-            U384.modsubAssign(x2, x1, p);
-            U384.modsubAssign(x2, x1, p);
+            x2 = U512.modexp(call, m1, 2);
+            U512.modsubAssign(x2, x1, p);
+            U512.modsubAssign(x2, x1, p);
 
-            y2 = U384.modsub(x1, x2, p);
-            U384.modmulAssign(call, y2, m1);
-            U384.modsubAssign(y2, y1, p);
+            y2 = U512.modsub(x1, x2, p);
+            U512.modmulAssign(call, y2, m1);
+            U512.modsubAssign(y2, y1, p);
         }
     }
 
@@ -308,73 +297,76 @@ library ECDSA384 {
      */
     function _twice3Affine(
         uint256 call,
-        uint256 p,
-        uint256 three,
-        uint256 a,
-        uint256 x1,
-        uint256 y1
-    ) private view returns (uint256 x2, uint256 y2) {
+        uint512 p,
+        uint512 three,
+        uint512 a,
+        uint512 x1,
+        uint512 y1
+    ) private view returns (uint512 x2, uint512 y2) {
         unchecked {
-            if (x1 == 0) {
-                return (0, 0);
+            x2 = U512.init();
+            y2 = U512.init();
+
+            if (x1.isNull()) {
+                return (U512.init(), U512.init());
             }
 
-            if (U384.eqInteger(y1, 0)) {
-                return (0, 0);
+            if (U512.eqInteger(y1, 0)) {
+                return (U512.init(), U512.init());
             }
 
-            uint256 m1 = U384.modexp(call, x1, 2);
-            U384.modmulAssign(call, m1, three);
-            U384.modaddAssign(m1, a, p);
+            uint512 m1 = U512.modexp(call, x1, 2);
+            U512.modmulAssign(call, m1, three);
+            U512.modaddAssign(m1, a, p);
 
-            uint256 m2 = U384.modshl1(y1, p);
-            U384.moddivAssign(call, m1, m2);
+            uint512 m2 = U512.modshl1(y1, p);
+            U512.moddivAssign(call, m1, m2);
 
-            x2 = U384.modexp(call, m1, 2);
-            U384.modsubAssign(x2, x1, p);
-            U384.modsubAssign(x2, x1, p);
+            x2 = U512.modexp(call, m1, 2);
+            U512.modsubAssign(x2, x1, p);
+            U512.modsubAssign(x2, x1, p);
 
-            y2 = U384.modsub(x1, x2, p);
-            U384.modmulAssign(call, y2, m1);
-            U384.modsubAssign(y2, y1, p);
+            y2 = U512.modsub(x1, x2, p);
+            U512.modmulAssign(call, y2, m1);
+            U512.modsubAssign(y2, y1, p);
 
-            if (U384.eqInteger(y2, 0)) {
-                return (0, 0);
+            if (U512.eqInteger(y2, 0)) {
+                return (U512.init(), U512.init());
             }
 
-            U384.modexpAssignTo(call, m1, x2, 2);
-            U384.modmulAssign(call, m1, three);
-            U384.modaddAssign(m1, a, p);
+            U512.modexpAssignTo(call, m1, x2, 2);
+            U512.modmulAssign(call, m1, three);
+            U512.modaddAssign(m1, a, p);
 
-            U384.modshl1AssignTo(m2, y2, p);
-            U384.moddivAssign(call, m1, m2);
+            U512.modshl1AssignTo(m2, y2, p);
+            U512.moddivAssign(call, m1, m2);
 
-            U384.modexpAssignTo(call, x1, m1, 2);
-            U384.modsubAssign(x1, x2, p);
-            U384.modsubAssign(x1, x2, p);
+            U512.modexpAssignTo(call, x1, m1, 2);
+            U512.modsubAssign(x1, x2, p);
+            U512.modsubAssign(x1, x2, p);
 
-            U384.modsubAssignTo(y1, x2, x1, p);
-            U384.modmulAssign(call, y1, m1);
-            U384.modsubAssign(y1, y2, p);
+            U512.modsubAssignTo(y1, x2, x1, p);
+            U512.modmulAssign(call, y1, m1);
+            U512.modsubAssign(y1, y2, p);
 
-            if (U384.eqInteger(y1, 0)) {
-                return (0, 0);
+            if (U512.eqInteger(y1, 0)) {
+                return (U512.init(), U512.init());
             }
 
-            U384.modexpAssignTo(call, m1, x1, 2);
-            U384.modmulAssign(call, m1, three);
-            U384.modaddAssign(m1, a, p);
+            U512.modexpAssignTo(call, m1, x1, 2);
+            U512.modmulAssign(call, m1, three);
+            U512.modaddAssign(m1, a, p);
 
-            U384.modshl1AssignTo(m2, y1, p);
-            U384.moddivAssign(call, m1, m2);
+            U512.modshl1AssignTo(m2, y1, p);
+            U512.moddivAssign(call, m1, m2);
 
-            U384.modexpAssignTo(call, x2, m1, 2);
-            U384.modsubAssign(x2, x1, p);
-            U384.modsubAssign(x2, x1, p);
+            U512.modexpAssignTo(call, x2, m1, 2);
+            U512.modsubAssign(x2, x1, p);
+            U512.modsubAssign(x2, x1, p);
 
-            U384.modsubAssignTo(y2, x1, x2, p);
-            U384.modmulAssign(call, y2, m1);
-            U384.modsubAssign(y2, y1, p);
+            U512.modsubAssignTo(y2, x1, x2, p);
+            U512.modmulAssign(call, y2, m1);
+            U512.modsubAssign(y2, y1, p);
         }
     }
 
@@ -383,56 +375,59 @@ library ECDSA384 {
      */
     function _addAffine(
         uint256 call,
-        uint256 p,
-        uint256 three,
-        uint256 a,
-        uint256 x1,
-        uint256 y1,
-        uint256 x2,
-        uint256 y2
-    ) private view returns (uint256 x3, uint256 y3) {
+        uint512 p,
+        uint512 three,
+        uint512 a,
+        uint512 x1,
+        uint512 y1,
+        uint512 x2,
+        uint512 y2
+    ) private view returns (uint512 x3, uint512 y3) {
         unchecked {
-            if (x1 == 0 || x2 == 0) {
-                if (x1 == 0 && x2 == 0) {
-                    return (0, 0);
+            x3 = U512.init();
+            y3 = U512.init();
+
+            if (x1.isNull() || x2.isNull()) {
+                if (x1.isNull() && x2.isNull()) {
+                    return (U512.init(), U512.init());
                 }
 
-                return x1 == 0 ? (x2.copy(), y2.copy()) : (x1.copy(), y1.copy());
+                return x1.isNull() ? (x2.copy(), y2.copy()) : (x1.copy(), y1.copy());
             }
 
-            if (U384.eq(x1, x2)) {
-                if (U384.eq(y1, y2)) {
+            if (U512.eq(x1, x2)) {
+                if (U512.eq(y1, y2)) {
                     return _twiceAffine(call, p, three, a, x1, y1);
                 }
 
-                return (0, 0);
+                return (U512.init(), U512.init());
             }
 
-            uint256 m1 = U384.modsub(y1, y2, p);
-            uint256 m2 = U384.modsub(x1, x2, p);
+            uint512 m1 = U512.modsub(y1, y2, p);
+            uint512 m2 = U512.modsub(x1, x2, p);
 
-            U384.moddivAssign(call, m1, m2);
+            U512.moddivAssign(call, m1, m2);
 
-            x3 = U384.modexp(call, m1, 2);
-            U384.modsubAssign(x3, x1, p);
-            U384.modsubAssign(x3, x2, p);
+            x3 = U512.modexp(call, m1, 2);
+            U512.modsubAssign(x3, x1, p);
+            U512.modsubAssign(x3, x2, p);
 
-            y3 = U384.modsub(x1, x3, p);
-            U384.modmulAssign(call, y3, m1);
-            U384.modsubAssign(y3, y1, p);
+            y3 = U512.modsub(x1, x3, p);
+            U512.modmulAssign(call, y3, m1);
+            U512.modsubAssign(y3, y1, p);
         }
     }
 
     function _precomputePointsTable(
         uint256 call,
-        uint256 p,
-        uint256 three,
-        uint256 a,
-        uint256 gx,
-        uint256 gy,
-        uint256 hx,
-        uint256 hy
-    ) private view returns (uint256[2][64] memory points_) {
+        uint512 p,
+        uint512 three,
+        uint512 a,
+        uint512 gx,
+        uint512 gy,
+        uint512 hx,
+        uint512 hy
+    ) private view returns (uint512[2][64] memory points_) {
         unchecked {
             (points_[0x01][0], points_[0x01][1]) = (hx.copy(), hy.copy());
             (points_[0x08][0], points_[0x08][1]) = (gx.copy(), gy.copy());
@@ -474,537 +469,6 @@ library ECDSA384 {
                     }
                 }
             }
-        }
-    }
-}
-
-/**
- * @notice Low-level utility library that implements unsigned 384-bit arithmetics.
- *
- * Should not be used outside of this file.
- */
-library U384 {
-    uint256 private constant SHORT_ALLOCATION = 64;
-
-    uint256 private constant CALL_ALLOCATION = 4 * 288;
-
-    uint256 private constant MUL_OFFSET = 288;
-    uint256 private constant EXP_OFFSET = 2 * 288;
-    uint256 private constant INV_OFFSET = 3 * 288;
-
-    function init(uint256 from_) internal pure returns (uint256 handler_) {
-        unchecked {
-            handler_ = _allocate(SHORT_ALLOCATION);
-
-            assembly {
-                mstore(handler_, 0x00)
-                mstore(add(0x20, handler_), from_)
-            }
-
-            return handler_;
-        }
-    }
-
-    function init(bytes memory from_) internal pure returns (uint256 handler_) {
-        unchecked {
-            require(from_.length == 48, "U384: not 384");
-
-            handler_ = _allocate(SHORT_ALLOCATION);
-
-            assembly {
-                mstore(handler_, 0x00)
-                mstore(add(handler_, 0x10), mload(add(from_, 0x20)))
-                mstore(add(handler_, 0x20), mload(add(from_, 0x30)))
-            }
-
-            return handler_;
-        }
-    }
-
-    function init2(
-        bytes memory from2_
-    ) internal pure returns (uint256 handler1_, uint256 handler2_) {
-        unchecked {
-            require(from2_.length == 96, "U384: not 768");
-
-            handler1_ = _allocate(SHORT_ALLOCATION);
-            handler2_ = _allocate(SHORT_ALLOCATION);
-
-            assembly {
-                mstore(handler1_, 0x00)
-                mstore(add(handler1_, 0x10), mload(add(from2_, 0x20)))
-                mstore(add(handler1_, 0x20), mload(add(from2_, 0x30)))
-
-                mstore(handler2_, 0x00)
-                mstore(add(handler2_, 0x10), mload(add(from2_, 0x50)))
-                mstore(add(handler2_, 0x20), mload(add(from2_, 0x60)))
-            }
-
-            return (handler1_, handler2_);
-        }
-    }
-
-    function initCall(uint256 m_) internal pure returns (uint256 handler_) {
-        unchecked {
-            handler_ = _allocate(CALL_ALLOCATION);
-
-            _sub(m_, init(2), handler_ + INV_OFFSET + 0xA0);
-
-            assembly {
-                let call_ := add(handler_, MUL_OFFSET)
-
-                mstore(call_, 0x60)
-                mstore(add(0x20, call_), 0x20)
-                mstore(add(0x40, call_), 0x40)
-                mstore(add(0xC0, call_), 0x01)
-                mstore(add(0xE0, call_), mload(m_))
-                mstore(add(0x0100, call_), mload(add(m_, 0x20)))
-
-                call_ := add(handler_, EXP_OFFSET)
-
-                mstore(call_, 0x40)
-                mstore(add(0x20, call_), 0x20)
-                mstore(add(0x40, call_), 0x40)
-                mstore(add(0xC0, call_), mload(m_))
-                mstore(add(0xE0, call_), mload(add(m_, 0x20)))
-
-                call_ := add(handler_, INV_OFFSET)
-
-                mstore(call_, 0x40)
-                mstore(add(0x20, call_), 0x40)
-                mstore(add(0x40, call_), 0x40)
-                mstore(add(0xE0, call_), mload(m_))
-                mstore(add(0x0100, call_), mload(add(m_, 0x20)))
-            }
-        }
-    }
-
-    function copy(uint256 handler_) internal pure returns (uint256 handlerCopy_) {
-        unchecked {
-            handlerCopy_ = _allocate(SHORT_ALLOCATION);
-
-            assembly {
-                mstore(handlerCopy_, mload(handler_))
-                mstore(add(handlerCopy_, 0x20), mload(add(handler_, 0x20)))
-            }
-
-            return handlerCopy_;
-        }
-    }
-
-    function eq(uint256 a_, uint256 b_) internal pure returns (bool eq_) {
-        assembly {
-            eq_ := and(eq(mload(a_), mload(b_)), eq(mload(add(a_, 0x20)), mload(add(b_, 0x20))))
-        }
-    }
-
-    function eqInteger(uint256 a_, uint256 bInteger_) internal pure returns (bool eq_) {
-        assembly {
-            eq_ := and(eq(mload(a_), 0), eq(mload(add(a_, 0x20)), bInteger_))
-        }
-    }
-
-    function cmp(uint256 a_, uint256 b_) internal pure returns (int256 cmp_) {
-        unchecked {
-            uint256 aWord_;
-            uint256 bWord_;
-
-            assembly {
-                aWord_ := mload(a_)
-                bWord_ := mload(b_)
-            }
-
-            if (aWord_ > bWord_) {
-                return 1;
-            }
-
-            if (aWord_ < bWord_) {
-                return -1;
-            }
-
-            assembly {
-                aWord_ := mload(add(a_, 0x20))
-                bWord_ := mload(add(b_, 0x20))
-            }
-
-            if (aWord_ > bWord_) {
-                return 1;
-            }
-
-            if (aWord_ < bWord_) {
-                return -1;
-            }
-        }
-    }
-
-    function modAssign(uint256 call_, uint256 a_, uint256 m_) internal view {
-        assembly {
-            mstore(call_, 0x40)
-            mstore(add(0x20, call_), 0x20)
-            mstore(add(0x40, call_), 0x40)
-            mstore(add(0x60, call_), mload(a_))
-            mstore(add(0x80, call_), mload(add(a_, 0x20)))
-            mstore(add(0xA0, call_), 0x01)
-            mstore(add(0xC0, call_), mload(m_))
-            mstore(add(0xE0, call_), mload(add(m_, 0x20)))
-
-            pop(staticcall(gas(), 0x5, call_, 0x0100, a_, 0x40))
-        }
-    }
-
-    function modexp(
-        uint256 call_,
-        uint256 b_,
-        uint256 eInteger_
-    ) internal view returns (uint256 r_) {
-        unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            assembly {
-                call_ := add(call_, EXP_OFFSET)
-
-                mstore(add(0x60, call_), mload(b_))
-                mstore(add(0x80, call_), mload(add(b_, 0x20)))
-                mstore(add(0xA0, call_), eInteger_)
-
-                pop(staticcall(gas(), 0x5, call_, 0x0100, r_, 0x40))
-            }
-
-            return r_;
-        }
-    }
-
-    function modexpAssignTo(
-        uint256 call_,
-        uint256 to_,
-        uint256 b_,
-        uint256 eInteger_
-    ) internal view {
-        assembly {
-            call_ := add(call_, EXP_OFFSET)
-
-            mstore(add(0x60, call_), mload(b_))
-            mstore(add(0x80, call_), mload(add(b_, 0x20)))
-            mstore(add(0xA0, call_), eInteger_)
-
-            pop(staticcall(gas(), 0x5, call_, 0x0100, to_, 0x40))
-        }
-    }
-
-    function modadd(uint256 a_, uint256 b_, uint256 m_) internal pure returns (uint256 r_) {
-        unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            _add(a_, b_, r_);
-
-            if (cmp(r_, m_) >= 0) {
-                _subFrom(r_, m_);
-            }
-
-            return r_;
-        }
-    }
-
-    function modaddAssign(uint256 a_, uint256 b_, uint256 m_) internal pure {
-        unchecked {
-            _addTo(a_, b_);
-
-            if (cmp(a_, m_) >= 0) {
-                return _subFrom(a_, m_);
-            }
-        }
-    }
-
-    function modmul(uint256 call_, uint256 a_, uint256 b_) internal view returns (uint256 r_) {
-        unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            _mul(a_, b_, call_ + MUL_OFFSET + 0x60);
-
-            assembly {
-                call_ := add(call_, MUL_OFFSET)
-
-                pop(staticcall(gas(), 0x5, call_, 0x0120, r_, 0x40))
-            }
-
-            return r_;
-        }
-    }
-
-    function modmulAssign(uint256 call_, uint256 a_, uint256 b_) internal view {
-        unchecked {
-            _mul(a_, b_, call_ + MUL_OFFSET + 0x60);
-
-            assembly {
-                call_ := add(call_, MUL_OFFSET)
-
-                pop(staticcall(gas(), 0x5, call_, 0x0120, a_, 0x40))
-            }
-        }
-    }
-
-    function modsub(uint256 a_, uint256 b_, uint256 m_) internal pure returns (uint256 r_) {
-        unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            if (cmp(a_, b_) >= 0) {
-                _sub(a_, b_, r_);
-                return r_;
-            }
-
-            _add(a_, m_, r_);
-            _subFrom(r_, b_);
-        }
-    }
-
-    function modsubAssign(uint256 a_, uint256 b_, uint256 m_) internal pure {
-        unchecked {
-            if (cmp(a_, b_) >= 0) {
-                _subFrom(a_, b_);
-                return;
-            }
-
-            _addTo(a_, m_);
-            _subFrom(a_, b_);
-        }
-    }
-
-    function modsubAssignTo(uint256 to_, uint256 a_, uint256 b_, uint256 m_) internal pure {
-        unchecked {
-            if (cmp(a_, b_) >= 0) {
-                _sub(a_, b_, to_);
-                return;
-            }
-
-            _add(a_, m_, to_);
-            _subFrom(to_, b_);
-        }
-    }
-
-    function modshl1(uint256 a_, uint256 m_) internal pure returns (uint256 r_) {
-        unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            _shl1(a_, r_);
-
-            if (cmp(r_, m_) >= 0) {
-                _subFrom(r_, m_);
-            }
-
-            return r_;
-        }
-    }
-
-    function modshl1AssignTo(uint256 to_, uint256 a_, uint256 m_) internal pure {
-        unchecked {
-            _shl1(a_, to_);
-
-            if (cmp(to_, m_) >= 0) {
-                _subFrom(to_, m_);
-            }
-        }
-    }
-
-    /// @dev Stores modinv into `b_` and moddiv into `a_`.
-    function moddivAssign(uint256 call_, uint256 a_, uint256 b_) internal view {
-        unchecked {
-            assembly {
-                call_ := add(call_, INV_OFFSET)
-
-                mstore(add(0x60, call_), mload(b_))
-                mstore(add(0x80, call_), mload(add(b_, 0x20)))
-
-                pop(staticcall(gas(), 0x5, call_, 0x0120, b_, 0x40))
-            }
-
-            modmulAssign(call_ - INV_OFFSET, a_, b_);
-        }
-    }
-
-    function moddiv(
-        uint256 call_,
-        uint256 a_,
-        uint256 b_,
-        uint256 m_
-    ) internal view returns (uint256 r_) {
-        unchecked {
-            r_ = modinv(call_, b_, m_);
-
-            _mul(a_, r_, call_ + 0x60);
-
-            assembly {
-                mstore(call_, 0x60)
-                mstore(add(0x20, call_), 0x20)
-                mstore(add(0x40, call_), 0x40)
-                mstore(add(0xC0, call_), 0x01)
-                mstore(add(0xE0, call_), mload(m_))
-                mstore(add(0x0100, call_), mload(add(m_, 0x20)))
-
-                pop(staticcall(gas(), 0x5, call_, 0x0120, r_, 0x40))
-            }
-        }
-    }
-
-    function modinv(uint256 call_, uint256 b_, uint256 m_) internal view returns (uint256 r_) {
-        unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            _sub(m_, init(2), call_ + 0xA0);
-
-            assembly {
-                mstore(call_, 0x40)
-                mstore(add(0x20, call_), 0x40)
-                mstore(add(0x40, call_), 0x40)
-                mstore(add(0x60, call_), mload(b_))
-                mstore(add(0x80, call_), mload(add(b_, 0x20)))
-                mstore(add(0xE0, call_), mload(m_))
-                mstore(add(0x0100, call_), mload(add(m_, 0x20)))
-
-                pop(staticcall(gas(), 0x5, call_, 0x0120, r_, 0x40))
-            }
-        }
-    }
-
-    function _shl1(uint256 a_, uint256 r_) internal pure {
-        assembly {
-            let a1_ := mload(add(a_, 0x20))
-
-            mstore(r_, or(shl(1, mload(a_)), shr(255, a1_)))
-            mstore(add(r_, 0x20), shl(1, a1_))
-        }
-    }
-
-    function _add(uint256 a_, uint256 b_, uint256 r_) private pure {
-        assembly {
-            let aWord_ := mload(add(a_, 0x20))
-            let sum_ := add(aWord_, mload(add(b_, 0x20)))
-
-            mstore(add(r_, 0x20), sum_)
-
-            sum_ := gt(aWord_, sum_)
-            sum_ := add(sum_, add(mload(a_), mload(b_)))
-
-            mstore(r_, sum_)
-        }
-    }
-
-    function _sub(uint256 a_, uint256 b_, uint256 r_) private pure {
-        assembly {
-            let aWord_ := mload(add(a_, 0x20))
-            let diff_ := sub(aWord_, mload(add(b_, 0x20)))
-
-            mstore(add(r_, 0x20), diff_)
-
-            diff_ := gt(diff_, aWord_)
-            diff_ := sub(sub(mload(a_), mload(b_)), diff_)
-
-            mstore(r_, diff_)
-        }
-    }
-
-    function _subFrom(uint256 a_, uint256 b_) private pure {
-        assembly {
-            let aWord_ := mload(add(a_, 0x20))
-            let diff_ := sub(aWord_, mload(add(b_, 0x20)))
-
-            mstore(add(a_, 0x20), diff_)
-
-            diff_ := gt(diff_, aWord_)
-            diff_ := sub(sub(mload(a_), mload(b_)), diff_)
-
-            mstore(a_, diff_)
-        }
-    }
-
-    function _addTo(uint256 a_, uint256 b_) private pure {
-        assembly {
-            let aWord_ := mload(add(a_, 0x20))
-            let sum_ := add(aWord_, mload(add(b_, 0x20)))
-
-            mstore(add(a_, 0x20), sum_)
-
-            sum_ := gt(aWord_, sum_)
-            sum_ := add(sum_, add(mload(a_), mload(b_)))
-
-            mstore(a_, sum_)
-        }
-    }
-
-    function _mul(uint256 a_, uint256 b_, uint256 r_) private pure {
-        assembly {
-            let a0_ := mload(a_)
-            let a1_ := shr(128, mload(add(a_, 0x20)))
-            let a2_ := and(mload(add(a_, 0x20)), 0xffffffffffffffffffffffffffffffff)
-
-            let b0_ := mload(b_)
-            let b1_ := shr(128, mload(add(b_, 0x20)))
-            let b2_ := and(mload(add(b_, 0x20)), 0xffffffffffffffffffffffffffffffff)
-
-            // r5
-            let current_ := mul(a2_, b2_)
-            let r0_ := and(current_, 0xffffffffffffffffffffffffffffffff)
-
-            // r4
-            current_ := shr(128, current_)
-
-            let temp_ := mul(a1_, b2_)
-            current_ := add(current_, temp_)
-            let curry_ := lt(current_, temp_)
-
-            temp_ := mul(a2_, b1_)
-            current_ := add(current_, temp_)
-            curry_ := add(curry_, lt(current_, temp_))
-
-            mstore(add(r_, 0x40), add(shl(128, current_), r0_))
-
-            // r3
-            current_ := add(shl(128, curry_), shr(128, current_))
-            curry_ := 0
-
-            temp_ := mul(a0_, b2_)
-            current_ := add(current_, temp_)
-            curry_ := lt(current_, temp_)
-
-            temp_ := mul(a1_, b1_)
-            current_ := add(current_, temp_)
-            curry_ := add(curry_, lt(current_, temp_))
-
-            temp_ := mul(a2_, b0_)
-            current_ := add(current_, temp_)
-            curry_ := add(curry_, lt(current_, temp_))
-
-            r0_ := and(current_, 0xffffffffffffffffffffffffffffffff)
-
-            // r2
-            current_ := add(shl(128, curry_), shr(128, current_))
-            curry_ := 0
-
-            temp_ := mul(a0_, b1_)
-            current_ := add(current_, temp_)
-            curry_ := lt(current_, temp_)
-
-            temp_ := mul(a1_, b0_)
-            current_ := add(current_, temp_)
-            curry_ := add(curry_, lt(current_, temp_))
-
-            mstore(add(r_, 0x20), add(shl(128, current_), r0_))
-
-            // r1
-            current_ := add(shl(128, curry_), shr(128, current_))
-            current_ := add(current_, mul(a0_, b0_))
-
-            mstore(r_, current_)
-        }
-    }
-
-    function _allocate(uint256 bytes_) private pure returns (uint256 handler_) {
-        unchecked {
-            assembly {
-                handler_ := mload(0x40)
-                mstore(0x40, add(handler_, bytes_))
-            }
-
-            return handler_;
         }
     }
 }
