@@ -200,15 +200,6 @@ library ECDSA384 {
             uint256 mask_;
             uint256 mask1_;
             uint256 mask2_;
-            //
-            //            console.logBytes(scalar1.toBytes());
-            //            console.logBytes(scalar2.toBytes());
-            //
-            //            console.log(_getWord(scalar1, 384));
-            //            console.log(_getWord(scalar2, 384));
-            //
-            //            console.log(_getWord(scalar1, 383));
-            //            console.log(_getWord(scalar2, 383));
 
             for (uint256 bit = 3; bit <= 384; bit += 3) {
                 mask1_ = _getWord(scalar1, 384 - bit);
