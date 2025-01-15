@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../../libs/crypto/bn/U512.sol";
+import {uint512} from "../../../libs/crypto/bn/U512.sol";
+import {U512} from "../../../libs/crypto/bn/U512.sol";
 import {ECDSA384} from "../../../libs/crypto/ECDSA384.sol";
 
 contract ECDSA384Mock {

@@ -2,163 +2,99 @@
 pragma solidity ^0.8.4;
 
 type uint512 is uint256;
+type call is uint256;
 
 /**
- * @notice Low-level utility library that implements unsigned 512-bit arithmetics.
+ * @notice Low-level library that implements unsigned 512-bit arithmetics.
  */
 library U512 {
-    uint256 private constant SHORT_ALLOCATION = 64;
-    uint256 private constant LONG_ALLOCATION = 64;
+    uint256 private constant _UINT512_ALLOCATION = 64;
+    uint256 private constant _BYTES_ALLOCATION = 96;
+    uint256 private constant _CALL_ALLOCATION = 384;
 
-    uint256 private constant CALL_ALLOCATION = 4 * 288;
-
-    uint256 private constant MUL_OFFSET = 288;
-    uint256 private constant EXP_OFFSET = 2 * 288;
-    uint256 private constant INV_OFFSET = 3 * 288;
-
-    function toBytes(uint512 from_) internal pure returns (bytes memory bytes_) {
+    function initCall() internal pure returns (call call_) {
         unchecked {
-            uint512 handler_ = _allocate(LONG_ALLOCATION);
+            call_ = call.wrap(_allocate(_CALL_ALLOCATION));
+        }
+    }
+
+    function fromUint256(uint256 u256_) internal pure returns (uint512 u512_) {
+        unchecked {
+            u512_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            assembly {
+                mstore(u512_, 0x00)
+                mstore(add(u512_, 0x20), u256_)
+            }
+        }
+    }
+
+    function fromBytes(bytes memory bytes_) internal pure returns (uint512 u512_) {
+        unchecked {
+            require(bytes_.length == 64, "U384: not 64 bytes");
+
+            u512_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            assembly {
+                mstore(u512_, mload(add(bytes_, 0x20)))
+                mstore(add(u512_, 0x20), mload(add(bytes_, 0x40)))
+            }
+        }
+    }
+
+    function copy(uint512 u512_) internal pure returns (uint512 u512Copy_) {
+        unchecked {
+            u512Copy_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            assembly {
+                mstore(u512Copy_, mload(u512_))
+                mstore(add(u512Copy_, 0x20), mload(add(u512_, 0x20)))
+            }
+        }
+    }
+
+    function toBytes(uint512 u512_) internal pure returns (bytes memory bytes_) {
+        unchecked {
+            uint256 handler_ = _allocate(_BYTES_ALLOCATION);
 
             assembly {
                 mstore(handler_, 0x40)
-                mstore(add(handler_, 0x20), mload(from_))
-                mstore(add(handler_, 0x40), mload(add(from_, 0x20)))
+                mstore(add(handler_, 0x20), mload(u512_))
+                mstore(add(handler_, 0x40), mload(add(u512_, 0x20)))
 
                 bytes_ := handler_
             }
         }
     }
 
-    function isNull(uint512 handler) internal pure returns (bool isNull_) {
+    function isNull(uint512 u512_) internal pure returns (bool isNull_) {
         unchecked {
             assembly {
-                isNull_ := iszero(handler)
+                isNull_ := iszero(u512_)
             }
-        }
-    }
-
-    function init() internal pure returns (uint512 handler_) {
-        unchecked {
-            assembly {
-                handler_ := 0
-            }
-        }
-    }
-
-    function init(uint256 from_) internal pure returns (uint512 handler_) {
-        unchecked {
-            handler_ = _allocate(SHORT_ALLOCATION);
-
-            assembly {
-                mstore(handler_, 0x00)
-                mstore(add(0x20, handler_), from_)
-            }
-
-            return handler_;
-        }
-    }
-
-    function init(bytes memory from_) internal pure returns (uint512 handler_) {
-        unchecked {
-            require(from_.length == 48, "U384: not 384");
-
-            handler_ = _allocate(SHORT_ALLOCATION);
-
-            assembly {
-                mstore(handler_, 0x00)
-                mstore(add(handler_, 0x10), mload(add(from_, 0x20)))
-                mstore(add(handler_, 0x20), mload(add(from_, 0x30)))
-            }
-
-            return handler_;
-        }
-    }
-
-    function init2(
-        bytes memory from2_
-    ) internal pure returns (uint512 handler1_, uint512 handler2_) {
-        unchecked {
-            require(from2_.length == 96, "U384: not 768");
-
-            handler1_ = _allocate(SHORT_ALLOCATION);
-            handler2_ = _allocate(SHORT_ALLOCATION);
-
-            assembly {
-                mstore(handler1_, 0x00)
-                mstore(add(handler1_, 0x10), mload(add(from2_, 0x20)))
-                mstore(add(handler1_, 0x20), mload(add(from2_, 0x30)))
-
-                mstore(handler2_, 0x00)
-                mstore(add(handler2_, 0x10), mload(add(from2_, 0x50)))
-                mstore(add(handler2_, 0x20), mload(add(from2_, 0x60)))
-            }
-
-            return (handler1_, handler2_);
-        }
-    }
-
-    function initCall(uint512 m_) internal pure returns (uint256 handler_) {
-        unchecked {
-            handler_ = _allocateCall(CALL_ALLOCATION);
-
-            _sub(m_, init(2), uint512.wrap(handler_ + INV_OFFSET + 0xA0));
-
-            assembly {
-                let call_ := add(handler_, MUL_OFFSET)
-
-                mstore(call_, 0x60)
-                mstore(add(0x20, call_), 0x20)
-                mstore(add(0x40, call_), 0x40)
-                mstore(add(0xC0, call_), 0x01)
-                mstore(add(0xE0, call_), mload(m_))
-                mstore(add(0x0100, call_), mload(add(m_, 0x20)))
-
-                call_ := add(handler_, EXP_OFFSET)
-
-                mstore(call_, 0x40)
-                mstore(add(0x20, call_), 0x20)
-                mstore(add(0x40, call_), 0x40)
-                mstore(add(0xC0, call_), mload(m_))
-                mstore(add(0xE0, call_), mload(add(m_, 0x20)))
-
-                call_ := add(handler_, INV_OFFSET)
-
-                mstore(call_, 0x40)
-                mstore(add(0x20, call_), 0x40)
-                mstore(add(0x40, call_), 0x40)
-                mstore(add(0xE0, call_), mload(m_))
-                mstore(add(0x0100, call_), mload(add(m_, 0x20)))
-            }
-        }
-    }
-
-    function copy(uint512 handler_) internal pure returns (uint512 handlerCopy_) {
-        unchecked {
-            handlerCopy_ = _allocate(SHORT_ALLOCATION);
-
-            assembly {
-                mstore(handlerCopy_, mload(handler_))
-                mstore(add(handlerCopy_, 0x20), mload(add(handler_, 0x20)))
-            }
-
-            return handlerCopy_;
         }
     }
 
     function eq(uint512 a_, uint512 b_) internal pure returns (bool eq_) {
-        assembly {
-            eq_ := and(eq(mload(a_), mload(b_)), eq(mload(add(a_, 0x20)), mload(add(b_, 0x20))))
+        unchecked {
+            assembly {
+                eq_ := and(
+                    eq(mload(a_), mload(b_)),
+                    eq(mload(add(a_, 0x20)), mload(add(b_, 0x20)))
+                )
+            }
         }
     }
 
-    function eqInteger(uint512 a_, uint256 bInteger_) internal pure returns (bool eq_) {
-        assembly {
-            eq_ := and(eq(mload(a_), 0), eq(mload(add(a_, 0x20)), bInteger_))
+    function eqUint256(uint512 a_, uint256 u256_) internal pure returns (bool eq_) {
+        unchecked {
+            assembly {
+                eq_ := and(eq(mload(a_), 0), eq(mload(add(a_, 0x20)), u256_))
+            }
         }
     }
 
-    function cmp(uint512 a_, uint512 b_) internal pure returns (int256 cmp_) {
+    function cmp(uint512 a_, uint512 b_) internal pure returns (int256) {
         unchecked {
             uint256 aWord_;
             uint256 bWord_;
@@ -188,229 +124,320 @@ library U512 {
             if (aWord_ < bWord_) {
                 return -1;
             }
+
+            return 0;
         }
     }
 
-    function modAssign(uint256 call_, uint512 a_, uint512 m_) internal view {
-        assembly {
-            mstore(call_, 0x40)
-            mstore(add(0x20, call_), 0x20)
-            mstore(add(0x40, call_), 0x40)
-            mstore(add(0x60, call_), mload(a_))
-            mstore(add(0x80, call_), mload(add(a_, 0x20)))
-            mstore(add(0xA0, call_), 0x01)
-            mstore(add(0xC0, call_), mload(m_))
-            mstore(add(0xE0, call_), mload(add(m_, 0x20)))
+    function mod(call call_, uint512 a_, uint512 m_) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
 
-            pop(staticcall(gas(), 0x5, call_, 0x0100, a_, 0x40))
+            _mod(call_, a_, m_, r_);
+        }
+    }
+
+    function modAssign(call call_, uint512 a_, uint512 m_) internal view {
+        unchecked {
+            _mod(call_, a_, m_, a_);
+        }
+    }
+
+    function modAssignTo(call call_, uint512 a_, uint512 m_, uint512 to_) internal view {
+        unchecked {
+            _mod(call_, a_, m_, to_);
+        }
+    }
+
+    function modinv(call call_, uint512 a_, uint512 m_) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _modinv(call_, a_, m_, r_);
+        }
+    }
+
+    function modinvAssign(call call_, uint512 a_, uint512 m_) internal view {
+        unchecked {
+            _modinv(call_, a_, m_, a_);
+        }
+    }
+
+    function modinvAssignTo(call call_, uint512 a_, uint512 m_, uint512 to_) internal view {
+        unchecked {
+            _modinv(call_, a_, m_, to_);
         }
     }
 
     function modexp(
-        uint256 call_,
+        call call_,
         uint512 b_,
-        uint256 eInteger_
+        uint512 e_,
+        uint512 m_
     ) internal view returns (uint512 r_) {
         unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
 
-            assembly {
-                call_ := add(call_, EXP_OFFSET)
+            _modexp(call_, b_, e_, m_, r_);
+        }
+    }
 
-                mstore(add(0x60, call_), mload(b_))
-                mstore(add(0x80, call_), mload(add(b_, 0x20)))
-                mstore(add(0xA0, call_), eInteger_)
-
-                pop(staticcall(gas(), 0x5, call_, 0x0100, r_, 0x40))
-            }
-
-            return r_;
+    function modexpAssign(call call_, uint512 b_, uint512 e_, uint512 m_) internal view {
+        unchecked {
+            _modexp(call_, b_, e_, m_, b_);
         }
     }
 
     function modexpAssignTo(
-        uint256 call_,
-        uint512 to_,
+        call call_,
         uint512 b_,
-        uint256 eInteger_
+        uint512 e_,
+        uint512 m_,
+        uint512 to_
     ) internal view {
-        assembly {
-            call_ := add(call_, EXP_OFFSET)
-
-            mstore(add(0x60, call_), mload(b_))
-            mstore(add(0x80, call_), mload(add(b_, 0x20)))
-            mstore(add(0xA0, call_), eInteger_)
-
-            pop(staticcall(gas(), 0x5, call_, 0x0100, to_, 0x40))
-        }
-    }
-
-    function modadd(uint512 a_, uint512 b_, uint512 m_) internal pure returns (uint512 r_) {
         unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            _add(a_, b_, r_);
-
-            if (cmp(r_, m_) >= 0) {
-                _subFrom(r_, m_);
-            }
-
-            return r_;
+            _modexp(call_, b_, e_, m_, to_);
         }
     }
 
-    function modaddAssign(uint512 a_, uint512 b_, uint512 m_) internal pure {
-        unchecked {
-            _addTo(a_, b_);
-
-            if (cmp(a_, m_) >= 0) {
-                return _subFrom(a_, m_);
-            }
-        }
-    }
-
-    function modmul(uint256 call_, uint512 a_, uint512 b_) internal view returns (uint512 r_) {
-        unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            _mul(a_, b_, uint512.wrap(call_ + MUL_OFFSET + 0x60));
-
-            assembly {
-                call_ := add(call_, MUL_OFFSET)
-
-                pop(staticcall(gas(), 0x5, call_, 0x0120, r_, 0x40))
-            }
-
-            return r_;
-        }
-    }
-
-    function modmulAssign(uint256 call_, uint512 a_, uint512 b_) internal view {
-        unchecked {
-            _mul(a_, b_, uint512.wrap(call_ + MUL_OFFSET + 0x60));
-
-            assembly {
-                call_ := add(call_, MUL_OFFSET)
-
-                pop(staticcall(gas(), 0x5, call_, 0x0120, a_, 0x40))
-            }
-        }
-    }
-
-    function modsub(uint512 a_, uint512 b_, uint512 m_) internal pure returns (uint512 r_) {
-        unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            if (cmp(a_, b_) >= 0) {
-                _sub(a_, b_, r_);
-                return r_;
-            }
-
-            _add(a_, m_, r_);
-            _subFrom(r_, b_);
-        }
-    }
-
-    function modsubAssign(uint512 a_, uint512 b_, uint512 m_) internal pure {
-        unchecked {
-            if (cmp(a_, b_) >= 0) {
-                _subFrom(a_, b_);
-                return;
-            }
-
-            _addTo(a_, m_);
-            _subFrom(a_, b_);
-        }
-    }
-
-    function modsubAssignTo(uint512 to_, uint512 a_, uint512 b_, uint512 m_) internal pure {
-        unchecked {
-            if (cmp(a_, b_) >= 0) {
-                _sub(a_, b_, to_);
-                return;
-            }
-
-            _add(a_, m_, to_);
-            _subFrom(to_, b_);
-        }
-    }
-
-    function modshl1(uint512 a_, uint512 m_) internal pure returns (uint512 r_) {
-        unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
-
-            _shl1(a_, r_);
-
-            if (cmp(r_, m_) >= 0) {
-                _subFrom(r_, m_);
-            }
-
-            return r_;
-        }
-    }
-
-    function modshl1AssignTo(uint512 to_, uint512 a_, uint512 m_) internal pure {
-        unchecked {
-            _shl1(a_, to_);
-
-            if (cmp(to_, m_) >= 0) {
-                _subFrom(to_, m_);
-            }
-        }
-    }
-
-    /// @dev Stores modinv into `b_` and moddiv into `a_`.
-    function moddivAssign(uint256 call_, uint512 a_, uint512 b_) internal view {
-        unchecked {
-            assembly {
-                call_ := add(call_, INV_OFFSET)
-
-                mstore(add(0x60, call_), mload(b_))
-                mstore(add(0x80, call_), mload(add(b_, 0x20)))
-
-                pop(staticcall(gas(), 0x5, call_, 0x0120, b_, 0x40))
-            }
-
-            modmulAssign(call_ - INV_OFFSET, a_, b_);
-        }
-    }
-
-    function moddiv(
-        uint256 call_,
+    function modadd(
+        call call_,
         uint512 a_,
         uint512 b_,
         uint512 m_
     ) internal view returns (uint512 r_) {
         unchecked {
-            r_ = modinv(call_, b_, m_);
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
 
-            _mul(a_, r_, uint512.wrap(call_ + 0x60));
+            _modadd(call_, a_, b_, m_, r_);
+        }
+    }
 
+    function modaddAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
+        unchecked {
+            _modadd(call_, a_, b_, m_, a_);
+        }
+    }
+
+    function modaddAssignTo(
+        call call_,
+        uint512 a_,
+        uint512 b_,
+        uint512 m_,
+        uint512 to_
+    ) internal view {
+        unchecked {
+            _modadd(call_, a_, b_, m_, to_);
+        }
+    }
+
+    function add(uint512 a_, uint512 b_) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _add(a_, b_, r_);
+        }
+    }
+
+    function addAssign(uint512 a_, uint512 b_) internal pure {
+        unchecked {
+            _add(a_, b_, a_);
+        }
+    }
+
+    function addAssignTo(uint512 a_, uint512 b_, uint512 to_) internal pure {
+        unchecked {
+            _add(a_, b_, to_);
+        }
+    }
+
+    function modsub(
+        call call_,
+        uint512 a_,
+        uint512 b_,
+        uint512 m_
+    ) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _modsub(call_, a_, b_, m_, r_);
+        }
+    }
+
+    function modsubAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
+        unchecked {
+            _modsub(call_, a_, b_, m_, a_);
+        }
+    }
+
+    function modsubAssignTo(
+        call call_,
+        uint512 a_,
+        uint512 b_,
+        uint512 m_,
+        uint512 to_
+    ) internal view {
+        unchecked {
+            _modsub(call_, a_, b_, m_, to_);
+        }
+    }
+
+    function sub(uint512 a_, uint512 b_) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _sub(a_, b_, r_);
+        }
+    }
+
+    function subAssign(uint512 a_, uint512 b_) internal pure {
+        unchecked {
+            _sub(a_, b_, a_);
+        }
+    }
+
+    function subAssignTo(uint512 a_, uint512 b_, uint512 to_) internal pure {
+        unchecked {
+            _sub(a_, b_, to_);
+        }
+    }
+
+    function modmul(
+        call call_,
+        uint512 a_,
+        uint512 b_,
+        uint512 m_
+    ) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _modmul(call_, a_, b_, m_, r_);
+        }
+    }
+
+    function modmulAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
+        unchecked {
+            _modmul(call_, a_, b_, m_, a_);
+        }
+    }
+
+    function modmulAssignTo(
+        call call_,
+        uint512 a_,
+        uint512 b_,
+        uint512 m_,
+        uint512 to_
+    ) internal view {
+        unchecked {
+            _modmul(call_, a_, b_, m_, to_);
+        }
+    }
+
+    function mul(uint512 a_, uint512 b_) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _mul(a_, b_, r_);
+        }
+    }
+
+    function mulAssign(uint512 a_, uint512 b_) internal pure {
+        unchecked {
+            _mul(a_, b_, a_);
+        }
+    }
+
+    function mulAssignTo(uint512 a_, uint512 b_, uint512 to_) internal pure {
+        unchecked {
+            _mul(a_, b_, to_);
+        }
+    }
+
+    function moddiv(
+        call call_,
+        uint512 a_,
+        uint512 b_,
+        uint512 m_
+    ) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _moddiv(call_, a_, b_, m_, r_);
+        }
+    }
+
+    function moddivAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
+        unchecked {
+            _moddiv(call_, a_, b_, m_, a_);
+        }
+    }
+
+    function moddivAssignTo(
+        call call_,
+        uint512 a_,
+        uint512 b_,
+        uint512 m_,
+        uint512 to_
+    ) internal view {
+        unchecked {
+            _moddiv(call_, a_, b_, m_, to_);
+        }
+    }
+
+    function _mod(call call_, uint512 a_, uint512 m_, uint512 r_) private view {
+        unchecked {
             assembly {
-                mstore(call_, 0x60)
-                mstore(add(0x20, call_), 0x20)
-                mstore(add(0x40, call_), 0x40)
-                mstore(add(0xC0, call_), 0x01)
-                mstore(add(0xE0, call_), mload(m_))
-                mstore(add(0x0100, call_), mload(add(m_, 0x20)))
+                mstore(call_, 0x40)
+                mstore(add(call_, 0x20), 0x20)
+                mstore(add(call_, 0x40), 0x40)
+                mstore(add(call_, 0x60), mload(a_))
+                mstore(add(call_, 0x80), mload(add(a_, 0x20)))
+                mstore(add(call_, 0xA0), 0x01)
+                mstore(add(call_, 0xC0), mload(m_))
+                mstore(add(call_, 0xE0), mload(add(m_, 0x20)))
+
+                pop(staticcall(gas(), 0x5, call_, 0x0100, r_, 0x40))
+            }
+        }
+    }
+
+    function _modexp(call call_, uint512 a_, uint512 e_, uint512 m_, uint512 r_) private view {
+        unchecked {
+            assembly {
+                mstore(call_, 0x40)
+                mstore(add(call_, 0x20), 0x40)
+                mstore(add(call_, 0x40), 0x40)
+                mstore(add(call_, 0x60), mload(a_))
+                mstore(add(call_, 0x80), mload(add(a_, 0x20)))
+                mstore(add(call_, 0xA0), mload(e_))
+                mstore(add(call_, 0xC0), mload(add(e_, 0x20)))
+                mstore(add(call_, 0xE0), mload(m_))
+                mstore(add(call_, 0x01000), mload(add(m_, 0x20)))
 
                 pop(staticcall(gas(), 0x5, call_, 0x0120, r_, 0x40))
             }
         }
     }
 
-    function modinv(uint256 call_, uint512 b_, uint512 m_) internal view returns (uint512 r_) {
+    function _modinv(call call_, uint512 a_, uint512 m_, uint512 r_) private view {
         unchecked {
-            r_ = _allocate(SHORT_ALLOCATION);
+            uint512 buffer_ = _buffer(call_);
 
-            _sub(m_, init(2), uint512.wrap(call_ + 0xA0));
+            assembly {
+                mstore(buffer_, 0x00)
+                mstore(add(buffer_, 0x20), 0x02)
+            }
+
+            _sub(m_, buffer_, buffer_);
 
             assembly {
                 mstore(call_, 0x40)
                 mstore(add(0x20, call_), 0x40)
                 mstore(add(0x40, call_), 0x40)
-                mstore(add(0x60, call_), mload(b_))
-                mstore(add(0x80, call_), mload(add(b_, 0x20)))
+                mstore(add(0x60, call_), mload(a_))
+                mstore(add(0x80, call_), mload(add(a_, 0x20)))
+                mstore(add(0xA0, call_), mload(buffer_))
+                mstore(add(0xC0, call_), mload(add(buffer_, 0x20)))
                 mstore(add(0xE0, call_), mload(m_))
                 mstore(add(0x0100, call_), mload(add(m_, 0x20)))
 
@@ -419,157 +446,328 @@ library U512 {
         }
     }
 
-    function _shl1(uint512 a_, uint512 r_) internal pure {
-        assembly {
-            let a1_ := mload(add(a_, 0x20))
+    function _add(uint512 a_, uint512 b_, uint512 r_) private pure {
+        unchecked {
+            assembly {
+                let aWord_ := mload(add(a_, 0x20))
+                let sum_ := add(aWord_, mload(add(b_, 0x20)))
 
-            mstore(r_, or(shl(1, mload(a_)), shr(255, a1_)))
-            mstore(add(r_, 0x20), shl(1, a1_))
+                mstore(r_, sum_)
+
+                sum_ := gt(aWord_, sum_)
+                sum_ := add(sum_, add(aWord_, mload(b_)))
+
+                mstore(add(r_, 0x20), sum_)
+            }
         }
     }
 
-    function _add(uint512 a_, uint512 b_, uint512 r_) private pure {
-        assembly {
-            let aWord_ := mload(add(a_, 0x20))
-            let sum_ := add(aWord_, mload(add(b_, 0x20)))
+    function _modadd(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
+        unchecked {
+            assembly {
+                let aWord_ := mload(add(a_, 0x20))
+                let sum_ := add(aWord_, mload(add(b_, 0x20)))
 
-            mstore(add(r_, 0x20), sum_)
+                mstore(add(call_, 0xA0), sum_)
 
-            sum_ := gt(aWord_, sum_)
-            sum_ := add(sum_, add(mload(a_), mload(b_)))
+                sum_ := gt(aWord_, sum_)
+                sum_ := add(sum_, add(aWord_, mload(b_)))
 
-            mstore(r_, sum_)
+                mstore(add(call_, 0x80), sum_)
+                mstore(add(call_, 0x60), gt(mload(a_), sum_))
+
+                mstore(call_, 0x40)
+                mstore(add(call_, 0x20), 0x20)
+                mstore(add(call_, 0x40), 0x40)
+                mstore(add(call_, 0xC0), 0x01)
+                mstore(add(call_, 0xE0), mload(m_))
+                mstore(add(call_, 0x0100), mload(add(m_, 0x20)))
+
+                pop(staticcall(gas(), 0x5, call_, 0x0120, r_, 0x40))
+            }
         }
     }
 
     function _sub(uint512 a_, uint512 b_, uint512 r_) private pure {
-        assembly {
-            let aWord_ := mload(add(a_, 0x20))
-            let diff_ := sub(aWord_, mload(add(b_, 0x20)))
+        unchecked {
+            assembly {
+                let aWord_ := mload(add(a_, 0x20))
+                let diff_ := sub(aWord_, mload(add(b_, 0x20)))
 
-            mstore(add(r_, 0x20), diff_)
+                mstore(add(r_, 0x20), diff_)
 
-            diff_ := gt(diff_, aWord_)
-            diff_ := sub(sub(mload(a_), mload(b_)), diff_)
+                diff_ := gt(diff_, aWord_)
+                diff_ := sub(sub(mload(a_), mload(b_)), diff_)
 
-            mstore(r_, diff_)
+                mstore(r_, diff_)
+            }
         }
     }
 
-    function _subFrom(uint512 a_, uint512 b_) private pure {
-        assembly {
-            let aWord_ := mload(add(a_, 0x20))
-            let diff_ := sub(aWord_, mload(add(b_, 0x20)))
+    function _modsub(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
+        unchecked {
+            int cmp_ = cmp(a_, b_);
 
-            mstore(add(a_, 0x20), diff_)
+            if (cmp_ >= 0) {
+                _sub(a_, b_, r_);
+            } else {
+                _sub(b_, a_, r_);
+            }
 
-            diff_ := gt(diff_, aWord_)
-            diff_ := sub(sub(mload(a_), mload(b_)), diff_)
+            assembly {
+                mstore(call_, 0x40)
+                mstore(add(call_, 0x20), 0x20)
+                mstore(add(call_, 0x40), 0x40)
+                mstore(add(call_, 0x60), mload(r_))
+                mstore(add(call_, 0x80), mload(add(r_, 0x20)))
+                mstore(add(call_, 0xA0), 0x01)
+                mstore(add(call_, 0xC0), mload(m_))
+                mstore(add(call_, 0xE0), mload(add(m_, 0x20)))
 
-            mstore(a_, diff_)
-        }
-    }
+                pop(staticcall(gas(), 0x5, call_, 0x0100, r_, 0x40))
+            }
 
-    function _addTo(uint512 a_, uint512 b_) private pure {
-        assembly {
-            let aWord_ := mload(add(a_, 0x20))
-            let sum_ := add(aWord_, mload(add(b_, 0x20)))
-
-            mstore(add(a_, 0x20), sum_)
-
-            sum_ := gt(aWord_, sum_)
-            sum_ := add(sum_, add(mload(a_), mload(b_)))
-
-            mstore(a_, sum_)
+            if (cmp_ < 0) {
+                _sub(m_, r_, r_);
+            }
         }
     }
 
     function _mul(uint512 a_, uint512 b_, uint512 r_) private pure {
-        assembly {
-            let a0_ := mload(a_)
-            let a1_ := shr(128, mload(add(a_, 0x20)))
-            let a2_ := and(mload(add(a_, 0x20)), 0xffffffffffffffffffffffffffffffff)
+        unchecked {
+            assembly {
+                let a0_ := shr(128, mload(a_))
+                let a1_ := and(mload(a_), 0xffffffffffffffffffffffffffffffff)
+                let a2_ := shr(128, mload(add(a_, 0x20)))
+                let a3_ := and(mload(add(a_, 0x20)), 0xffffffffffffffffffffffffffffffff)
 
-            let b0_ := mload(b_)
-            let b1_ := shr(128, mload(add(b_, 0x20)))
-            let b2_ := and(mload(add(b_, 0x20)), 0xffffffffffffffffffffffffffffffff)
+                let b0_ := shr(128, mload(b_))
+                let b1_ := and(mload(b_), 0xffffffffffffffffffffffffffffffff)
+                let b2_ := shr(128, mload(add(b_, 0x20)))
+                let b3_ := and(mload(add(b_, 0x20)), 0xffffffffffffffffffffffffffffffff)
 
-            // r5
-            let current_ := mul(a2_, b2_)
-            let r0_ := and(current_, 0xffffffffffffffffffffffffffffffff)
+                // r7
+                let current_ := mul(a3_, b3_)
+                let ri_ := and(current_, 0xffffffffffffffffffffffffffffffff)
 
-            // r4
-            current_ := shr(128, current_)
+                // r6
+                current_ := shr(128, current_)
 
-            let temp_ := mul(a1_, b2_)
-            current_ := add(current_, temp_)
-            let curry_ := lt(current_, temp_)
+                let temp_ := mul(a3_, b2_)
+                current_ := add(current_, temp_)
+                let curry_ := lt(current_, temp_)
 
-            temp_ := mul(a2_, b1_)
-            current_ := add(current_, temp_)
-            curry_ := add(curry_, lt(current_, temp_))
+                temp_ := mul(a2_, b3_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
 
-            mstore(add(r_, 0x40), add(shl(128, current_), r0_))
+                mstore(add(r_, 0x20), add(shl(128, current_), ri_))
 
-            // r3
-            current_ := add(shl(128, curry_), shr(128, current_))
-            curry_ := 0
+                // r5
+                current_ := add(shl(128, curry_), shr(128, current_))
+                curry_ := 0
 
-            temp_ := mul(a0_, b2_)
-            current_ := add(current_, temp_)
-            curry_ := lt(current_, temp_)
+                temp_ := mul(a3_, b1_)
+                current_ := add(current_, temp_)
+                curry_ := lt(current_, temp_)
 
-            temp_ := mul(a1_, b1_)
-            current_ := add(current_, temp_)
-            curry_ := add(curry_, lt(current_, temp_))
+                temp_ := mul(a2_, b2_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
 
-            temp_ := mul(a2_, b0_)
-            current_ := add(current_, temp_)
-            curry_ := add(curry_, lt(current_, temp_))
+                temp_ := mul(a1_, b3_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
 
-            r0_ := and(current_, 0xffffffffffffffffffffffffffffffff)
+                ri_ := and(current_, 0xffffffffffffffffffffffffffffffff)
 
-            // r2
-            current_ := add(shl(128, curry_), shr(128, current_))
-            curry_ := 0
+                // r4
+                current_ := add(shl(128, curry_), shr(128, current_))
+                curry_ := 0
 
-            temp_ := mul(a0_, b1_)
-            current_ := add(current_, temp_)
-            curry_ := lt(current_, temp_)
+                temp_ := mul(a3_, b0_)
+                current_ := add(current_, temp_)
+                curry_ := lt(current_, temp_)
 
-            temp_ := mul(a1_, b0_)
-            current_ := add(current_, temp_)
-            curry_ := add(curry_, lt(current_, temp_))
+                temp_ := mul(a2_, b1_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
 
-            mstore(add(r_, 0x20), add(shl(128, current_), r0_))
+                temp_ := mul(a1_, b2_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
 
-            // r1
-            current_ := add(shl(128, curry_), shr(128, current_))
-            current_ := add(current_, mul(a0_, b0_))
+                temp_ := mul(a0_, b2_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
 
-            mstore(r_, current_)
+                mstore(r_, add(shl(128, current_), ri_))
+            }
         }
     }
 
-    function _allocate(uint256 bytes_) private pure returns (uint512 handler_) {
+    function _modmulOverflow(call call_, uint512 a_, uint512 b_) private pure {
+        unchecked {
+            assembly {
+                let a0_ := shr(128, mload(a_))
+                let a1_ := and(mload(a_), 0xffffffffffffffffffffffffffffffff)
+                let a2_ := shr(128, mload(add(a_, 0x20)))
+                let a3_ := and(mload(add(a_, 0x20)), 0xffffffffffffffffffffffffffffffff)
+
+                let b0_ := shr(128, mload(b_))
+                let b1_ := and(mload(b_), 0xffffffffffffffffffffffffffffffff)
+                let b2_ := shr(128, mload(add(b_, 0x20)))
+                let b3_ := and(mload(add(b_, 0x20)), 0xffffffffffffffffffffffffffffffff)
+
+                // r7
+                let current_ := mul(a3_, b3_)
+                let ri_ := and(current_, 0xffffffffffffffffffffffffffffffff)
+
+                // r6
+                current_ := shr(128, current_)
+
+                let temp_ := mul(a3_, b2_)
+                current_ := add(current_, temp_)
+                let curry_ := lt(current_, temp_)
+
+                temp_ := mul(a2_, b3_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
+
+                mstore(add(call_, 0xC0), add(shl(128, current_), ri_))
+
+                // r5
+                current_ := add(shl(128, curry_), shr(128, current_))
+                curry_ := 0
+
+                temp_ := mul(a3_, b1_)
+                current_ := add(current_, temp_)
+                curry_ := lt(current_, temp_)
+
+                temp_ := mul(a2_, b2_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
+
+                temp_ := mul(a1_, b3_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
+
+                ri_ := and(current_, 0xffffffffffffffffffffffffffffffff)
+
+                // r4
+                current_ := add(shl(128, curry_), shr(128, current_))
+                curry_ := 0
+
+                temp_ := mul(a3_, b0_)
+                current_ := add(current_, temp_)
+                curry_ := lt(current_, temp_)
+
+                temp_ := mul(a2_, b1_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
+
+                temp_ := mul(a1_, b2_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
+
+                temp_ := mul(a0_, b2_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
+
+                mstore(add(call_, 0xA0), add(shl(128, current_), ri_))
+
+                // r3
+                current_ := add(shl(128, curry_), shr(128, current_))
+                curry_ := 0
+
+                temp_ := mul(a2_, b0_)
+                current_ := add(current_, temp_)
+                curry_ := lt(current_, temp_)
+
+                temp_ := mul(a1_, b1_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
+
+                temp_ := mul(a0_, b2_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
+
+                ri_ := and(current_, 0xffffffffffffffffffffffffffffffff)
+
+                // r2
+                current_ := add(shl(128, curry_), shr(128, current_))
+                curry_ := 0
+
+                temp_ := mul(a1_, b0_)
+                current_ := add(current_, temp_)
+                curry_ := lt(current_, temp_)
+
+                temp_ := mul(a0_, b1_)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
+
+                mstore(add(call_, 0x80), add(shl(128, current_), ri_))
+
+                // r1
+                current_ := add(shl(128, curry_), shr(128, current_))
+                current_ := add(current_, mul(a0_, b0_))
+
+                mstore(add(call_, 0x60), current_)
+            }
+        }
+    }
+
+    function _modmul(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
+        unchecked {
+            _modmulOverflow(call_, a_, b_);
+
+            assembly {
+                mstore(call_, 0x40)
+                mstore(add(call_, 0x20), 0x20)
+                mstore(add(call_, 0x40), 0x40)
+                mstore(add(call_, 0xE0), 0x01)
+                mstore(add(call_, 0x0100), mload(m_))
+                mstore(add(call_, 0x0120), mload(add(m_, 0x20)))
+
+                pop(staticcall(gas(), 0x5, call_, 0x0140, r_, 0x40))
+            }
+        }
+    }
+
+    function _moddiv(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) internal view {
+        unchecked {
+            uint512 buffer_ = _buffer(call_);
+
+            _modinv(call_, b_, m_, buffer_);
+            _modmulOverflow(call_, a_, b_);
+
+            assembly {
+                mstore(call_, 0x60)
+                mstore(add(0x20, call_), 0x20)
+                mstore(add(0x40, call_), 0x40)
+                mstore(add(0xE0, call_), 0x01)
+                mstore(add(0x0100, call_), mload(m_))
+                mstore(add(0x0120, call_), mload(add(m_, 0x20)))
+
+                pop(staticcall(gas(), 0x5, call_, 0x0140, r_, 0x40))
+            }
+        }
+    }
+
+    function _buffer(call call_) private pure returns (uint512 buffer_) {
+        unchecked {
+            assembly {
+                buffer_ := add(call_, 0x0140)
+            }
+        }
+    }
+
+    function _allocate(uint256 bytes_) private pure returns (uint256 handler_) {
         unchecked {
             assembly {
                 handler_ := mload(0x40)
                 mstore(0x40, add(handler_, bytes_))
             }
-
-            return handler_;
-        }
-    }
-
-    function _allocateCall(uint256 bytes_) private pure returns (uint256 handler_) {
-        unchecked {
-            assembly {
-                handler_ := mload(0x40)
-                mstore(0x40, add(handler_, bytes_))
-            }
-
-            return handler_;
         }
     }
 }
