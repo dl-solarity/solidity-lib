@@ -70,37 +70,8 @@ library ECDSA384 {
         unchecked {
             _Inputs memory inputs_;
 
-            {
-                bytes memory lhs_ = new bytes(64);
-                bytes memory rhs_ = new bytes(64);
-
-                MemoryUtils.unsafeCopy(
-                    signature_.getDataPointer(),
-                    lhs_.getDataPointer() + 0x10,
-                    48
-                );
-                MemoryUtils.unsafeCopy(
-                    signature_.getDataPointer() + 0x30,
-                    rhs_.getDataPointer() + 0x10,
-                    48
-                );
-
-                (inputs_.r, inputs_.s) = (U512.fromBytes(lhs_), U512.fromBytes(rhs_));
-
-                MemoryUtils.unsafeCopy(pubKey_.getDataPointer(), lhs_.getDataPointer() + 0x10, 48);
-                MemoryUtils.unsafeCopy(
-                    pubKey_.getDataPointer() + 0x30,
-                    rhs_.getDataPointer() + 0x10,
-                    48
-                );
-
-                (inputs_.x, inputs_.y) = (U512.fromBytes(lhs_), U512.fromBytes(rhs_));
-            }
-
-            console.logBytes(U512.toBytes(inputs_.x));
-            console.logBytes(U512.toBytes(inputs_.y));
-            console.logBytes(U512.toBytes(inputs_.r));
-            console.logBytes(U512.toBytes(inputs_.s));
+            (inputs_.r, inputs_.s) = _u512FromBytes2(signature_);
+            (inputs_.x, inputs_.y) = _u512FromBytes2(pubKey_);
 
             _Parameters memory params_ = _Parameters({
                 a: U512.fromBytes(curveParams_.a),
@@ -126,23 +97,6 @@ library ECDSA384 {
 
             if (!_isOnCurve(call, params_.p, params_.a, params_.b, inputs_.x, inputs_.y)) {
                 return false;
-            }
-
-            /// allow compatibility with non-384-bit hash functions.
-            {
-                uint256 hashedMessageLength_ = hashedMessage_.length;
-
-                if (hashedMessageLength_ < 64) {
-                    bytes memory tmp_ = new bytes(64);
-
-                    MemoryUtils.unsafeCopy(
-                        hashedMessage_.getDataPointer(),
-                        tmp_.getDataPointer() + 64 - hashedMessageLength_,
-                        hashedMessageLength_
-                    );
-
-                    hashedMessage_ = tmp_;
-                }
             }
 
             uint512 scalar1_ = U512.moddiv(
@@ -182,6 +136,18 @@ library ECDSA384 {
             U512.modAssign(call, scalar1_, params_.n);
 
             return U512.eq(scalar1_, inputs_.r);
+        }
+    }
+
+    function _u512FromBytes2(bytes memory bytes_) private view returns (uint512, uint512) {
+        unchecked {
+            bytes memory lhs_ = new bytes(48);
+            bytes memory rhs_ = new bytes(48);
+
+            MemoryUtils.unsafeCopy(bytes_.getDataPointer(), lhs_.getDataPointer(), 48);
+            MemoryUtils.unsafeCopy(bytes_.getDataPointer() + 32, rhs_.getDataPointer(), 48);
+
+            return (U512.fromBytes(lhs_), U512.fromBytes(rhs_));
         }
     }
 
