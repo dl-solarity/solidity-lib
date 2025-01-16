@@ -424,7 +424,7 @@ library U512 {
                 mstore(add(call_, 0xA0), mload(e_))
                 mstore(add(call_, 0xC0), mload(add(e_, 0x20)))
                 mstore(add(call_, 0xE0), mload(m_))
-                mstore(add(call_, 0x01000), mload(add(m_, 0x20)))
+                mstore(add(call_, 0x0100), mload(add(m_, 0x20)))
 
                 pop(staticcall(gas(), 0x5, call_, 0x0120, r_, 0x40))
             }
@@ -621,45 +621,35 @@ library U512 {
     function _modmulOverflow(call call_, uint512 a_, uint512 b_) private pure {
         unchecked {
             assembly {
-                function __mul(_a, _b, _idx1, _idx2) -> _word {
-                    _word := mul(
-                        shr(128, mload(add(_a, mul(_idx1, 0x10)))),
-                        shr(128, mload(add(_b, mul(_idx2, 0x10))))
+                function __mul(a, b, idx1, idx2) -> word {
+                    word := mul(
+                        shr(128, mload(add(a, mul(idx1, 0x10)))),
+                        shr(128, mload(add(b, mul(idx2, 0x10))))
                     )
                 }
 
-                //                let a0_ := shr(128, mload(a_))
-                //                let a1_ := and(mload(a_), 0xffffffffffffffffffffffffffffffff)
-                //                let a2_ := shr(128, mload(add(a_, 0x20)))
-                //                let a3_ := and(mload(add(a_, 0x20)), 0xffffffffffffffffffffffffffffffff)
-                //
-                //                let b0_ := shr(128, mload(b_))
-                //                let b1_ := and(mload(b_), 0xffffffffffffffffffffffffffffffff)
-                //                let b2_ := shr(128, mload(add(b_, 0x20)))
-                //                let b3_ := and(mload(add(b_, 0x20)), 0xffffffffffffffffffffffffffffffff)
-
                 // r7
                 let current_ := __mul(a_, b_, 3, 3)
-                let ri_ := and(current_, 0xffffffffffffffffffffffffffffffff)
+                let r0_ := and(current_, 0xffffffffffffffffffffffffffffffff)
 
                 // r6
                 current_ := shr(128, current_)
 
-                let temp_ := __mul(a_, b_, 3, 2)
+                let temp_ := __mul(a_, b_, 2, 3)
                 current_ := add(current_, temp_)
                 let curry_ := lt(current_, temp_)
 
-                temp_ := __mul(a_, b_, 2, 3)
+                temp_ := __mul(a_, b_, 3, 2)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
-                mstore(add(call_, 0xC0), add(shl(128, current_), ri_))
+                mstore(add(call_, 0xC0), add(shl(128, current_), r0_))
 
                 // r5
                 current_ := add(shl(128, curry_), shr(128, current_))
                 curry_ := 0
 
-                temp_ := __mul(a_, b_, 3, 1)
+                temp_ := __mul(a_, b_, 1, 3)
                 current_ := add(current_, temp_)
                 curry_ := lt(current_, temp_)
 
@@ -667,33 +657,33 @@ library U512 {
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
-                temp_ := __mul(a_, b_, 1, 3)
+                temp_ := __mul(a_, b_, 3, 1)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
-                ri_ := and(current_, 0xffffffffffffffffffffffffffffffff)
+                r0_ := and(current_, 0xffffffffffffffffffffffffffffffff)
 
                 // r4
                 current_ := add(shl(128, curry_), shr(128, current_))
                 curry_ := 0
 
-                temp_ := __mul(a_, b_, 3, 0)
+                temp_ := __mul(a_, b_, 0, 3)
                 current_ := add(current_, temp_)
                 curry_ := lt(current_, temp_)
-
-                temp_ := __mul(a_, b_, 2, 1)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
 
                 temp_ := __mul(a_, b_, 1, 2)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
-                temp_ := __mul(a_, b_, 0, 3)
+                temp_ := __mul(a_, b_, 2, 1)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
-                mstore(add(call_, 0xA0), add(shl(128, current_), ri_))
+                temp_ := __mul(a_, b_, 3, 0)
+                current_ := add(current_, temp_)
+                curry_ := add(curry_, lt(current_, temp_))
+
+                mstore(add(call_, 0xA0), add(shl(128, current_), r0_))
 
                 // r3
                 current_ := add(shl(128, curry_), shr(128, current_))
@@ -711,21 +701,21 @@ library U512 {
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
-                ri_ := and(current_, 0xffffffffffffffffffffffffffffffff)
+                r0_ := and(current_, 0xffffffffffffffffffffffffffffffff)
 
                 // r2
                 current_ := add(shl(128, curry_), shr(128, current_))
                 curry_ := 0
 
-                temp_ := __mul(a_, b_, 1, 0)
+                temp_ := __mul(a_, b_, 0, 1)
                 current_ := add(current_, temp_)
                 curry_ := lt(current_, temp_)
 
-                temp_ := __mul(a_, b_, 0, 1)
+                temp_ := __mul(a_, b_, 1, 0)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
-                mstore(add(call_, 0x80), add(shl(128, current_), ri_))
+                mstore(add(call_, 0x80), add(shl(128, current_), r0_))
 
                 // r1
                 current_ := add(shl(128, curry_), shr(128, current_))
@@ -741,7 +731,7 @@ library U512 {
             _modmulOverflow(call_, a_, b_);
 
             assembly {
-                mstore(call_, 0x40)
+                mstore(call_, 0x80)
                 mstore(add(call_, 0x20), 0x20)
                 mstore(add(call_, 0x40), 0x40)
                 mstore(add(call_, 0xE0), 0x01)
@@ -758,10 +748,10 @@ library U512 {
             uint512 buffer_ = _buffer(call_);
 
             _modinv(call_, b_, m_, buffer_);
-            _modmulOverflow(call_, a_, b_);
+            _modmulOverflow(call_, a_, buffer_);
 
             assembly {
-                mstore(call_, 0x60)
+                mstore(call_, 0x80)
                 mstore(add(0x20, call_), 0x20)
                 mstore(add(0x40, call_), 0x40)
                 mstore(add(0xE0, call_), 0x01)

@@ -19,7 +19,7 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return modaddGas(call_, a_, b_, m_).toBytes();
+        return U512.modadd(call_, a_, b_, m_).toBytes();
     }
 
     function modsub(
@@ -33,7 +33,7 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return modsubGas(call_, a_, b_, m_).toBytes();
+        return U512.modsub(call_, a_, b_, m_).toBytes();
     }
 
     function modmul(
@@ -47,33 +47,34 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return modmulGas(call_, a_, b_, m_).toBytes();
+        return U512.modmul(call_, a_, b_, m_).toBytes();
     }
 
-    function modaddGas(
-        call call_,
-        uint512 a_,
-        uint512 b_,
-        uint512 m_
-    ) public view returns (uint512) {
-        return U512.modadd(call_, a_, b_, m_);
+    function modexp(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        call call_ = U512.initCall();
+
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.modexp(call_, a_, b_, m_).toBytes();
     }
 
-    function modsubGas(
-        call call_,
-        uint512 a_,
-        uint512 b_,
-        uint512 m_
-    ) public view returns (uint512) {
-        return U512.modsub(call_, a_, b_, m_);
-    }
+    function moddiv(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        call call_ = U512.initCall();
 
-    function modmulGas(
-        call call_,
-        uint512 a_,
-        uint512 b_,
-        uint512 m_
-    ) public view returns (uint512) {
-        return U512.modmul(call_, a_, b_, m_);
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.moddiv(call_, a_, b_, m_).toBytes();
     }
 }

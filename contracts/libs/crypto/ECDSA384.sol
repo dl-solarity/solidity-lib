@@ -5,8 +5,6 @@ import {call, uint512} from "./bn/U512.sol";
 import {U512} from "./bn/U512.sol";
 import {MemoryUtils} from "../utils/MemoryUtils.sol";
 
-import "hardhat/console.sol";
-
 /**
  * @notice Cryptography module
  *
@@ -85,6 +83,8 @@ library ECDSA384 {
 
             call call = U512.initCall();
 
+            console.log("passed0");
+
             /// accept s only from the lower part of the curve
             if (
                 U512.eqUint256(inputs_.r, 0) ||
@@ -136,18 +136,6 @@ library ECDSA384 {
             U512.modAssign(call, scalar1_, params_.n);
 
             return U512.eq(scalar1_, inputs_.r);
-        }
-    }
-
-    function _u512FromBytes2(bytes memory bytes_) private view returns (uint512, uint512) {
-        unchecked {
-            bytes memory lhs_ = new bytes(48);
-            bytes memory rhs_ = new bytes(48);
-
-            MemoryUtils.unsafeCopy(bytes_.getDataPointer(), lhs_.getDataPointer(), 48);
-            MemoryUtils.unsafeCopy(bytes_.getDataPointer() + 32, rhs_.getDataPointer(), 48);
-
-            return (U512.fromBytes(lhs_), U512.fromBytes(rhs_));
         }
     }
 
@@ -388,6 +376,21 @@ library ECDSA384 {
             }
 
             return points_;
+        }
+    }
+
+    /**
+     * @dev Convert 96 bytes to two 512-bit unsigned integers.
+     */
+    function _u512FromBytes2(bytes memory bytes_) private view returns (uint512, uint512) {
+        unchecked {
+            bytes memory lhs_ = new bytes(48);
+            bytes memory rhs_ = new bytes(48);
+
+            MemoryUtils.unsafeCopy(bytes_.getDataPointer(), lhs_.getDataPointer(), 48);
+            MemoryUtils.unsafeCopy(bytes_.getDataPointer() + 48, rhs_.getDataPointer(), 48);
+
+            return (U512.fromBytes(lhs_), U512.fromBytes(rhs_));
         }
     }
 }
