@@ -83,8 +83,6 @@ library ECDSA384 {
 
             call call = U512.initCall();
 
-            console.log("passed0");
-
             /// accept s only from the lower part of the curve
             if (
                 U512.eqUint256(inputs_.r, 0) ||
