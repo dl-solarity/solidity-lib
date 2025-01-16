@@ -168,7 +168,7 @@ describe("ECDSA384", () => {
     });
   });
 
-  describe.only("brainpoolP384r1", () => {
+  describe("brainpoolP384r1", () => {
     const signature =
       "0x42d803dcea3f9809cda4ce5a541d969dbeacd6ab7bef7788db1e4a00dac3ae87c1c241c24bb39e041725e607718fc322306b08967b56e4e49d7c9afc48833f580ac9b49cdcec0962d564f89a8f0b57a9742573ebcbe709869253e8b466cb33be";
     const pubKey =

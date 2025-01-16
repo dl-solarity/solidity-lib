@@ -467,7 +467,7 @@ library U512 {
                 mstore(r_, sum_)
 
                 sum_ := gt(aWord_, sum_)
-                sum_ := add(sum_, add(aWord_, mload(b_)))
+                sum_ := add(sum_, add(mload(a_), mload(b_)))
 
                 mstore(add(r_, 0x20), sum_)
             }
@@ -483,12 +483,12 @@ library U512 {
                 mstore(add(call_, 0xA0), sum_)
 
                 sum_ := gt(aWord_, sum_)
-                sum_ := add(sum_, add(aWord_, mload(b_)))
+                sum_ := add(sum_, add(mload(a_), mload(b_)))
 
                 mstore(add(call_, 0x80), sum_)
                 mstore(add(call_, 0x60), gt(mload(a_), sum_))
 
-                mstore(call_, 0x40)
+                mstore(call_, 0x60)
                 mstore(add(call_, 0x20), 0x20)
                 mstore(add(call_, 0x40), 0x40)
                 mstore(add(call_, 0xC0), 0x01)
