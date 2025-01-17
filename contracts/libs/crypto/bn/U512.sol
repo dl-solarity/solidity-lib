@@ -31,7 +31,7 @@ library U512 {
 
     function fromBytes(bytes memory bytes_) internal view returns (uint512 u512_) {
         unchecked {
-            require(bytes_.length <= 64, "U384: >64 bytes");
+            assert(bytes_.length < 65);
 
             u512_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
 
@@ -639,28 +639,33 @@ library U512 {
         }
     }
 
-    function _modmulOverflow(call call_, uint512 a_, uint512 b_) private pure {
+    function _modmulOverflow(uint512 a_, uint512 b_, call call_) private pure {
         unchecked {
             assembly {
-                function __mul(a, b, idx1, idx2) -> word {
-                    word := mul(
-                        shr(128, mload(add(a, mul(idx1, 0x10)))),
-                        shr(128, mload(add(b, mul(idx2, 0x10))))
-                    )
-                }
+                let a3_ := and(mload(add(a_, 0x20)), 0xffffffffffffffffffffffffffffffff)
+                let b3_ := and(mload(add(b_, 0x20)), 0xffffffffffffffffffffffffffffffff)
+
+                let a2_ := shr(128, mload(add(a_, 0x20)))
+                let b2_ := shr(128, mload(add(b_, 0x20)))
+
+                let a1_ := and(mload(a_), 0xffffffffffffffffffffffffffffffff)
+                let b1_ := and(mload(b_), 0xffffffffffffffffffffffffffffffff)
+
+                let a0_ := shr(128, mload(a_))
+                let b0_ := shr(128, mload(b_))
 
                 // r7
-                let current_ := __mul(a_, b_, 3, 3)
+                let current_ := mul(a3_, b3_)
                 let r0_ := and(current_, 0xffffffffffffffffffffffffffffffff)
 
                 // r6
                 current_ := shr(128, current_)
 
-                let temp_ := __mul(a_, b_, 2, 3)
+                let temp_ := mul(a2_, b3_)
                 current_ := add(current_, temp_)
                 let curry_ := lt(current_, temp_)
 
-                temp_ := __mul(a_, b_, 3, 2)
+                temp_ := mul(a3_, b2_)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
@@ -670,15 +675,15 @@ library U512 {
                 current_ := add(shl(128, curry_), shr(128, current_))
                 curry_ := 0
 
-                temp_ := __mul(a_, b_, 1, 3)
+                temp_ := mul(a1_, b3_)
                 current_ := add(current_, temp_)
                 curry_ := lt(current_, temp_)
 
-                temp_ := __mul(a_, b_, 2, 2)
+                temp_ := mul(a2_, b2_)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
-                temp_ := __mul(a_, b_, 3, 1)
+                temp_ := mul(a3_, b1_)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
@@ -688,19 +693,19 @@ library U512 {
                 current_ := add(shl(128, curry_), shr(128, current_))
                 curry_ := 0
 
-                temp_ := __mul(a_, b_, 0, 3)
+                temp_ := mul(a0_, b3_)
                 current_ := add(current_, temp_)
                 curry_ := lt(current_, temp_)
 
-                temp_ := __mul(a_, b_, 1, 2)
+                temp_ := mul(a1_, b2_)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
-                temp_ := __mul(a_, b_, 2, 1)
+                temp_ := mul(a2_, b1_)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
-                temp_ := __mul(a_, b_, 3, 0)
+                temp_ := mul(a3_, b0_)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
@@ -710,15 +715,15 @@ library U512 {
                 current_ := add(shl(128, curry_), shr(128, current_))
                 curry_ := 0
 
-                temp_ := __mul(a_, b_, 2, 0)
+                temp_ := mul(a2_, b0_)
                 current_ := add(current_, temp_)
                 curry_ := lt(current_, temp_)
 
-                temp_ := __mul(a_, b_, 1, 1)
+                temp_ := mul(a1_, b1_)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
-                temp_ := __mul(a_, b_, 0, 2)
+                temp_ := mul(a0_, b2_)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
@@ -728,11 +733,11 @@ library U512 {
                 current_ := add(shl(128, curry_), shr(128, current_))
                 curry_ := 0
 
-                temp_ := __mul(a_, b_, 0, 1)
+                temp_ := mul(a0_, b1_)
                 current_ := add(current_, temp_)
                 curry_ := lt(current_, temp_)
 
-                temp_ := __mul(a_, b_, 1, 0)
+                temp_ := mul(a1_, b0_)
                 current_ := add(current_, temp_)
                 curry_ := add(curry_, lt(current_, temp_))
 
@@ -740,7 +745,7 @@ library U512 {
 
                 // r1
                 current_ := add(shl(128, curry_), shr(128, current_))
-                current_ := add(current_, __mul(a_, b_, 0, 0))
+                current_ := add(current_, mul(a0_, b0_))
 
                 mstore(add(call_, 0x60), current_)
             }
@@ -749,7 +754,7 @@ library U512 {
 
     function _modmul(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
         unchecked {
-            _modmulOverflow(call_, a_, b_);
+            _modmulOverflow(a_, b_, call_);
 
             assembly {
                 mstore(call_, 0x80)
@@ -769,7 +774,7 @@ library U512 {
             uint512 buffer_ = _buffer(call_);
 
             _modinv(call_, b_, m_, buffer_);
-            _modmulOverflow(call_, a_, buffer_);
+            _modmulOverflow(a_, buffer_, call_);
 
             assembly {
                 mstore(call_, 0x80)

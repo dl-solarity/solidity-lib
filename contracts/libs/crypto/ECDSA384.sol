@@ -113,10 +113,10 @@ library ECDSA384 {
                     U512.fromUint256(2),
                     U512.fromUint256(3),
                     params_.a,
-                    params_.gx,
-                    params_.gy,
                     inputs_.x,
-                    inputs_.y
+                    inputs_.y,
+                    params_.gx,
+                    params_.gy
                 );
 
                 (scalar1_, ) = _doubleScalarMultiplication(
@@ -331,10 +331,10 @@ library ECDSA384 {
         uint512 two_,
         uint512 three_,
         uint512 a_,
-        uint512 gx_,
-        uint512 gy_,
         uint512 hx_,
-        uint512 hy_
+        uint512 hy_,
+        uint512 gx_,
+        uint512 gy_
     ) private view returns (uint512[2][64] memory points_) {
         unchecked {
             (points_[0x01][0], points_[0x01][1]) = (U512.copy(hx_), U512.copy(hy_));
@@ -346,20 +346,24 @@ library ECDSA384 {
                         continue;
                     }
 
+                    uint256 maskTo = (i << 3) | j;
+
                     if (i != 0) {
-                        (points_[(i << 3) | j][0], points_[(i << 3) | j][1]) = _addAffine(
+                        uint256 maskFrom = ((i - 1) << 3) | j;
+
+                        (points_[maskTo][0], points_[maskTo][1]) = _addAffine(
                             call_,
                             p_,
                             two_,
                             three_,
                             a_,
-                            points_[((i - 1) << 3) | j][0],
-                            points_[((i - 1) << 3) | j][1],
+                            points_[maskFrom][0],
+                            points_[maskFrom][1],
                             gx_,
                             gy_
                         );
                     } else {
-                        (points_[(i << 3) | j][0], points_[(i << 3) | j][1]) = _addAffine(
+                        (points_[maskTo][0], points_[maskTo][1]) = _addAffine(
                             call_,
                             p_,
                             two_,
