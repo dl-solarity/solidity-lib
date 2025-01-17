@@ -81,7 +81,7 @@ library ECDSA384 {
                 lowSmax: U512.fromBytes(curveParams_.lowSmax)
             });
 
-            call call = U512.initCall();
+            call call_ = U512.initCall();
 
             /// accept s only from the lower part of the curve
             if (
@@ -93,26 +93,25 @@ library ECDSA384 {
                 return false;
             }
 
-            if (!_isOnCurve(call, params_.p, params_.a, params_.b, inputs_.x, inputs_.y)) {
+            if (!_isOnCurve(call_, params_.p, params_.a, params_.b, inputs_.x, inputs_.y)) {
                 return false;
             }
 
             uint512 scalar1_ = U512.moddiv(
-                call,
+                call_,
                 U512.fromBytes(hashedMessage_),
                 inputs_.s,
                 params_.n
             );
-            uint512 scalar2_ = U512.moddiv(call, inputs_.r, inputs_.s, params_.n);
+            uint512 scalar2_ = U512.moddiv(call_, inputs_.r, inputs_.s, params_.n);
 
             {
-                uint512 three_ = U512.fromUint256(3);
-
                 /// We use 6-bit masks where the first 3 bits refer to `scalar1` and the last 3 bits refer to `scalar2`.
                 uint512[2][64] memory points_ = _precomputePointsTable(
-                    call,
+                    call_,
                     params_.p,
-                    three_,
+                    U512.fromUint256(2),
+                    U512.fromUint256(3),
                     params_.a,
                     params_.gx,
                     params_.gy,
@@ -121,9 +120,10 @@ library ECDSA384 {
                 );
 
                 (scalar1_, ) = _doubleScalarMultiplication(
-                    call,
+                    call_,
                     params_.p,
-                    three_,
+                    U512.fromUint256(2),
+                    U512.fromUint256(3),
                     params_.a,
                     points_,
                     scalar1_,
@@ -131,7 +131,7 @@ library ECDSA384 {
                 );
             }
 
-            U512.modAssign(call, scalar1_, params_.n);
+            U512.modAssign(call_, scalar1_, params_.n);
 
             return U512.eq(scalar1_, inputs_.r);
         }
@@ -179,6 +179,7 @@ library ECDSA384 {
     function _doubleScalarMultiplication(
         call call_,
         uint512 p_,
+        uint512 two_,
         uint512 three_,
         uint512 a_,
         uint512[2][64] memory points_,
@@ -197,12 +198,13 @@ library ECDSA384 {
                 mask_ = (mask1_ << 3) | mask2_;
 
                 if (mask_ != 0) {
-                    (x_, y_) = _twiceAffine(call_, p_, three_, a_, x_, y_);
-                    (x_, y_) = _twiceAffine(call_, p_, three_, a_, x_, y_);
-                    (x_, y_) = _twiceAffine(call_, p_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
                     (x_, y_) = _addAffine(
                         call_,
                         p_,
+                        two_,
                         three_,
                         a_,
                         points_[mask_][0],
@@ -242,6 +244,7 @@ library ECDSA384 {
     function _twiceAffine(
         call call_,
         uint512 p_,
+        uint512 two_,
         uint512 three_,
         uint512 a_,
         uint512 x1_,
@@ -256,14 +259,14 @@ library ECDSA384 {
                 return (x2_, y2_);
             }
 
-            uint512 m1_ = U512.modexp(call_, x1_, U512.fromUint256(2), p_);
+            uint512 m1_ = U512.modexp(call_, x1_, two_, p_);
             U512.modmulAssign(call_, m1_, three_, p_);
             U512.modaddAssign(call_, m1_, a_, p_);
 
-            uint512 m2_ = U512.modmul(call_, y1_, U512.fromUint256(2), p_);
+            uint512 m2_ = U512.shl(call_, y1_, p_);
             U512.moddivAssign(call_, m1_, m2_, p_);
 
-            x2_ = U512.modexp(call_, m1_, U512.fromUint256(2), p_);
+            x2_ = U512.modexp(call_, m1_, two_, p_);
             U512.modsubAssign(call_, x2_, x1_, p_);
             U512.modsubAssign(call_, x2_, x1_, p_);
 
@@ -279,6 +282,7 @@ library ECDSA384 {
     function _addAffine(
         call call_,
         uint512 p_,
+        uint512 two_,
         uint512 three_,
         uint512 a_,
         uint512 x1_,
@@ -300,7 +304,7 @@ library ECDSA384 {
 
             if (U512.eq(x1_, x2_)) {
                 if (U512.eq(y1_, y2_)) {
-                    return _twiceAffine(call_, p_, three_, a_, x1_, y1_);
+                    return _twiceAffine(call_, p_, two_, three_, a_, x1_, y1_);
                 }
 
                 return (x3, y3);
@@ -311,7 +315,7 @@ library ECDSA384 {
 
             U512.moddivAssign(call_, m1_, m2_, p_);
 
-            x3 = U512.modexp(call_, m1_, U512.fromUint256(2), p_);
+            x3 = U512.modexp(call_, m1_, two_, p_);
             U512.modsubAssign(call_, x3, x1_, p_);
             U512.modsubAssign(call_, x3, x2_, p_);
 
@@ -324,6 +328,7 @@ library ECDSA384 {
     function _precomputePointsTable(
         call call_,
         uint512 p_,
+        uint512 two_,
         uint512 three_,
         uint512 a_,
         uint512 gx_,
@@ -341,31 +346,27 @@ library ECDSA384 {
                         continue;
                     }
 
-                    uint256 maskTo = (i << 3) | j;
-
                     if (i != 0) {
-                        uint256 maskFrom_ = ((i - 1) << 3) | j;
-
-                        (points_[maskTo][0], points_[maskTo][1]) = _addAffine(
+                        (points_[(i << 3) | j][0], points_[(i << 3) | j][1]) = _addAffine(
                             call_,
                             p_,
+                            two_,
                             three_,
                             a_,
-                            points_[maskFrom_][0],
-                            points_[maskFrom_][1],
+                            points_[((i - 1) << 3) | j][0],
+                            points_[((i - 1) << 3) | j][1],
                             gx_,
                             gy_
                         );
                     } else {
-                        uint256 maskFrom_ = (i << 3) | (j - 1);
-
-                        (points_[maskTo][0], points_[maskTo][1]) = _addAffine(
+                        (points_[(i << 3) | j][0], points_[(i << 3) | j][1]) = _addAffine(
                             call_,
                             p_,
+                            two_,
                             three_,
                             a_,
-                            points_[maskFrom_][0],
-                            points_[maskFrom_][1],
+                            points_[(i << 3) | (j - 1)][0],
+                            points_[(i << 3) | (j - 1)][1],
                             hx_,
                             hy_
                         );
