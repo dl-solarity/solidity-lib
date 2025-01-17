@@ -752,9 +752,55 @@ library U512 {
         }
     }
 
+    function _modmul2p(call call_, uint512 a_, uint512 b_) private pure {
+        unchecked {
+            assembly {
+                let a0_ := mload(a_)
+                let a1_ := mload(add(a_, 0x20))
+                let b0_ := mload(b_)
+                let b1_ := mload(add(b_, 0x20))
+
+                function mul2p(a, b) -> prod0, prod1 {
+                    let mm := mulmod(a, b, not(0))
+                    prod1 := mul(a, b)
+                    prod0 := sub(sub(mm, prod1), lt(mm, prod1))
+                }
+
+                let c0_ := 0
+                let c1_ := 0
+                let c2_ := 0
+                let c3_ := 0
+
+                c2_, c3_ := mul2p(a1_, b1_)
+
+                let prod0_, prod1_ := mul2p(a0_, b1_)
+                c2_ := add(c2_, prod1_)
+                c1_ := lt(c2_, prod1_)
+                c1_ := add(c1_, prod0_)
+                c0_ := lt(c1_, prod0_)
+
+                prod0_, prod1_ := mul2p(a1_, b0_)
+                c2_ := add(c2_, prod1_)
+                c1_ := add(c1_, lt(c2_, prod1_))
+                c1_ := add(c1_, prod0_)
+                c0_ := add(c0_, lt(c1_, prod0_))
+
+                prod0_, prod1_ := mul2p(a0_, b0_)
+                c1_ := add(c1_, prod1_)
+                c0_ := add(c0_, lt(c1_, prod1_))
+                c0_ := add(c0_, prod0_)
+
+                mstore(add(call_, 0xC0), c3_)
+                mstore(add(call_, 0xA0), c2_)
+                mstore(add(call_, 0x80), c1_)
+                mstore(add(call_, 0x60), c0_)
+            }
+        }
+    }
+
     function _modmul(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
         unchecked {
-            _modmulOverflow(a_, b_, call_);
+            _modmul2p(call_, a_, b_);
 
             assembly {
                 mstore(call_, 0x80)
@@ -774,7 +820,7 @@ library U512 {
             uint512 buffer_ = _buffer(call_);
 
             _modinv(call_, b_, m_, buffer_);
-            _modmulOverflow(a_, buffer_, call_);
+            _modmul2p(call_, a_, buffer_);
 
             assembly {
                 mstore(call_, 0x80)
