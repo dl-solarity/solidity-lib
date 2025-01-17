@@ -760,32 +760,48 @@ library U512 {
                 let b0_ := mload(b_)
                 let b1_ := mload(add(b_, 0x20))
 
-                function mul2p(a, b) -> prod0, prod1 {
-                    let mm := mulmod(a, b, not(0))
-                    prod1 := mul(a, b)
-                    prod0 := sub(sub(mm, prod1), lt(mm, prod1))
-                }
+                let mm_ := mulmod(
+                    a1_,
+                    b1_,
+                    0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                )
+                let c3_ := mul(a1_, b1_)
+                let c2_ := sub(sub(mm_, c3_), lt(mm_, c3_))
 
-                let c0_ := 0
-                let c1_ := 0
-                let c2_ := 0
-                let c3_ := 0
+                mm_ := mulmod(
+                    a0_,
+                    b1_,
+                    0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                )
+                let prod1_ := mul(a0_, b1_)
+                let prod0_ := sub(sub(mm_, prod1_), lt(mm_, prod1_))
 
-                c2_, c3_ := mul2p(a1_, b1_)
-
-                let prod0_, prod1_ := mul2p(a0_, b1_)
                 c2_ := add(c2_, prod1_)
-                c1_ := lt(c2_, prod1_)
+                let c1_ := lt(c2_, prod1_)
                 c1_ := add(c1_, prod0_)
-                c0_ := lt(c1_, prod0_)
+                let c0_ := lt(c1_, prod0_)
 
-                prod0_, prod1_ := mul2p(a1_, b0_)
+                mm_ := mulmod(
+                    a1_,
+                    b0_,
+                    0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                )
+                prod1_ := mul(a1_, b0_)
+                prod0_ := sub(sub(mm_, prod1_), lt(mm_, prod1_))
+
                 c2_ := add(c2_, prod1_)
                 c1_ := add(c1_, lt(c2_, prod1_))
                 c1_ := add(c1_, prod0_)
                 c0_ := add(c0_, lt(c1_, prod0_))
 
-                prod0_, prod1_ := mul2p(a0_, b0_)
+                mm_ := mulmod(
+                    a0_,
+                    b0_,
+                    0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                )
+                prod1_ := mul(a0_, b0_)
+                prod0_ := sub(sub(mm_, prod1_), lt(mm_, prod1_))
+
                 c1_ := add(c1_, prod1_)
                 c0_ := add(c0_, lt(c1_, prod1_))
                 c0_ := add(c0_, prod0_)
