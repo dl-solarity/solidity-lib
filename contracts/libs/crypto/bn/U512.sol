@@ -396,27 +396,6 @@ library U512 {
         }
     }
 
-    function shl(call call_, uint512 a_, uint512 p_) internal view returns (uint512 r_) {
-        unchecked {
-            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
-
-            _shl(call_, a_, p_, r_);
-        }
-    }
-
-    function _shl(call call_, uint512 a_, uint512 p_, uint512 r_) private view {
-        unchecked {
-            assembly {
-                let a1_ := mload(add(a_, 0x20))
-
-                mstore(r_, or(shl(1, mload(a_)), shr(255, a1_)))
-                mstore(add(r_, 0x20), shl(1, a1_))
-            }
-
-            _mod(call_, r_, p_, r_);
-        }
-    }
-
     function _mod(call call_, uint512 a_, uint512 m_, uint512 r_) private view {
         unchecked {
             assembly {

@@ -263,7 +263,7 @@ library ECDSA384 {
             U512.modmulAssign(call_, m1_, three_, p_);
             U512.modaddAssign(call_, m1_, a_, p_);
 
-            uint512 m2_ = U512.shl(call_, y1_, p_);
+            uint512 m2_ = U512.modmul(call_, y1_, two_, p_);
             U512.moddivAssign(call_, m1_, m2_, p_);
 
             x2_ = U512.modexp(call_, m1_, two_, p_);
