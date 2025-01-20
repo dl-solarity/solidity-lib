@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import {call, uint512} from "../bn/U512.sol";
+import {U512} from "../bn/U512.sol";
 import {MemoryUtils} from "../utils/MemoryUtils.sol";
-import {_U512} from "./backend/U512.sol";
 
 /**
  * @notice Cryptography module
  *
  * This library provides functionality for ECDSA verification over any 384-bit curve. Currently,
- * this is the most efficient implementation out there, consuming ~7.767 million gas per call.
+ * this is the most efficient implementation out there, consuming ~8.025 million gas per call.
  *
  * The approach is Strauss-Shamir double scalar multiplication with 6 bits of precompute + affine coordinates.
- * For reference, naive implementation uses ~400 billion gas, which is ~50000 times more expensive.
+ * For reference, naive implementation uses ~400 billion gas, which is 50000 times more expensive.
  *
  * We also tried using projective coordinates, however, the gas consumption rose to ~9 million gas.
  */
@@ -32,20 +33,20 @@ library ECDSA512 {
     }
 
     struct _Parameters {
-        uint256 a;
-        uint256 b;
-        uint256 gx;
-        uint256 gy;
-        uint256 p;
-        uint256 n;
-        uint256 lowSmax;
+        uint512 a;
+        uint512 b;
+        uint512 gx;
+        uint512 gy;
+        uint512 p;
+        uint512 n;
+        uint512 lowSmax;
     }
 
     struct _Inputs {
-        uint256 r;
-        uint256 s;
-        uint256 x;
-        uint256 y;
+        uint512 r;
+        uint512 s;
+        uint512 x;
+        uint512 y;
     }
 
     /**
@@ -67,27 +68,27 @@ library ECDSA512 {
         unchecked {
             _Inputs memory inputs_;
 
-            (inputs_.r, inputs_.s) = _u384FromBytes2(signature_);
-            (inputs_.x, inputs_.y) = _u384FromBytes2(pubKey_);
+            (inputs_.r, inputs_.s) = _u512FromBytes2(signature_);
+            (inputs_.x, inputs_.y) = _u512FromBytes2(pubKey_);
 
             _Parameters memory params_ = _Parameters({
-                a: _U512.fromBytes(curveParams_.a),
-                b: _U512.fromBytes(curveParams_.b),
-                gx: _U512.fromBytes(curveParams_.gx),
-                gy: _U512.fromBytes(curveParams_.gy),
-                p: _U512.fromBytes(curveParams_.p),
-                n: _U512.fromBytes(curveParams_.n),
-                lowSmax: _U512.fromBytes(curveParams_.lowSmax)
+                a: U512.fromBytes(curveParams_.a),
+                b: U512.fromBytes(curveParams_.b),
+                gx: U512.fromBytes(curveParams_.gx),
+                gy: U512.fromBytes(curveParams_.gy),
+                p: U512.fromBytes(curveParams_.p),
+                n: U512.fromBytes(curveParams_.n),
+                lowSmax: U512.fromBytes(curveParams_.lowSmax)
             });
 
-            uint256 call_ = _U512.initCall(params_.p);
+            call call_ = U512.initCall();
 
             /// accept s only from the lower part of the curve
             if (
-                _U512.eqUint256(inputs_.r, 0) ||
-                _U512.cmp(inputs_.r, params_.n) >= 0 ||
-                _U512.eqUint256(inputs_.s, 0) ||
-                _U512.cmp(inputs_.s, params_.lowSmax) > 0
+                U512.eqUint256(inputs_.r, 0) ||
+                U512.cmp(inputs_.r, params_.n) >= 0 ||
+                U512.eqUint256(inputs_.s, 0) ||
+                U512.cmp(inputs_.s, params_.lowSmax) > 0
             ) {
                 return false;
             }
@@ -96,22 +97,21 @@ library ECDSA512 {
                 return false;
             }
 
-            uint256 scalar1_ = _U512.moddiv(
+            uint512 scalar1_ = U512.moddiv(
                 call_,
-                _U512.fromBytes(hashedMessage_),
+                U512.fromBytes(hashedMessage_),
                 inputs_.s,
                 params_.n
             );
-            uint256 scalar2_ = _U512.moddiv(call_, inputs_.r, inputs_.s, params_.n);
+            uint512 scalar2_ = U512.moddiv(call_, inputs_.r, inputs_.s, params_.n);
 
             {
-                uint256 three_ = _U512.fromUint256(3);
-
                 /// We use 6-bit masks where the first 3 bits refer to `scalar1` and the last 3 bits refer to `scalar2`.
-                uint256[2][64] memory points_ = _precomputePointsTable(
+                uint512[2][64] memory points_ = _precomputePointsTable(
                     call_,
                     params_.p,
-                    three_,
+                    U512.fromUint256(2),
+                    U512.fromUint256(3),
                     params_.a,
                     inputs_.x,
                     inputs_.y,
@@ -122,7 +122,8 @@ library ECDSA512 {
                 (scalar1_, ) = _doubleScalarMultiplication(
                     call_,
                     params_.p,
-                    three_,
+                    U512.fromUint256(2),
+                    U512.fromUint256(3),
                     params_.a,
                     points_,
                     scalar1_,
@@ -130,9 +131,9 @@ library ECDSA512 {
                 );
             }
 
-            _U512.modAssign(call_, scalar1_, params_.n);
+            U512.modAssign(call_, scalar1_, params_.n);
 
-            return _U512.eq(scalar1_, inputs_.r);
+            return U512.eq(scalar1_, inputs_.r);
         }
     }
 
@@ -140,35 +141,35 @@ library ECDSA512 {
      * @dev Check if a point in affine coordinates is on the curve.
      */
     function _isOnCurve(
-        uint256 call_,
-        uint256 p_,
-        uint256 a_,
-        uint256 b_,
-        uint256 x_,
-        uint256 y_
+        call call_,
+        uint512 p_,
+        uint512 a_,
+        uint512 b_,
+        uint512 x_,
+        uint512 y_
     ) private view returns (bool) {
         unchecked {
             if (
-                _U512.eqUint256(x_, 0) ||
-                _U512.eq(x_, p_) ||
-                _U512.eqUint256(y_, 0) ||
-                _U512.eq(y_, p_)
+                U512.eqUint256(x_, 0) ||
+                U512.eq(x_, p_) ||
+                U512.eqUint256(y_, 0) ||
+                U512.eq(y_, p_)
             ) {
                 return false;
             }
 
-            uint256 lhs_ = _U512.modexp(call_, y_, 2);
-            uint256 rhs_ = _U512.modexp(call_, x_, 3);
+            uint512 lhs_ = U512.modexp(call_, y_, U512.fromUint256(2), p_);
+            uint512 rhs_ = U512.modexp(call_, x_, U512.fromUint256(3), p_);
 
-            if (!_U512.eqUint256(a_, 0)) {
-                rhs_ = _U512.modadd(rhs_, _U512.modmul(call_, x_, a_), p_); // x^3 + a*x
+            if (!U512.eqUint256(a_, 0)) {
+                rhs_ = U512.modadd(call_, rhs_, U512.modmul(call_, x_, a_, p_), p_); // x^3 + a*x
             }
 
-            if (!_U512.eqUint256(b_, 0)) {
-                rhs_ = _U512.modadd(rhs_, b_, p_); // x^3 + a*x + b
+            if (!U512.eqUint256(b_, 0)) {
+                rhs_ = U512.modadd(call_, rhs_, b_, p_); // x^3 + a*x + b
             }
 
-            return _U512.eq(lhs_, rhs_);
+            return U512.eq(lhs_, rhs_);
         }
     }
 
@@ -176,30 +177,43 @@ library ECDSA512 {
      * @dev Compute the Strauss-Shamir double scalar multiplication scalar1*G + scalar2*H.
      */
     function _doubleScalarMultiplication(
-        uint256 call_,
-        uint256 p_,
-        uint256 three_,
-        uint256 a_,
-        uint256[2][64] memory points_,
-        uint256 scalar1_,
-        uint256 scalar2_
-    ) private view returns (uint256 x_, uint256 y_) {
+        call call_,
+        uint512 p_,
+        uint512 two_,
+        uint512 three_,
+        uint512 a_,
+        uint512[2][64] memory points_,
+        uint512 scalar1_,
+        uint512 scalar2_
+    ) private view returns (uint512 x_, uint512 y_) {
         unchecked {
             uint256 mask_;
             uint256 mask1_;
             uint256 mask2_;
 
-            for (uint256 bit = 3; bit <= 384; bit += 3) {
-                mask1_ = _getWord(scalar1_, 384 - bit);
-                mask2_ = _getWord(scalar2_, 384 - bit);
+            // skip first two bits
+            assembly {
+                mask1_ := shr(254, mload(scalar1_))
+                mask2_ := shr(254, mload(scalar2_))
+                mask_ := or(shl(3, mask1_), mask2_)
+            }
+
+            (x_, y_) = (U512.copy(points_[mask_][0]), U512.copy(points_[mask_][1]));
+
+            for (uint256 bit = 5; bit <= 512; bit += 3) {
+                mask1_ = _getWord(scalar1_, 512 - bit);
+                mask2_ = _getWord(scalar2_, 512 - bit);
 
                 mask_ = (mask1_ << 3) | mask2_;
 
                 if (mask_ != 0) {
-                    (x_, y_) = _twice3Affine(call_, p_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
                     (x_, y_) = _addAffine(
                         call_,
                         p_,
+                        two_,
                         three_,
                         a_,
                         points_[mask_][0],
@@ -214,7 +228,7 @@ library ECDSA512 {
         }
     }
 
-    function _getWord(uint256 scalar_, uint256 bit_) private pure returns (uint256) {
+    function _getWord(uint512 scalar_, uint256 bit_) private pure returns (uint256) {
         unchecked {
             uint256 word_;
             if (bit_ <= 253) {
@@ -225,11 +239,19 @@ library ECDSA512 {
                 return (word_ >> bit_) & 0x07;
             }
 
-            assembly {
-                word_ := mload(add(scalar_, 0x10))
+            if (bit_ <= 381) {
+                assembly {
+                    word_ := mload(add(scalar_, 0x10))
+                }
+
+                return (word_ >> (bit_ - 128)) & 0x07;
             }
 
-            return (word_ >> (bit_ - 128)) & 0x07;
+            assembly {
+                word_ := mload(scalar_)
+            }
+
+            return (word_ >> (bit_ - 256)) & 0x07;
         }
     }
 
@@ -237,111 +259,37 @@ library ECDSA512 {
      * @dev Double an elliptic curve point in affine coordinates.
      */
     function _twiceAffine(
-        uint256 call_,
-        uint256 p_,
-        uint256 three_,
-        uint256 a_,
-        uint256 x1_,
-        uint256 y1_
-    ) private view returns (uint256 x2_, uint256 y2_) {
+        call call_,
+        uint512 p_,
+        uint512 two_,
+        uint512 three_,
+        uint512 a_,
+        uint512 x1_,
+        uint512 y1_
+    ) private view returns (uint512 x2_, uint512 y2_) {
         unchecked {
-            if (x1_ == 0) {
-                return (0, 0);
+            if (U512.isNull(x1_)) {
+                return (x2_, y2_);
             }
 
-            if (_U512.eqUint256(y1_, 0)) {
-                return (0, 0);
+            if (U512.eqUint256(y1_, 0)) {
+                return (x2_, y2_);
             }
 
-            uint256 m1_ = _U512.modexp(call_, x1_, 2);
-            _U512.modmulAssign(call_, m1_, three_);
-            _U512.modaddAssign(m1_, a_, p_);
+            uint512 m1_ = U512.modexp(call_, x1_, two_, p_);
+            U512.modmulAssign(call_, m1_, three_, p_);
+            U512.modaddAssign(call_, m1_, a_, p_);
 
-            uint256 m2_ = _U512.modshl1(y1_, p_);
-            _U512.moddivAssign(call_, m1_, m2_);
+            uint512 m2_ = U512.modmul(call_, y1_, two_, p_);
+            U512.moddivAssign(call_, m1_, m2_, p_);
 
-            x2_ = _U512.modexp(call_, m1_, 2);
-            _U512.modsubAssign(x2_, x1_, p_);
-            _U512.modsubAssign(x2_, x1_, p_);
+            x2_ = U512.modexp(call_, m1_, two_, p_);
+            U512.modsubAssign(call_, x2_, x1_, p_);
+            U512.modsubAssign(call_, x2_, x1_, p_);
 
-            y2_ = _U512.modsub(x1_, x2_, p_);
-            _U512.modmulAssign(call_, y2_, m1_);
-            _U512.modsubAssign(y2_, y1_, p_);
-        }
-    }
-
-    /**
-     * @dev Doubles an elliptic curve point 3 times in affine coordinates.
-     */
-    function _twice3Affine(
-        uint256 call_,
-        uint256 p_,
-        uint256 three_,
-        uint256 a_,
-        uint256 x1_,
-        uint256 y1_
-    ) private view returns (uint256 x2_, uint256 y2_) {
-        unchecked {
-            if (x1_ == 0) {
-                return (0, 0);
-            }
-
-            if (_U512.eqUint256(y1_, 0)) {
-                return (0, 0);
-            }
-
-            uint256 m1 = _U512.modexp(call_, x1_, 2);
-            _U512.modmulAssign(call_, m1, three_);
-            _U512.modaddAssign(m1, a_, p_);
-
-            uint256 m2 = _U512.modshl1(y1_, p_);
-            _U512.moddivAssign(call_, m1, m2);
-
-            x2_ = _U512.modexp(call_, m1, 2);
-            _U512.modsubAssign(x2_, x1_, p_);
-            _U512.modsubAssign(x2_, x1_, p_);
-
-            y2_ = _U512.modsub(x1_, x2_, p_);
-            _U512.modmulAssign(call_, y2_, m1);
-            _U512.modsubAssign(y2_, y1_, p_);
-
-            if (_U512.eqUint256(y2_, 0)) {
-                return (0, 0);
-            }
-
-            _U512.modexpAssignTo(call_, m1, x2_, 2);
-            _U512.modmulAssign(call_, m1, three_);
-            _U512.modaddAssign(m1, a_, p_);
-
-            _U512.modshl1AssignTo(m2, y2_, p_);
-            _U512.moddivAssign(call_, m1, m2);
-
-            _U512.modexpAssignTo(call_, x1_, m1, 2);
-            _U512.modsubAssign(x1_, x2_, p_);
-            _U512.modsubAssign(x1_, x2_, p_);
-
-            _U512.modsubAssignTo(y1_, x2_, x1_, p_);
-            _U512.modmulAssign(call_, y1_, m1);
-            _U512.modsubAssign(y1_, y2_, p_);
-
-            if (_U512.eqUint256(y1_, 0)) {
-                return (0, 0);
-            }
-
-            _U512.modexpAssignTo(call_, m1, x1_, 2);
-            _U512.modmulAssign(call_, m1, three_);
-            _U512.modaddAssign(m1, a_, p_);
-
-            _U512.modshl1AssignTo(m2, y1_, p_);
-            _U512.moddivAssign(call_, m1, m2);
-
-            _U512.modexpAssignTo(call_, x2_, m1, 2);
-            _U512.modsubAssign(x2_, x1_, p_);
-            _U512.modsubAssign(x2_, x1_, p_);
-
-            _U512.modsubAssignTo(y2_, x1_, x2_, p_);
-            _U512.modmulAssign(call_, y2_, m1);
-            _U512.modsubAssign(y2_, y1_, p_);
+            y2_ = U512.modsub(call_, x1_, x2_, p_);
+            U512.modmulAssign(call_, y2_, m1_, p_);
+            U512.modsubAssign(call_, y2_, y1_, p_);
         }
     }
 
@@ -349,63 +297,65 @@ library ECDSA512 {
      * @dev Add two elliptic curve points in affine coordinates.
      */
     function _addAffine(
-        uint256 call_,
-        uint256 p_,
-        uint256 three_,
-        uint256 a_,
-        uint256 x1_,
-        uint256 y1_,
-        uint256 x2_,
-        uint256 y2_
-    ) private view returns (uint256 x3, uint256 y3) {
+        call call_,
+        uint512 p_,
+        uint512 two_,
+        uint512 three_,
+        uint512 a_,
+        uint512 x1_,
+        uint512 y1_,
+        uint512 x2_,
+        uint512 y2_
+    ) private view returns (uint512 x3, uint512 y3) {
         unchecked {
-            if (x1_ == 0 || x2_ == 0) {
-                if (x1_ == 0 && x2_ == 0) {
-                    return (0, 0);
+            if (U512.isNull(x1_) || U512.isNull(x2_)) {
+                if (U512.isNull(x1_) && U512.isNull(x2_)) {
+                    return (x3, y3);
                 }
 
                 return
-                    x1_ == 0
-                        ? (_U512.copy(x2_), _U512.copy(y2_))
-                        : (_U512.copy(x1_), _U512.copy(y1_));
+                    U512.isNull(x1_)
+                        ? (U512.copy(x2_), U512.copy(y2_))
+                        : (U512.copy(x1_), U512.copy(y1_));
             }
 
-            if (_U512.eq(x1_, x2_)) {
-                if (_U512.eq(y1_, y2_)) {
-                    return _twiceAffine(call_, p_, three_, a_, x1_, y1_);
+            if (U512.eq(x1_, x2_)) {
+                if (U512.eq(y1_, y2_)) {
+                    return _twiceAffine(call_, p_, two_, three_, a_, x1_, y1_);
                 }
 
-                return (0, 0);
+                return (x3, y3);
             }
 
-            uint256 m1_ = _U512.modsub(y1_, y2_, p_);
-            uint256 m2_ = _U512.modsub(x1_, x2_, p_);
+            uint512 m1_ = U512.modsub(call_, y1_, y2_, p_);
+            uint512 m2_ = U512.modsub(call_, x1_, x2_, p_);
 
-            _U512.moddivAssign(call_, m1_, m2_);
+            U512.moddivAssign(call_, m1_, m2_, p_);
 
-            x3 = _U512.modexp(call_, m1_, 2);
-            _U512.modsubAssign(x3, x1_, p_);
-            _U512.modsubAssign(x3, x2_, p_);
+            x3 = U512.modexp(call_, m1_, two_, p_);
+            U512.modsubAssign(call_, x3, x1_, p_);
+            U512.modsubAssign(call_, x3, x2_, p_);
 
-            y3 = _U512.modsub(x1_, x3, p_);
-            _U512.modmulAssign(call_, y3, m1_);
-            _U512.modsubAssign(y3, y1_, p_);
+            y3 = U512.modsub(call_, x1_, x3, p_);
+            U512.modmulAssign(call_, y3, m1_, p_);
+            U512.modsubAssign(call_, y3, y1_, p_);
         }
     }
 
     function _precomputePointsTable(
-        uint256 call_,
-        uint256 p_,
-        uint256 three_,
-        uint256 a_,
-        uint256 hx_,
-        uint256 hy_,
-        uint256 gx_,
-        uint256 gy_
-    ) private view returns (uint256[2][64] memory points_) {
+        call call_,
+        uint512 p_,
+        uint512 two_,
+        uint512 three_,
+        uint512 a_,
+        uint512 hx_,
+        uint512 hy_,
+        uint512 gx_,
+        uint512 gy_
+    ) private view returns (uint512[2][64] memory points_) {
         unchecked {
-            (points_[0x01][0], points_[0x01][1]) = (_U512.copy(hx_), _U512.copy(hy_));
-            (points_[0x08][0], points_[0x08][1]) = (_U512.copy(gx_), _U512.copy(gy_));
+            (points_[0x01][0], points_[0x01][1]) = (U512.copy(hx_), U512.copy(hy_));
+            (points_[0x08][0], points_[0x08][1]) = (U512.copy(gx_), U512.copy(gy_));
 
             for (uint256 i = 0; i < 8; ++i) {
                 for (uint256 j = 0; j < 8; ++j) {
@@ -413,31 +363,31 @@ library ECDSA512 {
                         continue;
                     }
 
-                    uint256[2] memory pointTo_ = points_[(i << 3) | j];
+                    uint256 maskTo = (i << 3) | j;
 
                     if (i != 0) {
-                        uint256[2] memory pointFrom_ = points_[((i - 1) << 3) | j];
+                        uint256 maskFrom = ((i - 1) << 3) | j;
 
-                        (pointTo_[0], pointTo_[1]) = _addAffine(
+                        (points_[maskTo][0], points_[maskTo][1]) = _addAffine(
                             call_,
                             p_,
+                            two_,
                             three_,
                             a_,
-                            pointFrom_[0],
-                            pointFrom_[1],
+                            points_[maskFrom][0],
+                            points_[maskFrom][1],
                             gx_,
                             gy_
                         );
                     } else {
-                        uint256[2] memory pointFrom_ = points_[(i << 3) | (j - 1)];
-
-                        (pointTo_[0], pointTo_[1]) = _addAffine(
+                        (points_[maskTo][0], points_[maskTo][1]) = _addAffine(
                             call_,
                             p_,
+                            two_,
                             three_,
                             a_,
-                            pointFrom_[0],
-                            pointFrom_[1],
+                            points_[(i << 3) | (j - 1)][0],
+                            points_[(i << 3) | (j - 1)][1],
                             hx_,
                             hy_
                         );
@@ -450,17 +400,17 @@ library ECDSA512 {
     }
 
     /**
-     * @dev Convert 96 bytes to two 384-bit unsigned integers.
+     * @dev Convert 128 bytes to two 512-bit unsigned integers.
      */
-    function _u384FromBytes2(bytes memory bytes_) private view returns (uint256, uint256) {
+    function _u512FromBytes2(bytes memory bytes_) private view returns (uint512, uint512) {
         unchecked {
-            bytes memory lhs_ = new bytes(48);
-            bytes memory rhs_ = new bytes(48);
+            bytes memory lhs_ = new bytes(64);
+            bytes memory rhs_ = new bytes(64);
 
-            MemoryUtils.unsafeCopy(bytes_.getDataPointer(), lhs_.getDataPointer(), 48);
-            MemoryUtils.unsafeCopy(bytes_.getDataPointer() + 48, rhs_.getDataPointer(), 48);
+            MemoryUtils.unsafeCopy(bytes_.getDataPointer(), lhs_.getDataPointer(), 64);
+            MemoryUtils.unsafeCopy(bytes_.getDataPointer() + 64, rhs_.getDataPointer(), 64);
 
-            return (_U512.fromBytes(lhs_), _U512.fromBytes(rhs_));
+            return (U512.fromBytes(lhs_), U512.fromBytes(rhs_));
         }
     }
 }
