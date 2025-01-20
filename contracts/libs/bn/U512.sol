@@ -548,185 +548,24 @@ library U512 {
     function _mul(uint512 a_, uint512 b_, uint512 r_) private pure {
         unchecked {
             assembly {
-                let a0_ := shr(128, mload(a_))
-                let a1_ := and(mload(a_), 0xffffffffffffffffffffffffffffffff)
-                let a2_ := shr(128, mload(add(a_, 0x20)))
-                let a3_ := and(mload(add(a_, 0x20)), 0xffffffffffffffffffffffffffffffff)
+                let a0_ := mload(a_)
+                let a1_ := mload(add(a_, 0x20))
+                let b0_ := mload(b_)
+                let b1_ := mload(add(b_, 0x20))
 
-                let b0_ := shr(128, mload(b_))
-                let b1_ := and(mload(b_), 0xffffffffffffffffffffffffffffffff)
-                let b2_ := shr(128, mload(add(b_, 0x20)))
-                let b3_ := and(mload(add(b_, 0x20)), 0xffffffffffffffffffffffffffffffff)
+                let mm_ := mulmod(
+                    a1_,
+                    b1_,
+                    0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                )
+                let c3_ := mul(a1_, b1_)
+                let c2_ := sub(sub(mm_, c3_), lt(mm_, c3_))
 
-                // r7
-                let current_ := mul(a3_, b3_)
-                let ri_ := and(current_, 0xffffffffffffffffffffffffffffffff)
+                c2_ := add(c2_, mul(a0_, b1_))
+                c2_ := add(c2_, mul(a1_, b0_))
 
-                // r6
-                current_ := shr(128, current_)
-
-                let temp_ := mul(a3_, b2_)
-                current_ := add(current_, temp_)
-                let curry_ := lt(current_, temp_)
-
-                temp_ := mul(a2_, b3_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                mstore(add(r_, 0x20), add(shl(128, current_), ri_))
-
-                // r5
-                current_ := add(shl(128, curry_), shr(128, current_))
-                curry_ := 0
-
-                temp_ := mul(a3_, b1_)
-                current_ := add(current_, temp_)
-                curry_ := lt(current_, temp_)
-
-                temp_ := mul(a2_, b2_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                temp_ := mul(a1_, b3_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                ri_ := and(current_, 0xffffffffffffffffffffffffffffffff)
-
-                // r4
-                current_ := add(shl(128, curry_), shr(128, current_))
-                curry_ := 0
-
-                temp_ := mul(a3_, b0_)
-                current_ := add(current_, temp_)
-                curry_ := lt(current_, temp_)
-
-                temp_ := mul(a2_, b1_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                temp_ := mul(a1_, b2_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                temp_ := mul(a0_, b2_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                mstore(r_, add(shl(128, current_), ri_))
-            }
-        }
-    }
-
-    function _modmulOverflow(uint512 a_, uint512 b_, call call_) private pure {
-        unchecked {
-            assembly {
-                let a3_ := and(mload(add(a_, 0x20)), 0xffffffffffffffffffffffffffffffff)
-                let b3_ := and(mload(add(b_, 0x20)), 0xffffffffffffffffffffffffffffffff)
-
-                let a2_ := shr(128, mload(add(a_, 0x20)))
-                let b2_ := shr(128, mload(add(b_, 0x20)))
-
-                let a1_ := and(mload(a_), 0xffffffffffffffffffffffffffffffff)
-                let b1_ := and(mload(b_), 0xffffffffffffffffffffffffffffffff)
-
-                let a0_ := shr(128, mload(a_))
-                let b0_ := shr(128, mload(b_))
-
-                // r7
-                let current_ := mul(a3_, b3_)
-                let r0_ := and(current_, 0xffffffffffffffffffffffffffffffff)
-
-                // r6
-                current_ := shr(128, current_)
-
-                let temp_ := mul(a2_, b3_)
-                current_ := add(current_, temp_)
-                let curry_ := lt(current_, temp_)
-
-                temp_ := mul(a3_, b2_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                mstore(add(call_, 0xC0), add(shl(128, current_), r0_))
-
-                // r5
-                current_ := add(shl(128, curry_), shr(128, current_))
-                curry_ := 0
-
-                temp_ := mul(a1_, b3_)
-                current_ := add(current_, temp_)
-                curry_ := lt(current_, temp_)
-
-                temp_ := mul(a2_, b2_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                temp_ := mul(a3_, b1_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                r0_ := and(current_, 0xffffffffffffffffffffffffffffffff)
-
-                // r4
-                current_ := add(shl(128, curry_), shr(128, current_))
-                curry_ := 0
-
-                temp_ := mul(a0_, b3_)
-                current_ := add(current_, temp_)
-                curry_ := lt(current_, temp_)
-
-                temp_ := mul(a1_, b2_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                temp_ := mul(a2_, b1_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                temp_ := mul(a3_, b0_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                mstore(add(call_, 0xA0), add(shl(128, current_), r0_))
-
-                // r3
-                current_ := add(shl(128, curry_), shr(128, current_))
-                curry_ := 0
-
-                temp_ := mul(a2_, b0_)
-                current_ := add(current_, temp_)
-                curry_ := lt(current_, temp_)
-
-                temp_ := mul(a1_, b1_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                temp_ := mul(a0_, b2_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                r0_ := and(current_, 0xffffffffffffffffffffffffffffffff)
-
-                // r2
-                current_ := add(shl(128, curry_), shr(128, current_))
-                curry_ := 0
-
-                temp_ := mul(a0_, b1_)
-                current_ := add(current_, temp_)
-                curry_ := lt(current_, temp_)
-
-                temp_ := mul(a1_, b0_)
-                current_ := add(current_, temp_)
-                curry_ := add(curry_, lt(current_, temp_))
-
-                mstore(add(call_, 0x80), add(shl(128, current_), r0_))
-
-                // r1
-                current_ := add(shl(128, curry_), shr(128, current_))
-                current_ := add(current_, mul(a0_, b0_))
-
-                mstore(add(call_, 0x60), current_)
+                mstore(add(r_, 0x20), c3_)
+                mstore(r_, c2_)
             }
         }
     }

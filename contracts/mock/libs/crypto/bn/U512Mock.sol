@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {call} from "../../../../libs/crypto/bn/U512.sol";
-import {uint512} from "../../../../libs/crypto/bn/U512.sol";
-import {U512} from "../../../../libs/crypto/bn/U512.sol";
+import {call} from "../../../../libs/bn/U512.sol";
+import {uint512} from "../../../../libs/bn/U512.sol";
+import {U512} from "../../../../libs/bn/U512.sol";
 
 contract U512Mock {
     using U512 for *;
