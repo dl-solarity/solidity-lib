@@ -405,6 +405,8 @@ library ECDSA512 {
      */
     function _u512FromBytes2(bytes memory bytes_) private view returns (uint512, uint512) {
         unchecked {
+            assert(bytes_.length == 128);
+
             bytes memory lhs_ = new bytes(64);
             bytes memory rhs_ = new bytes(64);
 
