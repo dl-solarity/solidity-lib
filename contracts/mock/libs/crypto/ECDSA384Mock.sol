@@ -2,7 +2,8 @@
 pragma solidity ^0.8.4;
 
 import {ECDSA384} from "../../../libs/crypto/ECDSA384.sol";
-import {_U384} from "../../../libs/crypto/backend/U384.sol";
+import {uint512} from "../../../libs/bn/U512.sol";
+import {U512} from "../../../libs/bn/U512.sol";
 
 contract ECDSA384Mock {
     using ECDSA384 for *;
@@ -74,8 +75,8 @@ contract ECDSA384Mock {
     }
 
     function cmpMock() external pure returns (int256 cmp_) {
-        uint256 a_;
-        uint256 b_;
+        uint512 a_;
+        uint512 b_;
 
         assembly {
             a_ := mload(0x40)
@@ -87,6 +88,6 @@ contract ECDSA384Mock {
             mstore(0x40, add(b_, 0x40))
         }
 
-        return _U384.cmp(a_, b_);
+        return U512.cmp(a_, b_);
     }
 }
