@@ -9,7 +9,7 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
  * @notice Cryptography module
  *
  * This library provides functionality for ECDSA verification over any 512-bit curve. Currently,
- * this is the most efficient implementation out there, consuming ~20.2 million gas per call.
+ * this is the most efficient implementation out there, consuming ~20.1 million gas per call.
  *
  * The approach is Strauss-Shamir double scalar multiplication with 6 bits of precompute + affine coordinates.
  */

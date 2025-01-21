@@ -9,7 +9,7 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
  * @notice Cryptography module
  *
  * This library provides functionality for ECDSA verification over any 384-bit curve. Currently,
- * this is the most efficient implementation out there, consuming ~14.1 million gas per call.
+ * this is the most efficient implementation out there, consuming ~13.86 million gas per call.
  *
  * The approach is Strauss-Shamir double scalar multiplication with 6 bits of precompute + affine coordinates.
  */
@@ -188,15 +188,40 @@ library ECDSA384 {
             uint256 mask1_;
             uint256 mask2_;
 
-            for (uint256 bit = 3; bit <= 384; bit += 3) {
-                mask1_ = _getWord(scalar1_, 384 - bit);
-                mask2_ = _getWord(scalar2_, 384 - bit);
+            for (uint256 bit = 3; bit <= 386; ) {
+                if (bit <= 384) {
+                    mask1_ = _getWord(scalar1_, 384 - bit);
+                    mask2_ = _getWord(scalar2_, 384 - bit);
+
+                    if ((mask1_ >> 2) == 0 && (mask2_ >> 2) == 0) {
+                        (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                        ++bit;
+                        continue;
+                    }
+
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+
+                    bit += 3;
+                } else if (bit == 385) {
+                    mask1_ = _getWord(scalar1_, 0) & 0x03;
+                    mask2_ = _getWord(scalar2_, 0) & 0x03;
+
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+
+                    bit += 2;
+                } else {
+                    mask1_ = _getWord(scalar1_, 0) & 0x01;
+                    mask2_ = _getWord(scalar2_, 0) & 0x01;
+
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+
+                    ++bit;
+                }
 
                 mask_ = (mask1_ << 3) | mask2_;
-
-                (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
-                (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
-                (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
 
                 if (mask_ != 0) {
                     (x_, y_) = _addAffine(
