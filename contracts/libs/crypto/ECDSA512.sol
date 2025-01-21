@@ -8,7 +8,7 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
 /**
  * @notice Cryptography module
  *
- * This library provides functionality for ECDSA verification over any 384-bit curve. Currently,
+ * This library provides functionality for ECDSA verification over any 512-bit curve. Currently,
  * this is the most efficient implementation out there, consuming ~8.025 million gas per call.
  *
  * The approach is Strauss-Shamir double scalar multiplication with 6 bits of precompute + affine coordinates.
@@ -206,10 +206,11 @@ library ECDSA512 {
 
                 mask_ = (mask1_ << 3) | mask2_;
 
+                (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+
                 if (mask_ != 0) {
-                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
-                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
-                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
                     (x_, y_) = _addAffine(
                         call_,
                         p_,
