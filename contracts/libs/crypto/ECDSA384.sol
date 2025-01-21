@@ -195,8 +195,9 @@ library ECDSA384 {
 
                 mask_ = (mask1_ << 3) | mask2_;
 
+                (x_, y_) = _twice3Affine(call_, p_, three_, a_, x_, y_);
+
                 if (mask_ != 0) {
-                    (x_, y_) = _twice3Affine(call_, p_, three_, a_, x_, y_);
                     (x_, y_) = _addAffine(
                         call_,
                         p_,

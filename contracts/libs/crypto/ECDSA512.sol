@@ -9,18 +9,15 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
  * @notice Cryptography module
  *
  * This library provides functionality for ECDSA verification over any 512-bit curve. Currently,
- * this is the most efficient implementation out there, consuming ~8.025 million gas per call.
+ * this is the most efficient implementation out there, consuming ~20.2 million gas per call.
  *
  * The approach is Strauss-Shamir double scalar multiplication with 6 bits of precompute + affine coordinates.
- * For reference, naive implementation uses ~400 billion gas, which is 50000 times more expensive.
- *
- * We also tried using projective coordinates, however, the gas consumption rose to ~9 million gas.
  */
 library ECDSA512 {
     using MemoryUtils for *;
 
     /**
-     * @notice 384-bit curve parameters.
+     * @notice 512-bit curve parameters.
      */
     struct Parameters {
         bytes a;
@@ -51,7 +48,7 @@ library ECDSA512 {
 
     /**
      * @notice The function to verify the ECDSA signature
-     * @param curveParams_ the 384-bit curve parameters. `lowSmax` is `n / 2`.
+     * @param curveParams_ the 512-bit curve parameters. `lowSmax` is `n / 2`.
      * @param hashedMessage_ the already hashed message to be verified.
      * @param signature_ the ECDSA signature. Equals to `bytes(r) + bytes(s)`.
      * @param pubKey_ the full public key of a signer. Equals to `bytes(x) + bytes(y)`.
