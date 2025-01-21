@@ -162,11 +162,11 @@ library ECDSA512 {
             uint512 rhs_ = U512.modexp(call_, x_, U512.fromUint256(3), p_);
 
             if (!U512.eqUint256(a_, 0)) {
-                rhs_ = U512.modadd(call_, rhs_, U512.modmul(call_, x_, a_, p_), p_); // x^3 + a*x
+                rhs_ = U512.redadd(call_, rhs_, U512.modmul(call_, x_, a_, p_), p_); // x^3 + a*x
             }
 
             if (!U512.eqUint256(b_, 0)) {
-                rhs_ = U512.modadd(call_, rhs_, b_, p_); // x^3 + a*x + b
+                rhs_ = U512.redadd(call_, rhs_, b_, p_); // x^3 + a*x + b
             }
 
             return U512.eq(lhs_, rhs_);
@@ -279,18 +279,18 @@ library ECDSA512 {
 
             uint512 m1_ = U512.modexp(call_, x1_, two_, p_);
             U512.modmulAssign(call_, m1_, three_, p_);
-            U512.modaddAssign(call_, m1_, a_, p_);
+            U512.redaddAssign(call_, m1_, a_, p_);
 
             uint512 m2_ = U512.modmul(call_, y1_, two_, p_);
             U512.moddivAssign(call_, m1_, m2_, p_);
 
             x2_ = U512.modexp(call_, m1_, two_, p_);
-            U512.modsubAssign(call_, x2_, x1_, p_);
-            U512.modsubAssign(call_, x2_, x1_, p_);
+            U512.redsubAssign(call_, x2_, x1_, p_);
+            U512.redsubAssign(call_, x2_, x1_, p_);
 
-            y2_ = U512.modsub(call_, x1_, x2_, p_);
+            y2_ = U512.redsub(call_, x1_, x2_, p_);
             U512.modmulAssign(call_, y2_, m1_, p_);
-            U512.modsubAssign(call_, y2_, y1_, p_);
+            U512.redsubAssign(call_, y2_, y1_, p_);
         }
     }
 
@@ -328,18 +328,18 @@ library ECDSA512 {
                 return (x3, y3);
             }
 
-            uint512 m1_ = U512.modsub(call_, y1_, y2_, p_);
-            uint512 m2_ = U512.modsub(call_, x1_, x2_, p_);
+            uint512 m1_ = U512.redsub(call_, y1_, y2_, p_);
+            uint512 m2_ = U512.redsub(call_, x1_, x2_, p_);
 
             U512.moddivAssign(call_, m1_, m2_, p_);
 
             x3 = U512.modexp(call_, m1_, two_, p_);
-            U512.modsubAssign(call_, x3, x1_, p_);
-            U512.modsubAssign(call_, x3, x2_, p_);
+            U512.redsubAssign(call_, x3, x1_, p_);
+            U512.redsubAssign(call_, x3, x2_, p_);
 
-            y3 = U512.modsub(call_, x1_, x3, p_);
+            y3 = U512.redsub(call_, x1_, x3, p_);
             U512.modmulAssign(call_, y3, m1_, p_);
-            U512.modsubAssign(call_, y3, y1_, p_);
+            U512.redsubAssign(call_, y3, y1_, p_);
         }
     }
 

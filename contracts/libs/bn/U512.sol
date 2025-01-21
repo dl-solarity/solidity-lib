@@ -263,6 +263,37 @@ library U512 {
         }
     }
 
+    function redadd(
+        call call_,
+        uint512 a_,
+        uint512 b_,
+        uint512 m_
+    ) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _redadd(call_, a_, b_, m_, r_);
+        }
+    }
+
+    function redaddAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal pure {
+        unchecked {
+            _redadd(call_, a_, b_, m_, a_);
+        }
+    }
+
+    function redaddAssignTo(
+        call call_,
+        uint512 a_,
+        uint512 b_,
+        uint512 m_,
+        uint512 to_
+    ) internal pure {
+        unchecked {
+            _redadd(call_, a_, b_, m_, to_);
+        }
+    }
+
     function modsub(
         call call_,
         uint512 a_,
@@ -311,6 +342,37 @@ library U512 {
     function subAssignTo(uint512 a_, uint512 b_, uint512 to_) internal pure {
         unchecked {
             _sub(a_, b_, to_);
+        }
+    }
+
+    function redsub(
+        call call_,
+        uint512 a_,
+        uint512 b_,
+        uint512 m_
+    ) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _redsub(call_, a_, b_, m_, r_);
+        }
+    }
+
+    function redsubAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal pure {
+        unchecked {
+            _redsub(call_, a_, b_, m_, a_);
+        }
+    }
+
+    function redsubAssignTo(
+        call call_,
+        uint512 a_,
+        uint512 b_,
+        uint512 m_,
+        uint512 to_
+    ) internal pure {
+        unchecked {
+            _redsub(call_, a_, b_, m_, to_);
         }
     }
 
@@ -464,12 +526,12 @@ library U512 {
                 let aWord_ := mload(add(a_, 0x20))
                 let sum_ := add(aWord_, mload(add(b_, 0x20)))
 
-                mstore(r_, sum_)
+                mstore(add(r_, 0x20), sum_)
 
                 sum_ := gt(aWord_, sum_)
                 sum_ := add(sum_, add(mload(a_), mload(b_)))
 
-                mstore(add(r_, 0x20), sum_)
+                mstore(r_, sum_)
             }
         }
     }
@@ -496,6 +558,36 @@ library U512 {
                 mstore(add(call_, 0x0100), mload(add(m_, 0x20)))
 
                 pop(staticcall(gas(), 0x5, call_, 0x0120, r_, 0x40))
+            }
+        }
+    }
+
+    function _redadd(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private pure {
+        unchecked {
+            uint512 buffer_ = _buffer(call_);
+            bool overflowed_;
+
+            assembly {
+                let aWord_ := mload(add(a_, 0x20))
+                let sum_ := add(aWord_, mload(add(b_, 0x20)))
+
+                mstore(add(buffer_, 0x20), sum_)
+
+                sum_ := gt(aWord_, sum_)
+                sum_ := add(sum_, add(mload(a_), mload(b_)))
+
+                mstore(buffer_, sum_)
+                overflowed_ := gt(mload(a_), sum_)
+            }
+
+            if (overflowed_ || cmp(buffer_, m_) >= 0) {
+                _sub(buffer_, m_, r_);
+                return;
+            }
+
+            assembly {
+                mstore(r_, mload(buffer_))
+                mstore(add(r_, 0x20), mload(add(buffer_, 0x20)))
             }
         }
     }
@@ -542,6 +634,20 @@ library U512 {
             if (cmp_ < 0) {
                 _sub(m_, r_, r_);
             }
+        }
+    }
+
+    function _redsub(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private pure {
+        unchecked {
+            if (cmp(a_, b_) >= 0) {
+                _sub(a_, b_, r_);
+                return;
+            }
+
+            uint512 buffer_ = _buffer(call_);
+
+            _add(a_, m_, buffer_);
+            _sub(buffer_, b_, r_);
         }
     }
 
