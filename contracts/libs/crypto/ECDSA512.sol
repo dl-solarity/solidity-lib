@@ -188,24 +188,40 @@ library ECDSA512 {
             uint256 mask1_;
             uint256 mask2_;
 
-            // skip first two bits
-            assembly {
-                mask1_ := shr(254, mload(scalar1_))
-                mask2_ := shr(254, mload(scalar2_))
-                mask_ := or(shl(3, mask1_), mask2_)
-            }
+            for (uint256 bit = 3; bit <= 514; ) {
+                if (bit <= 512) {
+                    mask1_ = _getWord(scalar1_, 512 - bit);
+                    mask2_ = _getWord(scalar2_, 512 - bit);
 
-            (x_, y_) = (U512.copy(points_[mask_][0]), U512.copy(points_[mask_][1]));
+                    if ((mask1_ >> 2) == 0 && (mask2_ >> 2) == 0) {
+                        (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                        ++bit;
+                        continue;
+                    }
 
-            for (uint256 bit = 5; bit <= 512; bit += 3) {
-                mask1_ = _getWord(scalar1_, 512 - bit);
-                mask2_ = _getWord(scalar2_, 512 - bit);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+
+                    bit += 3;
+                } else if (bit == 513) {
+                    mask1_ = _getWord(scalar1_, 0) & 0x03;
+                    mask2_ = _getWord(scalar2_, 0) & 0x03;
+
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+
+                    bit += 2;
+                } else {
+                    mask1_ = _getWord(scalar1_, 0) & 0x01;
+                    mask2_ = _getWord(scalar2_, 0) & 0x01;
+
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+
+                    ++bit;
+                }
 
                 mask_ = (mask1_ << 3) | mask2_;
-
-                (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
-                (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
-                (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
 
                 if (mask_ != 0) {
                     (x_, y_) = _addAffine(
