@@ -19,7 +19,7 @@ describe("ECDSA512", () => {
 
   afterEach(reverter.revert);
 
-  describe.only("brainpoolP512r1", () => {
+  describe("brainpoolP512r1", () => {
     const signature =
       "0x0bd2593447cc6c02caf99d60418dd42e9a194c910e6755ed0c7059acac656b04ccfe1e8348462ee43066823aee2fed7ca012e9890dfb69866d7ae88b6506f9c744b42304e693796618d090dbcb2a2551c3cb78534611e61fd9d1a5c0938b5b8ec6ed53d2d28999eabbd8e7792d167fcf582492403a6a0f7cc94c73a28fb76b71";
     const pubKey =

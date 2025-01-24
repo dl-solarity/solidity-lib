@@ -4,7 +4,7 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import { U512Mock } from "@ethers-v6";
 
-describe.only("U512", () => {
+describe("U512", () => {
   const reverter = new Reverter();
 
   const prime = 76884956397045344220809746629001649092737531784414529538755519063063536359079n;

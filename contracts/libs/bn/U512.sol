@@ -12,12 +12,21 @@ library U512 {
     uint256 private constant _BYTES_ALLOCATION = 96;
     uint256 private constant _CALL_ALLOCATION = 384;
 
+    /**
+     * @notice Initializes a memory pointer for precompile call arguments.
+     * @return call_ A memory pointer for precompile operations.
+     */
     function initCall() internal pure returns (call call_) {
         unchecked {
             call_ = call.wrap(_allocate(_CALL_ALLOCATION));
         }
     }
 
+    /**
+     * @notice Converts a 256-bit unsigned integer to a 512-bit unsigned integer.
+     * @param u256_ The 256-bit unsigned integer to convert.
+     * @return u512_ The 512-bit representation of the input.
+     */
     function fromUint256(uint256 u256_) internal pure returns (uint512 u512_) {
         unchecked {
             u512_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
@@ -29,6 +38,12 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Converts a byte array to a 512-bit unsigned integer.
+     * @dev The byte array must be less than 65 bytes.
+     * @param bytes_ The byte array to convert.
+     * @return u512_ The 512-bit representation of the byte array.
+     */
     function fromBytes(bytes memory bytes_) internal view returns (uint512 u512_) {
         unchecked {
             assert(bytes_.length < 65);
@@ -54,6 +69,11 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Copies a 512-bit unsigned integer to a new memory location.
+     * @param u512_ The 512-bit unsigned integer to copy.
+     * @return u512Copy_ A pointer to the new copy of the 512-bit unsigned integer.
+     */
     function copy(uint512 u512_) internal pure returns (uint512 u512Copy_) {
         unchecked {
             u512Copy_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
@@ -65,6 +85,11 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Converts a 512-bit unsigned integer to a byte array.
+     * @param u512_ The 512-bit unsigned integer to convert.
+     * @return bytes_ A byte array representation of the 512-bit unsigned integer.
+     */
     function toBytes(uint512 u512_) internal pure returns (bytes memory bytes_) {
         unchecked {
             uint256 handler_ = _allocate(_BYTES_ALLOCATION);
@@ -79,6 +104,11 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Checks if a uint512 pointer is null.
+     * @param u512_ The uint512 pointer to check.
+     * @return isNull_ True if the pointer is null, false otherwise.
+     */
     function isNull(uint512 u512_) internal pure returns (bool isNull_) {
         unchecked {
             assembly {
@@ -87,6 +117,12 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Compares two 512-bit unsigned integers for equality.
+     * @param a_ The first 512-bit unsigned integer.
+     * @param b_ The second 512-bit unsigned integer.
+     * @return eq_ True if the integers are equal, false otherwise.
+     */
     function eq(uint512 a_, uint512 b_) internal pure returns (bool eq_) {
         unchecked {
             assembly {
@@ -98,6 +134,12 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Compares a 512-bit unsigned integer with a 256-bit unsigned integer for equality.
+     * @param a_ The 512-bit unsigned integer.
+     * @param u256_ The 256-bit unsigned integer.
+     * @return eq_ True if the integers are equal, false otherwise.
+     */
     function eqUint256(uint512 a_, uint256 u256_) internal pure returns (bool eq_) {
         unchecked {
             assembly {
@@ -106,6 +148,12 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Compares two 512-bit unsigned integers.
+     * @param a_ The first 512-bit unsigned integer.
+     * @param b_ The second 512-bit unsigned integer.
+     * @return 1 if `a_ > b_`, -1 if `a_ < b_`, and 0 if they are equal.
+     */
     function cmp(uint512 a_, uint512 b_) internal pure returns (int256) {
         unchecked {
             uint256 aWord_;
@@ -141,6 +189,13 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular arithmetic on 512-bit integers.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The dividend.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular operation `(a_ % m_)`.
+     */
     function mod(call call_, uint512 a_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
@@ -149,18 +204,41 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular assignment on a 512-bit unsigned integer.
+     * @dev Updates the value of `a_` to `(a_ % m_)`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The dividend.
+     * @param m_ The modulus.
+     */
     function modAssign(call call_, uint512 a_, uint512 m_) internal view {
         unchecked {
             _mod(call_, a_, m_, a_);
         }
     }
 
+    /**
+     * @notice Performs modular assignment and stores the result in a separate 512-bit unsigned integer.
+     * @dev Assigns the result `(a_ % m_)` to `to_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The dividend.
+     * @param m_ The modulus.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function modAssignTo(call call_, uint512 a_, uint512 m_, uint512 to_) internal view {
         unchecked {
             _mod(call_, a_, m_, to_);
         }
     }
 
+    /**
+     * @notice Computes the modular inverse of a 512-bit unsigned integer.
+     * @dev Warning: The modulus `m_` must be a prime number
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The 512-bit unsigned integer to invert.
+     * @param m_ The modulus.
+     * @return r_ The modular inverse result `a_^(-1) % m_`.
+     */
     function modinv(call call_, uint512 a_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
@@ -169,18 +247,43 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs the modular inverse assignment on a 512-bit unsigned integer.
+     * @dev Warning: The modulus `m_` must be a prime number
+     * @dev Updates the value of `a_` to `a_^(-1) % m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The 512-bit unsigned integer to invert.
+     * @param m_ The modulus.
+     */
     function modinvAssign(call call_, uint512 a_, uint512 m_) internal view {
         unchecked {
             _modinv(call_, a_, m_, a_);
         }
     }
 
+    /**
+     * @notice Computes the modular inverse and stores it in a separate 512-bit unsigned integer.
+     * @dev Warning: The modulus `m_` must be a prime number
+     * @dev Assigns the result of `a_^(-1) % m_` to `to_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The 512-bit unsigned integer to invert.
+     * @param m_ The modulus.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function modinvAssignTo(call call_, uint512 a_, uint512 m_, uint512 to_) internal view {
         unchecked {
             _modinv(call_, a_, m_, to_);
         }
     }
 
+    /**
+     * @notice Performs modular exponentiation on 512-bit unsigned integers.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param b_ The base.
+     * @param e_ The exponent.
+     * @param m_ The modulus.
+     * @return r_ The result of modular exponentiation `(b_^e_) % m_`.
+     */
     function modexp(
         call call_,
         uint512 b_,
@@ -194,12 +297,29 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular exponentiation assignment on the base.
+     * @dev Updates the value of `b_` to `(b_^e_) % m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param b_ The base.
+     * @param e_ The exponent.
+     * @param m_ The modulus.
+     */
     function modexpAssign(call call_, uint512 b_, uint512 e_, uint512 m_) internal view {
         unchecked {
             _modexp(call_, b_, e_, m_, b_);
         }
     }
 
+    /**
+     * @notice Performs modular exponentiation and stores the result in a separate 512-bit unsigned integer.
+     * @dev Assigns the result of `(b_^e_) % m_` to `to_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param b_ The base.
+     * @param e_ The exponent.
+     * @param m_ The modulus.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function modexpAssignTo(
         call call_,
         uint512 b_,
@@ -212,6 +332,14 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Adds two 512-bit unsigned integers under a modulus.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The first addend.
+     * @param b_ The second addend.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular addition `(a_ + b_) % m_`.
+     */
     function modadd(
         call call_,
         uint512 a_,
@@ -225,12 +353,29 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular addition assignment on the first 512-bit unsigned integer addend.
+     * @dev Updates the value of `a_` to `(a_ + b_) % m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The first addend.
+     * @param b_ The second addend.
+     * @param m_ The modulus.
+     */
     function modaddAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
         unchecked {
             _modadd(call_, a_, b_, m_, a_);
         }
     }
 
+    /**
+     * @notice Performs modular addition and stores the result in a separate 512-bit unsigned integer.
+     * @dev Assigns the result of `(a_ + b_) % m_` to `to_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The first addend.
+     * @param b_ The second addend.
+     * @param m_ The modulus.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function modaddAssignTo(
         call call_,
         uint512 a_,
@@ -243,6 +388,12 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Adds two 512-bit unsigned integers.
+     * @param a_ The first addend.
+     * @param b_ The second addend.
+     * @return r_ The result of the addition.
+     */
     function add(uint512 a_, uint512 b_) internal pure returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
@@ -251,18 +402,40 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs addition assignment on the first 512-bit unsigned addend.
+     * @dev Updates the value of `a_` to `a_ + b_`.
+     * @param a_ The first addend.
+     * @param b_ The second addend.
+     */
     function addAssign(uint512 a_, uint512 b_) internal pure {
         unchecked {
             _add(a_, b_, a_);
         }
     }
 
+    /**
+     * @notice Performs addition and stores the result in a separate 512-bit unsigned integer.
+     * @dev Assigns the result of `a_ + b_` to `to_`.
+     * @param a_ The first addend.
+     * @param b_ The second addend.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function addAssignTo(uint512 a_, uint512 b_, uint512 to_) internal pure {
         unchecked {
             _add(a_, b_, to_);
         }
     }
 
+    /**
+     * @notice Adds two 512-bit unsigned integers under a modulus.
+     * @dev This is an optimized version of `modadd` where the inputs must be pre-reduced by `m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The first addend, reduced by `m_`.
+     * @param b_ The second addend, reduced by `m_`.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular addition `(a_ + b_) % m_`.
+     */
     function redadd(
         call call_,
         uint512 a_,
@@ -276,12 +449,29 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular addition assignment on the first 512-bit unsigned integer addend.
+     * @dev This is an optimized version of `modaddAssign` where the inputs must be pre-reduced by `m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The first addend, reduced by `m_`.
+     * @param b_ The second addend, reduced by `m_`.
+     * @param m_ The modulus.
+     */
     function redaddAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal pure {
         unchecked {
             _redadd(call_, a_, b_, m_, a_);
         }
     }
 
+    /**
+     * @notice Performs modular addition and stores the result in a separate 512-bit unsigned integer.
+     * @dev This is an optimized version of `modaddAssignTo` where the inputs must be pre-reduced by `m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The first addend, reduced by `m_`.
+     * @param b_ The second addend, reduced by `m_`.
+     * @param m_ The modulus.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function redaddAssignTo(
         call call_,
         uint512 a_,
@@ -294,6 +484,14 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Subtracts one 512-bit unsigned integer from another under a modulus.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The minuend.
+     * @param b_ The subtrahend.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular subtraction `(a_ - b_) % m_`.
+     */
     function modsub(
         call call_,
         uint512 a_,
@@ -307,12 +505,27 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular subtraction assignment on the 512-bit unsigned integer minuend.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The minuend.
+     * @param b_ The subtrahend.
+     * @param m_ The modulus.
+     */
     function modsubAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
         unchecked {
             _modsub(call_, a_, b_, m_, a_);
         }
     }
 
+    /**
+     * @notice Performs modular subtraction and stores the result in a separate 512-bit unsigned integer.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The minuend.
+     * @param b_ The subtrahend.
+     * @param m_ The modulus.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function modsubAssignTo(
         call call_,
         uint512 a_,
@@ -325,6 +538,12 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Subtracts one 512-bit unsigned integer from another.
+     * @param a_ The minuend.
+     * @param b_ The subtrahend.
+     * @return r_ The result of the subtraction.
+     */
     function sub(uint512 a_, uint512 b_) internal pure returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
@@ -333,18 +552,40 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs subtraction assignment on the 512-bit unsigned minuend.
+     * @dev Updates the value of `a_` to `a_ - b_`.
+     * @param a_ The minuend.
+     * @param b_ The subtrahend.
+     */
     function subAssign(uint512 a_, uint512 b_) internal pure {
         unchecked {
             _sub(a_, b_, a_);
         }
     }
 
+    /**
+     * @notice Performs subtraction and stores the result in a separate 512-bit unsigned integer.
+     * @dev Assigns the result of `a_ - b_` to `to_`.
+     * @param a_ The minuend.
+     * @param b_ The subtrahend.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function subAssignTo(uint512 a_, uint512 b_, uint512 to_) internal pure {
         unchecked {
             _sub(a_, b_, to_);
         }
     }
 
+    /**
+     * @notice Subtracts one 512-bit unsigned integer from another under a modulus.
+     * @dev This is an optimized version of `modsub` where the inputs must be pre-reduced by `m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The minuend, reduced by `m_`.
+     * @param b_ The subtrahend, reduced by `m_`.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular subtraction `(a_ - b_) % m_`.
+     */
     function redsub(
         call call_,
         uint512 a_,
@@ -358,12 +599,29 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular subtraction assignment on the 512-bit unsigned integer minuend.
+     * @dev This is an optimized version of `modsubAssign` where the inputs must be pre-reduced by `m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The minuend, reduced by `m_`.
+     * @param b_ The subtrahend, reduced by `m_`.
+     * @param m_ The modulus.
+     */
     function redsubAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal pure {
         unchecked {
             _redsub(call_, a_, b_, m_, a_);
         }
     }
 
+    /**
+     * @notice Performs modular subtraction and stores the result in a separate 512-bit unsigned integer.
+     * @dev This is an optimized version of `modsubAssignTo` where the inputs must be pre-reduced by `m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The minuend, reduced by `m_`.
+     * @param b_ The subtrahend, reduced by `m_`.
+     * @param m_ The modulus.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function redsubAssignTo(
         call call_,
         uint512 a_,
@@ -376,6 +634,14 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Multiplies two 512-bit unsigned integers under a modulus.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The first factor.
+     * @param b_ The second factor.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular multiplication `(a_ * b_) % m_`.
+     */
     function modmul(
         call call_,
         uint512 a_,
@@ -389,12 +655,29 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular multiplication assignment on the first 512-bit unsigned integer factor.
+     * @dev Updates the value of `a_` to `(a_ * b_) % m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The first factor.
+     * @param b_ The second factor.
+     * @param m_ The modulus.
+     */
     function modmulAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
         unchecked {
             _modmul(call_, a_, b_, m_, a_);
         }
     }
 
+    /**
+     * @notice Performs modular multiplication and stores the result in a separate 512-bit unsigned integer.
+     * @dev Assigns the result of `(a_ * b_) % m_` to `to_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The first factor.
+     * @param b_ The second factor.
+     * @param m_ The modulus.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function modmulAssignTo(
         call call_,
         uint512 a_,
@@ -407,6 +690,12 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Multiplies two 512-bit unsigned integers.
+     * @param a_ The first factor.
+     * @param b_ The second factor.
+     * @return r_ The result of the multiplication.
+     */
     function mul(uint512 a_, uint512 b_) internal pure returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
@@ -415,18 +704,41 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs multiplication assignment on the first 512-bit unsigned factor.
+     * @dev Updates the value of `a_` to `a_ * b_`.
+     * @param a_ The first factor.
+     * @param b_ The second factor.
+     */
     function mulAssign(uint512 a_, uint512 b_) internal pure {
         unchecked {
             _mul(a_, b_, a_);
         }
     }
 
+    /**
+     * @notice Performs multiplication and stores the result in a separate 512-bit unsigned integer.
+     * @dev Assigns the result of `a_ * b_` to `to_`.
+     * @param a_ The first factor.
+     * @param b_ The second factor.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function mulAssignTo(uint512 a_, uint512 b_, uint512 to_) internal pure {
         unchecked {
             _mul(a_, b_, to_);
         }
     }
 
+    /**
+     * @notice Divides two 512-bit unsigned integers under a modulus.
+     * @dev Warning: The modulus `m_` must be a prime number.
+     * @dev Returns the result of `(a_ * b_^(-1)) % m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The dividend.
+     * @param b_ The divisor.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular division.
+     */
     function moddiv(
         call call_,
         uint512 a_,
@@ -440,12 +752,31 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs the modular division assignment on a 512-bit unsigned dividend.
+     * @dev Warning: The modulus `m_` must be a prime number.
+     * @dev Updates the value of `a_` to `(a_ * b_^(-1)) % m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The dividend.
+     * @param b_ The divisor.
+     * @param m_ The modulus.
+     */
     function moddivAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
         unchecked {
             _moddiv(call_, a_, b_, m_, a_);
         }
     }
 
+    /**
+     * @notice Performs the modular division and stores the result in a separate 512-bit unsigned integer.
+     * @dev Warning: The modulus `m_` must be a prime number.
+     * @dev Assigns the result of `(a_ * b_^(-1)) % m_` to `to_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param a_ The dividend.
+     * @param b_ The divisor.
+     * @param m_ The modulus.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
     function moddivAssignTo(
         call call_,
         uint512 a_,
@@ -458,6 +789,10 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular arithmetic using the EVM precompiled contract.
+     * @dev Computes `(a_ % m_)` and stores the result in `r_`.
+     */
     function _mod(call call_, uint512 a_, uint512 m_, uint512 r_) private view {
         unchecked {
             assembly {
@@ -475,6 +810,10 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular exponentiation using the EVM precompiled contract.
+     * @dev Computes `(a_^e_) % m_` and stores the result in `r_`.
+     */
     function _modexp(call call_, uint512 a_, uint512 e_, uint512 m_, uint512 r_) private view {
         unchecked {
             assembly {
@@ -493,6 +832,11 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Computes the modular inverse using the EVM precompiled contract.
+     * @dev The modulus `m_` must be a prime number.
+     * @dev Computes `a_^(-1) % m_` and stores the result in `r_`.
+     */
     function _modinv(call call_, uint512 a_, uint512 m_, uint512 r_) private view {
         unchecked {
             uint512 buffer_ = _buffer(call_);
@@ -520,6 +864,10 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs addition of two 512-bit unsigned integers.
+     * @dev Computes `a_ + b_` and stores the result in `r_`.
+     */
     function _add(uint512 a_, uint512 b_, uint512 r_) private pure {
         unchecked {
             assembly {
@@ -536,6 +884,10 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular addition using the EVM precompiled contract.
+     * @dev Computes `(a_ + b_) % m_` and stores the result in `r_`.
+     */
     function _modadd(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
         unchecked {
             assembly {
@@ -562,6 +914,10 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs reduced modular addition of two 512-bit unsigned integers.
+     * @dev Computes `(a_ + b_) % m_` assuming `a_` and `b_` are already reduced by `m_`.
+     */
     function _redadd(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private pure {
         unchecked {
             uint512 buffer_ = _buffer(call_);
@@ -592,6 +948,10 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs subtraction of two 512-bit unsigned integers.
+     * @dev Computes `a_ - b_` and stores the result in `r_`.
+     */
     function _sub(uint512 a_, uint512 b_, uint512 r_) private pure {
         unchecked {
             assembly {
@@ -608,6 +968,10 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular subtraction using the EVM precompiled contract.
+     * @dev Computes `(a_ - b_) % m_` and stores the result in `r_`.
+     */
     function _modsub(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
         unchecked {
             int cmp_ = cmp(a_, b_);
@@ -637,6 +1001,10 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs reduced modular subtraction of two 512-bit unsigned integers.
+     * @dev Computes `(a_ - b_) % m_` assuming `a_` and `b_` are already reduced by `m_`.
+     */
     function _redsub(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private pure {
         unchecked {
             if (cmp(a_, b_) >= 0) {
@@ -651,6 +1019,10 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Multiplies two 512-bit unsigned integers.
+     * @dev Computes `a_ * b_` and stores the result in `r_`.
+     */
     function _mul(uint512 a_, uint512 b_, uint512 r_) private pure {
         unchecked {
             assembly {
@@ -676,6 +1048,10 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Prepares intermediate results for modular multiplication.
+     * @dev Calculates partial products and stores them in `call_` for further processing.
+     */
     function _modmul2p(call call_, uint512 a_, uint512 b_) private pure {
         unchecked {
             assembly {
@@ -738,6 +1114,10 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Performs modular multiplication using the EVM precompiled contract.
+     * @dev Computes `(a_ * b_) % m_` and stores the result in `r_`.
+     */
     function _modmul(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
         unchecked {
             _modmul2p(call_, a_, b_);
@@ -755,6 +1135,11 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Computes the modular division using the EVM precompiled contract.
+     * @dev The modulus `m_` must be a prime number.
+     * @dev Computes `(a_ * b_^(-1)) % m_` and stores the result in `r_`.
+     */
     function _moddiv(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) internal view {
         unchecked {
             uint512 buffer_ = _buffer(call_);
@@ -775,6 +1160,9 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Calculates a memory pointer for a buffer based on the provided `call_` pointer.
+     */
     function _buffer(call call_) private pure returns (uint512 buffer_) {
         unchecked {
             assembly {
@@ -783,6 +1171,9 @@ library U512 {
         }
     }
 
+    /**
+     * @notice Allocates a specified amount of memory and updates the free memory pointer.
+     */
     function _allocate(uint256 bytes_) private pure returns (uint256 handler_) {
         unchecked {
             assembly {

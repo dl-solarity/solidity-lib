@@ -12,7 +12,7 @@ contract U512Mock {
         uint256 u256_
     )
         external
-        view
+        pure
         returns (
             uint512 pointerOriginal_,
             uint512 pointerCopy_,
@@ -27,7 +27,7 @@ contract U512Mock {
         valueCopy_ = U512.toBytes(pointerCopy_);
     }
 
-    function isNull(uint512 pointer_) external view returns (bool isNull_) {
+    function isNull(uint512 pointer_) external pure returns (bool isNull_) {
         return U512.isNull(pointer_);
     }
 
