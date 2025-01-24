@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.19;
 
 type uint512 is uint256;
 type call is uint256;
@@ -1183,3 +1183,22 @@ library U512 {
         }
     }
 }
+
+// Operator overloading pure functions
+function add(uint512 a_, uint512 b_) pure returns (uint512 r_) {
+    return U512.add(a_, b_);
+}
+
+function sub(uint512 a_, uint512 b_) pure returns (uint512 r_) {
+    return U512.sub(a_, b_);
+}
+
+function mul(uint512 a_, uint512 b_) pure returns (uint512 r_) {
+    return U512.mul(a_, b_);
+}
+
+function eq(uint512 a_, uint512 b_) pure returns (bool eq_) {
+    return U512.eq(a_, b_);
+}
+
+using {add as +, sub as -, mul as *, eq as ==} for uint512 global;
