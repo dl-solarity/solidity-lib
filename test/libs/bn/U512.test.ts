@@ -108,6 +108,17 @@ describe("U512", () => {
     return toBytes((((aBn - bBn) % mBn) + mBn) % mBn);
   }
 
+  function moddiv(a: string, b: string, m: string) {
+    const aBigInt = ethers.toBigInt(a);
+    const mBigInt = ethers.toBigInt(m);
+
+    const bInv = modinv(b, m);
+
+    const result = (aBigInt * ethers.toBigInt(bInv)) % mBigInt;
+
+    return toBytes(result);
+  }
+
   before(async () => {
     const U512Mock = await ethers.getContractFactory("U512Mock");
 
@@ -303,15 +314,14 @@ describe("U512", () => {
   it("moddiv test", async () => {
     const m = toBytes(prime);
 
-    const a = toBytes(779149564533142355434093157610126726613246737199n);
-    const b = toBytes(29118654464229156312755475164902924590603964377702716942232927993582928167089n);
+    for (let i = 0; i < 100; ++i) {
+      const a = randomU512();
+      const b = randomU512();
+      const to = randomU512();
 
-    const to = randomU512();
-
-    const expected = toBytes(30823410400962253491978005949535646087432096635784775122170630924100507445065n);
-
-    expect(await u512.moddiv(a, b, m)).to.equal(expected);
-    expect(await u512.moddivAssign(a, b, m)).to.equal(expected);
-    expect(await u512.moddivAssignTo(a, b, m, to)).to.equal(expected);
+      expect(await u512.moddiv(a, b, m)).to.be.equal(moddiv(a, b, m));
+      expect(await u512.moddivAssign(a, b, m)).to.be.equal(moddiv(a, b, m));
+      expect(await u512.moddivAssignTo(a, b, m, to)).to.be.equal(moddiv(a, b, m));
+    }
   });
 });
