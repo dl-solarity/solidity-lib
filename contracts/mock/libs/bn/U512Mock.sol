@@ -38,16 +38,6 @@ contract U512Mock {
         return U512.eq(a_, b_);
     }
 
-    function eqOperator(
-        bytes memory aBytes_,
-        bytes memory bBytes_
-    ) external view returns (bool eq_) {
-        uint512 a_ = U512.fromBytes(aBytes_);
-        uint512 b_ = U512.fromBytes(bBytes_);
-
-        return a_ == b_;
-    }
-
     function eqUint256(bytes memory aBytes_, uint256 u256_) external view returns (bool eq_) {
         uint512 a_ = U512.fromBytes(aBytes_);
 
@@ -155,16 +145,6 @@ contract U512Mock {
         return U512.add(a_, b_).toBytes();
     }
 
-    function addOperator(
-        bytes memory aBytes_,
-        bytes memory bBytes_
-    ) external view returns (bytes memory rBytes_) {
-        uint512 a_ = U512.fromBytes(aBytes_);
-        uint512 b_ = U512.fromBytes(bBytes_);
-
-        return (a_ + b_).toBytes();
-    }
-
     function addAssign(
         bytes memory aBytes_,
         bytes memory bBytes_
@@ -201,16 +181,6 @@ contract U512Mock {
         return U512.sub(a_, b_).toBytes();
     }
 
-    function subOperator(
-        bytes memory aBytes_,
-        bytes memory bBytes_
-    ) external view returns (bytes memory rBytes_) {
-        uint512 a_ = U512.fromBytes(aBytes_);
-        uint512 b_ = U512.fromBytes(bBytes_);
-
-        return (a_ - b_).toBytes();
-    }
-
     function subAssign(
         bytes memory aBytes_,
         bytes memory bBytes_
@@ -245,16 +215,6 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
 
         return U512.mul(a_, b_).toBytes();
-    }
-
-    function mulOperator(
-        bytes memory aBytes_,
-        bytes memory bBytes_
-    ) external view returns (bytes memory rBytes_) {
-        uint512 a_ = U512.fromBytes(aBytes_);
-        uint512 b_ = U512.fromBytes(bBytes_);
-
-        return (a_ * b_).toBytes();
     }
 
     function mulAssign(

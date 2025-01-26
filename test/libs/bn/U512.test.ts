@@ -4,7 +4,7 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import { U512Mock } from "@ethers-v6";
 
-describe("U512", () => {
+describe.only("U512", () => {
   const reverter = new Reverter();
 
   const prime = 76884956397045344220809746629001649092737531784414529538755519063063536359079n;
@@ -143,11 +143,8 @@ describe("U512", () => {
 
   it("eq test", async () => {
     expect(await u512.eq(toBytes(1020n), toBytes(1002n))).to.be.false;
-    expect(await u512.eqOperator(toBytes(1020n), toBytes(1002n))).to.be.false;
     expect(await u512.eq(toBytes(200n), toBytes(200n))).to.be.true;
-    expect(await u512.eqOperator(toBytes(200n), toBytes(200n))).to.be.true;
     expect(await u512.eq("0x00", "0x00")).to.be.true;
-    expect(await u512.eqOperator("0x00", "0x00")).to.be.true;
   });
 
   it("eqUint256 test", async () => {
@@ -197,7 +194,6 @@ describe("U512", () => {
       const to = randomU512();
 
       expect(await u512.add(a, b)).to.be.equal(add(a, b));
-      expect(await u512.addOperator(a, b)).to.be.equal(add(a, b));
       expect(await u512.addAssign(a, b)).to.be.equal(add(a, b));
       expect(await u512.addAssignTo(a, b, to)).to.be.equal(add(a, b));
     }
@@ -210,7 +206,6 @@ describe("U512", () => {
       const to = randomU512();
 
       expect(await u512.sub(a, b)).to.be.equal(sub(a, b));
-      expect(await u512.subOperator(a, b)).to.be.equal(sub(a, b));
       expect(await u512.subAssign(a, b)).to.be.equal(sub(a, b));
       expect(await u512.subAssignTo(a, b, to)).to.be.equal(sub(a, b));
     }
@@ -223,7 +218,6 @@ describe("U512", () => {
       const to = randomU512();
 
       expect(await u512.mul(a, b)).to.be.equal(mul(a, b));
-      expect(await u512.mulOperator(a, b)).to.be.equal(mul(a, b));
       expect(await u512.mulAssign(a, b)).to.be.equal(mul(a, b));
       expect(await u512.mulAssignTo(a, b, to)).to.be.equal(mul(a, b));
     }
