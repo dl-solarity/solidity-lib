@@ -180,7 +180,7 @@ library U512 {
      * @param u256_ The 256-bit unsigned integer.
      * @return eq_ True if the integers are equal, false otherwise.
      */
-    function eqUint256(uint512 a_, uint256 u256_) internal pure returns (bool eq_) {
+    function eqU256(uint512 a_, uint256 u256_) internal pure returns (bool eq_) {
         unchecked {
             assembly {
                 eq_ := and(eq(mload(a_), 0), eq(mload(add(a_, 0x20)), u256_))

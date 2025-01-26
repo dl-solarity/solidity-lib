@@ -4,7 +4,7 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import { U512Mock } from "@ethers-v6";
 
-describe("U512", () => {
+describe.only("U512", () => {
   const reverter = new Reverter();
 
   const prime = 76884956397045344220809746629001649092737531784414529538755519063063536359079n;
@@ -183,10 +183,10 @@ describe("U512", () => {
     expect(await u512.eq("0x00", "0x00")).to.be.true;
   });
 
-  it("eqUint256 test", async () => {
-    expect(await u512.eqUint256(toBytes(1020n), 1002n)).to.be.false;
-    expect(await u512.eqUint256(toBytes(200n), 200n)).to.be.true;
-    expect(await u512.eqUint256("0x00", 0)).to.be.true;
+  it("eqU256 test", async () => {
+    expect(await u512.eqU256(toBytes(1020n), 1002n)).to.be.false;
+    expect(await u512.eqU256(toBytes(200n), 200n)).to.be.true;
+    expect(await u512.eqU256("0x00", 0)).to.be.true;
   });
 
   it("cmp test", async () => {

@@ -9,7 +9,7 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
  * @notice Cryptography module
  *
  * This library provides functionality for ECDSA verification over any 384-bit curve. Currently,
- * this is the most efficient implementation out there, consuming ~13.86 million gas per call.
+ * this is the most efficient implementation out there, consuming ~8.9 million gas per call.
  *
  * The approach is Strauss-Shamir double scalar multiplication with 6 bits of precompute + affine coordinates.
  */
@@ -82,9 +82,9 @@ library ECDSA384 {
 
             /// accept s only from the lower part of the curve
             if (
-                U512.eqUint256(inputs_.r, 0) ||
+                U512.eqU256(inputs_.r, 0) ||
                 U512.cmp(inputs_.r, params_.n) >= 0 ||
-                U512.eqUint256(inputs_.s, 0) ||
+                U512.eqU256(inputs_.s, 0) ||
                 U512.cmp(inputs_.s, params_.lowSmax) > 0
             ) {
                 return false;
@@ -146,23 +146,18 @@ library ECDSA384 {
         uint512 y_
     ) private view returns (bool) {
         unchecked {
-            if (
-                U512.eqUint256(x_, 0) ||
-                U512.eq(x_, p_) ||
-                U512.eqUint256(y_, 0) ||
-                U512.eq(y_, p_)
-            ) {
+            if (U512.eqU256(x_, 0) || U512.eq(x_, p_) || U512.eqU256(y_, 0) || U512.eq(y_, p_)) {
                 return false;
             }
 
             uint512 lhs_ = U512.modexpU256(call_, y_, 2, p_);
             uint512 rhs_ = U512.modexpU256(call_, x_, 3, p_);
 
-            if (!U512.eqUint256(a_, 0)) {
+            if (!U512.eqU256(a_, 0)) {
                 rhs_ = U512.redadd(call_, rhs_, U512.modmul(call_, x_, a_, p_), p_); // x^3 + a*x
             }
 
-            if (!U512.eqUint256(b_, 0)) {
+            if (!U512.eqU256(b_, 0)) {
                 rhs_ = U512.redadd(call_, rhs_, b_, p_); // x^3 + a*x + b
             }
 
@@ -278,7 +273,7 @@ library ECDSA384 {
                 return (x2_, y2_);
             }
 
-            if (U512.eqUint256(y1_, 0)) {
+            if (U512.eqU256(y1_, 0)) {
                 return (x2_, y2_);
             }
 

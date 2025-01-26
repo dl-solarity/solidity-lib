@@ -60,10 +60,10 @@ contract U512Mock {
         return U512.eq(a_, b_);
     }
 
-    function eqUint256(bytes memory aBytes_, uint256 u256_) external view returns (bool eq_) {
+    function eqU256(bytes memory aBytes_, uint256 u256_) external view returns (bool eq_) {
         uint512 a_ = U512.fromBytes(aBytes_);
 
-        return U512.eqUint256(a_, u256_);
+        return U512.eqU256(a_, u256_);
     }
 
     function cmp(bytes memory aBytes_, bytes memory bBytes_) external view returns (int256) {
