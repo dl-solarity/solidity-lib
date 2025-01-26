@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import {call} from "../../../libs/bn/U512.sol";
 import {uint512} from "../../../libs/bn/U512.sol";
 import {U512} from "../../../libs/bn/U512.sol";
+// import "hardhat/console.sol";
 
 contract U512Mock {
     using U512 for *;
@@ -81,7 +82,12 @@ contract U512Mock {
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return U512.mod(call_, a_, m_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.mod(call_, a_, m_);
+
+        // console.log("mod gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function modAlloc(
@@ -133,7 +139,12 @@ contract U512Mock {
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return U512.modinv(call_, a_, m_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.modinv(call_, a_, m_);
+
+        // console.log("modinv gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function modinvAlloc(
@@ -183,7 +194,12 @@ contract U512Mock {
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
 
-        return U512.add(a_, b_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.add(a_, b_);
+
+        // console.log("add gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function addAssign(
@@ -219,7 +235,12 @@ contract U512Mock {
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
 
-        return U512.sub(a_, b_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.sub(a_, b_);
+
+        // console.log("sub gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function subAssign(
@@ -255,7 +276,12 @@ contract U512Mock {
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
 
-        return U512.mul(a_, b_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.mul(a_, b_);
+
+        // console.log("mul gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function mulAssign(
@@ -295,7 +321,12 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return U512.modadd(call_, a_, b_, m_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.modadd(call_, a_, b_, m_);
+
+        // console.log("modadd gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function modaddAlloc(
@@ -355,7 +386,12 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return U512.redadd(call_, a_, b_, m_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.redadd(call_, a_, b_, m_);
+
+        // console.log("redadd gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function redaddAlloc(
@@ -415,7 +451,12 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return U512.modsub(call_, a_, b_, m_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.modsub(call_, a_, b_, m_);
+
+        // console.log("modsub gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function modsubAlloc(
@@ -475,7 +516,12 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return U512.redsub(call_, a_, b_, m_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.redsub(call_, a_, b_, m_);
+
+        // console.log("redsub gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function redsubAlloc(
@@ -535,7 +581,12 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return U512.modmul(call_, a_, b_, m_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.modmul(call_, a_, b_, m_);
+
+        // console.log("modmul gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function modmulAlloc(
@@ -595,7 +646,12 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return U512.modexp(call_, a_, b_, m_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.modexp(call_, a_, b_, m_);
+
+        // console.log("modexp gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function modexpAlloc(
@@ -644,6 +700,67 @@ contract U512Mock {
         return to_.toBytes();
     }
 
+    function modexpU256(
+        bytes memory aBytes_,
+        uint256 b_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        call call_ = U512.initCall();
+
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.modexpU256(call_, a_, b_, m_);
+
+        // console.log("modexpU256 gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
+    }
+
+    function modexpU256Alloc(
+        bytes memory aBytes_,
+        uint256 b_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.modexpU256(a_, b_, m_).toBytes();
+    }
+
+    function modexpU256Assign(
+        bytes memory aBytes_,
+        uint256 b_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        call call_ = U512.initCall();
+
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        U512.modexpU256Assign(call_, a_, b_, m_);
+
+        return a_.toBytes();
+    }
+
+    function modexpU256AssignTo(
+        bytes memory aBytes_,
+        uint256 b_,
+        bytes memory mBytes_,
+        bytes memory toBytes_
+    ) external view returns (bytes memory rBytes_) {
+        call call_ = U512.initCall();
+
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+        uint512 to_ = U512.fromBytes(toBytes_);
+
+        U512.modexpU256AssignTo(call_, a_, b_, m_, to_);
+
+        return to_.toBytes();
+    }
+
     function moddiv(
         bytes memory aBytes_,
         bytes memory bBytes_,
@@ -655,7 +772,12 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
 
-        return U512.moddiv(call_, a_, b_, m_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.moddiv(call_, a_, b_, m_);
+
+        // console.log("moddiv gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function moddivAlloc(
@@ -721,9 +843,12 @@ contract U512Mock {
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
 
-        U512.andAssign(a_, b_);
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.and(a_, b_);
 
-        return a_.toBytes();
+        // console.log("and gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function andAssignTo(
@@ -757,9 +882,12 @@ contract U512Mock {
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
 
-        U512.orAssign(a_, b_);
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.or(a_, b_);
 
-        return a_.toBytes();
+        // console.log("or gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function orAssignTo(
@@ -783,7 +911,12 @@ contract U512Mock {
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
 
-        return U512.xor(a_, b_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.xor(a_, b_);
+
+        // console.log("xor gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function xorAssign(
@@ -815,7 +948,12 @@ contract U512Mock {
     function not(bytes memory aBytes_) external view returns (bytes memory rBytes_) {
         uint512 a_ = U512.fromBytes(aBytes_);
 
-        return U512.not(a_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.not(a_);
+
+        // console.log("not gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function notAssign(bytes memory aBytes_) external view returns (bytes memory rBytes_) {
@@ -841,7 +979,12 @@ contract U512Mock {
     function shl(bytes memory aBytes_, uint8 b_) external view returns (bytes memory rBytes_) {
         uint512 a_ = U512.fromBytes(aBytes_);
 
-        return U512.shl(a_, b_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.shl(a_, b_);
+
+        // console.log("shl gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function shlAssign(
@@ -871,7 +1014,12 @@ contract U512Mock {
     function shr(bytes memory aBytes_, uint8 b_) external view returns (bytes memory rBytes_) {
         uint512 a_ = U512.fromBytes(aBytes_);
 
-        return U512.shr(a_, b_).toBytes();
+        // uint256 gasBefore_ = gasleft();
+        uint512 result_ = U512.shr(a_, b_);
+
+        // console.log("shr gas: ", gasBefore_ - gasleft());
+
+        return result_.toBytes();
     }
 
     function shrAssign(

@@ -4,7 +4,7 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import { U512Mock } from "@ethers-v6";
 
-describe.only("U512", () => {
+describe("U512", () => {
   const reverter = new Reverter();
 
   const prime = 76884956397045344220809746629001649092737531784414529538755519063063536359079n;
@@ -346,6 +346,20 @@ describe.only("U512", () => {
       expect(await u512.modexpAlloc(a, b, m)).to.equal(modexp(a, b, m));
       expect(await u512.modexpAssign(a, b, m)).to.equal(modexp(a, b, m));
       expect(await u512.modexpAssignTo(a, b, m, to)).to.equal(modexp(a, b, m));
+    }
+  });
+
+  it("modexpU256 test", async () => {
+    for (let i = 0; i < 100; ++i) {
+      const a = randomU512();
+      const b = 100n;
+      const m = randomU512();
+      const to = randomU512();
+
+      expect(await u512.modexpU256(a, b, m)).to.equal(modexp(a, toBytes(b), m));
+      expect(await u512.modexpU256Alloc(a, b, m)).to.equal(modexp(a, toBytes(b), m));
+      expect(await u512.modexpU256Assign(a, b, m)).to.equal(modexp(a, toBytes(b), m));
+      expect(await u512.modexpU256AssignTo(a, b, m, to)).to.equal(modexp(a, toBytes(b), m));
     }
   });
 

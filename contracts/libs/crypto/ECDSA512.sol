@@ -155,8 +155,8 @@ library ECDSA512 {
                 return false;
             }
 
-            uint512 lhs_ = U512.modexp(call_, y_, U512.fromUint256(2), p_);
-            uint512 rhs_ = U512.modexp(call_, x_, U512.fromUint256(3), p_);
+            uint512 lhs_ = U512.modexpU256(call_, y_, 2, p_);
+            uint512 rhs_ = U512.modexpU256(call_, x_, 3, p_);
 
             if (!U512.eqUint256(a_, 0)) {
                 rhs_ = U512.redadd(call_, rhs_, U512.modmul(call_, x_, a_, p_), p_); // x^3 + a*x
@@ -290,14 +290,14 @@ library ECDSA512 {
                 return (x2_, y2_);
             }
 
-            uint512 m1_ = U512.modexp(call_, x1_, two_, p_);
+            uint512 m1_ = U512.modexpU256(call_, x1_, 2, p_);
             U512.modmulAssign(call_, m1_, three_, p_);
             U512.redaddAssign(call_, m1_, a_, p_);
 
             uint512 m2_ = U512.modmul(call_, y1_, two_, p_);
             U512.moddivAssign(call_, m1_, m2_, p_);
 
-            x2_ = U512.modexp(call_, m1_, two_, p_);
+            x2_ = U512.modexpU256(call_, m1_, 2, p_);
             U512.redsubAssign(call_, x2_, x1_, p_);
             U512.redsubAssign(call_, x2_, x1_, p_);
 
@@ -346,7 +346,7 @@ library ECDSA512 {
 
             U512.moddivAssign(call_, m1_, m2_, p_);
 
-            x3 = U512.modexp(call_, m1_, two_, p_);
+            x3 = U512.modexpU256(call_, m1_, 2, p_);
             U512.redsubAssign(call_, x3, x1_, p_);
             U512.redsubAssign(call_, x3, x2_, p_);
 

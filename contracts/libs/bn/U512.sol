@@ -6,6 +6,28 @@ type call is uint256;
 
 /**
  * @notice Low-level library that implements unsigned 512-bit arithmetics.
+
+ * | Statistic   | Avg          |
+ * | ----------- | ------------ |
+ * | add         | 269 gas      |
+ * | sub         | 278 gas      |
+ * | mul         | 353 gas      |
+ * | mod         | 682 gas      |
+ * | modinv      | 6083 gas     |
+ * | modadd      | 780 gas      |
+ * | redadd      | 590 gas      |
+ * | modmul      | 1176 gas     |
+ * | modsub      | 1017 gas     |
+ * | redsub      | 533 gas      |
+ * | modexp      | 5981 gas     |
+ * | modexpU256  | 692 gas      |
+ * | moddiv      | 7092 gas     |
+ * | and         | 251 gas      |
+ * | or          | 251 gas      |
+ * | xor         | 251 gas      |
+ * | not         | 216 gas      |
+ * | shl         | 272 gas      |
+ * | shr         | 272 gas      |
  */
 library U512 {
     uint256 private constant _UINT512_ALLOCATION = 64;
@@ -267,7 +289,7 @@ library U512 {
 
     /**
      * @notice Computes the modular inverse of a 512-bit unsigned integer.
-     * @dev Warning: The modulus `m_` must be a prime number
+     * @dev IMPORTANT: The modulus `m_` must be a prime number
      * @param call_ A memory pointer for precompile call arguments.
      * @param a_ The 512-bit unsigned integer to invert.
      * @param m_ The modulus.
@@ -283,7 +305,7 @@ library U512 {
 
     /**
      * @notice Computes the modular inverse of a 512-bit unsigned integer.
-     * @dev Warning: The modulus `m_` must be a prime number
+     * @dev IMPORTANT: The modulus `m_` must be a prime number
      * @dev Allocates memory for `call` every time it's called.
      * @param a_ The 512-bit unsigned integer to invert.
      * @param m_ The modulus.
@@ -300,7 +322,7 @@ library U512 {
 
     /**
      * @notice Performs the modular inverse assignment on a 512-bit unsigned integer.
-     * @dev Warning: The modulus `m_` must be a prime number
+     * @dev IMPORTANT: The modulus `m_` must be a prime number
      * @dev Updates the value of `a_` to `a_^(-1) % m_`.
      * @param call_ A memory pointer for precompile call arguments.
      * @param a_ The 512-bit unsigned integer to invert.
@@ -314,7 +336,7 @@ library U512 {
 
     /**
      * @notice Computes the modular inverse and stores it in a separate 512-bit unsigned integer.
-     * @dev Warning: The modulus `m_` must be a prime number
+     * @dev IMPORTANT: The modulus `m_` must be a prime number
      * @dev Assigns the result of `a_^(-1) % m_` to `to_`.
      * @param call_ A memory pointer for precompile call arguments.
      * @param a_ The 512-bit unsigned integer to invert.
@@ -397,6 +419,79 @@ library U512 {
     ) internal view {
         unchecked {
             _modexp(call_, b_, e_, m_, to_);
+        }
+    }
+
+    /**
+     * @notice Performs modular exponentiation on 512-bit unsigned integers.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param b_ The base.
+     * @param e_ The exponent.
+     * @param m_ The modulus.
+     * @return r_ The result of modular exponentiation `(b_^e_) % m_`.
+     */
+    function modexpU256(
+        call call_,
+        uint512 b_,
+        uint256 e_,
+        uint512 m_
+    ) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _modexpU256(call_, b_, e_, m_, r_);
+        }
+    }
+
+    /**
+     * @notice Performs modular exponentiation of a 512-bit unsigned integer base and a 256-bit unsigned integer exponent.
+     * @dev Allocates memory for `call` every time it's called.
+     * @param b_ The base.
+     * @param e_ The exponent.
+     * @param m_ The modulus.
+     * @return r_ The result of modular exponentiation `(b_^e_) % m_`.
+     */
+    function modexpU256(uint512 b_, uint256 e_, uint512 m_) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+            call call_ = initCall();
+
+            _modexpU256(call_, b_, e_, m_, r_);
+        }
+    }
+
+    /**
+     * @notice Performs modular exponentiation of a 512-bit unsigned integer base and a 256-bit unsigned integer exponent.
+     * @dev Updates the value of `b_` to `(b_^e_) % m_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param b_ The base.
+     * @param e_ The exponent.
+     * @param m_ The modulus.
+     */
+    function modexpU256Assign(call call_, uint512 b_, uint256 e_, uint512 m_) internal view {
+        unchecked {
+            _modexpU256(call_, b_, e_, m_, b_);
+        }
+    }
+
+    /**
+     * @notice Performs modular exponentiation of a 512-bit unsigned integer base and a 256-bit unsigned integer exponent.
+     * @dev Assigns the result of `(b_^e_) % m_` to `to_`.
+     * @param call_ A memory pointer for precompile call arguments.
+     * @param b_ The base.
+     * @param e_ The exponent.
+     * @param m_ The modulus.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
+    function modexpU256AssignTo(
+        call call_,
+        uint512 b_,
+        uint256 e_,
+        uint512 m_,
+        uint512 to_
+    ) internal view {
+        unchecked {
+            _modexpU256(call_, b_, e_, m_, to_);
         }
     }
 
@@ -890,7 +985,7 @@ library U512 {
 
     /**
      * @notice Divides two 512-bit unsigned integers under a modulus.
-     * @dev Warning: The modulus `m_` must be a prime number.
+     * @dev IMPORTANT: The modulus `m_` must be a prime number.
      * @dev Returns the result of `(a_ * b_^(-1)) % m_`.
      * @param call_ A memory pointer for precompile call arguments.
      * @param a_ The dividend.
@@ -913,7 +1008,7 @@ library U512 {
 
     /**
      * @notice Divides two 512-bit unsigned integers under a modulus.
-     * @dev Warning: The modulus `m_` must be a prime number.
+     * @dev IMPORTANT: The modulus `m_` must be a prime number.
      * @dev Returns the result of `(a_ * b_^(-1)) % m_`.
      * @dev Allocates memory for `call` every time it's called.
      * @param a_ The dividend.
@@ -932,7 +1027,7 @@ library U512 {
 
     /**
      * @notice Performs the modular division assignment on a 512-bit unsigned dividend.
-     * @dev Warning: The modulus `m_` must be a prime number.
+     * @dev IMPORTANT: The modulus `m_` must be a prime number.
      * @dev Updates the value of `a_` to `(a_ * b_^(-1)) % m_`.
      * @param call_ A memory pointer for precompile call arguments.
      * @param a_ The dividend.
@@ -947,7 +1042,7 @@ library U512 {
 
     /**
      * @notice Performs the modular division and stores the result in a separate 512-bit unsigned integer.
-     * @dev Warning: The modulus `m_` must be a prime number.
+     * @dev IMPORTANT: The modulus `m_` must be a prime number.
      * @dev Assigns the result of `(a_ * b_^(-1)) % m_` to `to_`.
      * @param call_ A memory pointer for precompile call arguments.
      * @param a_ The dividend.
@@ -1242,6 +1337,27 @@ library U512 {
     }
 
     /**
+     * @notice Performs modular exponentiation using the EVM precompiled contract.
+     * @dev Computes `(a_^e_) % m_` and stores the result in `r_`.
+     */
+    function _modexpU256(call call_, uint512 a_, uint256 e_, uint512 m_, uint512 r_) private view {
+        unchecked {
+            assembly {
+                mstore(call_, 0x40)
+                mstore(add(call_, 0x20), 0x20)
+                mstore(add(call_, 0x40), 0x40)
+                mstore(add(call_, 0x60), mload(a_))
+                mstore(add(call_, 0x80), mload(add(a_, 0x20)))
+                mstore(add(call_, 0xA0), e_)
+                mstore(add(call_, 0xC0), mload(m_))
+                mstore(add(call_, 0xE0), mload(add(m_, 0x20)))
+
+                pop(staticcall(gas(), 0x5, call_, 0x0100, r_, 0x40))
+            }
+        }
+    }
+
+    /**
      * @notice Computes the modular inverse using the EVM precompiled contract.
      * @dev The modulus `m_` must be a prime number.
      * @dev Computes `a_^(-1) % m_` and stores the result in `r_`.
@@ -1428,6 +1544,7 @@ library U512 {
     /**
      * @notice Multiplies two 512-bit unsigned integers.
      * @dev Computes `a_ * b_` and stores the result in `r_`.
+     * @dev Generalizes the "muldiv" algorithm to split 512-bit unsigned integers into chunks, as detailed at https://xn--2-umb.com/21/muldiv/.
      */
     function _mul(uint512 a_, uint512 b_, uint512 r_) private pure {
         unchecked {
@@ -1457,6 +1574,7 @@ library U512 {
     /**
      * @notice Prepares intermediate results for modular multiplication.
      * @dev Calculates partial products and stores them in `call_` for further processing.
+     * @dev Generalizes the "muldiv" algorithm to split 512-bit unsigned integers into chunks, as detailed at https://xn--2-umb.com/21/muldiv/.
      */
     function _modmul2p(call call_, uint512 a_, uint512 b_) private pure {
         unchecked {
