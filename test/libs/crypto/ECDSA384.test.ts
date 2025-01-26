@@ -30,7 +30,7 @@ function modifyRight(value: string, modifier: string): string {
   return newSignature;
 }
 
-describe.only("ECDSA384", () => {
+describe("ECDSA384", () => {
   const reverter = new Reverter();
 
   let ecdsa384: ECDSA384Mock;

@@ -27,6 +27,27 @@ contract U512Mock {
         valueCopy_ = U512.toBytes(pointerCopy_);
     }
 
+    function assign(
+        uint256 u256_
+    )
+        external
+        pure
+        returns (
+            uint512 pointerOriginal_,
+            uint512 pointerAssign_,
+            bytes memory valueOriginal_,
+            bytes memory valueAssign_
+        )
+    {
+        pointerOriginal_ = U512.fromUint256(u256_);
+        valueOriginal_ = U512.toBytes(pointerOriginal_);
+
+        pointerAssign_ = U512.fromUint256(0);
+
+        U512.assign(pointerOriginal_, pointerAssign_);
+        valueAssign_ = U512.toBytes(pointerAssign_);
+    }
+
     function isNull(uint512 pointer_) external pure returns (bool isNull_) {
         return U512.isNull(pointer_);
     }
@@ -61,6 +82,16 @@ contract U512Mock {
         uint512 m_ = U512.fromBytes(mBytes_);
 
         return U512.mod(call_, a_, m_).toBytes();
+    }
+
+    function modAlloc(
+        bytes memory aBytes_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.mod(a_, m_).toBytes();
     }
 
     function modAssign(
@@ -103,6 +134,16 @@ contract U512Mock {
         uint512 m_ = U512.fromBytes(mBytes_);
 
         return U512.modinv(call_, a_, m_).toBytes();
+    }
+
+    function modinvAlloc(
+        bytes memory aBytes_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.modinv(a_, m_).toBytes();
     }
 
     function modinvAssign(
@@ -257,6 +298,18 @@ contract U512Mock {
         return U512.modadd(call_, a_, b_, m_).toBytes();
     }
 
+    function modaddAlloc(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.modadd(a_, b_, m_).toBytes();
+    }
+
     function modaddAssign(
         bytes memory aBytes_,
         bytes memory bBytes_,
@@ -303,6 +356,18 @@ contract U512Mock {
         uint512 m_ = U512.fromBytes(mBytes_);
 
         return U512.redadd(call_, a_, b_, m_).toBytes();
+    }
+
+    function redaddAlloc(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.redadd(a_, b_, m_).toBytes();
     }
 
     function redaddAssign(
@@ -353,6 +418,18 @@ contract U512Mock {
         return U512.modsub(call_, a_, b_, m_).toBytes();
     }
 
+    function modsubAlloc(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.modsub(a_, b_, m_).toBytes();
+    }
+
     function modsubAssign(
         bytes memory aBytes_,
         bytes memory bBytes_,
@@ -399,6 +476,18 @@ contract U512Mock {
         uint512 m_ = U512.fromBytes(mBytes_);
 
         return U512.redsub(call_, a_, b_, m_).toBytes();
+    }
+
+    function redsubAlloc(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.redsub(a_, b_, m_).toBytes();
     }
 
     function redsubAssign(
@@ -449,6 +538,18 @@ contract U512Mock {
         return U512.modmul(call_, a_, b_, m_).toBytes();
     }
 
+    function modmulAlloc(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.modmul(a_, b_, m_).toBytes();
+    }
+
     function modmulAssign(
         bytes memory aBytes_,
         bytes memory bBytes_,
@@ -495,6 +596,18 @@ contract U512Mock {
         uint512 m_ = U512.fromBytes(mBytes_);
 
         return U512.modexp(call_, a_, b_, m_).toBytes();
+    }
+
+    function modexpAlloc(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.modexp(a_, b_, m_).toBytes();
     }
 
     function modexpAssign(
@@ -545,6 +658,18 @@ contract U512Mock {
         return U512.moddiv(call_, a_, b_, m_).toBytes();
     }
 
+    function moddivAlloc(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory mBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 m_ = U512.fromBytes(mBytes_);
+
+        return U512.moddiv(a_, b_, m_).toBytes();
+    }
+
     function moddivAssign(
         bytes memory aBytes_,
         bytes memory bBytes_,
@@ -575,6 +700,200 @@ contract U512Mock {
         uint512 to_ = U512.fromBytes(toBytes_);
 
         U512.moddivAssignTo(call_, a_, b_, m_, to_);
+
+        return to_.toBytes();
+    }
+
+    function and(
+        bytes memory aBytes_,
+        bytes memory bBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+
+        return U512.and(a_, b_).toBytes();
+    }
+
+    function andAssign(
+        bytes memory aBytes_,
+        bytes memory bBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+
+        U512.andAssign(a_, b_);
+
+        return a_.toBytes();
+    }
+
+    function andAssignTo(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory toBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 to_ = U512.fromBytes(toBytes_);
+
+        U512.andAssignTo(a_, b_, to_);
+
+        return to_.toBytes();
+    }
+
+    function or(
+        bytes memory aBytes_,
+        bytes memory bBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+
+        return U512.or(a_, b_).toBytes();
+    }
+
+    function orAssign(
+        bytes memory aBytes_,
+        bytes memory bBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+
+        U512.orAssign(a_, b_);
+
+        return a_.toBytes();
+    }
+
+    function orAssignTo(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory toBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 to_ = U512.fromBytes(toBytes_);
+
+        U512.orAssignTo(a_, b_, to_);
+
+        return to_.toBytes();
+    }
+
+    function xor(
+        bytes memory aBytes_,
+        bytes memory bBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+
+        return U512.xor(a_, b_).toBytes();
+    }
+
+    function xorAssign(
+        bytes memory aBytes_,
+        bytes memory bBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+
+        U512.xorAssign(a_, b_);
+
+        return a_.toBytes();
+    }
+
+    function xorAssignTo(
+        bytes memory aBytes_,
+        bytes memory bBytes_,
+        bytes memory toBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 b_ = U512.fromBytes(bBytes_);
+        uint512 to_ = U512.fromBytes(toBytes_);
+
+        U512.xorAssignTo(a_, b_, to_);
+
+        return to_.toBytes();
+    }
+
+    function not(bytes memory aBytes_) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+
+        return U512.not(a_).toBytes();
+    }
+
+    function notAssign(bytes memory aBytes_) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+
+        U512.notAssign(a_);
+
+        return a_.toBytes();
+    }
+
+    function notAssignTo(
+        bytes memory aBytes_,
+        bytes memory toBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 to_ = U512.fromBytes(toBytes_);
+
+        U512.notAssignTo(a_, to_);
+
+        return to_.toBytes();
+    }
+
+    function shl(bytes memory aBytes_, uint8 b_) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+
+        return U512.shl(a_, b_).toBytes();
+    }
+
+    function shlAssign(
+        bytes memory aBytes_,
+        uint8 b_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+
+        U512.shlAssign(a_, b_);
+
+        return a_.toBytes();
+    }
+
+    function shlAssignTo(
+        bytes memory aBytes_,
+        uint8 b_,
+        bytes memory toBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 to_ = U512.fromBytes(toBytes_);
+
+        U512.shlAssignTo(a_, b_, to_);
+
+        return to_.toBytes();
+    }
+
+    function shr(bytes memory aBytes_, uint8 b_) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+
+        return U512.shr(a_, b_).toBytes();
+    }
+
+    function shrAssign(
+        bytes memory aBytes_,
+        uint8 b_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+
+        U512.shrAssign(a_, b_);
+
+        return a_.toBytes();
+    }
+
+    function shrAssignTo(
+        bytes memory aBytes_,
+        uint8 b_,
+        bytes memory toBytes_
+    ) external view returns (bytes memory rBytes_) {
+        uint512 a_ = U512.fromBytes(aBytes_);
+        uint512 to_ = U512.fromBytes(toBytes_);
+
+        U512.shrAssignTo(a_, b_, to_);
 
         return to_.toBytes();
     }

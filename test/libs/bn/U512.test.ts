@@ -101,11 +101,11 @@ describe.only("U512", () => {
   }
 
   function modsub(a: string, b: string, m: string): string {
-    const aBn = ethers.toBigInt(a);
-    const bBn = ethers.toBigInt(b);
-    const mBn = ethers.toBigInt(m);
+    const aBigInt = ethers.toBigInt(a);
+    const bBigInt = ethers.toBigInt(b);
+    const mBigInt = ethers.toBigInt(m);
 
-    return toBytes((((aBn - bBn) % mBn) + mBn) % mBn);
+    return toBytes((((aBigInt - bBigInt) % mBigInt) + mBigInt) % mBigInt);
   }
 
   function moddiv(a: string, b: string, m: string) {
@@ -117,6 +117,35 @@ describe.only("U512", () => {
     const result = (aBigInt * ethers.toBigInt(bInv)) % mBigInt;
 
     return toBytes(result);
+  }
+
+  function and(a: string, b: string): string {
+    return toBytes(ethers.toBigInt(a) & ethers.toBigInt(b));
+  }
+
+  function or(a: string, b: string): string {
+    return toBytes(ethers.toBigInt(a) | ethers.toBigInt(b));
+  }
+
+  function xor(a: string, b: string): string {
+    return toBytes(ethers.toBigInt(a) ^ ethers.toBigInt(b));
+  }
+
+  function not(a: string): string {
+    // ~a = -a - 1
+    const maxUint512 = (BigInt(1) << BigInt(512)) - 1n;
+
+    return sub(toBytes(maxUint512), a);
+  }
+
+  function shl(a: string, b: number): string {
+    const maxUint512 = BigInt(1) << BigInt(512);
+
+    return toBytes((ethers.toBigInt(a) << BigInt(b)) % maxUint512);
+  }
+
+  function shr(a: string, b: number): string {
+    return toBytes(ethers.toBigInt(a) >> BigInt(b));
   }
 
   before(async () => {
@@ -134,6 +163,13 @@ describe.only("U512", () => {
 
     expect(pointerOriginal).to.be.lessThan(pointerCopy);
     expect(valueOriginal).to.be.equal(valueCopy);
+  });
+
+  it("assign test", async () => {
+    const [pointerOriginal, pointerAssign, valueOriginal, valueAssign] = await u512.assign(prime);
+
+    expect(pointerOriginal).to.not.eq(pointerAssign);
+    expect(valueOriginal).to.be.equal(valueAssign);
   });
 
   it("isNull test", async () => {
@@ -169,6 +205,7 @@ describe.only("U512", () => {
       const to = randomU512();
 
       expect(await u512.mod(a, m)).to.be.equal(mod(a, m));
+      expect(await u512.modAlloc(a, m)).to.be.equal(mod(a, m));
       expect(await u512.modAssign(a, m)).to.be.equal(mod(a, m));
       expect(await u512.modAssignTo(a, m, to)).to.be.equal(mod(a, m));
     }
@@ -182,6 +219,7 @@ describe.only("U512", () => {
       const to = randomU512();
 
       expect(await u512.modinv(a, m)).to.be.equal(modinv(a, m));
+      expect(await u512.modinvAlloc(a, m)).to.be.equal(modinv(a, m));
       expect(await u512.modinvAssign(a, m)).to.be.equal(modinv(a, m));
       expect(await u512.modinvAssignTo(a, m, to)).to.be.equal(modinv(a, m));
     }
@@ -231,6 +269,7 @@ describe.only("U512", () => {
       const to = randomU512();
 
       expect(await u512.modadd(a, b, m)).to.equal(modadd(a, b, m));
+      expect(await u512.modaddAlloc(a, b, m)).to.equal(modadd(a, b, m));
       expect(await u512.modaddAssign(a, b, m)).to.equal(modadd(a, b, m));
       expect(await u512.modaddAssignTo(a, b, m, to)).to.equal(modadd(a, b, m));
     }
@@ -246,6 +285,7 @@ describe.only("U512", () => {
       const to = randomU512();
 
       expect(await u512.redadd(a, b, m)).to.equal(modadd(a, b, m));
+      expect(await u512.redaddAlloc(a, b, m)).to.equal(modadd(a, b, m));
       expect(await u512.redaddAssign(a, b, m)).to.equal(modadd(a, b, m));
       expect(await u512.redaddAssignTo(a, b, m, to)).to.equal(modadd(a, b, m));
     }
@@ -259,6 +299,7 @@ describe.only("U512", () => {
       const to = randomU512();
 
       expect(await u512.modmul(a, b, m)).to.equal(modmul(a, b, m));
+      expect(await u512.modmulAlloc(a, b, m)).to.equal(modmul(a, b, m));
       expect(await u512.modmulAssign(a, b, m)).to.equal(modmul(a, b, m));
       expect(await u512.modmulAssignTo(a, b, m, to)).to.equal(modmul(a, b, m));
     }
@@ -272,6 +313,7 @@ describe.only("U512", () => {
       const to = randomU512();
 
       expect(await u512.modsub(a, b, m)).to.equal(modsub(a, b, m));
+      expect(await u512.modsubAlloc(a, b, m)).to.equal(modsub(a, b, m));
       expect(await u512.modsubAssign(a, b, m)).to.equal(modsub(a, b, m));
       expect(await u512.modsubAssignTo(a, b, m, to)).to.equal(modsub(a, b, m));
     }
@@ -287,6 +329,7 @@ describe.only("U512", () => {
       const to = randomU512();
 
       expect(await u512.redsub(a, b, m)).to.equal(modsub(a, b, m));
+      expect(await u512.redsubAlloc(a, b, m)).to.equal(modsub(a, b, m));
       expect(await u512.redsubAssign(a, b, m)).to.equal(modsub(a, b, m));
       expect(await u512.redsubAssignTo(a, b, m, to)).to.equal(modsub(a, b, m));
     }
@@ -300,6 +343,7 @@ describe.only("U512", () => {
       const to = randomU512();
 
       expect(await u512.modexp(a, b, m)).to.equal(modexp(a, b, m));
+      expect(await u512.modexpAlloc(a, b, m)).to.equal(modexp(a, b, m));
       expect(await u512.modexpAssign(a, b, m)).to.equal(modexp(a, b, m));
       expect(await u512.modexpAssignTo(a, b, m, to)).to.equal(modexp(a, b, m));
     }
@@ -314,8 +358,78 @@ describe.only("U512", () => {
       const to = randomU512();
 
       expect(await u512.moddiv(a, b, m)).to.be.equal(moddiv(a, b, m));
+      expect(await u512.moddivAlloc(a, b, m)).to.be.equal(moddiv(a, b, m));
       expect(await u512.moddivAssign(a, b, m)).to.be.equal(moddiv(a, b, m));
       expect(await u512.moddivAssignTo(a, b, m, to)).to.be.equal(moddiv(a, b, m));
+    }
+  });
+
+  it("and test", async () => {
+    for (let i = 0; i < 100; ++i) {
+      const a = randomU512();
+      const b = randomU512();
+      const to = randomU512();
+
+      expect(await u512.and(a, b)).to.be.equal(and(a, b));
+      expect(await u512.andAssign(a, b)).to.be.equal(and(a, b));
+      expect(await u512.andAssignTo(a, b, to)).to.be.equal(and(a, b));
+    }
+  });
+
+  it("or test", async () => {
+    for (let i = 0; i < 100; ++i) {
+      const a = randomU512();
+      const b = randomU512();
+      const to = randomU512();
+
+      expect(await u512.or(a, b)).to.be.equal(or(a, b));
+      expect(await u512.orAssign(a, b)).to.be.equal(or(a, b));
+      expect(await u512.orAssignTo(a, b, to)).to.be.equal(or(a, b));
+    }
+  });
+
+  it("xor test", async () => {
+    for (let i = 0; i < 100; ++i) {
+      const a = randomU512();
+      const b = randomU512();
+      const to = randomU512();
+
+      expect(await u512.xor(a, b)).to.be.equal(xor(a, b));
+      expect(await u512.xorAssign(a, b)).to.be.equal(xor(a, b));
+      expect(await u512.xorAssignTo(a, b, to)).to.be.equal(xor(a, b));
+    }
+  });
+
+  it("not test", async () => {
+    for (let i = 0; i < 100; ++i) {
+      const a = randomU512();
+      const to = randomU512();
+
+      expect(await u512.not(a)).to.be.equal(not(a));
+      expect(await u512.notAssign(a)).to.be.equal(not(a));
+      expect(await u512.notAssignTo(a, to)).to.be.equal(not(a));
+    }
+  });
+
+  it("shl test", async () => {
+    for (let b = 0; b < 256; ++b) {
+      const a = randomU512();
+      const to = randomU512();
+
+      expect(await u512.shl(a, b)).to.be.equal(shl(a, b));
+      expect(await u512.shlAssign(a, b)).to.be.equal(shl(a, b));
+      expect(await u512.shlAssignTo(a, b, to)).to.be.equal(shl(a, b));
+    }
+  });
+
+  it("shr test", async () => {
+    for (let b = 0; b < 256; ++b) {
+      const a = randomU512();
+      const to = randomU512();
+
+      expect(await u512.shr(a, b)).to.be.equal(shr(a, b));
+      expect(await u512.shrAssign(a, b)).to.be.equal(shr(a, b));
+      expect(await u512.shrAssignTo(a, b, to)).to.be.equal(shr(a, b));
     }
   });
 });

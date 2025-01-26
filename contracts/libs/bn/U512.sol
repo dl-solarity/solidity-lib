@@ -19,6 +19,10 @@ library U512 {
     function initCall() internal pure returns (call call_) {
         unchecked {
             call_ = call.wrap(_allocate(_CALL_ALLOCATION));
+
+            assembly {
+                call_ := add(call_, 0x40)
+            }
         }
     }
 
@@ -81,6 +85,20 @@ library U512 {
             assembly {
                 mstore(u512Copy_, mload(u512_))
                 mstore(add(u512Copy_, 0x20), mload(add(u512_, 0x20)))
+            }
+        }
+    }
+
+    /**
+     * @notice Assigns a 512-bit unsigned integer to another.
+     * @param u512_ The 512-bit unsigned integer to assign.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
+    function assign(uint512 u512_, uint512 to_) internal pure {
+        unchecked {
+            assembly {
+                mstore(to_, mload(u512_))
+                mstore(add(to_, 0x20), mload(add(u512_, 0x20)))
             }
         }
     }
@@ -205,6 +223,22 @@ library U512 {
     }
 
     /**
+     * @notice Performs modular arithmetic on 512-bit integers.
+     * @dev Allocates memory for `call` every time it's called.
+     * @param a_ The dividend.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular operation `(a_ % m_)`.
+     */
+    function mod(uint512 a_, uint512 m_) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+            call call_ = initCall();
+
+            _mod(call_, a_, m_, r_);
+        }
+    }
+
+    /**
      * @notice Performs modular assignment on a 512-bit unsigned integer.
      * @dev Updates the value of `a_` to `(a_ % m_)`.
      * @param call_ A memory pointer for precompile call arguments.
@@ -242,6 +276,23 @@ library U512 {
     function modinv(call call_, uint512 a_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _modinv(call_, a_, m_, r_);
+        }
+    }
+
+    /**
+     * @notice Computes the modular inverse of a 512-bit unsigned integer.
+     * @dev Warning: The modulus `m_` must be a prime number
+     * @dev Allocates memory for `call` every time it's called.
+     * @param a_ The 512-bit unsigned integer to invert.
+     * @param m_ The modulus.
+     * @return r_ The modular inverse result `a_^(-1) % m_`.
+     */
+    function modinv(uint512 a_, uint512 m_) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+            call call_ = initCall();
 
             _modinv(call_, a_, m_, r_);
         }
@@ -298,6 +349,23 @@ library U512 {
     }
 
     /**
+     * @notice Performs modular exponentiation on 512-bit unsigned integers.
+     * @dev Allocates memory for `call` every time it's called.
+     * @param b_ The base.
+     * @param e_ The exponent.
+     * @param m_ The modulus.
+     * @return r_ The result of modular exponentiation `(b_^e_) % m_`.
+     */
+    function modexp(uint512 b_, uint512 e_, uint512 m_) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+            call call_ = initCall();
+
+            _modexp(call_, b_, e_, m_, r_);
+        }
+    }
+
+    /**
      * @notice Performs modular exponentiation assignment on the base.
      * @dev Updates the value of `b_` to `(b_^e_) % m_`.
      * @param call_ A memory pointer for precompile call arguments.
@@ -348,6 +416,23 @@ library U512 {
     ) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _modadd(call_, a_, b_, m_, r_);
+        }
+    }
+
+    /**
+     * @notice Adds two 512-bit unsigned integers under a modulus.
+     * @dev Allocates memory for `call` every time it's called.
+     * @param a_ The first addend.
+     * @param b_ The second addend.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular addition `(a_ + b_) % m_`.
+     */
+    function modadd(uint512 a_, uint512 b_, uint512 m_) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+            call call_ = initCall();
 
             _modadd(call_, a_, b_, m_, r_);
         }
@@ -450,6 +535,26 @@ library U512 {
     }
 
     /**
+     * @notice Adds two 512-bit unsigned integers under a modulus.
+     * @dev This is an optimized version of `modadd` where the inputs must be pre-reduced by `m_`.
+     * @dev Allocates memory for `call` every time it's called.
+     * @param a_ The first addend, reduced by `m_`.
+     * @param b_ The second addend, reduced by `m_`.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular addition `(a_ + b_) % m_`.
+     */
+    function redadd(uint512 a_, uint512 b_, uint512 m_) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            // `redadd` doesn't make calls, it only requires 2 words for buffer.
+            call call_ = call.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _redadd(call_, a_, b_, m_, r_);
+        }
+    }
+
+    /**
      * @notice Performs modular addition assignment on the first 512-bit unsigned integer addend.
      * @dev This is an optimized version of `modaddAssign` where the inputs must be pre-reduced by `m_`.
      * @param call_ A memory pointer for precompile call arguments.
@@ -500,6 +605,23 @@ library U512 {
     ) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _modsub(call_, a_, b_, m_, r_);
+        }
+    }
+
+    /**
+     * @notice Subtracts one 512-bit unsigned integer from another under a modulus.
+     * @dev Allocates memory for `call` every time it's called.
+     * @param a_ The minuend.
+     * @param b_ The subtrahend.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular subtraction `(a_ - b_) % m_`.
+     */
+    function modsub(uint512 a_, uint512 b_, uint512 m_) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+            call call_ = initCall();
 
             _modsub(call_, a_, b_, m_, r_);
         }
@@ -600,6 +722,26 @@ library U512 {
     }
 
     /**
+     * @notice Subtracts one 512-bit unsigned integer from another under a modulus.
+     * @dev This is an optimized version of `modsub` where the inputs must be pre-reduced by `m_`.
+     * @dev Allocates memory for `call` every time it's called.
+     * @param a_ The minuend, reduced by `m_`.
+     * @param b_ The subtrahend, reduced by `m_`.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular subtraction `(a_ - b_) % m_`.
+     */
+    function redsub(uint512 a_, uint512 b_, uint512 m_) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            // `redsub` doesn't make calls, it only requires 2 words for buffer.
+            call call_ = call.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _redsub(call_, a_, b_, m_, r_);
+        }
+    }
+
+    /**
      * @notice Performs modular subtraction assignment on the 512-bit unsigned integer minuend.
      * @dev This is an optimized version of `modsubAssign` where the inputs must be pre-reduced by `m_`.
      * @param call_ A memory pointer for precompile call arguments.
@@ -650,6 +792,23 @@ library U512 {
     ) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _modmul(call_, a_, b_, m_, r_);
+        }
+    }
+
+    /**
+     * @notice Multiplies two 512-bit unsigned integers under a modulus.
+     * @dev Allocates memory for `call` every time it's called.
+     * @param a_ The first factor.
+     * @param b_ The second factor.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular multiplication `(a_ * b_) % m_`.
+     */
+    function modmul(uint512 a_, uint512 b_, uint512 m_) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+            call call_ = initCall();
 
             _modmul(call_, a_, b_, m_, r_);
         }
@@ -753,6 +912,25 @@ library U512 {
     }
 
     /**
+     * @notice Divides two 512-bit unsigned integers under a modulus.
+     * @dev Warning: The modulus `m_` must be a prime number.
+     * @dev Returns the result of `(a_ * b_^(-1)) % m_`.
+     * @dev Allocates memory for `call` every time it's called.
+     * @param a_ The dividend.
+     * @param b_ The divisor.
+     * @param m_ The modulus.
+     * @return r_ The result of the modular division.
+     */
+    function moddiv(uint512 a_, uint512 b_, uint512 m_) internal view returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+            call call_ = initCall();
+
+            _moddiv(call_, a_, b_, m_, r_);
+        }
+    }
+
+    /**
      * @notice Performs the modular division assignment on a 512-bit unsigned dividend.
      * @dev Warning: The modulus `m_` must be a prime number.
      * @dev Updates the value of `a_` to `(a_ * b_^(-1)) % m_`.
@@ -786,6 +964,237 @@ library U512 {
     ) internal view {
         unchecked {
             _moddiv(call_, a_, b_, m_, to_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise AND of two 512-bit unsigned integers.
+     * @param a_ The first 512-bit unsigned integer.
+     * @param b_ The second 512-bit unsigned integer.
+     * @return r_ The result of the bitwise AND operation.
+     */
+    function and(uint512 a_, uint512 b_) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _and(a_, b_, r_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise AND assignment on the first 512-bit unsigned integer.
+     * @dev Updates the value of `a_` to `a_ & b_`.
+     * @param a_ The first 512-bit unsigned integer.
+     * @param b_ The second 512-bit unsigned integer.
+     */
+    function andAssign(uint512 a_, uint512 b_) internal pure {
+        unchecked {
+            _and(a_, b_, a_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise AND and stores the result in a separate 512-bit unsigned integer.
+     * @dev Assigns the result of `a_ & b_` to `to_`.
+     * @param a_ The first 512-bit unsigned integer.
+     * @param b_ The second 512-bit unsigned integer.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
+    function andAssignTo(uint512 a_, uint512 b_, uint512 to_) internal pure {
+        unchecked {
+            _and(a_, b_, to_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise OR of two 512-bit unsigned integers.
+     * @param a_ The first 512-bit unsigned integer.
+     * @param b_ The second 512-bit unsigned integer.
+     * @return r_ The result of the bitwise OR operation.
+     */
+    function or(uint512 a_, uint512 b_) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _or(a_, b_, r_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise OR assignment on the first 512-bit unsigned integer.
+     * @dev Updates the value of `a_` to `a_ | b_`.
+     * @param a_ The first 512-bit unsigned integer.
+     * @param b_ The second 512-bit unsigned integer.
+     */
+    function orAssign(uint512 a_, uint512 b_) internal pure {
+        unchecked {
+            _or(a_, b_, a_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise OR and stores the result in a separate 512-bit unsigned integer.
+     * @dev Assigns the result of `a_ | b_` to `to_`.
+     * @param a_ The first 512-bit unsigned integer.
+     * @param b_ The second 512-bit unsigned integer.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
+    function orAssignTo(uint512 a_, uint512 b_, uint512 to_) internal pure {
+        unchecked {
+            _or(a_, b_, to_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise XOR of two 512-bit unsigned integers.
+     * @param a_ The first 512-bit unsigned integer.
+     * @param b_ The second 512-bit unsigned integer.
+     * @return r_ The result of the bitwise XOR operation.
+     */
+    function xor(uint512 a_, uint512 b_) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _xor(a_, b_, r_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise XOR assignment on the first 512-bit unsigned integer.
+     * @dev Updates the value of `a_` to `a_ ^ b_`.
+     * @param a_ The first 512-bit unsigned integer.
+     * @param b_ The second 512-bit unsigned integer.
+     */
+    function xorAssign(uint512 a_, uint512 b_) internal pure {
+        unchecked {
+            _xor(a_, b_, a_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise XOR and stores the result in a separate 512-bit unsigned integer.
+     * @dev Assigns the result of `a_ ^ b_` to `to_`.
+     * @param a_ The first 512-bit unsigned integer.
+     * @param b_ The second 512-bit unsigned integer.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
+    function xorAssignTo(uint512 a_, uint512 b_, uint512 to_) internal pure {
+        unchecked {
+            _xor(a_, b_, to_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise NOT of a 512-bit unsigned integer.
+     * @param a_ The 512-bit unsigned integer.
+     * @return r_ The result of the bitwise NOT operation.
+     */
+    function not(uint512 a_) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _not(a_, r_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise NOT assignment on a 512-bit unsigned integer.
+     * @dev Updates the value of `a_` to `~a_`.
+     * @param a_ The 512-bit unsigned integer.
+     */
+    function notAssign(uint512 a_) internal pure {
+        unchecked {
+            _not(a_, a_);
+        }
+    }
+
+    /**
+     * @notice Performs bitwise NOT and stores the result in a separate 512-bit unsigned integer.
+     * @dev Assigns the result of `~a_` to `to_`.
+     * @param a_ The 512-bit unsigned integer.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
+    function notAssignTo(uint512 a_, uint512 to_) internal pure {
+        unchecked {
+            _not(a_, to_);
+        }
+    }
+
+    /**
+     * @notice Shifts a 512-bit unsigned integer to the left by a specified number of bits.
+     * @param a_ The 512-bit unsigned integer to shift.
+     * @param b_ The number of bits to shift by.
+     * @return r_ The result of the left shift operation.
+     */
+    function shl(uint512 a_, uint8 b_) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _shl(a_, b_, r_);
+        }
+    }
+
+    /**
+     * @notice Shifts a 512-bit unsigned integer to the left by a specified number of bits.
+     * @dev Updates the value of `a_` to `a_ << b_`.
+     * @param a_ The 512-bit unsigned integer to shift.
+     * @param b_ The number of bits to shift by.
+     */
+    function shlAssign(uint512 a_, uint8 b_) internal pure {
+        unchecked {
+            _shl(a_, b_, a_);
+        }
+    }
+
+    /**
+     * @notice Shifts a 512-bit unsigned integer to the left by a specified number of bits.
+     * @dev Assigns the result of `a_ << b_` to `to_`.
+     * @param a_ The 512-bit unsigned integer to shift.
+     * @param b_ The number of bits to shift by.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
+    function shlAssignTo(uint512 a_, uint8 b_, uint512 to_) internal pure {
+        unchecked {
+            _shl(a_, b_, to_);
+        }
+    }
+
+    /**
+     * @notice Shifts a 512-bit unsigned integer to the right by a specified number of bits.
+     * @param a_ The 512-bit unsigned integer to shift.
+     * @param b_ The number of bits to shift by.
+     * @return r_ The result of the right shift operation.
+     */
+    function shr(uint512 a_, uint8 b_) internal pure returns (uint512 r_) {
+        unchecked {
+            r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
+
+            _shr(a_, b_, r_);
+        }
+    }
+
+    /**
+     * @notice Shifts a 512-bit unsigned integer to the right by a specified number of bits.
+     * @dev Updates the value of `a_` to `a_ >> b_`.
+     * @param a_ The 512-bit unsigned integer to shift.
+     * @param b_ The number of bits to shift by.
+     */
+    function shrAssign(uint512 a_, uint8 b_) internal pure {
+        unchecked {
+            _shr(a_, b_, a_);
+        }
+    }
+
+    /**
+     * @notice Shifts a 512-bit unsigned integer to the right by a specified number of bits.
+     * @dev Assigns the result of `a_ >> b_` to `to_`.
+     * @param a_ The 512-bit unsigned integer to shift.
+     * @param b_ The number of bits to shift by.
+     * @param to_ The target 512-bit unsigned integer to store the result.
+     */
+    function shrAssignTo(uint512 a_, uint8 b_, uint512 to_) internal pure {
+        unchecked {
+            _shr(a_, b_, to_);
         }
     }
 
@@ -941,10 +1350,7 @@ library U512 {
                 return;
             }
 
-            assembly {
-                mstore(r_, mload(buffer_))
-                mstore(add(r_, 0x20), mload(add(buffer_, 0x20)))
-            }
+            assign(buffer_, r_);
         }
     }
 
@@ -1149,13 +1555,94 @@ library U512 {
 
             assembly {
                 mstore(call_, 0x80)
-                mstore(add(0x20, call_), 0x20)
-                mstore(add(0x40, call_), 0x40)
-                mstore(add(0xE0, call_), 0x01)
-                mstore(add(0x0100, call_), mload(m_))
-                mstore(add(0x0120, call_), mload(add(m_, 0x20)))
+                mstore(add(call_, 0x20), 0x20)
+                mstore(add(call_, 0x40), 0x40)
+                mstore(add(call_, 0xE0), 0x01)
+                mstore(add(call_, 0x0100), mload(m_))
+                mstore(add(call_, 0x0120), mload(add(m_, 0x20)))
 
                 pop(staticcall(gas(), 0x5, call_, 0x0140, r_, 0x40))
+            }
+        }
+    }
+
+    /**
+     * @notice Performs bitwise AND of two 512-bit unsigned integers.
+     * @dev Computes `a_ & b_` and stores the result in `r_`.
+     */
+    function _and(uint512 a_, uint512 b_, uint512 r_) internal pure {
+        unchecked {
+            assembly {
+                mstore(r_, and(mload(a_), mload(b_)))
+                mstore(add(r_, 0x20), and(mload(add(a_, 0x20)), mload(add(b_, 0x20))))
+            }
+        }
+    }
+
+    /**
+     * @notice Performs bitwise OR of two 512-bit unsigned integers.
+     * @dev Computes `a_ | b_` and stores the result in `r_`.
+     */
+    function _or(uint512 a_, uint512 b_, uint512 r_) internal pure {
+        unchecked {
+            assembly {
+                mstore(r_, or(mload(a_), mload(b_)))
+                mstore(add(r_, 0x20), or(mload(add(a_, 0x20)), mload(add(b_, 0x20))))
+            }
+        }
+    }
+
+    /**
+     * @notice Performs bitwise XOR of two 512-bit unsigned integers.
+     * @dev Computes `a_ ^ b_` and stores the result in `r_`.
+     */
+    function _xor(uint512 a_, uint512 b_, uint512 r_) internal pure {
+        unchecked {
+            assembly {
+                mstore(r_, xor(mload(a_), mload(b_)))
+                mstore(add(r_, 0x20), xor(mload(add(a_, 0x20)), mload(add(b_, 0x20))))
+            }
+        }
+    }
+
+    /**
+     * @notice Performs bitwise NOT of a 512-bit unsigned integer.
+     * @dev Computes `~a_` and stores the result in `r_`.
+     */
+    function _not(uint512 a_, uint512 r_) internal pure {
+        unchecked {
+            assembly {
+                mstore(r_, not(mload(a_)))
+                mstore(add(r_, 0x20), not(mload(add(a_, 0x20))))
+            }
+        }
+    }
+
+    /**
+     * @notice Performs left shift of a 512-bit unsigned integer.
+     * @dev Computes `a_ << b_` and stores the result in `r_`.
+     */
+    function _shl(uint512 a_, uint8 b_, uint512 r_) internal pure {
+        unchecked {
+            assembly {
+                mstore(r_, or(shl(b_, mload(a_)), shr(sub(256, b_), mload(add(a_, 0x20)))))
+                mstore(add(r_, 0x20), shl(b_, mload(add(a_, 0x20))))
+            }
+        }
+    }
+
+    /**
+     * @notice Performs right shift of a 512-bit unsigned integer.
+     * @dev Computes `a_ >> b_` and stores the result in `r_`.
+     */
+    function _shr(uint512 a_, uint8 b_, uint512 r_) internal pure {
+        unchecked {
+            assembly {
+                mstore(
+                    add(r_, 0x20),
+                    or(shr(b_, mload(add(a_, 0x20))), shl(sub(256, b_), mload(a_)))
+                )
+                mstore(r_, shr(b_, mload(a_)))
             }
         }
     }
@@ -1166,7 +1653,7 @@ library U512 {
     function _buffer(call call_) private pure returns (uint512 buffer_) {
         unchecked {
             assembly {
-                buffer_ := add(call_, 0x0140)
+                buffer_ := sub(call_, 0x40)
             }
         }
     }
