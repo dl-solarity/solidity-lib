@@ -6,7 +6,7 @@ type call is uint256;
 
 /**
  * @notice Low-level library that implements unsigned 512-bit arithmetics.
-
+ *
  * | Statistic   | Avg          |
  * | ----------- | ------------ |
  * | add         | 269 gas      |
