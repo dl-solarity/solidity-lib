@@ -55,8 +55,9 @@ type call is uint256;
  * uint512 b_ = U512.fromUint256(6);
  * uint512 m_ = U512.fromUint256(5);
  * uint512 r_ = a.modadd(call_, b_, m_); // 4
- * r_.mulmodAssignTo(a_, m_); // 2
+ * r_.modmulAssign(a_, m_); // 2
  * r_.eq(U512.fromUint256(2)); // true
+ * r_.toBytes(); // "0x0...02"
  * ```
  *
  */
