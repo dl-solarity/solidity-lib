@@ -42,8 +42,8 @@ type call is uint256;
  * ```
  *
  * Note that each mod call allocates extra memory for invoking the precompile. This is fine for lightweight
- * functions (under 1 million gas). However, for heavier functions, consider allocating memory once and reusing
- * it in subsequent calls. This approach can help reduce gas costs. Additionally, use assignment functions to avoid
+ * functions. However, for heavy functions, consider allocating memory once and reusing it in subsequent calls.
+ * This approach can help reduce gas costs. Additionally, use assignment functions to avoid
  * allocating memory for new local variables, instead assigning values to existing ones.
  *
  * ```
