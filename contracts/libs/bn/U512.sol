@@ -34,30 +34,31 @@ type call is uint256;
  * ```
  * using U512 for uint512;
  *
- * uint512 u512 = U512.fromUint256(12345678901234567890);
- * uint512 modulus = U512.fromUint256(987654321987654321);
+ * uint512 a_ = U512.fromUint256(3);
+ * uint512 b_ = U512.fromUint256(6);
+ * uint512 m_ = U512.fromUint256(5);
+ * uint512 r_ = a.modadd(b_, m_);
  *
- * call callPointer = U512.initCall();
- *
- * // Modular arithmetic with a call (no memory reallocation for each operation)
- * uint512 result = U512.mod(callPointer, u512, modulus);
- * U512.modaddAssign(callPointer, u512, modulus);
- *
- * // Modular arithmetic without a call (memory will be allocated for each operation)
- * result = u512.mod(modulus);
- * u512.modaddAssign(modulus);
- *
- * u512.subAssign(result);
- *
- * uint512 u512Copy = u512.copy();
- * bool isEqual = u512.eq(u512Copy);
- *
- * uint512 a = U512.fromUint256(3);
- * uint512 b = U512.fromUint256(6);
- * uint512 m = U512.fromUint256(5);
- * uint512 r = a.modadd(b, m);
- * r.toBytes(); // "0x0...04"
+ * r_.eq(U512.fromUint256(4)); // true
  * ```
+ *
+ * Note that each mod call allocates extra memory for invoking the precompile. This is fine for lightweight
+ * functions (under 1 million gas). However, for heavier functions, consider allocating memory once and reusing
+ * it in subsequent calls. This approach can help reduce gas costs. Additionally, use assignment functions to avoid
+ * allocating memory for new local variables, instead assigning values to existing ones.
+ *
+ * ```
+ * using U512 for uint512;
+ *
+ * call call_ = U512.initCall();
+ * uint512 a_ = U512.fromUint256(3);
+ * uint512 b_ = U512.fromUint256(6);
+ * uint512 m_ = U512.fromUint256(5);
+ * uint512 r_ = a.modadd(call_, b_, m_); // 4
+ * r_.mulmodAssignTo(a_, m_); // 2
+ * r_.eq(U512.fromUint256(2)); // true
+ * ```
+ *
  */
 library U512 {
     uint256 private constant _UINT512_ALLOCATION = 64;
