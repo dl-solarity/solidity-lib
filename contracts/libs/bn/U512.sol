@@ -58,7 +58,6 @@ type call is uint256;
  * r_.eq(U512.fromUint256(2)); // true
  * r_.toBytes(); // "0x00..02"
  * ```
- *
  */
 library U512 {
     uint256 private constant _UINT512_ALLOCATION = 64;
