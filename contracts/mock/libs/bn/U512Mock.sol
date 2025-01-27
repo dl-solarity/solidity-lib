@@ -844,11 +844,11 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
 
         // uint256 gasBefore_ = gasleft();
-        uint512 result_ = U512.and(a_, b_);
+        U512.andAssign(a_, b_);
 
         // console.log("and gas: ", gasBefore_ - gasleft());
 
-        return result_.toBytes();
+        return a_.toBytes();
     }
 
     function andAssignTo(
@@ -883,11 +883,11 @@ contract U512Mock {
         uint512 b_ = U512.fromBytes(bBytes_);
 
         // uint256 gasBefore_ = gasleft();
-        uint512 result_ = U512.or(a_, b_);
+        U512.orAssign(a_, b_);
 
         // console.log("or gas: ", gasBefore_ - gasleft());
 
-        return result_.toBytes();
+        return a_.toBytes();
     }
 
     function orAssignTo(

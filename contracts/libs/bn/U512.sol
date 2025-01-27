@@ -28,6 +28,30 @@ type call is uint256;
  * | not         | 216 gas      |
  * | shl         | 272 gas      |
  * | shr         | 272 gas      |
+ *
+ * ## Usage example:
+ *
+ * ```
+ * using U512 for uint512;
+ *
+ * uint512 u512 = U512.fromUint256(12345678901234567890);
+ * uint512 modulus = U512.fromUint256(987654321987654321);
+ *
+ * call callPointer = U512.initCall();
+ *
+ * // Modular arithmetic with a call (no memory reallocation for each operation)
+ * uint512 result = U512.mod(callPointer, u512, modulus);
+ * U512.modaddAssign(callPointer, u512, modulus);
+ *
+ * // Modular arithmetic without a call (memory will be allocated for each operation)
+ * result = u512.mod(modulus);
+ * u512.modaddAssign(modulus);
+ *
+ * u512.subAssign(result);
+ *
+ * uint512 u512Copy = u512.copy();
+ * bool isEqual = u512.isEq(u512Copy);
+ * ```
  */
 library U512 {
     uint256 private constant _UINT512_ALLOCATION = 64;
