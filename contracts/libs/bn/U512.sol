@@ -50,7 +50,13 @@ type call is uint256;
  * u512.subAssign(result);
  *
  * uint512 u512Copy = u512.copy();
- * bool isEqual = u512.isEq(u512Copy);
+ * bool isEqual = u512.eq(u512Copy);
+ *
+ * uint512 a = U512.fromUint256(3);
+ * uint512 b = U512.fromUint256(6);
+ * uint512 m = U512.fromUint256(5);
+ * uint512 r = a.modadd(b, m);
+ * r.toBytes(); // "0x0...04"
  * ```
  */
 library U512 {
