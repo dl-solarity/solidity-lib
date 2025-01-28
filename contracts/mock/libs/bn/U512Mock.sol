@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {call} from "../../../libs/bn/U512.sol";
+import {call512} from "../../../libs/bn/U512.sol";
 import {uint512} from "../../../libs/bn/U512.sol";
 import {U512} from "../../../libs/bn/U512.sol";
 // import "hardhat/console.sol";
@@ -77,7 +77,7 @@ contract U512Mock {
         bytes memory aBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
@@ -104,7 +104,7 @@ contract U512Mock {
         bytes memory aBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
@@ -119,7 +119,7 @@ contract U512Mock {
         bytes memory mBytes_,
         bytes memory toBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
@@ -134,7 +134,7 @@ contract U512Mock {
         bytes memory aBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
@@ -161,7 +161,7 @@ contract U512Mock {
         bytes memory aBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
@@ -176,7 +176,7 @@ contract U512Mock {
         bytes memory mBytes_,
         bytes memory toBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
@@ -315,7 +315,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -346,7 +346,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -363,7 +363,7 @@ contract U512Mock {
         bytes memory mBytes_,
         bytes memory toBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -380,7 +380,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -411,7 +411,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -428,7 +428,7 @@ contract U512Mock {
         bytes memory mBytes_,
         bytes memory toBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -445,7 +445,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -476,7 +476,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -493,7 +493,7 @@ contract U512Mock {
         bytes memory mBytes_,
         bytes memory toBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -510,7 +510,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -541,7 +541,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -558,7 +558,7 @@ contract U512Mock {
         bytes memory mBytes_,
         bytes memory toBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -575,7 +575,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -606,7 +606,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -623,7 +623,7 @@ contract U512Mock {
         bytes memory mBytes_,
         bytes memory toBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -640,7 +640,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -671,7 +671,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -688,7 +688,7 @@ contract U512Mock {
         bytes memory mBytes_,
         bytes memory toBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -705,7 +705,7 @@ contract U512Mock {
         uint256 b_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
@@ -734,7 +734,7 @@ contract U512Mock {
         uint256 b_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
@@ -750,7 +750,7 @@ contract U512Mock {
         bytes memory mBytes_,
         bytes memory toBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 m_ = U512.fromBytes(mBytes_);
@@ -766,7 +766,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -797,7 +797,7 @@ contract U512Mock {
         bytes memory bBytes_,
         bytes memory mBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);
@@ -814,7 +814,7 @@ contract U512Mock {
         bytes memory mBytes_,
         bytes memory toBytes_
     ) external view returns (bytes memory rBytes_) {
-        call call_ = U512.initCall();
+        call512 call_ = U512.initCall();
 
         uint512 a_ = U512.fromBytes(aBytes_);
         uint512 b_ = U512.fromBytes(bBytes_);

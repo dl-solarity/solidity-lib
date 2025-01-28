@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 type uint512 is uint256;
-type call is uint256;
+type call512 is uint256;
 
 /**
  * @notice Low-level library that implements unsigned 512-bit arithmetics.
@@ -29,6 +29,14 @@ type call is uint256;
  * | shl         | 272 gas      |
  * | shr         | 272 gas      |
  *
+ * ## Imports:
+ *
+ * First import the library and all the necessary types.
+ *
+ * ```
+ * import {U512, uint512, call512} from "U512.sol";
+ * ```
+ *
  * ## Usage example:
  *
  * ```
@@ -49,7 +57,7 @@ type call is uint256;
  * ```
  * using U512 for uint512;
  *
- * call call_ = U512.initCall();
+ * call512 call_ = U512.initCall();
  * uint512 a_ = U512.fromUint256(3);
  * uint512 b_ = U512.fromUint256(6);
  * uint512 m_ = U512.fromUint256(5);
@@ -68,9 +76,9 @@ library U512 {
      * @notice Initializes a memory pointer for precompile call arguments.
      * @return call_ A memory pointer for precompile operations.
      */
-    function initCall() internal pure returns (call call_) {
+    function initCall() internal pure returns (call512 call_) {
         unchecked {
-            call_ = call.wrap(_allocate(_CALL_ALLOCATION));
+            call_ = call512.wrap(_allocate(_CALL_ALLOCATION));
 
             assembly {
                 call_ := add(call_, 0x40)
@@ -266,7 +274,7 @@ library U512 {
      * @param m_ The modulus.
      * @return r_ The result of the modular operation `(a_ % m_)`.
      */
-    function mod(call call_, uint512 a_, uint512 m_) internal view returns (uint512 r_) {
+    function mod(call512 call_, uint512 a_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
 
@@ -284,7 +292,7 @@ library U512 {
     function mod(uint512 a_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
-            call call_ = initCall();
+            call512 call_ = initCall();
 
             _mod(call_, a_, m_, r_);
         }
@@ -297,7 +305,7 @@ library U512 {
      * @param a_ The dividend.
      * @param m_ The modulus.
      */
-    function modAssign(call call_, uint512 a_, uint512 m_) internal view {
+    function modAssign(call512 call_, uint512 a_, uint512 m_) internal view {
         unchecked {
             _mod(call_, a_, m_, a_);
         }
@@ -311,7 +319,7 @@ library U512 {
      * @param m_ The modulus.
      * @param to_ The target 512-bit unsigned integer to store the result.
      */
-    function modAssignTo(call call_, uint512 a_, uint512 m_, uint512 to_) internal view {
+    function modAssignTo(call512 call_, uint512 a_, uint512 m_, uint512 to_) internal view {
         unchecked {
             _mod(call_, a_, m_, to_);
         }
@@ -325,7 +333,7 @@ library U512 {
      * @param m_ The modulus.
      * @return r_ The modular inverse result `a_^(-1) % m_`.
      */
-    function modinv(call call_, uint512 a_, uint512 m_) internal view returns (uint512 r_) {
+    function modinv(call512 call_, uint512 a_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
 
@@ -344,7 +352,7 @@ library U512 {
     function modinv(uint512 a_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
-            call call_ = initCall();
+            call512 call_ = initCall();
 
             _modinv(call_, a_, m_, r_);
         }
@@ -358,7 +366,7 @@ library U512 {
      * @param a_ The 512-bit unsigned integer to invert.
      * @param m_ The modulus.
      */
-    function modinvAssign(call call_, uint512 a_, uint512 m_) internal view {
+    function modinvAssign(call512 call_, uint512 a_, uint512 m_) internal view {
         unchecked {
             _modinv(call_, a_, m_, a_);
         }
@@ -373,7 +381,7 @@ library U512 {
      * @param m_ The modulus.
      * @param to_ The target 512-bit unsigned integer to store the result.
      */
-    function modinvAssignTo(call call_, uint512 a_, uint512 m_, uint512 to_) internal view {
+    function modinvAssignTo(call512 call_, uint512 a_, uint512 m_, uint512 to_) internal view {
         unchecked {
             _modinv(call_, a_, m_, to_);
         }
@@ -388,7 +396,7 @@ library U512 {
      * @return r_ The result of modular exponentiation `(b_^e_) % m_`.
      */
     function modexp(
-        call call_,
+        call512 call_,
         uint512 b_,
         uint512 e_,
         uint512 m_
@@ -411,7 +419,7 @@ library U512 {
     function modexp(uint512 b_, uint512 e_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
-            call call_ = initCall();
+            call512 call_ = initCall();
 
             _modexp(call_, b_, e_, m_, r_);
         }
@@ -425,7 +433,7 @@ library U512 {
      * @param e_ The exponent.
      * @param m_ The modulus.
      */
-    function modexpAssign(call call_, uint512 b_, uint512 e_, uint512 m_) internal view {
+    function modexpAssign(call512 call_, uint512 b_, uint512 e_, uint512 m_) internal view {
         unchecked {
             _modexp(call_, b_, e_, m_, b_);
         }
@@ -441,7 +449,7 @@ library U512 {
      * @param to_ The target 512-bit unsigned integer to store the result.
      */
     function modexpAssignTo(
-        call call_,
+        call512 call_,
         uint512 b_,
         uint512 e_,
         uint512 m_,
@@ -461,7 +469,7 @@ library U512 {
      * @return r_ The result of modular exponentiation `(b_^e_) % m_`.
      */
     function modexpU256(
-        call call_,
+        call512 call_,
         uint512 b_,
         uint256 e_,
         uint512 m_
@@ -484,7 +492,7 @@ library U512 {
     function modexpU256(uint512 b_, uint256 e_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
-            call call_ = initCall();
+            call512 call_ = initCall();
 
             _modexpU256(call_, b_, e_, m_, r_);
         }
@@ -498,7 +506,7 @@ library U512 {
      * @param e_ The exponent.
      * @param m_ The modulus.
      */
-    function modexpU256Assign(call call_, uint512 b_, uint256 e_, uint512 m_) internal view {
+    function modexpU256Assign(call512 call_, uint512 b_, uint256 e_, uint512 m_) internal view {
         unchecked {
             _modexpU256(call_, b_, e_, m_, b_);
         }
@@ -514,7 +522,7 @@ library U512 {
      * @param to_ The target 512-bit unsigned integer to store the result.
      */
     function modexpU256AssignTo(
-        call call_,
+        call512 call_,
         uint512 b_,
         uint256 e_,
         uint512 m_,
@@ -534,7 +542,7 @@ library U512 {
      * @return r_ The result of the modular addition `(a_ + b_) % m_`.
      */
     function modadd(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_
@@ -557,7 +565,7 @@ library U512 {
     function modadd(uint512 a_, uint512 b_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
-            call call_ = initCall();
+            call512 call_ = initCall();
 
             _modadd(call_, a_, b_, m_, r_);
         }
@@ -571,7 +579,7 @@ library U512 {
      * @param b_ The second addend.
      * @param m_ The modulus.
      */
-    function modaddAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
+    function modaddAssign(call512 call_, uint512 a_, uint512 b_, uint512 m_) internal view {
         unchecked {
             _modadd(call_, a_, b_, m_, a_);
         }
@@ -587,7 +595,7 @@ library U512 {
      * @param to_ The target 512-bit unsigned integer to store the result.
      */
     function modaddAssignTo(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_,
@@ -647,7 +655,7 @@ library U512 {
      * @return r_ The result of the modular addition `(a_ + b_) % m_`.
      */
     function redadd(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_
@@ -673,7 +681,7 @@ library U512 {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
 
             // `redadd` doesn't make calls, it only requires 2 words for buffer.
-            call call_ = call.wrap(_allocate(_UINT512_ALLOCATION));
+            call512 call_ = call512.wrap(_allocate(_UINT512_ALLOCATION));
 
             _redadd(call_, a_, b_, m_, r_);
         }
@@ -687,7 +695,7 @@ library U512 {
      * @param b_ The second addend, reduced by `m_`.
      * @param m_ The modulus.
      */
-    function redaddAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal pure {
+    function redaddAssign(call512 call_, uint512 a_, uint512 b_, uint512 m_) internal pure {
         unchecked {
             _redadd(call_, a_, b_, m_, a_);
         }
@@ -703,7 +711,7 @@ library U512 {
      * @param to_ The target 512-bit unsigned integer to store the result.
      */
     function redaddAssignTo(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_,
@@ -723,7 +731,7 @@ library U512 {
      * @return r_ The result of the modular subtraction `(a_ - b_) % m_`.
      */
     function modsub(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_
@@ -746,7 +754,7 @@ library U512 {
     function modsub(uint512 a_, uint512 b_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
-            call call_ = initCall();
+            call512 call_ = initCall();
 
             _modsub(call_, a_, b_, m_, r_);
         }
@@ -759,7 +767,7 @@ library U512 {
      * @param b_ The subtrahend.
      * @param m_ The modulus.
      */
-    function modsubAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
+    function modsubAssign(call512 call_, uint512 a_, uint512 b_, uint512 m_) internal view {
         unchecked {
             _modsub(call_, a_, b_, m_, a_);
         }
@@ -774,7 +782,7 @@ library U512 {
      * @param to_ The target 512-bit unsigned integer to store the result.
      */
     function modsubAssignTo(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_,
@@ -834,7 +842,7 @@ library U512 {
      * @return r_ The result of the modular subtraction `(a_ - b_) % m_`.
      */
     function redsub(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_
@@ -860,7 +868,7 @@ library U512 {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
 
             // `redsub` doesn't make calls, it only requires 2 words for buffer.
-            call call_ = call.wrap(_allocate(_UINT512_ALLOCATION));
+            call512 call_ = call512.wrap(_allocate(_UINT512_ALLOCATION));
 
             _redsub(call_, a_, b_, m_, r_);
         }
@@ -874,7 +882,7 @@ library U512 {
      * @param b_ The subtrahend, reduced by `m_`.
      * @param m_ The modulus.
      */
-    function redsubAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal pure {
+    function redsubAssign(call512 call_, uint512 a_, uint512 b_, uint512 m_) internal pure {
         unchecked {
             _redsub(call_, a_, b_, m_, a_);
         }
@@ -890,7 +898,7 @@ library U512 {
      * @param to_ The target 512-bit unsigned integer to store the result.
      */
     function redsubAssignTo(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_,
@@ -910,7 +918,7 @@ library U512 {
      * @return r_ The result of the modular multiplication `(a_ * b_) % m_`.
      */
     function modmul(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_
@@ -933,7 +941,7 @@ library U512 {
     function modmul(uint512 a_, uint512 b_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
-            call call_ = initCall();
+            call512 call_ = initCall();
 
             _modmul(call_, a_, b_, m_, r_);
         }
@@ -947,7 +955,7 @@ library U512 {
      * @param b_ The second factor.
      * @param m_ The modulus.
      */
-    function modmulAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
+    function modmulAssign(call512 call_, uint512 a_, uint512 b_, uint512 m_) internal view {
         unchecked {
             _modmul(call_, a_, b_, m_, a_);
         }
@@ -963,7 +971,7 @@ library U512 {
      * @param to_ The target 512-bit unsigned integer to store the result.
      */
     function modmulAssignTo(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_,
@@ -1024,7 +1032,7 @@ library U512 {
      * @return r_ The result of the modular division.
      */
     function moddiv(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_
@@ -1049,7 +1057,7 @@ library U512 {
     function moddiv(uint512 a_, uint512 b_, uint512 m_) internal view returns (uint512 r_) {
         unchecked {
             r_ = uint512.wrap(_allocate(_UINT512_ALLOCATION));
-            call call_ = initCall();
+            call512 call_ = initCall();
 
             _moddiv(call_, a_, b_, m_, r_);
         }
@@ -1064,7 +1072,7 @@ library U512 {
      * @param b_ The divisor.
      * @param m_ The modulus.
      */
-    function moddivAssign(call call_, uint512 a_, uint512 b_, uint512 m_) internal view {
+    function moddivAssign(call512 call_, uint512 a_, uint512 b_, uint512 m_) internal view {
         unchecked {
             _moddiv(call_, a_, b_, m_, a_);
         }
@@ -1081,7 +1089,7 @@ library U512 {
      * @param to_ The target 512-bit unsigned integer to store the result.
      */
     function moddivAssignTo(
-        call call_,
+        call512 call_,
         uint512 a_,
         uint512 b_,
         uint512 m_,
@@ -1327,7 +1335,7 @@ library U512 {
      * @notice Performs modular arithmetic using the EVM precompiled contract.
      * @dev Computes `(a_ % m_)` and stores the result in `r_`.
      */
-    function _mod(call call_, uint512 a_, uint512 m_, uint512 r_) private view {
+    function _mod(call512 call_, uint512 a_, uint512 m_, uint512 r_) private view {
         unchecked {
             assembly {
                 mstore(call_, 0x40)
@@ -1348,7 +1356,7 @@ library U512 {
      * @notice Performs modular exponentiation using the EVM precompiled contract.
      * @dev Computes `(a_^e_) % m_` and stores the result in `r_`.
      */
-    function _modexp(call call_, uint512 a_, uint512 e_, uint512 m_, uint512 r_) private view {
+    function _modexp(call512 call_, uint512 a_, uint512 e_, uint512 m_, uint512 r_) private view {
         unchecked {
             assembly {
                 mstore(call_, 0x40)
@@ -1370,7 +1378,13 @@ library U512 {
      * @notice Performs modular exponentiation using the EVM precompiled contract.
      * @dev Computes `(a_^e_) % m_` and stores the result in `r_`.
      */
-    function _modexpU256(call call_, uint512 a_, uint256 e_, uint512 m_, uint512 r_) private view {
+    function _modexpU256(
+        call512 call_,
+        uint512 a_,
+        uint256 e_,
+        uint512 m_,
+        uint512 r_
+    ) private view {
         unchecked {
             assembly {
                 mstore(call_, 0x40)
@@ -1392,7 +1406,7 @@ library U512 {
      * @dev The modulus `m_` must be a prime number.
      * @dev Computes `a_^(-1) % m_` and stores the result in `r_`.
      */
-    function _modinv(call call_, uint512 a_, uint512 m_, uint512 r_) private view {
+    function _modinv(call512 call_, uint512 a_, uint512 m_, uint512 r_) private view {
         unchecked {
             uint512 buffer_ = _buffer(call_);
 
@@ -1443,7 +1457,7 @@ library U512 {
      * @notice Performs modular addition using the EVM precompiled contract.
      * @dev Computes `(a_ + b_) % m_` and stores the result in `r_`.
      */
-    function _modadd(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
+    function _modadd(call512 call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
         unchecked {
             assembly {
                 let aWord_ := mload(add(a_, 0x20))
@@ -1473,7 +1487,7 @@ library U512 {
      * @notice Performs reduced modular addition of two 512-bit unsigned integers.
      * @dev Computes `(a_ + b_) % m_` assuming `a_` and `b_` are already reduced by `m_`.
      */
-    function _redadd(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private pure {
+    function _redadd(call512 call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private pure {
         unchecked {
             uint512 buffer_ = _buffer(call_);
             bool overflowed_;
@@ -1524,7 +1538,7 @@ library U512 {
      * @notice Performs modular subtraction using the EVM precompiled contract.
      * @dev Computes `(a_ - b_) % m_` and stores the result in `r_`.
      */
-    function _modsub(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
+    function _modsub(call512 call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
         unchecked {
             int cmp_ = cmp(a_, b_);
 
@@ -1557,7 +1571,7 @@ library U512 {
      * @notice Performs reduced modular subtraction of two 512-bit unsigned integers.
      * @dev Computes `(a_ - b_) % m_` assuming `a_` and `b_` are already reduced by `m_`.
      */
-    function _redsub(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private pure {
+    function _redsub(call512 call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private pure {
         unchecked {
             if (cmp(a_, b_) >= 0) {
                 _sub(a_, b_, r_);
@@ -1606,7 +1620,7 @@ library U512 {
      * @dev Calculates partial products and stores them in `call_` for further processing.
      * @dev Generalizes the "muldiv" algorithm to split 512-bit unsigned integers into chunks, as detailed at https://xn--2-umb.com/21/muldiv/.
      */
-    function _modmul2p(call call_, uint512 a_, uint512 b_) private pure {
+    function _modmul2p(call512 call_, uint512 a_, uint512 b_) private pure {
         unchecked {
             assembly {
                 let a0_ := mload(a_)
@@ -1672,7 +1686,7 @@ library U512 {
      * @notice Performs modular multiplication using the EVM precompiled contract.
      * @dev Computes `(a_ * b_) % m_` and stores the result in `r_`.
      */
-    function _modmul(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
+    function _modmul(call512 call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
         unchecked {
             _modmul2p(call_, a_, b_);
 
@@ -1694,7 +1708,7 @@ library U512 {
      * @dev The modulus `m_` must be a prime number.
      * @dev Computes `(a_ * b_^(-1)) % m_` and stores the result in `r_`.
      */
-    function _moddiv(call call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) internal view {
+    function _moddiv(call512 call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) internal view {
         unchecked {
             uint512 buffer_ = _buffer(call_);
 
@@ -1798,7 +1812,7 @@ library U512 {
     /**
      * @notice Calculates a memory pointer for a buffer based on the provided `call_` pointer.
      */
-    function _buffer(call call_) private pure returns (uint512 buffer_) {
+    function _buffer(call512 call_) private pure returns (uint512 buffer_) {
         unchecked {
             assembly {
                 buffer_ := sub(call_, 0x40)

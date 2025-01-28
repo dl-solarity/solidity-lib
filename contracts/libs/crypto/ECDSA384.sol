@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {call, uint512} from "../bn/U512.sol";
+import {call512, uint512} from "../bn/U512.sol";
 import {U512} from "../bn/U512.sol";
 import {MemoryUtils} from "../utils/MemoryUtils.sol";
 
@@ -78,7 +78,7 @@ library ECDSA384 {
                 lowSmax: U512.fromBytes(curveParams_.lowSmax)
             });
 
-            call call_ = U512.initCall();
+            call512 call_ = U512.initCall();
 
             /// accept s only from the lower part of the curve
             if (
@@ -138,7 +138,7 @@ library ECDSA384 {
      * @dev Check if a point in affine coordinates is on the curve.
      */
     function _isOnCurve(
-        call call_,
+        call512 call_,
         uint512 p_,
         uint512 a_,
         uint512 b_,
@@ -169,7 +169,7 @@ library ECDSA384 {
      * @dev Compute the Strauss-Shamir double scalar multiplication scalar1*G + scalar2*H.
      */
     function _doubleScalarMultiplication(
-        call call_,
+        call512 call_,
         uint512 p_,
         uint512 two_,
         uint512 three_,
@@ -260,7 +260,7 @@ library ECDSA384 {
      * @dev Double an elliptic curve point in affine coordinates.
      */
     function _twiceAffine(
-        call call_,
+        call512 call_,
         uint512 p_,
         uint512 two_,
         uint512 three_,
@@ -298,7 +298,7 @@ library ECDSA384 {
      * @dev Add two elliptic curve points in affine coordinates.
      */
     function _addAffine(
-        call call_,
+        call512 call_,
         uint512 p_,
         uint512 two_,
         uint512 three_,
@@ -344,7 +344,7 @@ library ECDSA384 {
     }
 
     function _precomputePointsTable(
-        call call_,
+        call512 call_,
         uint512 p_,
         uint512 two_,
         uint512 three_,
