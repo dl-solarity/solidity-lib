@@ -10,7 +10,7 @@
 Solidity modules and utilities that **go far beyond mediocre solidity**.
 
 - Implementation of the [**Contracts Registry**](https://eips.ethereum.org/EIPS/eip-6224) pattern
-- State-of-the-art cryptography primitives (**ECDSA over 256-bit and 384-bit curves**, **RSASSA-PSS**)
+- State-of-the-art cryptography primitives (**ECDSA over 256-bit, 384-bit, and 512-bit curves**, **RSASSA-PSS**)
 - Advanced data structures (**Vector**, **DynamicSet**, **PriorityQueue**, **AVLTree**)
 - ZK-friendly [**Cartesian Merkle Tree**](https://medium.com/@Arvolear/cartesian-merkle-tree-the-new-breed-a30b005ecf27), [**Sparse Merkle Tree**](https://docs.iden3.io/publications/pdfs/Merkle-Tree.pdf), and [**Incremental Merkle Tree**](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf) implementations
 - Versatile access control smart contracts (**Merkle whitelists**, **RBAC**)
@@ -18,6 +18,7 @@ Solidity modules and utilities that **go far beyond mediocre solidity**.
 - Flexible finance instruments (**Staking**, **Vesting**)
 - Robust UniswapV2 and UniswapV3 oracles
 - Lightweight SBT implementation
+- Hyperoptimized **uint512** BigInt library
 - Utilities to ease work with memory, types, ERC20 decimals, arrays, sets, and ZK proofs
 
 Built leveraging [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (4.9.6).
