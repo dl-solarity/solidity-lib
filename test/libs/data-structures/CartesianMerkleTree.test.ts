@@ -29,6 +29,25 @@ describe("CartesianMerkleTree", () => {
     return resultArr;
   }
 
+  function parseNumberToBitsArray(num: bigint, expectedLength: bigint): number[] {
+    const binary = num.toString(2);
+    const resultArr: number[] = [];
+
+    if (expectedLength < BigInt(binary.length)) {
+      throw Error("Wrong expected length");
+    }
+
+    for (let i = 0; i < expectedLength - BigInt(binary.length); i++) {
+      resultArr.push(0);
+    }
+
+    for (let i = 0; i < binary.length; i++) {
+      resultArr.push(Number(binary[i]));
+    }
+
+    return resultArr;
+  }
+
   async function verifyCMTProof(
     proof: CartesianMerkleTree.ProofStruct,
     expectedRoot: string,
@@ -44,22 +63,31 @@ describe("CartesianMerkleTree", () => {
 
     let currentSiblingsIndex: number = Number(proof.siblingsLength);
     let finalHash: string = "";
+    let directionBits = [];
 
     while (true) {
       let valuesToHash: string[] = [];
       let currentSiblings: BytesLike[] = proof.siblings.slice(currentSiblingsIndex - 2, currentSiblingsIndex);
 
       if (currentSiblingsIndex === Number(proof.siblingsLength)) {
+        directionBits[currentSiblingsIndex / 2 - 1] = 0;
+
         if (BigInt(ethers.hexlify(currentSiblings[0])) > BigInt(ethers.hexlify(currentSiblings[1]))) {
           currentSiblings = [currentSiblings[1], currentSiblings[0]];
+
+          directionBits[currentSiblingsIndex / 2 - 1] = 1;
         }
 
         valuesToHash = [keyToVerify, ethers.hexlify(currentSiblings[0]), ethers.hexlify(currentSiblings[1])];
       } else {
         let sortedChildren: string[] = [finalHash, ethers.hexlify(currentSiblings[1])];
 
+        directionBits[currentSiblingsIndex / 2 - 1] = 0;
+
         if (BigInt(sortedChildren[0]) > BigInt(sortedChildren[1])) {
           sortedChildren = [sortedChildren[1], sortedChildren[0]];
+
+          directionBits[currentSiblingsIndex / 2 - 1] = 1;
         }
 
         valuesToHash = [currentSiblings[0].toString(), sortedChildren[0], sortedChildren[1]];
@@ -81,6 +109,9 @@ describe("CartesianMerkleTree", () => {
       }
     }
 
+    const expectedDirBitsArray = parseNumberToBitsArray(proof.directionBits, proof.siblingsLength / 2n);
+
+    expect(expectedDirBitsArray).to.be.deep.eq(directionBits);
     expect(expectedRoot).to.be.eq(finalHash);
   }
 
@@ -259,6 +290,7 @@ describe("CartesianMerkleTree", () => {
 
       expect(proof.siblingsLength).to.be.eq(0);
       expect(proof.siblings).to.be.deep.eq(new Array(desiredProofSize).fill(0));
+      expect(proof.directionBits).to.be.eq(0);
       expect(proof.existence).to.be.false;
     });
 

@@ -30,7 +30,7 @@ pragma solidity ^0.8.4;
  *
  * uintTreaple.getRoot();
  *
- * CartesianMerkleTree.Proof memory proof = uintTreaple.getProof(100);
+ * CartesianMerkleTree.Proof memory proof = uintTreaple.getProof(100, 10);
  *
  * uintTreaple.getNodeByKey(100);
  *
@@ -590,6 +590,7 @@ library CartesianMerkleTree {
      * @param root The root hash of the Cartesian Merkle tree.
      * @param siblings An array of sibling hashes can be used to get the Cartesian Merkle Root.
      * @param siblingsLength The number of siblings to be used for evidence.
+     * @param directionBits A path from the root to the node.
      * @param existence Indicates the presence (true) or absence (false) of the node.
      * @param key The key associated with the node.
      * @param nonExistenceKey The non-existence key of the auxiliary node in case when existence is false.
@@ -598,6 +599,7 @@ library CartesianMerkleTree {
         bytes32 root;
         bytes32[] siblings;
         uint256 siblingsLength;
+        uint256 directionBits;
         bool existence;
         bytes32 key;
         bytes32 nonExistenceKey;
@@ -775,6 +777,7 @@ library CartesianMerkleTree {
             root: _rootMerkleHash(treaple),
             siblings: new bytes32[](desiredProofSize_),
             siblingsLength: 0,
+            directionBits: 0,
             existence: false,
             key: key_,
             nonExistenceKey: ZERO_HASH
@@ -787,20 +790,23 @@ library CartesianMerkleTree {
         Node storage node;
         uint256 currentSiblingsIndex_;
         uint256 nextNodeId_ = treaple.merkleRootId;
+        uint256 directionBits_;
 
         while (true) {
             node = treaple.nodes[uint64(nextNodeId_)];
 
             if (node.key == key_) {
-                _addProofSibling(
-                    proof_,
-                    currentSiblingsIndex_++,
-                    treaple.nodes[node.childLeft].merkleHash
-                );
-                _addProofSibling(
-                    proof_,
-                    currentSiblingsIndex_++,
-                    treaple.nodes[node.childRight].merkleHash
+                bytes32 leftHash_ = treaple.nodes[node.childLeft].merkleHash;
+                bytes32 rightHash_ = treaple.nodes[node.childRight].merkleHash;
+
+                _addProofSibling(proof_, currentSiblingsIndex_++, leftHash_);
+                _addProofSibling(proof_, currentSiblingsIndex_++, rightHash_);
+
+                proof_.directionBits = _calculateDirectionBit(
+                    directionBits_,
+                    currentSiblingsIndex_,
+                    leftHash_,
+                    rightHash_
                 );
 
                 proof_.existence = true;
@@ -820,15 +826,17 @@ library CartesianMerkleTree {
             }
 
             if (nextNodeId_ == 0) {
-                _addProofSibling(
-                    proof_,
-                    currentSiblingsIndex_++,
-                    treaple.nodes[node.childLeft].merkleHash
-                );
-                _addProofSibling(
-                    proof_,
-                    currentSiblingsIndex_++,
-                    treaple.nodes[node.childRight].merkleHash
+                bytes32 leftHash_ = treaple.nodes[node.childLeft].merkleHash;
+                bytes32 rightHash_ = treaple.nodes[node.childRight].merkleHash;
+
+                _addProofSibling(proof_, currentSiblingsIndex_++, leftHash_);
+                _addProofSibling(proof_, currentSiblingsIndex_++, rightHash_);
+
+                proof_.directionBits = _calculateDirectionBit(
+                    directionBits_,
+                    currentSiblingsIndex_,
+                    leftHash_,
+                    rightHash_
                 );
 
                 proof_.nonExistenceKey = node.key;
@@ -841,6 +849,13 @@ library CartesianMerkleTree {
             _addProofSibling(
                 proof_,
                 currentSiblingsIndex_++,
+                treaple.nodes[otherNodeId_].merkleHash
+            );
+
+            directionBits_ = _calculateDirectionBit(
+                directionBits_,
+                currentSiblingsIndex_,
+                treaple.nodes[uint64(nextNodeId_)].merkleHash,
                 treaple.nodes[otherNodeId_].merkleHash
             );
         }
@@ -873,6 +888,23 @@ library CartesianMerkleTree {
         );
 
         proof_.siblings[currentSiblingsIndex_] = siblingToAdd_;
+    }
+
+    function _calculateDirectionBit(
+        uint256 directionBits_,
+        uint256 currentSiblingsIndex_,
+        bytes32 leftHash_,
+        bytes32 rightHash_
+    ) private pure returns (uint256) {
+        if (currentSiblingsIndex_ != 2) {
+            directionBits_ <<= 1;
+        }
+
+        if (leftHash_ > rightHash_) {
+            directionBits_++;
+        }
+
+        return directionBits_;
     }
 
     function _hashNodes(CMT storage treaple, uint256 nodeId_) private view returns (bytes32) {
