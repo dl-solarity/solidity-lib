@@ -1708,7 +1708,7 @@ library U512 {
      * @dev The modulus `m_` must be a prime number.
      * @dev Computes `(a_ * b_^(-1)) % m_` and stores the result in `r_`.
      */
-    function _moddiv(call512 call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) internal view {
+    function _moddiv(call512 call_, uint512 a_, uint512 b_, uint512 m_, uint512 r_) private view {
         unchecked {
             uint512 buffer_ = _buffer(call_);
 
@@ -1732,7 +1732,7 @@ library U512 {
      * @notice Performs bitwise AND of two 512-bit unsigned integers.
      * @dev Computes `a_ & b_` and stores the result in `r_`.
      */
-    function _and(uint512 a_, uint512 b_, uint512 r_) internal pure {
+    function _and(uint512 a_, uint512 b_, uint512 r_) private pure {
         unchecked {
             assembly {
                 mstore(r_, and(mload(a_), mload(b_)))
@@ -1745,7 +1745,7 @@ library U512 {
      * @notice Performs bitwise OR of two 512-bit unsigned integers.
      * @dev Computes `a_ | b_` and stores the result in `r_`.
      */
-    function _or(uint512 a_, uint512 b_, uint512 r_) internal pure {
+    function _or(uint512 a_, uint512 b_, uint512 r_) private pure {
         unchecked {
             assembly {
                 mstore(r_, or(mload(a_), mload(b_)))
@@ -1758,7 +1758,7 @@ library U512 {
      * @notice Performs bitwise XOR of two 512-bit unsigned integers.
      * @dev Computes `a_ ^ b_` and stores the result in `r_`.
      */
-    function _xor(uint512 a_, uint512 b_, uint512 r_) internal pure {
+    function _xor(uint512 a_, uint512 b_, uint512 r_) private pure {
         unchecked {
             assembly {
                 mstore(r_, xor(mload(a_), mload(b_)))
@@ -1771,7 +1771,7 @@ library U512 {
      * @notice Performs bitwise NOT of a 512-bit unsigned integer.
      * @dev Computes `~a_` and stores the result in `r_`.
      */
-    function _not(uint512 a_, uint512 r_) internal pure {
+    function _not(uint512 a_, uint512 r_) private pure {
         unchecked {
             assembly {
                 mstore(r_, not(mload(a_)))
@@ -1784,7 +1784,7 @@ library U512 {
      * @notice Performs left shift of a 512-bit unsigned integer.
      * @dev Computes `a_ << b_` and stores the result in `r_`.
      */
-    function _shl(uint512 a_, uint8 b_, uint512 r_) internal pure {
+    function _shl(uint512 a_, uint8 b_, uint512 r_) private pure {
         unchecked {
             assembly {
                 mstore(r_, or(shl(b_, mload(a_)), shr(sub(256, b_), mload(add(a_, 0x20)))))
@@ -1797,7 +1797,7 @@ library U512 {
      * @notice Performs right shift of a 512-bit unsigned integer.
      * @dev Computes `a_ >> b_` and stores the result in `r_`.
      */
-    function _shr(uint512 a_, uint8 b_, uint512 r_) internal pure {
+    function _shr(uint512 a_, uint8 b_, uint512 r_) private pure {
         unchecked {
             assembly {
                 mstore(
