@@ -63,15 +63,13 @@ describe("CartesianMerkleTree", () => {
 
     let currentSiblingsIndex: number = Number(proof.siblingsLength);
     let finalHash: string = "";
-    let directionBits = [];
+    let directionBits = Array(currentSiblingsIndex / 2).fill(0);
 
     while (true) {
       let valuesToHash: string[] = [];
       let currentSiblings: BytesLike[] = proof.siblings.slice(currentSiblingsIndex - 2, currentSiblingsIndex);
 
       if (currentSiblingsIndex === Number(proof.siblingsLength)) {
-        directionBits[currentSiblingsIndex / 2 - 1] = 0;
-
         if (BigInt(ethers.hexlify(currentSiblings[0])) > BigInt(ethers.hexlify(currentSiblings[1]))) {
           currentSiblings = [currentSiblings[1], currentSiblings[0]];
 
@@ -81,8 +79,6 @@ describe("CartesianMerkleTree", () => {
         valuesToHash = [keyToVerify, ethers.hexlify(currentSiblings[0]), ethers.hexlify(currentSiblings[1])];
       } else {
         let sortedChildren: string[] = [finalHash, ethers.hexlify(currentSiblings[1])];
-
-        directionBits[currentSiblingsIndex / 2 - 1] = 0;
 
         if (BigInt(sortedChildren[0]) > BigInt(sortedChildren[1])) {
           sortedChildren = [sortedChildren[1], sortedChildren[0]];
