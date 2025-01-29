@@ -30,7 +30,7 @@ pragma solidity ^0.8.4;
  *
  * uintTreaple.getRoot();
  *
- * CartesianMerkleTree.Proof memory proof = uintTreaple.getProof(100, 10);
+ * CartesianMerkleTree.Proof memory proof = uintTreaple.getProof(100, 0);
  *
  * uintTreaple.getNodeByKey(100);
  *
@@ -901,7 +901,7 @@ library CartesianMerkleTree {
         }
 
         if (leftHash_ > rightHash_) {
-            directionBits_++;
+            directionBits_ |= 1;
         }
 
         return directionBits_;
