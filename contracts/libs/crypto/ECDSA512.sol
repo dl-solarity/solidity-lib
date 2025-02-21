@@ -7,16 +7,16 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
 /**
  * @notice Cryptography module
  *
- * This library provides functionality for ECDSA verification over any 384-bit curve. Currently,
- * this is the most efficient implementation out there, consuming ~8.9 million gas per call.
+ * This library provides functionality for ECDSA verification over any 512-bit curve. Currently,
+ * this is the most efficient implementation out there, consuming ~13.6 million gas per call.
  *
  * The approach is Strauss-Shamir double scalar multiplication with 6 bits of precompute + affine coordinates.
  */
-library ECDSA384 {
+library ECDSA512 {
     using MemoryUtils for *;
 
     /**
-     * @notice 384-bit curve parameters.
+     * @notice 512-bit curve parameters.
      */
     struct Parameters {
         bytes a;
@@ -49,7 +49,7 @@ library ECDSA384 {
 
     /**
      * @notice The function to verify the ECDSA signature
-     * @param curveParams_ the 384-bit curve parameters. `lowSmax` is `n / 2`.
+     * @param curveParams_ the 512-bit curve parameters. `lowSmax` is `n / 2`.
      * @param hashedMessage_ the already hashed message to be verified.
      * @param signature_ the ECDSA signature. Equals to `bytes(r) + bytes(s)`.
      * @param pubKey_ the full public key of a signer. Equals to `bytes(x) + bytes(y)`.
@@ -184,10 +184,10 @@ library ECDSA384 {
             uint256 mask1_;
             uint256 mask2_;
 
-            for (uint256 bit = 3; bit <= 386; ) {
-                if (bit <= 384) {
-                    mask1_ = _getWord(scalar1_, 384 - bit);
-                    mask2_ = _getWord(scalar2_, 384 - bit);
+            for (uint256 bit = 3; bit <= 514; ) {
+                if (bit <= 512) {
+                    mask1_ = _getWord(scalar1_, 512 - bit);
+                    mask2_ = _getWord(scalar2_, 512 - bit);
 
                     if ((mask1_ >> 2) == 0 && (mask2_ >> 2) == 0) {
                         (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
@@ -200,7 +200,7 @@ library ECDSA384 {
                     (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
 
                     bit += 3;
-                } else if (bit == 385) {
+                } else if (bit == 513) {
                     mask1_ = _getWord(scalar1_, 0) & 0x03;
                     mask2_ = _getWord(scalar2_, 0) & 0x03;
 
@@ -249,11 +249,19 @@ library ECDSA384 {
                 return (word_ >> bit_) & 0x07;
             }
 
-            assembly {
-                word_ := mload(add(scalar_, 0x10))
+            if (bit_ <= 381) {
+                assembly {
+                    word_ := mload(add(scalar_, 0x10))
+                }
+
+                return (word_ >> (bit_ - 128)) & 0x07;
             }
 
-            return (word_ >> (bit_ - 128)) & 0x07;
+            assembly {
+                word_ := mload(scalar_)
+            }
+
+            return (word_ >> (bit_ - 256)) & 0x07;
         }
     }
 
@@ -402,17 +410,17 @@ library ECDSA384 {
     }
 
     /**
-     * @dev Convert 96 bytes to two 512-bit unsigned integers.
+     * @dev Convert 128 bytes to two 512-bit unsigned integers.
      */
     function _u512FromBytes2(bytes memory bytes_) private view returns (uint512, uint512) {
         unchecked {
-            assert(bytes_.length == 96);
+            assert(bytes_.length == 128);
 
-            bytes memory lhs_ = new bytes(48);
-            bytes memory rhs_ = new bytes(48);
+            bytes memory lhs_ = new bytes(64);
+            bytes memory rhs_ = new bytes(64);
 
-            MemoryUtils.unsafeCopy(bytes_.getDataPointer(), lhs_.getDataPointer(), 48);
-            MemoryUtils.unsafeCopy(bytes_.getDataPointer() + 48, rhs_.getDataPointer(), 48);
+            MemoryUtils.unsafeCopy(bytes_.getDataPointer(), lhs_.getDataPointer(), 64);
+            MemoryUtils.unsafeCopy(bytes_.getDataPointer() + 64, rhs_.getDataPointer(), 64);
 
             return (U512.fromBytes(lhs_), U512.fromBytes(rhs_));
         }

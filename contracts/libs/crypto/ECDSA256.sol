@@ -25,14 +25,14 @@ library ECDSA256 {
         uint256 lowSmax;
     }
 
-    // solhint-disable-next-line contract-name-camelcase
+    // solhint-disable-next-line contract-name-capwords
     struct _JPoint {
         uint256 x;
         uint256 y;
         uint256 z;
     }
 
-    // solhint-disable-next-line contract-name-camelcase
+    // solhint-disable-next-line contract-name-capwords
     struct _Inputs {
         uint256 r;
         uint256 s;

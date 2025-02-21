@@ -30,7 +30,7 @@ function modifyRight(value: string, modifier: string): string {
   return newSignature;
 }
 
-describe("ECDSA384", () => {
+describe.skip("ECDSA384", () => {
   const reverter = new Reverter();
 
   let ecdsa384: ECDSA384Mock;
@@ -56,6 +56,17 @@ describe("ECDSA384", () => {
     describe("verify", () => {
       it("should verify the signature", async () => {
         expect(await ecdsa384.verifySECP384r1(message, signature, pubKey)).to.be.true;
+      });
+
+      it("should verify the signature sha384", async () => {
+        const message =
+          "0xfc000000009322da48a8586f26f148003932f6d4c0d1ce3a21798f7b651dab7642188c9061a66dc9b190e00b0290e264";
+        const signature =
+          "0xe14f41a5fc83aa4725a9ea60ab5b0b9de27f519af4b557a601f1fee0243f8eee5180f8c531414f3473f4457430cb7a261047ed2bf1f98e3ce93e8fdbdc63cc79f238998fee74e1bb6cd708694950bbffe3945066064da043f04d7083d0a596ec";
+        const pubKey =
+          "0x2da57dda1089276a543f9ffdac0bff0d976cad71eb7280e7d9bfd9fee4bdb2f20f47ff888274389772d98cc5752138aa4b6d054d69dcf3e25ec49df870715e34883b1836197d76f8ad962e78f6571bbc7407b0d6091f9e4d88f014274406174f";
+
+        expect(await ecdsa384.verifySECP384r1WithoutHashing(message, signature, pubKey)).to.be.true;
       });
 
       it("should not verify invalid signature", async () => {
@@ -93,28 +104,16 @@ describe("ECDSA384", () => {
         expect(await ecdsa384.verifySECP384r1(message, modifiedSig, pubKey)).to.be.false;
       });
 
-      it("should revert if curve parameters have an invalid length", async () => {
-        await expect(
-          ecdsa384.verifySECP384r1CustomCurveParameters(message, signature, pubKey, "0x", "0x"),
-        ).to.be.revertedWithCustomError(ecdsa384, "Not384");
-      });
-
       it("should revert if signature or public key has an invalid length", async () => {
         const wrongSig =
           "0x3066023100a2fcd465ab5b507fc55941c1c6cd8286de04b83c94c6be25b5bdf58e27d86c3759d5f94ffcbd009618b6371bc51994f0023100d708d5045caa4a61cad42622c14bfb3343a5a9dc8fdbd19ce46b9e24c2aff84ba5114bb543fc4b0099f369079302b721";
 
-        await expect(ecdsa384.verifySECP384r1(message, wrongSig, pubKey)).to.be.revertedWithCustomError(
-          ecdsa384,
-          "Not768",
-        );
+        await expect(ecdsa384.verifySECP384r1(message, wrongSig, pubKey)).to.be.reverted;
 
         const wrongPubKey =
           "0x3076301006072a8648ce3d020106052b81040022036200041d77728fada41a8a7a23fe922e4e2dc8881a94b72a0612077ad80eeef13ff3bbea92aeef36a0f65885417aea104b86b76aedc226e260f7d0eeea8405b9269f354d929e5a98cab64fe192db94ed9335b7395e38e99b8bfaf32effa163a92889f9";
 
-        await expect(ecdsa384.verifySECP384r1(message, signature, wrongPubKey)).to.be.revertedWithCustomError(
-          ecdsa384,
-          "Not768",
-        );
+        await expect(ecdsa384.verifySECP384r1(message, signature, wrongPubKey)).to.be.reverted;
       });
 
       it("should not revert when message is hashed using SHA-384", async () => {

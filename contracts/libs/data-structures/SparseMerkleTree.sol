@@ -244,7 +244,7 @@ library SparseMerkleTree {
 
     /**
      **********************
-     *     Bytes32IMT     *
+     *     Bytes32SMT     *
      **********************
      */
 
@@ -1054,27 +1054,27 @@ library SparseMerkleTree {
         return proof_;
     }
 
-    function _hash2(bytes32 a, bytes32 b) private pure returns (bytes32 result) {
+    function _hash2(bytes32 a_, bytes32 b_) private pure returns (bytes32 result_) {
         assembly {
-            mstore(0, a)
-            mstore(32, b)
+            mstore(0, a_)
+            mstore(32, b_)
 
-            result := keccak256(0, 64)
+            result_ := keccak256(0, 64)
         }
     }
 
     /**
      * @dev The decision not to update the free memory pointer is due to the temporary nature of the hash arguments.
      */
-    function _hash3(bytes32 a, bytes32 b, bytes32 c) private pure returns (bytes32 result) {
+    function _hash3(bytes32 a_, bytes32 b_, bytes32 c) private pure returns (bytes32 result_) {
         assembly {
-            let free_ptr := mload(64)
+            let freePtr_ := mload(64)
 
-            mstore(free_ptr, a)
-            mstore(add(free_ptr, 32), b)
-            mstore(add(free_ptr, 64), c)
+            mstore(freePtr_, a_)
+            mstore(add(freePtr_, 32), b_)
+            mstore(add(freePtr_, 64), c)
 
-            result := keccak256(free_ptr, 96)
+            result_ := keccak256(freePtr_, 96)
         }
     }
 
