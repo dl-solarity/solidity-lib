@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitPOAP Badge](https://public-api.gitpoap.io/v1/repo/dl-solarity/solidity-lib/badge)](https://www.gitpoap.io/gh/dl-solarity/solidity-lib)
 
-# Solidity Library for Savvies
+# Solarity Solidity Library
 
 Solidity modules and utilities that **go far beyond mediocre solidity**.
 
@@ -21,7 +21,7 @@ Solidity modules and utilities that **go far beyond mediocre solidity**.
 - Hyperoptimized **uint512** BigInt library
 - Utilities to ease work with memory, types, ERC20 decimals, arrays, sets, and ZK proofs
 
-Built leveraging [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (5.2.0).
+Built with courage and aspiration to perfection.
 
 ## Overview
 
@@ -51,13 +51,14 @@ import {TypeCaster} from "@solarity/solidity-lib/libs/utils/TypeCaster.sol";
 import {CartesianMerkleTree} from "@solarity/solidity-lib/libs/data-structures/CartesianMerkleTree.sol";
 import {Groth16VerifierHelper} from "@solarity/solidity-lib/libs/zkp/Groth16VerifierHelper.sol";
 
-contract Logic is AMultiOwnable {
+contract Example is AMultiOwnable {
     using CartesianMerkleTree for CartesianMerkleTree.UintCMT;
+    using Groth16VerifierHelper for address;
     
     CartesianMerkleTree.UintCMT internal _uintTreaple;
     address internal _treapleVerifier;
 
-    function __Logic_init(address treapleVerifier_) initializer {
+    function __Example_init(address treapleVerifier_) initializer {
         __AMultiOwnable_init();
         _uintTreaple.initialize(40);
         _treapleVerifier = treapleVerifier_;
@@ -67,20 +68,20 @@ contract Logic is AMultiOwnable {
         _uintTreaple.add(key_);
     }
 
-    function getProof(uint256 key_) external view returns (CartesianMerkleTree.Proof memory) {
+    function getMerkleProof(uint256 key_) external view returns (CartesianMerkleTree.Proof memory) {
         return _uintTreaple.getProof(key_, 0);
     }
 
-    function verifyZKProof(Groth16VerifierHelper.ProofPoints memory proof_) external {
+    function verifyZKProof(Groth16VerifierHelper.ProofPoints memory proof_) external view {
         uint256[] memory pubSignals_ = TypeCaster.asSingletonArray(_uintTreaple.getRoot());
 
-        require(Groth16VerifierHelper.verifyProof(_treapleVerifier, pubSignals_, proof_), "ZK proof verification failed");
+        require(_treapleVerifier.verifyProof(pubSignals_, proof_), "ZKP verification failed");
     }
 }
 ```
 
-> [!IMPORTANT]
-> It is important to use the library as it is shipped and not copy-paste the code from untrusted sources.
+> [!TIP]
+> The library is designed to work cohesively with [hardhat-zkit](https://github.com/dl-solarity/hardhat-zkit) and [circom-lib](https://github.com/dl-solarity/circom-lib) packages.
 
 ## Contribution
 
