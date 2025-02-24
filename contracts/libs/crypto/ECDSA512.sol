@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
+// Separate imports due to IntelliJ Solidity plugin issues
 import {call512, uint512} from "../bn/U512.sol";
 import {U512} from "../bn/U512.sol";
+
 import {MemoryUtils} from "../utils/MemoryUtils.sol";
 
 /**
@@ -29,6 +31,7 @@ library ECDSA512 {
         bytes lowSmax;
     }
 
+    // solhint-disable-next-line contract-name-capwords
     struct _Parameters {
         uint512 a;
         uint512 b;
@@ -39,6 +42,7 @@ library ECDSA512 {
         uint512 lowSmax;
     }
 
+    // solhint-disable-next-line contract-name-capwords
     struct _Inputs {
         uint512 r;
         uint512 s;

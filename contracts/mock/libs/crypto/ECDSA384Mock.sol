@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
 import {ECDSA384} from "../../../libs/crypto/ECDSA384.sol";
+
+// Separate imports due to IntelliJ Solidity plugin issues
 import {uint512} from "../../../libs/bn/U512.sol";
 import {U512} from "../../../libs/bn/U512.sol";
 

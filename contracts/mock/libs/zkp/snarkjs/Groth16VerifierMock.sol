@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: MIT
+// solhint-disable
+pragma solidity ^0.8.21;
+
+contract BaseGroth16VerifierMock {
+    bool public verifyResult;
+    uint256[] public expectedInputs;
+
+    error InvalidInputs();
+
+    constructor(bool verifyResult_, uint256[] memory expectedInputs_) {
+        verifyResult = verifyResult_;
+        expectedInputs = expectedInputs_;
+    }
+
+    function setVerifyResult(bool newResult_) external {
+        verifyResult = newResult_;
+    }
+
+    function setExpectedInputs(uint256[] memory newExpectedInputs_) external {
+        expectedInputs = newExpectedInputs_;
+    }
+}
+
+contract Groth16Verifier2Mock is BaseGroth16VerifierMock {
+    constructor(
+        bool verifyResult_,
+        uint256[] memory expectedInputs_
+    ) BaseGroth16VerifierMock(verifyResult_, expectedInputs_) {}
+
+    function verifyProof(
+        uint256[2] memory,
+        uint256[2][2] memory,
+        uint256[2] memory,
+        uint256[2] memory inputs_
+    ) external view returns (bool) {
+        for (uint256 i = 0; i < inputs_.length; i++) {
+            if (inputs_[i] != expectedInputs[i]) revert InvalidInputs();
+        }
+
+        return verifyResult;
+    }
+}
+
+contract Groth16Verifier3Mock is BaseGroth16VerifierMock {
+    constructor(
+        bool verifyResult_,
+        uint256[] memory expectedInputs_
+    ) BaseGroth16VerifierMock(verifyResult_, expectedInputs_) {}
+
+    function verifyProof(
+        uint256[2] memory,
+        uint256[2][2] memory,
+        uint256[2] memory,
+        uint256[3] memory inputs_
+    ) external view returns (bool) {
+        for (uint256 i = 0; i < inputs_.length; i++) {
+            if (inputs_[i] != expectedInputs[i]) revert InvalidInputs();
+        }
+
+        return verifyResult;
+    }
+}

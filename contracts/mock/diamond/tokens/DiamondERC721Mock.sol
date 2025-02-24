@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+// solhint-disable
+pragma solidity ^0.8.21;
 
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 import {DiamondERC721} from "../../../diamond/tokens/ERC721/DiamondERC721.sol";
 
 contract DiamondERC721Mock is DiamondERC721 {
-    string baseUri;
-    bool replaceOwner;
+    string internal baseUri;
+    bool internal replaceOwner;
 
     constructor() {
         _disableInitializers(DIAMOND_ERC721_STORAGE_SLOT);
@@ -23,6 +23,18 @@ contract DiamondERC721Mock is DiamondERC721 {
         string memory symbol_
     ) external initializer(DIAMOND_ERC721_STORAGE_SLOT) {
         __DiamondERC721_init(name_, symbol_);
+    }
+
+    function __DiamondERC721Mock_disableInit() external initializer(DIAMOND_ERC721_STORAGE_SLOT) {
+        _disableInitializers(DIAMOND_ERC721_STORAGE_SLOT);
+    }
+
+    function __DiamondERC721Mock_reinitInit(
+        string memory name_,
+        string memory symbol_,
+        uint64 version_
+    ) external initializer(DIAMOND_ERC721_STORAGE_SLOT) {
+        __DiamondERC721Mock_reinit(name_, symbol_, version_);
     }
 
     function toggleReplaceOwner() external {
@@ -49,40 +61,60 @@ contract DiamondERC721Mock is DiamondERC721 {
         safeTransferFrom(from_, to_, tokenId_);
     }
 
-    function beforeTokenTransfer(uint256 batchSize) external {
-        _beforeTokenTransfer(address(this), address(this), 1, batchSize);
+    function update(uint256 batchSize_) external {
+        _update(address(this), 1, batchSize_);
     }
 
     function disableInitializers() external {
         _disableInitializers(DIAMOND_ERC721_STORAGE_SLOT);
     }
 
+    function enableInitializers(uint64 version_) external {
+        _getInitializableStorage()
+            .initializableStorage[DIAMOND_ERC721_STORAGE_SLOT]
+            .initialized = version_;
+    }
+
+    function getInitializedVersion() external view returns (uint64) {
+        return _getInitializedVersion(DIAMOND_ERC721_STORAGE_SLOT);
+    }
+
+    function __DiamondERC721Mock_reinit(
+        string memory name_,
+        string memory symbol_,
+        uint64 version_
+    ) public reinitializer(DIAMOND_ERC721_STORAGE_SLOT, version_) {
+        __DiamondERC721_init(name_, symbol_);
+    }
+
+    function _update(
+        address to_,
+        uint256 tokenId_,
+        uint256 batchSize_
+    ) internal override returns (address) {
+        if (replaceOwner) {
+            _getErc721Storage().owners[tokenId_] = address(this);
+            return address(this);
+        } else {
+            return super._update(to_, tokenId_, batchSize_);
+        }
+    }
+
     function _baseURI() internal view override returns (string memory) {
         super._baseURI();
         return baseUri;
     }
-
-    function _beforeTokenTransfer(
-        address from_,
-        address to_,
-        uint256 firstTokenId_,
-        uint256 batchSize_
-    ) internal override {
-        if (replaceOwner) {
-            _getErc721Storage().owners[firstTokenId_] = address(this);
-        } else {
-            super._beforeTokenTransfer(from_, to_, firstTokenId_, batchSize_);
-        }
-    }
 }
 
 contract NonERC721Receiver is IERC721Receiver {
+    error RevertingOnERC721Received();
+
     function onERC721Received(
         address,
         address,
         uint256,
         bytes calldata
     ) external pure override returns (bytes4) {
-        revert("ERC721Receiver: reverting onERC721Received");
+        revert RevertingOnERC721Received();
     }
 }

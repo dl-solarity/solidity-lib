@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.21;
 
-import {call512} from "../../../libs/bn/U512.sol";
-import {uint512} from "../../../libs/bn/U512.sol";
+// Separate imports due to IntelliJ Solidity plugin issues
+import {call512, uint512} from "../../../libs/bn/U512.sol";
 import {U512} from "../../../libs/bn/U512.sol";
-// import "hardhat/console.sol";
 
 contract U512Mock {
     using U512 for *;
