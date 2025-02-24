@@ -4,7 +4,7 @@ pragma solidity ^0.8.21;
 import {PRECISION} from "../../utils/Globals.sol";
 
 /**
- * @notice The Abstract Value Distributor module
+ * @notice The Staking module
  *
  * Contract module for distributing value among users based on their shares.
  *

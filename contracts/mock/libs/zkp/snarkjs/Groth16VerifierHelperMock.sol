@@ -2,15 +2,15 @@
 // solhint-disable
 pragma solidity ^0.8.21;
 
-import {VerifierHelper} from "../../../../libs/zkp/VerifierHelper.sol";
+import {Groth16VerifierHelper} from "../../../../libs/zkp/Groth16VerifierHelper.sol";
 
-contract VerifierHelperMock {
-    using VerifierHelper for address;
+contract Groth16VerifierHelperMock {
+    using Groth16VerifierHelper for address;
 
     function verifyProofStruct(
         address verifier_,
         uint256[] memory pubSignals_,
-        VerifierHelper.ProofPoints memory proofPoints_
+        Groth16VerifierHelper.ProofPoints memory proofPoints_
     ) external view returns (bool) {
         return verifier_.verifyProof(pubSignals_, proofPoints_);
     }
@@ -28,7 +28,7 @@ contract VerifierHelperMock {
     function verifyProofStructSafe(
         address verifier_,
         uint256[] memory pubSignals_,
-        VerifierHelper.ProofPoints memory proofPoints_,
+        Groth16VerifierHelper.ProofPoints memory proofPoints_,
         uint256 pubSignalsCount_
     ) external view returns (bool) {
         return verifier_.verifyProofSafe(pubSignals_, proofPoints_, pubSignalsCount_);

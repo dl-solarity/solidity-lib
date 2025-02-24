@@ -3,14 +3,14 @@ import { expect } from "chai";
 
 import { Reverter } from "@/test/helpers/reverter";
 
-import { VerifierHelperMock, Verifier2Mock, Verifier3Mock } from "@ethers-v6";
+import { Groth16VerifierHelperMock, Groth16Verifier2Mock, Groth16Verifier3Mock } from "@ethers-v6";
 
-describe("VerifierHelper", () => {
+describe("Groth16VerifierHelper", () => {
   const reverter = new Reverter();
 
-  let verifierHelper: VerifierHelperMock;
-  let verifier2: Verifier2Mock;
-  let verifier3: Verifier3Mock;
+  let verifierHelper: Groth16VerifierHelperMock;
+  let verifier2: Groth16Verifier2Mock;
+  let verifier3: Groth16Verifier3Mock;
 
   const a = <[number, number]>[10, 20];
   const b = <[[number, number], [number, number]]>[
@@ -23,14 +23,14 @@ describe("VerifierHelper", () => {
   const pubSignals3 = [3, 6, 9];
 
   before("setup", async () => {
-    const VerifierHelperMock = await ethers.getContractFactory("VerifierHelperMock");
-    const Verifier2Mock = await ethers.getContractFactory("Verifier2Mock");
-    const Verifier3Mock = await ethers.getContractFactory("Verifier3Mock");
+    const Groth16VerifierHelperMock = await ethers.getContractFactory("Groth16VerifierHelperMock");
+    const Groth16Verifier2Mock = await ethers.getContractFactory("Groth16Verifier2Mock");
+    const Groth16Verifier3Mock = await ethers.getContractFactory("Groth16Verifier3Mock");
 
-    verifierHelper = await VerifierHelperMock.deploy();
+    verifierHelper = await Groth16VerifierHelperMock.deploy();
 
-    verifier2 = await Verifier2Mock.deploy(true, pubSignals2);
-    verifier3 = await Verifier3Mock.deploy(true, pubSignals3);
+    verifier2 = await Groth16Verifier2Mock.deploy(true, pubSignals2);
+    verifier3 = await Groth16Verifier3Mock.deploy(true, pubSignals3);
 
     await reverter.snapshot();
   });

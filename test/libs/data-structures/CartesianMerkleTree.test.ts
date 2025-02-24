@@ -373,7 +373,7 @@ describe("CartesianMerkleTree", () => {
       }
 
       await expect(treaple.getUintProof(keys[0], 1))
-        .to.be.revertedWithCustomError(treaple, "ProofSizeTooLow")
+        .to.be.revertedWithCustomError(treaple, "ProofSizeTooSmall")
         .withArgs(1, 1);
     });
   });

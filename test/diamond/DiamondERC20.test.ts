@@ -5,7 +5,6 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 import { Reverter } from "@/test/helpers/reverter";
 import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
-import { MAX_UINT256 } from "@/scripts/utils/constants";
 import { wei } from "@/scripts/utils/utils";
 
 import { OwnableDiamondMock, DiamondERC20Mock, Diamond } from "@ethers-v6";
@@ -61,17 +60,75 @@ describe("DiamondERC20 and InitializableStorage", () => {
         .withArgs();
     });
 
+    it("should reinitialize contract correctly", async () => {
+      await erc20.enableInitializers(1);
+
+      let tx = erc20.__DiamondERC20Mock_reinit("Mock Token 2", "MT2", 2);
+      await expect(tx)
+        .to.emit(erc20, "Initialized")
+        .withArgs(await erc20.DIAMOND_ERC20_STORAGE_SLOT(), 2);
+      expect(await erc20.getInitializedVersion()).to.be.equal(2);
+
+      tx = erc20.__DiamondERC20Mock_reinit("Mock Token 5", "MT5", 5);
+      await expect(tx)
+        .to.emit(erc20, "Initialized")
+        .withArgs(await erc20.DIAMOND_ERC20_STORAGE_SLOT(), 5);
+      expect(await erc20.getInitializedVersion()).to.be.equal(5);
+
+      await expect(erc20.__DiamondERC20Mock_reinit("Mock Token 4", "MT4", 4))
+        .to.be.revertedWithCustomError(erc20, "InvalidInitialization")
+        .withArgs();
+
+      expect(await erc20.getInitializedVersion()).to.be.equal(5);
+
+      await expect(erc20.__DiamondERC20Mock_reinit("Mock Token 5", "MT5", 5))
+        .to.be.revertedWithCustomError(erc20, "InvalidInitialization")
+        .withArgs();
+    });
+
+    it("should not allow to reinitialize within the initializer", async () => {
+      const DiamondERC20Mock = await ethers.getContractFactory("DiamondERC20Mock");
+      const contract = await DiamondERC20Mock.deploy();
+
+      await contract.enableInitializers(0);
+
+      await expect(contract.__DiamondERC20Mock_reinitInit("Mock Token", "MTT", 2))
+        .to.be.revertedWithCustomError(erc20, "InvalidInitialization")
+        .withArgs();
+    });
+
     it("should disable implementation initialization", async () => {
       const DiamondERC20Mock = await ethers.getContractFactory("DiamondERC20Mock");
       const contract = await DiamondERC20Mock.deploy();
 
-      let tx = contract.deploymentTransaction();
+      const deploymentTx = contract.deploymentTransaction();
 
-      expect(tx)
+      expect(deploymentTx)
         .to.emit(contract, "Initialized")
         .withArgs(await erc20.DIAMOND_ERC20_STORAGE_SLOT());
 
-      await expect(contract.disableInitializers())
+      await contract.enableInitializers(1);
+
+      let disableTx = contract.disableInitializers();
+      await expect(disableTx)
+        .to.emit(contract, "Initialized")
+        .withArgs(await erc20.DIAMOND_ERC20_STORAGE_SLOT(), 2n ** 64n - 1n);
+
+      await expect(contract.__DiamondERC20Mock_reinit("Mock Token", "MTT", 2))
+        .to.be.revertedWithCustomError(erc20, "InvalidInitialization")
+        .withArgs();
+
+      disableTx = contract.disableInitializers();
+      await expect(disableTx).to.not.emit(contract, "Initialized");
+    });
+
+    it("should not allow to disable initialization within the initializer", async () => {
+      const DiamondERC20Mock = await ethers.getContractFactory("DiamondERC20Mock");
+      const contract = await DiamondERC20Mock.deploy();
+
+      await contract.enableInitializers(0);
+
+      await expect(contract.__DiamondERC20Mock_disableInit())
         .to.be.revertedWithCustomError(erc20, "InvalidInitialization")
         .withArgs();
     });
@@ -169,10 +226,10 @@ describe("DiamondERC20 and InitializableStorage", () => {
 
     it("should not spend allowance if allowance is infinite type(uint256).max", async () => {
       await erc20.mint(OWNER.address, wei("100"));
-      await erc20.approve(SECOND, MAX_UINT256);
+      await erc20.approve(SECOND, ethers.MaxUint256);
       await erc20.connect(SECOND).transferFrom(OWNER.address, SECOND.address, wei("100"));
 
-      expect(await erc20.allowance(OWNER.address, SECOND.address)).to.equal(MAX_UINT256);
+      expect(await erc20.allowance(OWNER.address, SECOND.address)).to.equal(ethers.MaxUint256);
     });
   });
 

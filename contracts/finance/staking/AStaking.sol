@@ -8,7 +8,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {AValueDistributor} from "./AValueDistributor.sol";
 
 /**
- * @notice The Abstarct Staking module
+ * @notice The Staking module
  *
  * Contract module for staking tokens and earning rewards based on shares.
  */

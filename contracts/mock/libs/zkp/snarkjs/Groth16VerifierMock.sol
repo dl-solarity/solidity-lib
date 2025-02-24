@@ -2,7 +2,7 @@
 // solhint-disable
 pragma solidity ^0.8.21;
 
-contract BaseVerifierMock {
+contract BaseGroth16VerifierMock {
     bool public verifyResult;
     uint256[] public expectedInputs;
 
@@ -22,11 +22,11 @@ contract BaseVerifierMock {
     }
 }
 
-contract Verifier2Mock is BaseVerifierMock {
+contract Groth16Verifier2Mock is BaseGroth16VerifierMock {
     constructor(
         bool verifyResult_,
         uint256[] memory expectedInputs_
-    ) BaseVerifierMock(verifyResult_, expectedInputs_) {}
+    ) BaseGroth16VerifierMock(verifyResult_, expectedInputs_) {}
 
     function verifyProof(
         uint256[2] memory,
@@ -42,11 +42,11 @@ contract Verifier2Mock is BaseVerifierMock {
     }
 }
 
-contract Verifier3Mock is BaseVerifierMock {
+contract Groth16Verifier3Mock is BaseGroth16VerifierMock {
     constructor(
         bool verifyResult_,
         uint256[] memory expectedInputs_
-    ) BaseVerifierMock(verifyResult_, expectedInputs_) {}
+    ) BaseGroth16VerifierMock(verifyResult_, expectedInputs_) {}
 
     function verifyProof(
         uint256[2] memory,

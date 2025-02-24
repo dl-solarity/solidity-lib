@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Source: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.2/contracts/proxy/transparent/TransparentUpgradeableProxy.sol
 
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.22;
 
 import {ERC1967Utils} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 import {IAdminableProxy} from "../../interfaces/proxy/IAdminableProxy.sol";
 
 /**
@@ -33,22 +34,22 @@ contract AdminableProxy is ERC1967Proxy {
     }
 
     function _fallback() internal virtual override {
-        if (msg.sender == _ADMIN) {
-            bytes4 selector_ = msg.sig;
+        if (msg.sender != _ADMIN) {
+            super._fallback();
+        }
 
-            if (selector_ == IAdminableProxy.upgradeToAndCall.selector) {
-                _dispatchUpgradeToAndCall();
-            } else if (selector_ == IAdminableProxy.implementation.selector) {
-                bytes memory returndata_ = _dispatchImplementation();
+        bytes4 selector_ = msg.sig;
 
-                assembly {
-                    return(add(returndata_, 0x20), mload(returndata_))
-                }
-            } else {
-                revert ProxyDeniedAdminAccess();
+        if (selector_ == IAdminableProxy.upgradeToAndCall.selector) {
+            _dispatchUpgradeToAndCall();
+        } else if (selector_ == IAdminableProxy.implementation.selector) {
+            bytes memory returndata_ = _dispatchImplementation();
+
+            assembly {
+                return(add(returndata_, 0x20), mload(returndata_))
             }
         } else {
-            super._fallback();
+            revert ProxyDeniedAdminAccess();
         }
     }
 

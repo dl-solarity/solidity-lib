@@ -12,11 +12,15 @@ abstract contract AInitializableStorage {
         keccak256("diamond.standard.initializable.storage");
 
     struct IStorage {
-        // storage slot => { 0: not initialized, 1: initializing, 2: initialized }
-        mapping(bytes32 => uint8) initializingStorage;
+        mapping(bytes32 => InitializableStorage) initializableStorage;
     }
 
-    event Initialized(bytes32 storageSlot);
+    struct InitializableStorage {
+        uint64 initialized;
+        bool initializing;
+    }
+
+    event Initialized(bytes32 storageSlot, uint64 version);
 
     error AlreadyInitialized();
     error InvalidInitialization();
@@ -30,15 +34,42 @@ abstract contract AInitializableStorage {
      * Emits an {Initialized} event.
      */
     modifier initializer(bytes32 storageSlot_) {
-        uint8 initializing_ = _getInitializing(storageSlot_);
+        if (_getInitializedVersion(storageSlot_) != 0) revert AlreadyInitialized();
 
-        if (initializing_ != 0) revert AlreadyInitialized();
-
-        _setInitializing(storageSlot_, 1);
+        _setInitializing(storageSlot_, true);
         _;
-        _setInitializing(storageSlot_, 2);
+        _setInitializing(storageSlot_, false);
 
-        emit Initialized(storageSlot_);
+        _setInitialized(storageSlot_, 1);
+
+        emit Initialized(storageSlot_, 1);
+    }
+
+    /**
+     * @dev A modifier that defines a protected reinitializer function that can be invoked at most once
+     * for a particular storage in a Diamond proxy that begins with {storageSlot_},
+     * and only if the storage hasn't been initialized to a greater version before.
+     * In its scope, `onlyInitializing` functions can be used to initialize parent contracts.
+     *
+     * Note that versions can jump in increments greater than 1; this implies that if multiple reinitializers coexist in
+     * a storage slot, executing them in the right order is up to the developer or operator.
+     *
+     * WARNING: Setting the version to 2**64 - 1 will prevent any future reinitialization.
+     *
+     * Emits an {Initialized} event.
+     */
+    modifier reinitializer(bytes32 storageSlot_, uint64 version_) {
+        if (_isInitializing(storageSlot_) || _getInitializedVersion(storageSlot_) >= version_) {
+            revert InvalidInitialization();
+        }
+
+        _setInitialized(storageSlot_, version_);
+
+        _setInitializing(storageSlot_, true);
+        _;
+        _setInitializing(storageSlot_, false);
+
+        emit Initialized(storageSlot_, version_);
     }
 
     /**
@@ -46,7 +77,7 @@ abstract contract AInitializableStorage {
      * {initializer} modifier, directly or indirectly.
      */
     modifier onlyInitializing(bytes32 storageSlot_) {
-        if (_getInitializing(storageSlot_) != 1) revert NotInitializing();
+        if (!_isInitializing(storageSlot_)) revert NotInitializing();
         _;
     }
 
@@ -65,26 +96,40 @@ abstract contract AInitializableStorage {
      * Emits an {Initialized} event the first time it is successfully executed.
      */
     function _disableInitializers(bytes32 storageSlot_) internal virtual {
-        uint8 initializing_ = _getInitializing(storageSlot_);
+        if (_isInitializing(storageSlot_)) revert InvalidInitialization();
 
-        if (initializing_ != 0) revert InvalidInitialization();
+        if (_getInitializedVersion(storageSlot_) != type(uint64).max) {
+            _setInitialized(storageSlot_, type(uint64).max);
 
-        _setInitializing(storageSlot_, 2);
-
-        emit Initialized(storageSlot_);
+            emit Initialized(storageSlot_, type(uint64).max);
+        }
     }
 
     /**
-     * @dev Internal function that returns the initializing for the specified storage slot.
+     * @dev Returns the highest version that has been initialized for the provided storage slot.
      */
-    function _getInitializing(bytes32 storageSlot_) internal view returns (uint8) {
-        return _getInitializableStorage().initializingStorage[storageSlot_];
+    function _getInitializedVersion(bytes32 storageSlot_) internal view returns (uint64) {
+        return _getInitializableStorage().initializableStorage[storageSlot_].initialized;
     }
 
     /**
-     * @dev Internal function that sets the initializingStorage value.
+     * @dev Returns 1 if the storage at the specified slot is currently initializing, 0 otherwise.
      */
-    function _setInitializing(bytes32 storageSlot_, uint8 value_) private {
-        _getInitializableStorage().initializingStorage[storageSlot_] = value_;
+    function _isInitializing(bytes32 storageSlot_) internal view returns (bool) {
+        return _getInitializableStorage().initializableStorage[storageSlot_].initializing;
+    }
+
+    /**
+     * @dev Internal function that sets the initialization version for the provided storage slot.
+     */
+    function _setInitialized(bytes32 storageSlot_, uint64 value_) private {
+        _getInitializableStorage().initializableStorage[storageSlot_].initialized = value_;
+    }
+
+    /**
+     * @dev Internal function that sets the initializing value for the provided storage slot.
+     */
+    function _setInitializing(bytes32 storageSlot_, bool value_) private {
+        _getInitializableStorage().initializableStorage[storageSlot_].initializing = value_;
     }
 }

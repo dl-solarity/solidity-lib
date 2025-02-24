@@ -77,17 +77,77 @@ describe("DiamondERC721 and InitializableStorage", () => {
         .withArgs();
     });
 
+    it("should reinitialize contract correctly", async () => {
+      await erc721.enableInitializers(1);
+
+      let tx = erc721.__DiamondERC721Mock_reinit("Mock Token 2", "MT2", 2);
+      await expect(tx)
+        .to.emit(erc721, "Initialized")
+        .withArgs(await erc721.DIAMOND_ERC721_STORAGE_SLOT(), 2);
+      expect(await erc721.getInitializedVersion()).to.be.equal(2);
+
+      tx = erc721.__DiamondERC721Mock_reinit("Mock Token 4", "MT4", 4);
+      await expect(tx)
+        .to.emit(erc721, "Initialized")
+        .withArgs(await erc721.DIAMOND_ERC721_STORAGE_SLOT(), 4);
+      expect(await erc721.getInitializedVersion()).to.be.equal(4);
+
+      await expect(erc721.__DiamondERC721Mock_reinit("Mock Token 3", "MT3", 3))
+        .to.be.revertedWithCustomError(erc721, "InvalidInitialization")
+        .withArgs();
+
+      expect(await erc721.getInitializedVersion()).to.be.equal(4);
+
+      await expect(erc721.__DiamondERC721Mock_reinit("Mock Token 4", "MT4", 4))
+        .to.be.revertedWithCustomError(erc721, "InvalidInitialization")
+        .withArgs();
+    });
+
+    it("should not allow to reinitialize within the initializer", async () => {
+      const DiamondERC721Mock = await ethers.getContractFactory("DiamondERC721Mock");
+      const contract = await DiamondERC721Mock.deploy();
+
+      await contract.enableInitializers(0);
+
+      await expect(contract.__DiamondERC721Mock_reinitInit("Mock Token", "MTT", 2))
+        .to.be.revertedWithCustomError(erc721, "InvalidInitialization")
+        .withArgs();
+    });
+
     it("should disable implementation initialization", async () => {
       const DiamondERC721Mock = await ethers.getContractFactory("DiamondERC721Mock");
       const contract = await DiamondERC721Mock.deploy();
 
-      let tx = contract.deploymentTransaction();
+      const deploymentTx = contract.deploymentTransaction();
 
-      expect(tx)
+      expect(deploymentTx)
         .to.emit(contract, "Initialized")
         .withArgs(await erc721.DIAMOND_ERC721_STORAGE_SLOT());
 
-      await expect(contract.disableInitializers()).to.be.revertedWithCustomError(erc721, "InvalidInitialization");
+      await contract.enableInitializers(1);
+
+      let disableTx = contract.disableInitializers();
+      await expect(disableTx)
+        .to.emit(contract, "Initialized")
+        .withArgs(await erc721.DIAMOND_ERC721_STORAGE_SLOT(), 2n ** 64n - 1n);
+
+      await expect(contract.__DiamondERC721Mock_reinit("Mock Token", "MTT", 2))
+        .to.be.revertedWithCustomError(erc721, "InvalidInitialization")
+        .withArgs();
+
+      disableTx = contract.disableInitializers();
+      await expect(disableTx).to.not.emit(contract, "Initialized");
+    });
+
+    it("should not allow to disable initialization within the initializer", async () => {
+      const DiamondERC721Mock = await ethers.getContractFactory("DiamondERC721Mock");
+      const contract = await DiamondERC721Mock.deploy();
+
+      await contract.enableInitializers(0);
+
+      await expect(contract.__DiamondERC721Mock_disableInit())
+        .to.be.revertedWithCustomError(erc721, "InvalidInitialization")
+        .withArgs();
     });
   });
 

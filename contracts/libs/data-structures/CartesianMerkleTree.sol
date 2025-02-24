@@ -53,7 +53,7 @@ library CartesianMerkleTree {
     error TreapleNotEmpty();
 
     error ZeroDesiredProofSize();
-    error ProofSizeTooLow(uint256 attemptedIndex, uint256 maxIndex);
+    error ProofSizeTooSmall(uint256 attemptedIndex, uint256 maxIndex);
 
     error ZeroKeyProvided();
     error KeyAlreadyExists();
@@ -891,7 +891,7 @@ library CartesianMerkleTree {
         bytes32 siblingToAdd_
     ) private pure {
         if (currentSiblingsIndex_ >= proof_.siblings.length) {
-            revert ProofSizeTooLow(currentSiblingsIndex_, proof_.siblings.length);
+            revert ProofSizeTooSmall(currentSiblingsIndex_, proof_.siblings.length);
         }
 
         proof_.siblings[currentSiblingsIndex_] = siblingToAdd_;

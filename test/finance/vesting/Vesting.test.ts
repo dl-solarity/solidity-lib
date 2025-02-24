@@ -6,7 +6,6 @@ import { time } from "@nomicfoundation/hardhat-network-helpers";
 
 import { Reverter } from "@/test/helpers/reverter";
 import { precision, wei } from "@/scripts/utils/utils";
-import { MAX_UINT256 } from "@/scripts/utils/constants";
 
 import { ERC20Mock, ERC20Mock__factory, AVesting, VestingMock, VestingMock__factory } from "@ethers-v6";
 
@@ -40,7 +39,7 @@ describe("Vesting", () => {
     await vesting.__VestingMock_init();
 
     await erc20.mint(OWNER.address, wei(1_000_000));
-    await erc20.approve(await vesting.getAddress(), MAX_UINT256);
+    await erc20.approve(await vesting.getAddress(), ethers.MaxUint256);
 
     await reverter.snapshot();
   });

@@ -21,7 +21,7 @@ Solidity modules and utilities that **go far beyond mediocre solidity**.
 - Hyperoptimized **uint512** BigInt library
 - Utilities to ease work with memory, types, ERC20 decimals, arrays, sets, and ZK proofs
 
-Built leveraging [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (5.1.0).
+Built leveraging [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (5.2.0).
 
 ## Overview
 
@@ -46,10 +46,36 @@ Once the [npm package](https://www.npmjs.com/package/@solarity/solidity-lib) is 
 ```solidity
 pragma solidity ^0.8.21;
 
-import {OwnableContractsRegistry} from "@solarity/solidity-lib/contracts-registry/presets/OwnableContractsRegistry.sol";
+import {AMultiOwnable} from "@solarity/solidity-lib/access/AMultiOwnable.sol";
+import {TypeCaster} from "@solarity/solidity-lib/libs/utils/TypeCaster.sol";
+import {CartesianMerkleTree} from "@solarity/solidity-lib/libs/data-structures/CartesianMerkleTree.sol";
+import {Groth16VerifierHelper} from "@solarity/solidity-lib/libs/zkp/Groth16VerifierHelper.sol";
 
-contract ContractsRegistry is OwnableContractsRegistry {
-    . . .
+contract Logic is AMultiOwnable {
+    using CartesianMerkleTree for CartesianMerkleTree.UintCMT;
+    
+    CartesianMerkleTree.UintCMT internal _uintTreaple;
+    address internal _treapleVerifier;
+
+    function __Logic_init(address treapleVerifier_) initializer {
+        __AMultiOwnable_init();
+        _uintTreaple.initialize(40);
+        _treapleVerifier = treapleVerifier_;
+    }
+
+    function addToTree(uint256 key_) external onlyOwner {
+        _uintTreaple.add(key_);
+    }
+
+    function getProof(uint256 key_) external view returns (CartesianMerkleTree.Proof memory) {
+        return _uintTreaple.getProof(key_, 0);
+    }
+
+    function verifyZKProof(Groth16VerifierHelper.ProofPoints memory proof_) external {
+        uint256[] memory pubSignals_ = TypeCaster.asSingletonArray(_uintTreaple.getRoot());
+
+        require(Groth16VerifierHelper.verifyProof(_treapleVerifier, pubSignals_, proof_), "ZK proof verification failed");
+    }
 }
 ```
 

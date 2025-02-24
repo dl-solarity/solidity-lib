@@ -25,6 +25,18 @@ contract DiamondERC721Mock is DiamondERC721 {
         __DiamondERC721_init(name_, symbol_);
     }
 
+    function __DiamondERC721Mock_disableInit() external initializer(DIAMOND_ERC721_STORAGE_SLOT) {
+        _disableInitializers(DIAMOND_ERC721_STORAGE_SLOT);
+    }
+
+    function __DiamondERC721Mock_reinitInit(
+        string memory name_,
+        string memory symbol_,
+        uint64 version_
+    ) external initializer(DIAMOND_ERC721_STORAGE_SLOT) {
+        __DiamondERC721Mock_reinit(name_, symbol_, version_);
+    }
+
     function toggleReplaceOwner() external {
         replaceOwner = !replaceOwner;
     }
@@ -55,6 +67,24 @@ contract DiamondERC721Mock is DiamondERC721 {
 
     function disableInitializers() external {
         _disableInitializers(DIAMOND_ERC721_STORAGE_SLOT);
+    }
+
+    function enableInitializers(uint64 version_) external {
+        _getInitializableStorage()
+            .initializableStorage[DIAMOND_ERC721_STORAGE_SLOT]
+            .initialized = version_;
+    }
+
+    function getInitializedVersion() external view returns (uint64) {
+        return _getInitializedVersion(DIAMOND_ERC721_STORAGE_SLOT);
+    }
+
+    function __DiamondERC721Mock_reinit(
+        string memory name_,
+        string memory symbol_,
+        uint64 version_
+    ) public reinitializer(DIAMOND_ERC721_STORAGE_SLOT, version_) {
+        __DiamondERC721_init(name_, symbol_);
     }
 
     function _update(
