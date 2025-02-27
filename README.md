@@ -75,10 +75,12 @@ contract Example is AMultiOwnable {
     function verifyZKProof(Groth16VerifierHelper.ProofPoints memory proof_) external view {
         uint256[] memory pubSignals_ = TypeCaster.asSingletonArray(_uintTreaple.getRoot());
 
-        require(_treapleVerifier.verifyProof(pubSignals_, proof_), "ZKP verification failed");
+        require(_treapleVerifier.verifyProof(proof_, pubSignals_), "ZKP verification failed");
     }
 }
 ```
+
+This example showcases the basic usage of a `CartesianMerkleTree` with ZK proofs. The contract's `MultiOwner` may add elements to the tree to then privately prove their existence. Also, the `Groth16VerifierHelper` library is used to simplify the interaction with the ZK verifier.
 
 > [!TIP]
 > The library is designed to work cohesively with [hardhat-zkit](https://github.com/dl-solarity/hardhat-zkit) and [circom-lib](https://github.com/dl-solarity/circom-lib) packages.
