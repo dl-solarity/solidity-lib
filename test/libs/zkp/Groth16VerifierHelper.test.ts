@@ -40,25 +40,25 @@ describe("Groth16VerifierHelper", () => {
   describe("verifyProof", () => {
     it("should correctly call verifyProof function", async () => {
       const contractInterface = expect(
-        await verifierHelper.verifyProofStruct(await verifier3.getAddress(), pubSignals3, { a, b, c }),
+        await verifierHelper.verifyProofStruct(await verifier3.getAddress(), { a, b, c }, pubSignals3),
       ).to.be.true;
 
-      expect(await verifierHelper.verifyProof(await verifier3.getAddress(), pubSignals3, a, b, c)).to.be.true;
+      expect(await verifierHelper.verifyProof(await verifier3.getAddress(), a, b, c, pubSignals3)).to.be.true;
 
       await verifier2.setVerifyResult(false);
 
-      expect(await verifierHelper.verifyProofStruct(await verifier2.getAddress(), pubSignals2, { a, b, c })).to.be
+      expect(await verifierHelper.verifyProofStruct(await verifier2.getAddress(), { a, b, c }, pubSignals2)).to.be
         .false;
-      expect(await verifierHelper.verifyProof(await verifier2.getAddress(), pubSignals2, a, b, c)).to.be.false;
+      expect(await verifierHelper.verifyProof(await verifier2.getAddress(), a, b, c, pubSignals2)).to.be.false;
     });
 
     it("should get exception if failed to call verifyProof function", async () => {
       const wrongPubSignals = [1, 1, 2, 3];
 
-      await expect(verifierHelper.verifyProofStruct(await verifier2.getAddress(), wrongPubSignals, { a, b, c }))
+      await expect(verifierHelper.verifyProofStruct(await verifier2.getAddress(), { a, b, c }, wrongPubSignals))
         .to.be.revertedWithCustomError(verifierHelper, "FailedToCallVerifyProof")
         .withArgs();
-      await expect(verifierHelper.verifyProof(await verifier3.getAddress(), wrongPubSignals, a, b, c))
+      await expect(verifierHelper.verifyProof(await verifier3.getAddress(), a, b, c, wrongPubSignals))
         .to.be.revertedWithCustomError(verifierHelper, "FailedToCallVerifyProof")
         .withArgs();
     });
@@ -66,23 +66,23 @@ describe("Groth16VerifierHelper", () => {
 
   describe("verifyProofSafe", () => {
     it("should correctly call verifyProof function with additional checks", async () => {
-      expect(await verifierHelper.verifyProofStructSafe(await verifier3.getAddress(), pubSignals3, { a, b, c }, 3)).to
+      expect(await verifierHelper.verifyProofStructSafe(await verifier3.getAddress(), { a, b, c }, pubSignals3, 3)).to
         .be.true;
-      expect(await verifierHelper.verifyProofSafe(await verifier3.getAddress(), pubSignals3, a, b, c, 3)).to.be.true;
+      expect(await verifierHelper.verifyProofSafe(await verifier3.getAddress(), a, b, c, pubSignals3, 3)).to.be.true;
 
       await verifier2.setVerifyResult(false);
 
-      expect(await verifierHelper.verifyProofStructSafe(await verifier2.getAddress(), pubSignals2, { a, b, c }, 2)).to
+      expect(await verifierHelper.verifyProofStructSafe(await verifier2.getAddress(), { a, b, c }, pubSignals2, 2)).to
         .be.false;
-      expect(await verifierHelper.verifyProofSafe(await verifier2.getAddress(), pubSignals2, a, b, c, 2)).to.be.false;
+      expect(await verifierHelper.verifyProofSafe(await verifier2.getAddress(), a, b, c, pubSignals2, 2)).to.be.false;
     });
 
     it("should get an exception if it passes invalid public signals arr", async () => {
-      await expect(verifierHelper.verifyProofStructSafe(await verifier2.getAddress(), pubSignals2, { a, b, c }, 4))
+      await expect(verifierHelper.verifyProofStructSafe(await verifier2.getAddress(), { a, b, c }, pubSignals2, 4))
         .to.be.revertedWithCustomError(verifierHelper, "InvalidPublicSignalsCount")
         .withArgs(pubSignals2.length, 4);
 
-      await expect(verifierHelper.verifyProofSafe(await verifier3.getAddress(), pubSignals3, a, b, c, 4))
+      await expect(verifierHelper.verifyProofSafe(await verifier3.getAddress(), a, b, c, pubSignals3, 4))
         .to.be.revertedWithCustomError(verifierHelper, "InvalidPublicSignalsCount")
         .withArgs(pubSignals3.length, 4);
     });
