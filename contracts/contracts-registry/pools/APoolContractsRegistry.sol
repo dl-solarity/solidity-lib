@@ -2,14 +2,13 @@
 pragma solidity ^0.8.21;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {Paginator} from "../../libs/arrays/Paginator.sol";
 
 import {ADependant} from "../../contracts-registry/ADependant.sol";
-
-import {ProxyBeacon} from "../../proxy/beacon/ProxyBeacon.sol";
 
 /**
  * @notice The PoolContractsRegistry module
@@ -31,7 +30,7 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
 
     address internal _contractsRegistry;
 
-    mapping(string => ProxyBeacon) private _beacons;
+    mapping(string => UpgradeableBeacon) private _beacons;
     mapping(string => EnumerableSet.AddressSet) private _pools; // name => pool
 
     error NoMappingExists(string poolName);
@@ -134,7 +133,9 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
     ) internal virtual {
         for (uint256 i = 0; i < names_.length; i++) {
             if (address(_beacons[names_[i]]) == address(0)) {
-                _beacons[names_[i]] = ProxyBeacon(_deployProxyBeacon());
+                _beacons[names_[i]] = UpgradeableBeacon(
+                    _deployProxyBeacon(newImplementations_[i])
+                );
             }
 
             if (_beacons[names_[i]].implementation() != newImplementations_[i]) {
@@ -196,7 +197,7 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
      * @notice The utility function to deploy a Proxy Beacon contract to be used within the registry
      * @return the address of a Proxy Beacon
      */
-    function _deployProxyBeacon() internal virtual returns (address) {
-        return address(new ProxyBeacon());
+    function _deployProxyBeacon(address implementation_) internal virtual returns (address) {
+        return address(new UpgradeableBeacon(implementation_, address(this)));
     }
 }

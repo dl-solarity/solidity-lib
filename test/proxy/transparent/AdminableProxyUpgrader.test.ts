@@ -38,7 +38,7 @@ describe("AdminableProxyUpgrader", () => {
       await expect(
         adminableProxyUpgrader.connect(SECOND).upgrade(await proxy.getAddress(), await proxy.getAddress(), "0x"),
       )
-        .to.be.revertedWithCustomError(adminableProxyUpgrader, "UnauthorizedAccount")
+        .to.be.revertedWithCustomError(adminableProxyUpgrader, "OwnableUnauthorizedAccount")
         .withArgs(SECOND);
     });
   });
