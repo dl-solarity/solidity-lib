@@ -25,7 +25,7 @@ describe("AdminableProxyUpgrader", () => {
 
     token = await ERC20Mock.deploy("mock", "mock", 18);
 
-    adminableProxyUpgrader = await AdminableProxyUpgrader.deploy();
+    adminableProxyUpgrader = await AdminableProxyUpgrader.deploy(OWNER);
     proxy = await AdminableProxy.deploy(await token.getAddress(), await adminableProxyUpgrader.getAddress(), "0x");
 
     await reverter.snapshot();
@@ -38,7 +38,7 @@ describe("AdminableProxyUpgrader", () => {
       await expect(
         adminableProxyUpgrader.connect(SECOND).upgrade(await proxy.getAddress(), await proxy.getAddress(), "0x"),
       )
-        .to.be.revertedWithCustomError(adminableProxyUpgrader, "UnauthorizedAccount")
+        .to.be.revertedWithCustomError(adminableProxyUpgrader, "OwnableUnauthorizedAccount")
         .withArgs(SECOND);
     });
   });

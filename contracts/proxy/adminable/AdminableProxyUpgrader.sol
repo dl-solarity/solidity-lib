@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
-import {APermanentOwnable} from "../../access/APermanentOwnable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
 import {IAdminableProxy} from "./AdminableProxy.sol";
 
 /**
@@ -9,8 +10,8 @@ import {IAdminableProxy} from "./AdminableProxy.sol";
  *
  * This is the lightweight helper contract that may be used as a AdminableProxy admin.
  */
-contract AdminableProxyUpgrader is APermanentOwnable {
-    constructor() APermanentOwnable(msg.sender) {}
+contract AdminableProxyUpgrader is Ownable {
+    constructor(address initialOwner_) Ownable(initialOwner_) {}
 
     /**
      * @notice The function to upgrade the implementation contract

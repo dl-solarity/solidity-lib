@@ -7,7 +7,7 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import {
   PoolFactoryMock,
-  PublicBeaconProxy,
+  BeaconProxy,
   PoolContractsRegistryMock,
   ContractsRegistryPoolMock,
   PoolMock,
@@ -97,12 +97,11 @@ describe("PoolFactory", () => {
         expect(await poolContractsRegistry.countPools(NAME_2)).to.equal(0n);
 
         const PoolMock = await ethers.getContractFactory("PoolMock");
-        const PublicBeaconProxy = await ethers.getContractFactory("PublicBeaconProxy");
+        const BeaconProxy = await ethers.getContractFactory("BeaconProxy");
 
         const pool = <PoolMock>PoolMock.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
-        const beaconProxy = <PublicBeaconProxy>PublicBeaconProxy.attach(await pool.getAddress());
+        const beaconProxy = <BeaconProxy>BeaconProxy.attach(await pool.getAddress());
 
-        expect(await beaconProxy.implementation()).to.equal(await poolImpl.getAddress());
         expect(await pool.token()).not.to.equal(ethers.ZeroAddress);
       });
 
@@ -177,20 +176,12 @@ describe("PoolFactory", () => {
         expect(pools).to.deep.equal([predictedAddress1, predictedAddress2]);
 
         const PoolMock = await ethers.getContractFactory("PoolMock");
-        const PublicBeaconProxy = await ethers.getContractFactory("PublicBeaconProxy");
 
         const poolProxies = await Promise.all(pools.map(async (pool: string) => <PoolMock>PoolMock.attach(pool)));
-        const beaconProxies = await Promise.all(
-          pools.map(async (pool: string) => <PublicBeaconProxy>PublicBeaconProxy.attach(pool)),
-        );
 
         const tokens = await Promise.all(poolProxies.map(async (poolProxy: PoolMock) => await poolProxy.token()));
-        const implementations = await Promise.all(
-          beaconProxies.map(async (beaconProxy: PublicBeaconProxy) => await beaconProxy.implementation()),
-        );
 
         expect(tokens).to.deep.equal([await token.getAddress(), await token.getAddress()]);
-        expect(implementations).to.deep.equal([await poolImpl.getAddress(), await poolImpl.getAddress()]);
       });
 
       it("should revert when deploying the pool with the same salt", async () => {

@@ -2,11 +2,10 @@
 pragma solidity ^0.8.22;
 
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
 import {ADependant} from "../../../contracts-registry/ADependant.sol";
 import {APoolContractsRegistry} from "../APoolContractsRegistry.sol";
-
-import {PublicBeaconProxy} from "../../../proxy/beacon/PublicBeaconProxy.sol";
 
 /**
  * @notice The PoolContractsRegistry module
@@ -43,7 +42,7 @@ abstract contract APoolFactory is ADependant {
     ) internal virtual returns (address) {
         return
             address(
-                new PublicBeaconProxy(
+                new BeaconProxy(
                     APoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
                     bytes("")
                 )
@@ -61,7 +60,7 @@ abstract contract APoolFactory is ADependant {
     ) internal virtual returns (address) {
         return
             address(
-                new PublicBeaconProxy{salt: salt_}(
+                new BeaconProxy{salt: salt_}(
                     APoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
                     bytes("")
                 )
@@ -98,7 +97,7 @@ abstract contract APoolFactory is ADependant {
     ) internal view virtual returns (address) {
         bytes32 bytecodeHash = keccak256(
             abi.encodePacked(
-                type(PublicBeaconProxy).creationCode,
+                type(BeaconProxy).creationCode,
                 abi.encode(
                     APoolContractsRegistry(poolRegistry_).getProxyBeacon(poolType_),
                     bytes("")

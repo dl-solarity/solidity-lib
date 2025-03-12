@@ -56,7 +56,7 @@ abstract contract AContractsRegistry is Initializable {
      * @notice The initialization function
      */
     function __AContractsRegistry_init() internal onlyInitializing {
-        _proxyUpgrader = new AdminableProxyUpgrader();
+        _proxyUpgrader = new AdminableProxyUpgrader(address(this));
     }
 
     /**

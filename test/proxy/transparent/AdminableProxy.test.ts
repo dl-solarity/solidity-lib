@@ -26,7 +26,7 @@ describe("AdminableProxy", () => {
 
     const token: ERC20Mock = await ERC20Mock.deploy("mock", "mock", 18);
 
-    const adminableProxyUpgrader: AdminableProxyUpgrader = await AdminableProxyUpgrader.deploy();
+    const adminableProxyUpgrader: AdminableProxyUpgrader = await AdminableProxyUpgrader.deploy(OWNER);
     proxy = await AdminableProxy.deploy(await token.getAddress(), await adminableProxyUpgrader.getAddress(), "0x");
 
     tokenProxy = <ERC20Mock>token.attach(await proxy.getAddress());
