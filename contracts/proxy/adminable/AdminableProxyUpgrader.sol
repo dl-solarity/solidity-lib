@@ -11,7 +11,7 @@ import {IAdminableProxy} from "./AdminableProxy.sol";
  * This is the lightweight helper contract that may be used as a AdminableProxy admin.
  */
 contract AdminableProxyUpgrader is Ownable {
-    constructor() Ownable(msg.sender) {}
+    constructor(address initialOwner_) Ownable(initialOwner_) {}
 
     /**
      * @notice The function to upgrade the implementation contract
