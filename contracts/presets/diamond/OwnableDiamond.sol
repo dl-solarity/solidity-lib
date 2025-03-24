@@ -3,7 +3,7 @@ pragma solidity ^0.8.21;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {Diamond} from "../Diamond.sol";
+import {Diamond} from "../../diamond/Diamond.sol";
 
 /**
  * @notice The Diamond standard module

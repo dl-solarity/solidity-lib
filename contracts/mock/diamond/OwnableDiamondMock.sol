@@ -2,7 +2,7 @@
 // solhint-disable
 pragma solidity ^0.8.21;
 
-import {OwnableDiamond} from "../../diamond/presets/OwnableDiamond.sol";
+import {OwnableDiamond} from "../../presets/diamond/OwnableDiamond.sol";
 
 contract OwnableDiamondMock is OwnableDiamond {
     function __OwnableDiamondDirect_init() external {

@@ -4,7 +4,7 @@ pragma solidity ^0.8.22;
 
 import {ContractsRegistryPoolMock} from "./ContractsRegistryPoolMock.sol";
 
-import {AOwnablePoolContractsRegistry} from "../../../contracts-registry/pools/presets/AOwnablePoolContractsRegistry.sol";
+import {AOwnablePoolContractsRegistry} from "../../../presets/contracts-registry/pools/AOwnablePoolContractsRegistry.sol";
 
 contract PoolContractsRegistryMock is AOwnablePoolContractsRegistry {
     string public constant POOL_1_NAME = "POOL_1";
