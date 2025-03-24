@@ -5,7 +5,7 @@ pragma solidity ^0.8.22;
 import {ContractsRegistryPoolMock} from "../ContractsRegistryPoolMock.sol";
 import {PoolContractsRegistryMock} from "../PoolContractsRegistryMock.sol";
 
-import {APoolFactory} from "../../../../contracts-registry/pools/pool-factory/APoolFactory.sol";
+import {APoolFactory} from "../../../../contracts-registry/pools/APoolFactory.sol";
 
 contract PoolFactoryMock is APoolFactory {
     address public poolContractsRegistry;

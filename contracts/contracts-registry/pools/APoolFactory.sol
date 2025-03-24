@@ -4,8 +4,8 @@ pragma solidity ^0.8.22;
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
-import {ADependant} from "../../../contracts-registry/ADependant.sol";
-import {APoolContractsRegistry} from "../APoolContractsRegistry.sol";
+import {ADependant} from "../../contracts-registry/ADependant.sol";
+import {APoolContractsRegistry} from "./APoolContractsRegistry.sol";
 
 /**
  * @notice The PoolContractsRegistry module
