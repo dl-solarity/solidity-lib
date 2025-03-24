@@ -24,7 +24,7 @@ describe("CompoundRateKeeper", () => {
     const CompoundRateKeeperMock = await ethers.getContractFactory("CompoundRateKeeperMock");
     keeper = await CompoundRateKeeperMock.deploy();
 
-    await keeper.__OwnableCompoundRateKeeper_init(precision(1), 31536000);
+    await keeper.__CompoundRateKeeperMock_init(precision(1), 31536000);
 
     await reverter.snapshot();
   });
@@ -34,19 +34,9 @@ describe("CompoundRateKeeper", () => {
   describe("access", () => {
     it("should not initialize twice", async () => {
       await expect(keeper.mockInit(precision(1), 31536000)).to.be.revertedWithCustomError(keeper, "NotInitializing");
-      await expect(keeper.__OwnableCompoundRateKeeper_init(precision(1), 31536000))
+      await expect(keeper.__CompoundRateKeeperMock_init(precision(1), 31536000))
         .to.be.revertedWithCustomError(keeper, "InvalidInitialization")
         .withArgs();
-    });
-
-    it("only owner should call these functions", async () => {
-      await expect(keeper.connect(SECOND).setCapitalizationRate(precision(1)))
-        .to.be.revertedWithCustomError(keeper, "OwnableUnauthorizedAccount")
-        .withArgs(SECOND);
-
-      await expect(keeper.connect(SECOND).setCapitalizationPeriod(31536000))
-        .to.be.revertedWithCustomError(keeper, "OwnableUnauthorizedAccount")
-        .withArgs(SECOND);
     });
   });
 
