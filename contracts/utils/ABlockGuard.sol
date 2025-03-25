@@ -22,7 +22,13 @@ pragma solidity ^0.8.21;
  * ```
  */
 abstract contract ABlockGuard {
-    mapping(string => mapping(address => uint256)) private _lockedInBlocks;
+    struct ABlockGuardStorage {
+        mapping(string resource => mapping(address key => uint256 block)) lockedInBlocks;
+    }
+
+    // bytes32(uint256(keccak256("solarity.contract.ABlockGuard")) - 1)
+    bytes32 private constant A_BLOCK_GUARD_STORAGE =
+        0x06ea6e036a07a5850b5065c6817e5fe3c9f293357867b6a3fbe568a6a46097e6;
 
     error BlockGuardLocked(string resource, address key);
 
@@ -48,7 +54,9 @@ abstract contract ABlockGuard {
      * @param key_ the key of the resource (the caller)
      */
     function _lockBlock(string memory resource_, address key_) internal {
-        _lockedInBlocks[resource_][key_] = _getBlockNumber();
+        ABlockGuardStorage storage $ = _getABlockGuardStorage();
+
+        $.lockedInBlocks[resource_][key_] = _getBlockNumber();
     }
 
     /**
@@ -57,7 +65,9 @@ abstract contract ABlockGuard {
      * @param key_ the key of the resource (the caller)
      */
     function _checkBlock(string memory resource_, address key_) internal view {
-        if (_lockedInBlocks[resource_][key_] == _getBlockNumber())
+        ABlockGuardStorage storage $ = _getABlockGuardStorage();
+
+        if ($.lockedInBlocks[resource_][key_] == _getBlockNumber())
             revert BlockGuardLocked(resource_, key_);
     }
 
@@ -71,7 +81,9 @@ abstract contract ABlockGuard {
         string memory resource_,
         address key_
     ) internal view returns (uint256 block_) {
-        return _lockedInBlocks[resource_][key_];
+        ABlockGuardStorage storage $ = _getABlockGuardStorage();
+
+        return $.lockedInBlocks[resource_][key_];
     }
 
     /**
@@ -82,5 +94,14 @@ abstract contract ABlockGuard {
      */
     function _getBlockNumber() internal view virtual returns (uint256 block_) {
         return block.number;
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getABlockGuardStorage() private pure returns (ABlockGuardStorage storage $) {
+        assembly {
+            $.slot := A_BLOCK_GUARD_STORAGE
+        }
     }
 }

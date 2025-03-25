@@ -15,21 +15,25 @@ import {AValueDistributor} from "./AValueDistributor.sol";
 abstract contract AStaking is AValueDistributor, Initializable {
     using SafeERC20 for IERC20;
 
-    address private _sharesToken;
-    address private _rewardsToken;
+    struct AStakingStorage {
+        address sharesToken;
+        address rewardsToken;
+        /**
+         * @dev The rate of rewards distribution per second.
+         *
+         * It determines the rate at which rewards are earned and distributed
+         * to stakers based on their shares.
+         *
+         * Note: Ensure that the `rate` value is set correctly to match
+         * the decimal precision of the `rewardsToken` to ensure accurate rewards distribution.
+         */
+        uint256 rate;
+        uint256 stakingStartTime;
+    }
 
-    /**
-     * @dev The rate of rewards distribution per second.
-     *
-     * It determines the rate at which rewards are earned and distributed
-     * to stakers based on their shares.
-     *
-     * Note: Ensure that the `_rate` value is set correctly to match
-     * the decimal precision of the `_rewardsToken` to ensure accurate rewards distribution.
-     */
-    uint256 private _rate;
-
-    uint256 private _stakingStartTime;
+    //bytes32(uint256(keccak256("solarity.contract.AStaking")) - 1)
+    bytes32 private constant A_STAKING_STORAGE =
+        0xee54d165e3c91d57e07d52c1ebabdcdcd7404fd069d2a193b47e3d9262448543;
 
     error RewardsTokenIsZeroAddress();
     error SharesTokenIsZeroAddress();
@@ -63,8 +67,10 @@ abstract contract AStaking is AValueDistributor, Initializable {
         if (sharesToken_ == address(0)) revert SharesTokenIsZeroAddress();
         if (rewardsToken_ == address(0)) revert RewardsTokenIsZeroAddress();
 
-        _sharesToken = sharesToken_;
-        _rewardsToken = rewardsToken_;
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        $.sharesToken = sharesToken_;
+        $.rewardsToken = rewardsToken_;
         _setRate(rate_);
         _setStakingStartTime(stakingStartTime_);
     }
@@ -125,7 +131,9 @@ abstract contract AStaking is AValueDistributor, Initializable {
      * @return The address of the shares token contract.
      */
     function sharesToken() public view returns (address) {
-        return _sharesToken;
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        return $.sharesToken;
     }
 
     /**
@@ -133,7 +141,9 @@ abstract contract AStaking is AValueDistributor, Initializable {
      * @return The address of the rewards token contract.
      */
     function rewardsToken() public view returns (address) {
-        return _rewardsToken;
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        return $.rewardsToken;
     }
 
     /**
@@ -141,7 +151,9 @@ abstract contract AStaking is AValueDistributor, Initializable {
      * @return The timestamp when staking starts.
      */
     function stakingStartTime() public view returns (uint256) {
-        return _stakingStartTime;
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        return $.stakingStartTime;
     }
 
     /**
@@ -149,7 +161,9 @@ abstract contract AStaking is AValueDistributor, Initializable {
      * @return The rate of rewards distribution per second.
      */
     function rate() public view returns (uint256) {
-        return _rate;
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        return $.rate;
     }
 
     /**
@@ -157,7 +171,9 @@ abstract contract AStaking is AValueDistributor, Initializable {
      * @param stakingStartTime_ The timestamp when staking will start.
      */
     function _setStakingStartTime(uint256 stakingStartTime_) internal {
-        _stakingStartTime = stakingStartTime_;
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        $.stakingStartTime = stakingStartTime_;
     }
 
     /**
@@ -167,7 +183,9 @@ abstract contract AStaking is AValueDistributor, Initializable {
     function _setRate(uint256 newRate_) internal {
         _update(address(0));
 
-        _rate = newRate_;
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        $.rate = newRate_;
     }
 
     /**
@@ -176,7 +194,9 @@ abstract contract AStaking is AValueDistributor, Initializable {
      * @param amount_ The amount of shares added.
      */
     function _afterAddShares(address user_, uint256 amount_) internal virtual override {
-        IERC20(_sharesToken).safeTransferFrom(user_, address(this), amount_);
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        IERC20($.sharesToken).safeTransferFrom(user_, address(this), amount_);
     }
 
     /**
@@ -185,7 +205,9 @@ abstract contract AStaking is AValueDistributor, Initializable {
      * @param amount_ The amount of shares removed.
      */
     function _afterRemoveShares(address user_, uint256 amount_) internal virtual override {
-        IERC20(_sharesToken).safeTransfer(user_, amount_);
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        IERC20($.sharesToken).safeTransfer(user_, amount_);
     }
 
     /**
@@ -194,15 +216,19 @@ abstract contract AStaking is AValueDistributor, Initializable {
      * @param amount_ The amount of value distributed.
      */
     function _afterDistributeValue(address user_, uint256 amount_) internal virtual override {
-        IERC20(_rewardsToken).safeTransfer(user_, amount_);
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        IERC20($.rewardsToken).safeTransfer(user_, amount_);
     }
 
     /**
      * @dev Throws if the staking has not started yet.
      */
     function _checkStakingStarted() internal view {
-        if (block.timestamp < _stakingStartTime)
-            revert StakingHasNotStarted(block.timestamp, _stakingStartTime);
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        if (block.timestamp < $.stakingStartTime)
+            revert StakingHasNotStarted(block.timestamp, $.stakingStartTime);
     }
 
     /**
@@ -215,6 +241,17 @@ abstract contract AStaking is AValueDistributor, Initializable {
         uint256 timeUpTo_,
         uint256 timeLastUpdate_
     ) internal view virtual override returns (uint256) {
-        return _rate * (timeUpTo_ - timeLastUpdate_);
+        AStakingStorage storage $ = _getAStakingStorage();
+
+        return $.rate * (timeUpTo_ - timeLastUpdate_);
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getAStakingStorage() private pure returns (AStakingStorage storage $) {
+        assembly {
+            $.slot := A_STAKING_STORAGE
+        }
     }
 }

@@ -32,13 +32,17 @@ abstract contract AUniswapV2Oracle is Initializable {
         uint256 refs;
     }
 
-    IUniswapV2Factory public uniswapV2Factory;
+    struct AUniswapV2OracleStorage {
+        IUniswapV2Factory uniswapV2Factory;
+        uint256 timeWindow;
+        EnumerableSet.AddressSet pairs;
+        mapping(address tokenIn => address[] path) paths;
+        mapping(address pair => PairInfo pairInfo) pairInfos;
+    }
 
-    uint256 public timeWindow;
-
-    EnumerableSet.AddressSet private _pairs;
-    mapping(address => address[]) private _paths;
-    mapping(address => PairInfo) private _pairInfos;
+    // bytes32(uint256(keccak256("solarity.contract.AUniswapV2Oracle")) - 1)
+    bytes32 private constant A_UNISWAP_V2_ORACLE_STORAGE =
+        0x2fdb993a50a5a16d800fe20fee85d9cea7844b76e3162c1018adbd8cba58fed0;
 
     error InvalidPath(address tokenIn, uint256 pathLength);
     error PathAlreadyRegistered(address tokenIn);
@@ -54,7 +58,9 @@ abstract contract AUniswapV2Oracle is Initializable {
         address uniswapV2Factory_,
         uint256 timeWindow_
     ) internal onlyInitializing {
-        uniswapV2Factory = IUniswapV2Factory(uniswapV2Factory_);
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
+        $.uniswapV2Factory = IUniswapV2Factory(uniswapV2Factory_);
 
         _setTimeWindow(timeWindow_);
     }
@@ -65,12 +71,14 @@ abstract contract AUniswapV2Oracle is Initializable {
      * May be called at any time. The time window automatically adjusts
      */
     function updatePrices() public virtual {
-        uint256 pairsLength_ = _pairs.length();
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
+        uint256 pairsLength_ = $.pairs.length();
 
         for (uint256 i = 0; i < pairsLength_; i++) {
-            address pair_ = _pairs.at(i);
+            address pair_ = $.pairs.at(i);
 
-            PairInfo storage pairInfo = _pairInfos[pair_];
+            PairInfo storage pairInfo = $.pairInfos[pair_];
             uint256[] storage pairTimestamps = pairInfo.blockTimestamps;
 
             (
@@ -98,7 +106,9 @@ abstract contract AUniswapV2Oracle is Initializable {
      * @return The output token address
      */
     function getPrice(address tokenIn_, uint256 amount_) public view returns (uint256, address) {
-        address[] storage path = _paths[tokenIn_];
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
+        address[] storage path = $.paths[tokenIn_];
         uint256 pathLength_ = path.length;
 
         if (pathLength_ < 2) revert InvalidPath(tokenIn_, pathLength_);
@@ -107,7 +117,7 @@ abstract contract AUniswapV2Oracle is Initializable {
 
         for (uint256 i = 0; i < pathLength_ - 1; i++) {
             (address currentToken_, address nextToken_) = (path[i], path[i + 1]);
-            address pair_ = uniswapV2Factory.getPair(currentToken_, nextToken_);
+            address pair_ = $.uniswapV2Factory.getPair(currentToken_, nextToken_);
             uint256 price_ = _getPrice(pair_, currentToken_);
 
             amount_ = price_.mulDiv(amount_, 2 ** 112);
@@ -122,7 +132,9 @@ abstract contract AUniswapV2Oracle is Initializable {
      * @return the route of the provided token
      */
     function getPath(address tokenIn_) public view returns (address[] memory) {
-        return _paths[tokenIn_];
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
+        return $.paths[tokenIn_];
     }
 
     /**
@@ -130,7 +142,9 @@ abstract contract AUniswapV2Oracle is Initializable {
      * @return the array of pairs
      */
     function getPairs() public view returns (address[] memory) {
-        return _pairs.values();
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
+        return $.pairs.values();
     }
 
     /**
@@ -139,7 +153,9 @@ abstract contract AUniswapV2Oracle is Initializable {
      * @return the number of oracle observations
      */
     function getPairRounds(address pair_) public view returns (uint256) {
-        return _pairInfos[pair_].blockTimestamps.length;
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
+        return $.pairInfos[pair_].blockTimestamps.length;
     }
 
     /**
@@ -154,7 +170,9 @@ abstract contract AUniswapV2Oracle is Initializable {
         address pair_,
         uint256 round_
     ) public view returns (uint256, uint256, uint256) {
-        PairInfo storage _pairInfo = _pairInfos[pair_];
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
+        PairInfo storage _pairInfo = $.pairInfos[pair_];
 
         return (
             _pairInfo.prices0Cumulative[round_],
@@ -164,13 +182,29 @@ abstract contract AUniswapV2Oracle is Initializable {
     }
 
     /**
+     * @notice Returns the uniswapV2Factory address
+     */
+    function getUniswapV2Factory() public view returns (IUniswapV2Factory) {
+        return _getAUniswapV2OracleStorage().uniswapV2Factory;
+    }
+
+    /**
+     * @notice Returns the timeWindow
+     */
+    function getTimeWindow() public view returns (uint256) {
+        return _getAUniswapV2OracleStorage().timeWindow;
+    }
+
+    /**
      * @notice The function to set the time window of TWAP
      * @param newTimeWindow_ the new time window value in seconds
      */
     function _setTimeWindow(uint256 newTimeWindow_) internal {
         if (newTimeWindow_ == 0) revert TimeWindowIsZero();
 
-        timeWindow = newTimeWindow_;
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
+        $.timeWindow = newTimeWindow_;
     }
 
     /**
@@ -178,6 +212,8 @@ abstract contract AUniswapV2Oracle is Initializable {
      * @param paths_ the array of token paths to add
      */
     function _addPaths(address[][] memory paths_) internal {
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
         uint256 numberOfPaths_ = paths_.length;
 
         for (uint256 i = 0; i < numberOfPaths_; i++) {
@@ -185,18 +221,18 @@ abstract contract AUniswapV2Oracle is Initializable {
             address tokenIn_ = paths_[i][0];
 
             if (pathLength_ < 2) revert InvalidPath(tokenIn_, pathLength_);
-            if (_paths[tokenIn_].length != 0) revert PathAlreadyRegistered(tokenIn_);
+            if ($.paths[tokenIn_].length != 0) revert PathAlreadyRegistered(tokenIn_);
 
             for (uint256 j = 0; j < pathLength_ - 1; j++) {
                 (bool exists_, address pair_) = _pairExists(paths_[i][j], paths_[i][j + 1]);
 
                 if (!exists_) revert PairDoesNotExist(paths_[i][j], paths_[i][j + 1]);
 
-                _pairs.add(pair_);
-                _pairInfos[pair_].refs++;
+                $.pairs.add(pair_);
+                $.pairInfos[pair_].refs++;
             }
 
-            _paths[tokenIn_] = paths_[i];
+            $.paths[tokenIn_] = paths_[i];
         }
 
         updatePrices();
@@ -207,33 +243,35 @@ abstract contract AUniswapV2Oracle is Initializable {
      * @param tokenIns_ The array of token addresses to remove
      */
     function _removePaths(address[] memory tokenIns_) internal {
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
         uint256 numberOfPaths_ = tokenIns_.length;
 
         for (uint256 i = 0; i < numberOfPaths_; i++) {
             address tokenIn_ = tokenIns_[i];
-            uint256 pathLength_ = _paths[tokenIn_].length;
+            uint256 pathLength_ = $.paths[tokenIn_].length;
 
             if (pathLength_ == 0) {
                 continue;
             }
 
             for (uint256 j = 0; j < pathLength_ - 1; j++) {
-                address pair_ = uniswapV2Factory.getPair(
-                    _paths[tokenIn_][j],
-                    _paths[tokenIn_][j + 1]
+                address pair_ = $.uniswapV2Factory.getPair(
+                    $.paths[tokenIn_][j],
+                    $.paths[tokenIn_][j + 1]
                 );
 
-                PairInfo storage _pairInfo = _pairInfos[pair_];
+                PairInfo storage _pairInfo = $.pairInfos[pair_];
 
                 /// @dev can't underflow
                 _pairInfo.refs--;
 
                 if (_pairInfo.refs == 0) {
-                    _pairs.remove(pair_);
+                    $.pairs.remove(pair_);
                 }
             }
 
-            delete _paths[tokenIn_];
+            delete $.paths[tokenIn_];
         }
     }
 
@@ -241,12 +279,14 @@ abstract contract AUniswapV2Oracle is Initializable {
      * @notice The private function to get the price of a token inside a pair
      */
     function _getPrice(address pair_, address expectedToken_) private view returns (uint256) {
-        PairInfo storage pairInfo = _pairInfos[pair_];
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
+        PairInfo storage pairInfo = $.pairInfos[pair_];
 
         unchecked {
             /// @dev pairInfo.blockTimestamps can't be empty
             uint256 index_ = pairInfo.blockTimestamps.lowerBound(
-                (uint32(block.timestamp) - timeWindow) % 2 ** 32
+                (uint32(block.timestamp) - $.timeWindow) % 2 ** 32
             );
             index_ = index_ == 0 ? index_ : index_ - 1;
 
@@ -278,7 +318,9 @@ abstract contract AUniswapV2Oracle is Initializable {
      * @notice The private function to check the existence of a pair
      */
     function _pairExists(address token1_, address token2_) private view returns (bool, address) {
-        address pair_ = uniswapV2Factory.getPair(token1_, token2_);
+        AUniswapV2OracleStorage storage $ = _getAUniswapV2OracleStorage();
+
+        address pair_ = $.uniswapV2Factory.getPair(token1_, token2_);
 
         return (pair_ != address(0), pair_);
     }
@@ -311,6 +353,19 @@ abstract contract AUniswapV2Oracle is Initializable {
                     uint256((uint224(reserve0_) << 112) / reserve1_) *
                     timeElapsed_;
             }
+        }
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getAUniswapV2OracleStorage()
+        private
+        pure
+        returns (AUniswapV2OracleStorage storage $)
+    {
+        assembly {
+            $.slot := A_UNISWAP_V2_ORACLE_STORAGE
         }
     }
 }

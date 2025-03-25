@@ -20,14 +20,18 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
     using Strings for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
 
-    string private _name;
-    string private _symbol;
+    struct ASBTStorage {
+        string name;
+        string symbol;
+        mapping(uint256 tokenId => address owner) tokenOwners;
+        mapping(address owner => EnumerableSet.UintSet balances) balances;
+        string baseURI;
+        mapping(uint256 tokenId => string tokenURI) tokenURIs;
+    }
 
-    mapping(uint256 => address) private _tokenOwners;
-    mapping(address => EnumerableSet.UintSet) private _balances;
-
-    string private _baseURI;
-    mapping(uint256 => string) private _tokenURIs;
+    // bytes32(uint256(keccak256("solarity.contract.ASBT")) - 1)
+    bytes32 private constant A_SBT_STORAGE =
+        0x5a40b9c2fd292e4e0de2167f20d990524d7ad1b1bbf797f218a97c33c5ea76fb;
 
     error ReceiverIsZeroAddress();
     error TokenAlreadyExists(uint256 tokenId);
@@ -39,8 +43,10 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
      * @param symbol_ the symbol of the contract (can't be changed)
      */
     function __ASBT_init(string memory name_, string memory symbol_) internal onlyInitializing {
-        _name = name_;
-        _symbol = symbol_;
+        ASBTStorage storage $ = _getASBTStorage();
+
+        $.name = name_;
+        $.symbol = symbol_;
     }
 
     /**
@@ -48,7 +54,9 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
      * @return the name of the contract
      */
     function name() public view virtual override returns (string memory) {
-        return _name;
+        ASBTStorage storage $ = _getASBTStorage();
+
+        return $.name;
     }
 
     /**
@@ -56,7 +64,9 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
      * @return the symbol of the contract
      */
     function symbol() public view virtual override returns (string memory) {
-        return _symbol;
+        ASBTStorage storage $ = _getASBTStorage();
+
+        return $.symbol;
     }
 
     /**
@@ -74,7 +84,9 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
      * @return the user's balance
      */
     function balanceOf(address owner_) public view virtual override returns (uint256) {
-        return _balances[owner_].length();
+        ASBTStorage storage $ = _getASBTStorage();
+
+        return $.balances[owner_].length();
     }
 
     /**
@@ -87,7 +99,9 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
         address owner_,
         uint256 index_
     ) public view virtual override returns (uint256) {
-        return _balances[owner_].at(index_);
+        ASBTStorage storage $ = _getASBTStorage();
+
+        return $.balances[owner_].at(index_);
     }
 
     /**
@@ -96,7 +110,9 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
      * @return the array of tokens the user owns
      */
     function tokensOf(address owner_) public view virtual override returns (uint256[] memory) {
-        return _balances[owner_].values();
+        ASBTStorage storage $ = _getASBTStorage();
+
+        return $.balances[owner_].values();
     }
 
     /**
@@ -113,7 +129,9 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
      * @return the base URI
      */
     function baseURI() public view virtual override returns (string memory) {
-        return _baseURI;
+        ASBTStorage storage $ = _getASBTStorage();
+
+        return $.baseURI;
     }
 
     /**
@@ -127,7 +145,9 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
      * @return the URI of the token
      */
     function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
-        string memory tokenURI_ = _tokenURIs[tokenId_];
+        ASBTStorage storage $ = _getASBTStorage();
+
+        string memory tokenURI_ = $.tokenURIs[tokenId_];
 
         if (bytes(tokenURI_).length != 0) {
             return tokenURI_;
@@ -165,8 +185,10 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
 
         _beforeTokenAction(to_, tokenId_);
 
-        _balances[to_].add(tokenId_);
-        _tokenOwners[tokenId_] = to_;
+        ASBTStorage storage $ = _getASBTStorage();
+
+        $.balances[to_].add(tokenId_);
+        $.tokenOwners[tokenId_] = to_;
 
         emit Transfer(address(0), to_, tokenId_);
     }
@@ -182,10 +204,12 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
 
         _beforeTokenAction(address(0), tokenId_);
 
-        _balances[owner_].remove(tokenId_);
-        delete _tokenOwners[tokenId_];
+        ASBTStorage storage $ = _getASBTStorage();
 
-        delete _tokenURIs[tokenId_];
+        $.balances[owner_].remove(tokenId_);
+        delete $.tokenOwners[tokenId_];
+
+        delete $.tokenURIs[tokenId_];
 
         emit Transfer(owner_, address(0), tokenId_);
     }
@@ -198,7 +222,9 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
     function _setTokenURI(uint256 tokenId_, string memory tokenURI_) internal virtual {
         if (!tokenExists(tokenId_)) revert TokenDoesNotExist(tokenId_);
 
-        _tokenURIs[tokenId_] = tokenURI_;
+        ASBTStorage storage $ = _getASBTStorage();
+
+        $.tokenURIs[tokenId_] = tokenURI_;
     }
 
     /**
@@ -206,7 +232,9 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
      * @param baseURI_ the URI to set
      */
     function _setBaseURI(string memory baseURI_) internal virtual {
-        _baseURI = baseURI_;
+        ASBTStorage storage $ = _getASBTStorage();
+
+        $.baseURI = baseURI_;
     }
 
     /**
@@ -215,7 +243,18 @@ abstract contract ASBT is ISBT, ERC165Upgradeable {
      * @return address of an owner or `address(0)` if token does not exist
      */
     function _ownerOf(uint256 tokenId_) internal view virtual returns (address) {
-        return _tokenOwners[tokenId_];
+        ASBTStorage storage $ = _getASBTStorage();
+
+        return $.tokenOwners[tokenId_];
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getASBTStorage() private pure returns (ASBTStorage storage $) {
+        assembly {
+            $.slot := A_SBT_STORAGE
+        }
     }
 
     /**

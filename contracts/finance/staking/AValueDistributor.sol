@@ -24,11 +24,16 @@ abstract contract AValueDistributor {
         uint256 owedValue;
     }
 
-    uint256 private _totalShares;
-    uint256 private _cumulativeSum;
-    uint256 private _updatedAt;
+    struct AValueDistributorStorage {
+        uint256 totalShares;
+        uint256 cumulativeSum;
+        uint256 updatedAt;
+        mapping(address user => UserDistribution distribution) userDistributions;
+    }
 
-    mapping(address => UserDistribution) private _userDistributions;
+    //bytes32(uint256(keccak256("solarity.contract.AValueDistributor")) - 1)
+    bytes32 private constant A_VALUE_DISTRIBUTOR_STORAGE =
+        0x3787c5369be7468820c1967d258d594c4479f12333b91d3edff0bcbb43e7bf8f;
 
     event SharesAdded(address user, uint256 amount);
     event SharesRemoved(address user, uint256 amount);
@@ -44,7 +49,9 @@ abstract contract AValueDistributor {
      * @return The total number of shares.
      */
     function totalShares() public view returns (uint256) {
-        return _totalShares;
+        AValueDistributorStorage storage $ = _getAValueDistributorStorage();
+
+        return $.totalShares;
     }
 
     /**
@@ -52,7 +59,9 @@ abstract contract AValueDistributor {
      * @return The cumulative sum of value that has been distributed.
      */
     function cumulativeSum() public view returns (uint256) {
-        return _cumulativeSum;
+        AValueDistributorStorage storage $ = _getAValueDistributorStorage();
+
+        return $.cumulativeSum;
     }
 
     /**
@@ -60,7 +69,9 @@ abstract contract AValueDistributor {
      * @return The timestamp of the last update.
      */
     function updatedAt() public view returns (uint256) {
-        return _updatedAt;
+        AValueDistributorStorage storage $ = _getAValueDistributorStorage();
+
+        return $.updatedAt;
     }
 
     /**
@@ -69,7 +80,9 @@ abstract contract AValueDistributor {
      * @return The distribution details including user's shares, cumulative sum and value owed.
      */
     function userDistribution(address user_) public view returns (UserDistribution memory) {
-        return _userDistributions[user_];
+        AValueDistributorStorage storage $ = _getAValueDistributorStorage();
+
+        return $.userDistributions[user_];
     }
 
     /**
@@ -78,7 +91,9 @@ abstract contract AValueDistributor {
      * @return The total owed value to the user.
      */
     function getOwedValue(address user_) public view returns (uint256) {
-        UserDistribution storage userDist = _userDistributions[user_];
+        AValueDistributorStorage storage $ = _getAValueDistributorStorage();
+
+        UserDistribution storage userDist = $.userDistributions[user_];
 
         return
             (userDist.shares *
@@ -98,8 +113,10 @@ abstract contract AValueDistributor {
 
         _update(user_);
 
-        _totalShares += amount_;
-        _userDistributions[user_].shares += amount_;
+        AValueDistributorStorage storage $ = _getAValueDistributorStorage();
+
+        $.totalShares += amount_;
+        $.userDistributions[user_].shares += amount_;
 
         emit SharesAdded(user_, amount_);
 
@@ -112,7 +129,9 @@ abstract contract AValueDistributor {
      * @param amount_ The amount of shares to remove.
      */
     function _removeShares(address user_, uint256 amount_) internal virtual {
-        UserDistribution storage _userDist = _userDistributions[user_];
+        AValueDistributorStorage storage $ = _getAValueDistributorStorage();
+
+        UserDistribution storage _userDist = $.userDistributions[user_];
 
         if (amount_ == 0) revert AmountIsZero();
         if (amount_ > _userDist.shares)
@@ -120,7 +139,7 @@ abstract contract AValueDistributor {
 
         _update(user_);
 
-        _totalShares -= amount_;
+        $.totalShares -= amount_;
         _userDist.shares -= amount_;
 
         emit SharesRemoved(user_, amount_);
@@ -136,7 +155,9 @@ abstract contract AValueDistributor {
     function _distributeValue(address user_, uint256 amount_) internal virtual {
         _update(user_);
 
-        UserDistribution storage _userDist = _userDistributions[user_];
+        AValueDistributorStorage storage $ = _getAValueDistributorStorage();
+
+        UserDistribution storage _userDist = $.userDistributions[user_];
 
         if (amount_ == 0) revert AmountIsZero();
         if (amount_ > _userDist.owedValue)
@@ -157,7 +178,9 @@ abstract contract AValueDistributor {
     function _distributeAllValue(address user_) internal virtual returns (uint256) {
         _update(user_);
 
-        UserDistribution storage _userDist = _userDistributions[user_];
+        AValueDistributorStorage storage $ = _getAValueDistributorStorage();
+
+        UserDistribution storage _userDist = $.userDistributions[user_];
 
         uint256 amount_ = _userDist.owedValue;
 
@@ -213,16 +236,18 @@ abstract contract AValueDistributor {
      * @param user_ The address of the user.
      */
     function _update(address user_) internal {
-        _cumulativeSum = _getFutureCumulativeSum(block.timestamp);
-        _updatedAt = block.timestamp;
+        AValueDistributorStorage storage $ = _getAValueDistributorStorage();
+
+        $.cumulativeSum = _getFutureCumulativeSum(block.timestamp);
+        $.updatedAt = block.timestamp;
 
         if (user_ != address(0)) {
-            UserDistribution storage _userDist = _userDistributions[user_];
+            UserDistribution storage _userDist = $.userDistributions[user_];
 
             _userDist.owedValue +=
-                (_userDist.shares * (_cumulativeSum - _userDist.cumulativeSum)) /
+                (_userDist.shares * ($.cumulativeSum - _userDist.cumulativeSum)) /
                 PRECISION;
-            _userDist.cumulativeSum = _cumulativeSum;
+            _userDist.cumulativeSum = $.cumulativeSum;
         }
     }
 
@@ -246,12 +271,27 @@ abstract contract AValueDistributor {
      * @return The future cumulative sum of value per token staked that has been distributed.
      */
     function _getFutureCumulativeSum(uint256 timeUpTo_) internal view returns (uint256) {
-        if (_totalShares == 0) {
-            return _cumulativeSum;
+        AValueDistributorStorage storage $ = _getAValueDistributorStorage();
+
+        if ($.totalShares == 0) {
+            return $.cumulativeSum;
         }
 
-        uint256 value_ = _getValueToDistribute(timeUpTo_, _updatedAt);
+        uint256 value_ = _getValueToDistribute(timeUpTo_, $.updatedAt);
 
-        return _cumulativeSum + (value_ * PRECISION) / _totalShares;
+        return $.cumulativeSum + (value_ * PRECISION) / $.totalShares;
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getAValueDistributorStorage()
+        private
+        pure
+        returns (AValueDistributorStorage storage $)
+    {
+        assembly {
+            $.slot := A_VALUE_DISTRIBUTOR_STORAGE
+        }
     }
 }

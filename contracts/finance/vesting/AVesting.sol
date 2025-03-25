@@ -102,17 +102,19 @@ abstract contract AVesting is Initializable {
         uint256 scheduleId;
     }
 
+    struct AVestingStorage {
+        uint256 scheduleId;
+        uint256 vestingId;
+        mapping(uint256 id => Schedule schedule) schedules;
+        mapping(uint256 id => VestingData vesting) vestings;
+        mapping(address beneficiary => EnumerableSet.UintSet vesting_ids) beneficiaryIds;
+    }
+
     uint256 public constant LINEAR_EXPONENT = 1;
 
-    uint256 public scheduleId;
-    uint256 public vestingId;
-
-    // id => schedule
-    mapping(uint256 => Schedule) private _schedules;
-    // id => vesting
-    mapping(uint256 => VestingData) private _vestings;
-    // beneficiary => vesting ids
-    mapping(address => EnumerableSet.UintSet) private _beneficiaryIds;
+    //bytes32(uint256(keccak256("solarity.contract.AVesting")) - 1);
+    bytes32 private constant A_VESTING_STORAGE =
+        0xee07efa6f2a5c4bf7120115c09072706624f99551950f190e3ef74cf14f394d1;
 
     /**
      * @notice Emitted when a new schedule is created.
@@ -156,7 +158,9 @@ abstract contract AVesting is Initializable {
      * @param vestingId_ The ID of the vesting contract.
      */
     function withdrawFromVesting(uint256 vestingId_) public virtual {
-        VestingData storage _vesting = _vestings[vestingId_];
+        AVestingStorage storage $ = _getAVestingStorage();
+
+        VestingData storage _vesting = $.vestings[vestingId_];
 
         if (msg.sender != _vesting.beneficiary) revert UnauthorizedAccount(msg.sender);
         if (_vesting.paidAmount >= _vesting.vestingAmount) revert NothingToWithdraw();
@@ -177,7 +181,9 @@ abstract contract AVesting is Initializable {
      * @return Schedule struct.
      */
     function getSchedule(uint256 scheduleId_) public view virtual returns (Schedule memory) {
-        return _schedules[scheduleId_];
+        AVestingStorage storage $ = _getAVestingStorage();
+
+        return $.schedules[scheduleId_];
     }
 
     /**
@@ -186,7 +192,9 @@ abstract contract AVesting is Initializable {
      * @return VestingData struct.
      */
     function getVesting(uint256 vestingId_) public view virtual returns (VestingData memory) {
-        return _vestings[vestingId_];
+        AVestingStorage storage $ = _getAVestingStorage();
+
+        return $.vestings[vestingId_];
     }
 
     /**
@@ -195,11 +203,13 @@ abstract contract AVesting is Initializable {
      * @return An array of VestingData struct.
      */
     function getVestings(address beneficiary_) public view virtual returns (VestingData[] memory) {
-        uint256[] memory ids_ = _beneficiaryIds[beneficiary_].values();
+        AVestingStorage storage $ = _getAVestingStorage();
+
+        uint256[] memory ids_ = $.beneficiaryIds[beneficiary_].values();
         VestingData[] memory beneficiaryVestings_ = new VestingData[](ids_.length);
 
         for (uint256 i = 0; i < ids_.length; i++) {
-            beneficiaryVestings_[i] = _vestings[ids_[i]];
+            beneficiaryVestings_[i] = $.vestings[ids_[i]];
         }
 
         return beneficiaryVestings_;
@@ -211,7 +221,9 @@ abstract contract AVesting is Initializable {
      * @return An array of uint256 representing all vesting IDs for the beneficiary.
      */
     function getVestingIds(address beneficiary_) public view virtual returns (uint256[] memory) {
-        return _beneficiaryIds[beneficiary_].values();
+        AVestingStorage storage $ = _getAVestingStorage();
+
+        return $.beneficiaryIds[beneficiary_].values();
     }
 
     /**
@@ -220,7 +232,9 @@ abstract contract AVesting is Initializable {
      * @return The amount of tokens vested.
      */
     function getVestedAmount(uint256 vestingId_) public view virtual returns (uint256) {
-        VestingData storage _vesting = _vestings[vestingId_];
+        AVestingStorage storage $ = _getAVestingStorage();
+
+        VestingData storage _vesting = $.vestings[vestingId_];
 
         return _getVestedAmount(_vesting, _vesting.scheduleId, block.timestamp);
     }
@@ -231,9 +245,25 @@ abstract contract AVesting is Initializable {
      * @return The amount of tokens available to withdraw.
      */
     function getWithdrawableAmount(uint256 vestingId_) public view virtual returns (uint256) {
-        VestingData storage _vesting = _vestings[vestingId_];
+        AVestingStorage storage $ = _getAVestingStorage();
+
+        VestingData storage _vesting = $.vestings[vestingId_];
 
         return _getWithdrawableAmount(_vesting, _vesting.scheduleId, block.timestamp);
+    }
+
+    /**
+     * @notice Returns the scheduleId
+     */
+    function getScheduleId() public view returns (uint256) {
+        return _getAVestingStorage().scheduleId;
+    }
+
+    /**
+     * @notice Returns the vestingId
+     */
+    function getVestingId() public view returns (uint256) {
+        return _getAVestingStorage().vestingId;
     }
 
     /**
@@ -247,14 +277,16 @@ abstract contract AVesting is Initializable {
     ) internal virtual returns (uint256) {
         _validateSchedule(baseSchedule_);
 
-        _schedules[++scheduleId] = Schedule({
+        AVestingStorage storage $ = _getAVestingStorage();
+
+        $.schedules[++$.scheduleId] = Schedule({
             scheduleData: baseSchedule_,
             exponent: LINEAR_EXPONENT
         });
 
-        emit ScheduleCreated(scheduleId);
+        emit ScheduleCreated($.scheduleId);
 
-        return scheduleId;
+        return $.scheduleId;
     }
 
     /**
@@ -267,11 +299,13 @@ abstract contract AVesting is Initializable {
 
         _validateSchedule(schedule_.scheduleData);
 
-        _schedules[++scheduleId] = schedule_;
+        AVestingStorage storage $ = _getAVestingStorage();
 
-        emit ScheduleCreated(scheduleId);
+        $.schedules[++$.scheduleId] = schedule_;
 
-        return scheduleId;
+        emit ScheduleCreated($.scheduleId);
+
+        return $.scheduleId;
     }
 
     /**
@@ -282,7 +316,9 @@ abstract contract AVesting is Initializable {
     function _createVesting(VestingData memory vesting_) internal virtual returns (uint256) {
         _validateVesting(vesting_);
 
-        Schedule storage _schedule = _schedules[vesting_.scheduleId];
+        AVestingStorage storage $ = _getAVestingStorage();
+
+        Schedule storage _schedule = $.schedules[vesting_.scheduleId];
 
         if (
             vesting_.vestingStartTime +
@@ -291,11 +327,11 @@ abstract contract AVesting is Initializable {
             block.timestamp
         ) revert VestingPastDate();
 
-        uint256 _currentVestingId = ++vestingId;
+        uint256 _currentVestingId = ++$.vestingId;
 
-        _beneficiaryIds[vesting_.beneficiary].add(_currentVestingId);
+        $.beneficiaryIds[vesting_.beneficiary].add(_currentVestingId);
 
-        _vestings[_currentVestingId] = vesting_;
+        $.vestings[_currentVestingId] = vesting_;
 
         emit VestingCreated(_currentVestingId, vesting_.beneficiary, vesting_.vestingToken);
 
@@ -373,7 +409,9 @@ abstract contract AVesting is Initializable {
         uint256 vestingStartTime_,
         uint256 timestampUpTo_
     ) internal view virtual returns (uint256 vestedAmount_) {
-        Schedule storage _schedule = _schedules[scheduleId_];
+        AVestingStorage storage $ = _getAVestingStorage();
+
+        Schedule storage _schedule = $.schedules[scheduleId_];
         BaseSchedule storage _baseData = _schedule.scheduleData;
 
         if (vestingStartTime_ > timestampUpTo_) {
@@ -467,6 +505,15 @@ abstract contract AVesting is Initializable {
             if (exponent_ & 1 == 1) {
                 result_ = (result_ * base_) / PRECISION;
             }
+        }
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getAVestingStorage() private pure returns (AVestingStorage storage $) {
+        assembly {
+            $.slot := A_VESTING_STORAGE
         }
     }
 }

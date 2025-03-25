@@ -38,10 +38,15 @@ import {ADependant} from "./ADependant.sol";
  * Users may also fetch all the contracts present in the system as they are now located in a single place.
  */
 abstract contract AContractsRegistry is Initializable {
-    AdminableProxyUpgrader private _proxyUpgrader;
+    struct AContractsRegistryStorage {
+        AdminableProxyUpgrader proxyUpgrader;
+        mapping(string name => address contractAddress) contracts;
+        mapping(address contractAddress => bool isProxy) isProxy;
+    }
 
-    mapping(string => address) private _contracts;
-    mapping(address => bool) private _isProxy;
+    //bytes32(uint256(keccak256("solarity.contract.AContractsRegistry")) - 1)
+    bytes32 private constant A_CONTRACTS_REGISTRY_STORAGE =
+        0x769f3b456cd81d706504548e533f55ce8f4cb7a5f9b80697cfd5d8146de0ca61;
 
     event ContractAdded(string name, address contractAddress);
     event ProxyContractAdded(string name, address contractAddress, address implementation);
@@ -56,7 +61,9 @@ abstract contract AContractsRegistry is Initializable {
      * @notice The initialization function
      */
     function __AContractsRegistry_init() internal onlyInitializing {
-        _proxyUpgrader = new AdminableProxyUpgrader(address(this));
+        AContractsRegistryStorage storage $ = _getAContractsRegistryStorage();
+
+        $.proxyUpgrader = new AdminableProxyUpgrader(address(this));
     }
 
     /**
@@ -65,7 +72,9 @@ abstract contract AContractsRegistry is Initializable {
      * @return the address of the contract
      */
     function getContract(string memory name_) public view returns (address) {
-        address contractAddress_ = _contracts[name_];
+        AContractsRegistryStorage storage $ = _getAContractsRegistryStorage();
+
+        address contractAddress_ = $.contracts[name_];
 
         _checkIfMappingExist(contractAddress_, name_);
 
@@ -78,7 +87,9 @@ abstract contract AContractsRegistry is Initializable {
      * @return true if the contract is present in the registry
      */
     function hasContract(string memory name_) public view returns (bool) {
-        return _contracts[name_] != address(0);
+        AContractsRegistryStorage storage $ = _getAContractsRegistryStorage();
+
+        return $.contracts[name_] != address(0);
     }
 
     /**
@@ -86,7 +97,9 @@ abstract contract AContractsRegistry is Initializable {
      * @return the proxy admin address
      */
     function getProxyUpgrader() public view returns (address) {
-        return address(_proxyUpgrader);
+        AContractsRegistryStorage storage $ = _getAContractsRegistryStorage();
+
+        return address($.proxyUpgrader);
     }
 
     /**
@@ -95,12 +108,14 @@ abstract contract AContractsRegistry is Initializable {
      * @return the implementation address
      */
     function getImplementation(string memory name_) public view returns (address) {
-        address contractProxy_ = _contracts[name_];
+        AContractsRegistryStorage storage $ = _getAContractsRegistryStorage();
+
+        address contractProxy_ = $.contracts[name_];
 
         if (contractProxy_ == address(0)) revert NoMappingExists(name_);
-        if (!_isProxy[contractProxy_]) revert NotAProxy(name_, contractProxy_);
+        if (!$.isProxy[contractProxy_]) revert NotAProxy(name_, contractProxy_);
 
-        return _proxyUpgrader.getImplementation(contractProxy_);
+        return $.proxyUpgrader.getImplementation(contractProxy_);
     }
 
     /**
@@ -120,7 +135,9 @@ abstract contract AContractsRegistry is Initializable {
         string memory name_,
         bytes memory data_
     ) internal virtual {
-        address contractAddress_ = _contracts[name_];
+        AContractsRegistryStorage storage $ = _getAContractsRegistryStorage();
+
+        address contractAddress_ = $.contracts[name_];
 
         _checkIfMappingExist(contractAddress_, name_);
 
@@ -152,12 +169,14 @@ abstract contract AContractsRegistry is Initializable {
         address newImplementation_,
         bytes memory data_
     ) internal virtual {
-        address contractToUpgrade_ = _contracts[name_];
+        AContractsRegistryStorage storage $ = _getAContractsRegistryStorage();
+
+        address contractToUpgrade_ = $.contracts[name_];
 
         if (contractToUpgrade_ == address(0)) revert NoMappingExists(name_);
-        if (!_isProxy[contractToUpgrade_]) revert NotAProxy(name_, contractToUpgrade_);
+        if (!$.isProxy[contractToUpgrade_]) revert NotAProxy(name_, contractToUpgrade_);
 
-        _proxyUpgrader.upgrade(contractToUpgrade_, newImplementation_, data_);
+        $.proxyUpgrader.upgrade(contractToUpgrade_, newImplementation_, data_);
 
         emit ProxyContractUpgraded(name_, newImplementation_);
     }
@@ -171,7 +190,9 @@ abstract contract AContractsRegistry is Initializable {
     function _addContract(string memory name_, address contractAddress_) internal virtual {
         if (contractAddress_ == address(0)) revert ZeroAddressProvided(name_);
 
-        _contracts[name_] = contractAddress_;
+        AContractsRegistryStorage storage $ = _getAContractsRegistryStorage();
+
+        $.contracts[name_] = contractAddress_;
 
         emit ContractAdded(name_, contractAddress_);
     }
@@ -200,10 +221,12 @@ abstract contract AContractsRegistry is Initializable {
     ) internal virtual {
         if (contractAddress_ == address(0)) revert ZeroAddressProvided(name_);
 
-        address proxyAddr_ = _deployProxy(contractAddress_, address(_proxyUpgrader), data_);
+        AContractsRegistryStorage storage $ = _getAContractsRegistryStorage();
 
-        _contracts[name_] = proxyAddr_;
-        _isProxy[proxyAddr_] = true;
+        address proxyAddr_ = _deployProxy(contractAddress_, address($.proxyUpgrader), data_);
+
+        $.contracts[name_] = proxyAddr_;
+        $.isProxy[proxyAddr_] = true;
 
         emit ProxyContractAdded(name_, proxyAddr_, contractAddress_);
     }
@@ -221,13 +244,15 @@ abstract contract AContractsRegistry is Initializable {
     ) internal virtual {
         if (contractAddress_ == address(0)) revert ZeroAddressProvided(name_);
 
-        _contracts[name_] = contractAddress_;
-        _isProxy[contractAddress_] = true;
+        AContractsRegistryStorage storage $ = _getAContractsRegistryStorage();
+
+        $.contracts[name_] = contractAddress_;
+        $.isProxy[contractAddress_] = true;
 
         emit ProxyContractAdded(
             name_,
             contractAddress_,
-            _proxyUpgrader.getImplementation(contractAddress_)
+            $.proxyUpgrader.getImplementation(contractAddress_)
         );
     }
 
@@ -236,12 +261,14 @@ abstract contract AContractsRegistry is Initializable {
      * @param name_ the associated name with the contract
      */
     function _removeContract(string memory name_) internal virtual {
-        address contractAddress_ = _contracts[name_];
+        AContractsRegistryStorage storage $ = _getAContractsRegistryStorage();
+
+        address contractAddress_ = $.contracts[name_];
 
         _checkIfMappingExist(contractAddress_, name_);
 
-        delete _isProxy[contractAddress_];
-        delete _contracts[name_];
+        delete $.isProxy[contractAddress_];
+        delete $.contracts[name_];
 
         emit ContractRemoved(name_);
     }
@@ -263,5 +290,18 @@ abstract contract AContractsRegistry is Initializable {
 
     function _checkIfMappingExist(address contractAddress_, string memory name_) internal pure {
         if (contractAddress_ == address(0)) revert NoMappingExists(name_);
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getAContractsRegistryStorage()
+        private
+        pure
+        returns (AContractsRegistryStorage storage $)
+    {
+        assembly {
+            $.slot := A_CONTRACTS_REGISTRY_STORAGE
+        }
     }
 }
