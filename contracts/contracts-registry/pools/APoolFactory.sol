@@ -23,7 +23,7 @@ abstract contract APoolFactory is ADependant {
         address contractsRegistry;
     }
 
-    //bytes32(uint256(keccak256("solarity.contract.APoolFactory")) - 1)
+    // bytes32(uint256(keccak256("solarity.contract.APoolFactory")) - 1)
     bytes32 private constant A_POOL_FACTORY_STORAGE =
         0x1f5518d1b664801322096f1ea43578b6bee500653439ee8a900427e814b7cf43;
 

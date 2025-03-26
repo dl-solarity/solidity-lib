@@ -36,7 +36,7 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
         uint256 currentRate;
     }
 
-    //bytes32(uint256(keccak256("solarity.contract.ACompoundRateKeeper")) - 1)
+    // bytes32(uint256(keccak256("solarity.contract.ACompoundRateKeeper")) - 1)
     bytes32 private constant A_COMPOUND_RATE_KEEPER_STORAGE =
         0x061532485bc23876878e1c65fc8e0ea01501853558743d08806f3509197f1f11;
 

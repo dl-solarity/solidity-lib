@@ -112,7 +112,7 @@ abstract contract AVesting is Initializable {
 
     uint256 public constant LINEAR_EXPONENT = 1;
 
-    //bytes32(uint256(keccak256("solarity.contract.AVesting")) - 1);
+    // bytes32(uint256(keccak256("solarity.contract.AVesting")) - 1);
     bytes32 private constant A_VESTING_STORAGE =
         0xee07efa6f2a5c4bf7120115c09072706624f99551950f190e3ef74cf14f394d1;
 

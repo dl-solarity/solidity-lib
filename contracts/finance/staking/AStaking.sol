@@ -31,7 +31,7 @@ abstract contract AStaking is AValueDistributor, Initializable {
         uint256 stakingStartTime;
     }
 
-    //bytes32(uint256(keccak256("solarity.contract.AStaking")) - 1)
+    // bytes32(uint256(keccak256("solarity.contract.AStaking")) - 1)
     bytes32 private constant A_STAKING_STORAGE =
         0xee54d165e3c91d57e07d52c1ebabdcdcd7404fd069d2a193b47e3d9262448543;
 

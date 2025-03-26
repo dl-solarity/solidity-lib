@@ -44,7 +44,7 @@ abstract contract AContractsRegistry is Initializable {
         mapping(address contractAddress => bool isProxy) isProxy;
     }
 
-    //bytes32(uint256(keccak256("solarity.contract.AContractsRegistry")) - 1)
+    // bytes32(uint256(keccak256("solarity.contract.AContractsRegistry")) - 1)
     bytes32 private constant A_CONTRACTS_REGISTRY_STORAGE =
         0x769f3b456cd81d706504548e533f55ce8f4cb7a5f9b80697cfd5d8146de0ca61;
 

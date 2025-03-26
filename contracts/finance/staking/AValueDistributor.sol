@@ -31,7 +31,7 @@ abstract contract AValueDistributor {
         mapping(address user => UserDistribution distribution) userDistributions;
     }
 
-    //bytes32(uint256(keccak256("solarity.contract.AValueDistributor")) - 1)
+    // bytes32(uint256(keccak256("solarity.contract.AValueDistributor")) - 1)
     bytes32 private constant A_VALUE_DISTRIBUTOR_STORAGE =
         0x3787c5369be7468820c1967d258d594c4479f12333b91d3edff0bcbb43e7bf8f;
 
