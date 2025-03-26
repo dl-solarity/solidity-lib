@@ -122,6 +122,13 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
     }
 
     /**
+     * @dev Returns the address of the contracts registry
+     */
+    function getContractsRegistry() public view returns (address) {
+        return _getAPoolContractsRegistryStorage().contractsRegistry;
+    }
+
+    /**
      * @notice The paginated function to list pools by their name (call `countPools()` to account for pagination)
      * @param name_ the associated pools name
      * @param offset_ the starting index in the pools array

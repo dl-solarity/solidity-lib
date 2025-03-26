@@ -51,6 +51,8 @@ describe("PoolContractsRegistry", () => {
 
     await contractsRegistry.injectDependencies(await contractsRegistry.POOL_CONTRACTS_REGISTRY_NAME());
 
+    expect(await poolContractsRegistry.getContractsRegistry()).to.equal(await contractsRegistry.getAddress());
+
     NAME_1 = await poolContractsRegistry.POOL_1_NAME();
     NAME_2 = await poolContractsRegistry.POOL_2_NAME();
 

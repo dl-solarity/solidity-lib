@@ -41,6 +41,13 @@ abstract contract APoolFactory is ADependant {
     }
 
     /**
+     * @dev Returns the address of the contracts registry
+     */
+    function getContractsRegistry() public view returns (address) {
+        return _getAPoolFactoryStorage().contractsRegistry;
+    }
+
+    /**
      * @notice The internal deploy function that deploys BeaconProxy pointing to the
      * pool implementation taken from the PoolContractRegistry
      */

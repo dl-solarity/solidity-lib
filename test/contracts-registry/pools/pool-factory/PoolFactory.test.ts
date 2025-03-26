@@ -7,7 +7,6 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import {
   PoolFactoryMock,
-  BeaconProxy,
   PoolContractsRegistryMock,
   ContractsRegistryPoolMock,
   PoolMock,
@@ -66,6 +65,8 @@ describe("PoolFactory", () => {
     NAME_1 = await poolContractsRegistry.POOL_1_NAME();
     NAME_2 = await poolContractsRegistry.POOL_2_NAME();
 
+    expect(await poolFactory.getContractsRegistry()).to.equal(await contractsRegistry.getAddress());
+
     await reverter.snapshot();
   });
 
@@ -97,10 +98,8 @@ describe("PoolFactory", () => {
         expect(await poolContractsRegistry.countPools(NAME_2)).to.equal(0n);
 
         const PoolMock = await ethers.getContractFactory("PoolMock");
-        const BeaconProxy = await ethers.getContractFactory("BeaconProxy");
 
         const pool = <PoolMock>PoolMock.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
-        const beaconProxy = <BeaconProxy>BeaconProxy.attach(await pool.getAddress());
 
         expect(await pool.token()).not.to.equal(ethers.ZeroAddress);
       });
