@@ -7,7 +7,9 @@
 
 # Solarity Solidity Library
 
-Solidity modules and utilities that **go far beyond mediocre solidity**.
+Solidity contracts and utilities that **go far beyond mediocre solidity**.
+
+## Contracts
 
 ```md
 contracts
@@ -41,7 +43,7 @@ contracts
 │   ├── arrays
 │   │   ├── ArrayHelper - "Common functions to work with arrays"
 │   │   ├── Paginator - "Return array slices from view function"
-│   │   └── SetHelper - "Array abstraction over Sets"
+│   │   └── SetHelper - "Array abstraction over sets"
 │   ├── bn
 │   │   └── U512 - "A hyperoptimized uint512 implementation"
 │   ├── crypto
@@ -53,7 +55,7 @@ contracts
 │   │   ├── AvlTree — "AVL tree implementation with an iterator traversal"
 │   │   ├── CartesianMerkleTree — "CMT reference implementation"
 │   │   ├── DynamicSet — "Set for strings and bytes"
-│   │   ├── IncrementalMerkleTree - "IMT implementation with flexible height"
+│   │   ├── IncrementalMerkleTree - "IMT implementation with flexible tree height"
 │   │   ├── PriorityQueue - "Max queue heap implementation"
 │   │   ├── SparseMerkleTree — "SMT optimized implementation"
 │   │   └── memory
@@ -98,7 +100,7 @@ The latest stable version is always in the `master` branch.
 
 ## Documentation
 
-Check out the project's [documentation](https://docs.solarity.dev) with broad explanations and usage examples of every module. Full `natspec` guides are also available in the source code.
+Check out the project's [documentation](https://docs.solarity.dev) with broad explanations and usage examples of every contract. Full `natspec` guides are also available in the source code.
 
 ## Contribution
 
