@@ -27,7 +27,7 @@ contracts
 │       └── APoolFactory — "Factory implementation for a pooled registry"
 ├── diamond
 │   ├── ADiamondStorage — "The storage part of ERC-2535 diamond"
-│   ├── Diamond — "Revised ERC—2535 diamond implementation"
+│   ├── Diamond — "Revised ERC-2535 diamond implementation"
 │   └── utils
 │       ├── AInitializableStorage — "Initializable logic for diamond facets"
 │       └── DiamondERC165 — "ERC-165 introspection for diamond facets"
