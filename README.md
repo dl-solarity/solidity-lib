@@ -11,7 +11,7 @@ Solidity contracts and utilities that **go far beyond mediocre solidity**.
 
 ## Contracts
 
-```md
+```ml
 contracts
 ├── access
 │   ├── AMerkleWhitelisted - "Whitelists via Merkle proofs"
