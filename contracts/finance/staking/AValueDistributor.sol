@@ -32,7 +32,7 @@ abstract contract AValueDistributor {
     }
 
     // bytes32(uint256(keccak256("solarity.contract.AValueDistributor")) - 1)
-    bytes32 internal constant A_VALUE_DISTRIBUTOR_STORAGE =
+    bytes32 private constant A_VALUE_DISTRIBUTOR_STORAGE =
         0x3787c5369be7468820c1967d258d594c4479f12333b91d3edff0bcbb43e7bf8f;
 
     event SharesAdded(address user, uint256 amount);
@@ -90,7 +90,7 @@ abstract contract AValueDistributor {
      * @param user_ The address of the user.
      * @return The total owed value to the user.
      */
-    function getOwedValue(address user_) public view virtual returns (uint256) {
+    function getOwedValue(address user_) public view returns (uint256) {
         AValueDistributorStorage storage $ = _getAValueDistributorStorage();
 
         UserDistribution storage userDist = $.userDistributions[user_];
@@ -235,7 +235,7 @@ abstract contract AValueDistributor {
      *
      * @param user_ The address of the user.
      */
-    function _update(address user_) internal virtual {
+    function _update(address user_) internal {
         AValueDistributorStorage storage $ = _getAValueDistributorStorage();
 
         $.cumulativeSum = _getFutureCumulativeSum(block.timestamp);
@@ -270,7 +270,7 @@ abstract contract AValueDistributor {
      * @param timeUpTo_ The timestamp up to which to calculate the value distribution.
      * @return The future cumulative sum of value per token staked that has been distributed.
      */
-    function _getFutureCumulativeSum(uint256 timeUpTo_) internal view virtual returns (uint256) {
+    function _getFutureCumulativeSum(uint256 timeUpTo_) internal view returns (uint256) {
         AValueDistributorStorage storage $ = _getAValueDistributorStorage();
 
         if ($.totalShares == 0) {
@@ -286,9 +286,8 @@ abstract contract AValueDistributor {
      * @dev Returns a pointer to the storage namespace
      */
     function _getAValueDistributorStorage()
-        internal
+        private
         pure
-        virtual
         returns (AValueDistributorStorage storage $)
     {
         assembly {
