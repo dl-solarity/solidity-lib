@@ -9,81 +9,96 @@
 
 Solidity modules and utilities that **go far beyond mediocre solidity**.
 
-- Implementation of the [**Contracts Registry**](https://eips.ethereum.org/EIPS/eip-6224) pattern
-- State-of-the-art cryptography primitives (**ECDSA over 256-bit, 384-bit, and 512-bit curves**, **RSASSA-PSS**)
-- Advanced data structures (**Vector**, **DynamicSet**, **PriorityQueue**, **AVLTree**)
-- ZK-friendly [**Cartesian Merkle Tree**](https://medium.com/@Arvolear/cartesian-merkle-tree-the-new-breed-a30b005ecf27), [**Sparse Merkle Tree**](https://docs.iden3.io/publications/pdfs/Merkle-Tree.pdf), and [**Incremental Merkle Tree**](https://github.com/runtimeverification/deposit-contract-verification/blob/master/deposit-contract-verification.pdf) implementations
-- Versatile access control smart contracts (**Merkle whitelists**, **RBAC**)
-- Enhanced and simplified [**Diamond**](https://eips.ethereum.org/EIPS/eip-2535) pattern
-- Flexible finance instruments (**Staking**, **Vesting**)
-- Robust UniswapV2 and UniswapV3 oracles
-- Lightweight SBT implementation
-- Hyperoptimized **uint512** BigInt library
-- Utilities to ease work with memory, types, ERC20 decimals, arrays, sets, and ZK proofs
+```md
+contracts
+├── access
+│   ├── AMerkleWhitelisted - "Whitelists via Merkle proofs"
+│   ├── AMultiOwnable — "Multiple owners with the equal access level"
+│   ├── ARBAC — "A powerful implementation of a true RBAC"
+│   └── extensions
+│       └── "ARBACGroupable" - "Groupable extension of ARBAC"
+├── contracts-registry
+│   ├── AContractsRegistry — "Reference registry implementation of ERC-6224 pattern"
+│   ├── ADependant — "Reference dependant implementation of ERC-6224 pattern"
+│   └── pools
+│       ├── APoolContractsRegistry — "Adaptation of ERC-6224 for factory-like contracts"
+│       └── APoolFactory - "Factory implementation for a pooled registry"
+├── diamond
+│   ├── ADiamondStorage — "The storage part of ERC-2535 diamond"
+│   ├── Diamond - "Revised ERC-2535 diamond implementation"
+│   └── utils
+│       ├── AInitializableStorage - "Initializable logic for diamond facets"
+│       └── DiamondERC165 - "ERC-165 introspection for diamond facets"
+├── finance
+│   ├── compound-rate-keeper
+│   │   └── ACompoundRateKeeper - "Complex percentage calculator used in lending protocols"
+│   ├── staking
+│   │   ├── AStaking - "Flexible rewards staking implementation"
+│   │   └── AValueDistributor - "Efficient distribution algorithm implementation"
+│   └── vesting
+│       └── AVesting - "Linear and exponential vesting implementation"
+├── libs
+│   ├── arrays
+│   │   ├── ArrayHelper - "Common functions to work with arrays"
+│   │   ├── Paginator - "Return array slices from view function"
+│   │   └── SetHelper - "Array abstraction over Sets"
+│   ├── bn
+│   │   └── U512 - "A hyperoptimized uint512 implementation"
+│   ├── crypto
+│   │   ├── ECDSA256 - "ECDSA verification over any 256-bit curves"
+│   │   ├── ECDSA384 - "ECDSA verification over any 384-bit curves"
+│   │   ├── ECDSA512 - "ECDSA verification over any 512-bit curves"
+│   │   └── RSASSAPSS - "RSASSA-PSS verification with MGF1"
+│   ├── data-structures
+│   │   ├── AvlTree — "AVL tree implementation with an iterator traversal"
+│   │   ├── CartesianMerkleTree — "CMT reference implementation"
+│   │   ├── DynamicSet — "Set for strings and bytes"
+│   │   ├── IncrementalMerkleTree - "IMT implementation with flexible height"
+│   │   ├── PriorityQueue - "Max queue heap implementation"
+│   │   ├── SparseMerkleTree — "SMT optimized implementation"
+│   │   └── memory
+│   │       └── Vector - "A pushable memory array"
+│   ├── utils
+│   │   ├── DecimalsConverter - "Simplify interaction with ERC-20 decimals"
+│   │   ├── MemoryUtils - "Functions for memory manipulation"
+│   │   ├── ReturnDataProxy - "Bypass extra returndata copy when returning data"
+│   │   └── Typecaster - "Cast between various Solidity types"
+│   └── zkp
+│       ├── Groth16VerifierHelper - "Simplify integration with Groth16 proofs"
+│       └── PlonkVerifierHelper - "Simplify integration with Plonk proofs"
+├── oracles
+│   ├── AUniswapV2Oracle - "Uniswap V2 oracle with custom TWAP"
+│   └── UniswapV3Oracle - "Uniswap V3 oracle with a clean interface"
+├── proxy
+│   └── adminable
+│       ├── AdminableProxy - "A slight modification of a transparent proxy"
+│       └── AdminableProxyUpgrader - "A slight modification of a proxy admin"
+├── tokens
+│   └── ASBT - "A minimal implementation of an SBT"
+├── utils
+│   ├── ABlockGuard - "Protect against flashloans"
+│   └── Globals - "Some commonly used constants"
+├── presets - "Presets for the library contracts"
+├── interfaces - "Interfaces for the library contracts"
+└── mock - "Mocks for testing purposes"
+```
 
 Built with courage and aspiration to perfection.
 
-## Overview
+> [!TIP]
+> The library is designed to work cohesively with [hardhat-zkit](https://github.com/dl-solarity/hardhat-zkit) and [circom-lib](https://github.com/dl-solarity/circom-lib) packages.
 
-### Installation
+## Installation
 
-```console
-$ npm install @solarity/solidity-lib
+```bash
+npm install @solarity/solidity-lib
 ```
 
 The latest stable version is always in the `master` branch.
 
-### Documentation
+## Documentation
 
 Check out the project's [documentation](https://docs.solarity.dev) with broad explanations and usage examples of every module. Full `natspec` guides are also available in the source code.
-
-## Usage
-
-You will find the smart contracts in the `/contracts` directory. Feel free to play around and check the project's structure.
-
-Once the [npm package](https://www.npmjs.com/package/@solarity/solidity-lib) is installed, one can use the library just like that:
-
-```solidity
-pragma solidity ^0.8.21;
-
-import {AMultiOwnable} from "@solarity/solidity-lib/access/AMultiOwnable.sol";
-import {TypeCaster} from "@solarity/solidity-lib/libs/utils/TypeCaster.sol";
-import {CartesianMerkleTree} from "@solarity/solidity-lib/libs/data-structures/CartesianMerkleTree.sol";
-import {Groth16VerifierHelper} from "@solarity/solidity-lib/libs/zkp/Groth16VerifierHelper.sol";
-
-contract Example is AMultiOwnable {
-    using CartesianMerkleTree for CartesianMerkleTree.UintCMT;
-    using Groth16VerifierHelper for address;
-    
-    CartesianMerkleTree.UintCMT internal _uintTreaple;
-    address internal _treapleVerifier;
-
-    function __Example_init(address treapleVerifier_) initializer {
-        __AMultiOwnable_init();
-        _uintTreaple.initialize(40);
-        _treapleVerifier = treapleVerifier_;
-    }
-
-    function addToTree(uint256 key_) external onlyOwner {
-        _uintTreaple.add(key_);
-    }
-
-    function getMerkleProof(uint256 key_) external view returns (CartesianMerkleTree.Proof memory) {
-        return _uintTreaple.getProof(key_, 0);
-    }
-
-    function verifyZKProof(Groth16VerifierHelper.ProofPoints memory proof_) external view {
-        uint256[] memory pubSignals_ = TypeCaster.asSingletonArray(_uintTreaple.getRoot());
-
-        require(_treapleVerifier.verifyProof(proof_, pubSignals_), "ZKP verification failed");
-    }
-}
-```
-
-This example showcases the basic usage of a `CartesianMerkleTree` with ZK proofs. The contract's `MultiOwner` may add elements to the tree to then privately prove their existence. Also, the `Groth16VerifierHelper` library is used to simplify the interaction with the ZK verifier.
-
-> [!TIP]
-> The library is designed to work cohesively with [hardhat-zkit](https://github.com/dl-solarity/hardhat-zkit) and [circom-lib](https://github.com/dl-solarity/circom-lib) packages.
 
 ## Contribution
 
