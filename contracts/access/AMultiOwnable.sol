@@ -44,6 +44,15 @@ abstract contract AMultiOwnable is IMultiOwnable, Initializable {
     }
 
     /**
+     * @dev Initializes the contract setting the array of initial owners.
+     */
+    function __AMultiOwnable_init(address[] memory initialOwners_) internal onlyInitializing {
+        if (initialOwners_.length == 0) revert InvalidOwner();
+
+        _addOwners(initialOwners_);
+    }
+
+    /**
      * @notice The function to add equally rightful owners to the contract
      * @param newOwners_ the owners to be added
      */

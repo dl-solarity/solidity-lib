@@ -54,7 +54,7 @@ abstract contract AUniswapV2Oracle is Initializable {
      * @param uniswapV2Factory_ the Uniswap V2 factory
      * @param timeWindow_ the time between oracle observations
      */
-    function __OracleV2_init(
+    function __AUniswapV2Oracle_init(
         address uniswapV2Factory_,
         uint256 timeWindow_
     ) internal onlyInitializing {

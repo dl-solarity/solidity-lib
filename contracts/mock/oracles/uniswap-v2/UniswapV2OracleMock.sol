@@ -13,11 +13,11 @@ contract UniswapV2OracleMock is AUniswapV2Oracle {
         address uniswapV2Factory_,
         uint256 timeWindow_
     ) external initializer {
-        __OracleV2_init(uniswapV2Factory_, timeWindow_);
+        __AUniswapV2Oracle_init(uniswapV2Factory_, timeWindow_);
     }
 
     function mockInit(address uniswapV2Factory_, uint256 timeWindow_) external {
-        __OracleV2_init(uniswapV2Factory_, timeWindow_);
+        __AUniswapV2Oracle_init(uniswapV2Factory_, timeWindow_);
     }
 
     function addPaths(address[][] calldata paths_) external {
