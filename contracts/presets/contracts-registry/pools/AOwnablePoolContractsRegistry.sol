@@ -3,7 +3,7 @@ pragma solidity ^0.8.21;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {APoolContractsRegistry} from "../APoolContractsRegistry.sol";
+import {APoolContractsRegistry} from "../../../contracts-registry/pools/APoolContractsRegistry.sol";
 
 /**
  * @notice The Ownable preset of PoolContractsRegistry

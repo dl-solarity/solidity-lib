@@ -1,6 +1,6 @@
 {
   "name": "@solarity/solidity-lib",
-  "version": "3.0.0-rc.3",
+  "version": "3.0.0",
   "license": "MIT",
   "author": "Distributed Lab",
   "readme": "README.md",

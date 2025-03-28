@@ -28,14 +28,17 @@ import {PRECISION} from "../../utils/Globals.sol";
 abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
     using Math for uint256;
 
-    uint256 private _capitalizationRate;
-    uint64 private _capitalizationPeriod;
+    struct ACompoundRateKeeperStorage {
+        uint256 capitalizationRate;
+        uint64 capitalizationPeriod;
+        uint64 lastUpdate;
+        bool isMaxRateReached;
+        uint256 currentRate;
+    }
 
-    uint64 private _lastUpdate;
-
-    bool private _isMaxRateReached;
-
-    uint256 private _currentRate;
+    // bytes32(uint256(keccak256("solarity.contract.ACompoundRateKeeper")) - 1)
+    bytes32 private constant A_COMPOUND_RATE_KEEPER_STORAGE =
+        0x061532485bc23876878e1c65fc8e0ea01501853558743d08806f3509197f1f11;
 
     error CapitalizationPeriodIsZero();
     error MaxRateIsReached();
@@ -48,8 +51,10 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
         uint256 capitalizationRate_,
         uint64 capitalizationPeriod_
     ) internal onlyInitializing {
-        _currentRate = PRECISION;
-        _lastUpdate = uint64(block.timestamp);
+        ACompoundRateKeeperStorage storage $ = _getACompoundRateKeeperStorage();
+
+        $.currentRate = PRECISION;
+        $.lastUpdate = uint64(block.timestamp);
 
         _changeCapitalizationRate(capitalizationRate_);
         _changeCapitalizationPeriod(capitalizationPeriod_);
@@ -59,12 +64,14 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
      * @notice The function to force-update the compound rate if the getter reverts, sets isMaxRateReached to true
      */
     function emergencyUpdateCompoundRate() public override {
+        ACompoundRateKeeperStorage storage $ = _getACompoundRateKeeperStorage();
+
         try this.getCompoundRate() returns (uint256 rate_) {
             if (rate_ == _getMaxRate()) {
-                _isMaxRateReached = true;
+                $.isMaxRateReached = true;
             }
         } catch {
-            _isMaxRateReached = true;
+            $.isMaxRateReached = true;
         }
     }
 
@@ -82,24 +89,26 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
      * @return the compound rate for the provided timestamp
      */
     function getFutureCompoundRate(uint64 timestamp_) public view override returns (uint256) {
-        if (_isMaxRateReached) {
+        ACompoundRateKeeperStorage storage $ = _getACompoundRateKeeperStorage();
+
+        if ($.isMaxRateReached) {
             return _getMaxRate();
         }
 
-        uint64 lastUpdate_ = _lastUpdate;
+        uint64 lastUpdate_ = $.lastUpdate;
 
         if (lastUpdate_ >= timestamp_) {
-            return _currentRate;
+            return $.currentRate;
         }
 
         uint64 secondsPassed_ = timestamp_ - lastUpdate_;
 
-        uint64 capitalizationPeriod_ = _capitalizationPeriod;
+        uint64 capitalizationPeriod_ = $.capitalizationPeriod;
         uint64 capitalizationPeriodsNum_ = secondsPassed_ / capitalizationPeriod_;
         uint64 secondsLeft_ = secondsPassed_ % capitalizationPeriod_;
 
-        uint256 capitalizationRate_ = _capitalizationRate;
-        uint256 rate_ = _currentRate;
+        uint256 capitalizationRate_ = $.capitalizationRate;
+        uint256 rate_ = $.currentRate;
 
         if (capitalizationPeriodsNum_ != 0) {
             uint256 capitalizationPeriodRate_ = _raiseToPower(
@@ -124,7 +133,9 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
      * @return capitalizationRate_ the current capitalization rate
      */
     function getCapitalizationRate() public view returns (uint256 capitalizationRate_) {
-        return _capitalizationRate;
+        ACompoundRateKeeperStorage storage $ = _getACompoundRateKeeperStorage();
+
+        return $.capitalizationRate;
     }
 
     /**
@@ -132,7 +143,9 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
      * @return capitalizationPeriod_ the current capitalization period
      */
     function getCapitalizationPeriod() public view returns (uint64 capitalizationPeriod_) {
-        return _capitalizationPeriod;
+        ACompoundRateKeeperStorage storage $ = _getACompoundRateKeeperStorage();
+
+        return $.capitalizationPeriod;
     }
 
     /**
@@ -140,7 +153,9 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
      * @return lastUpdate_ the timestamp of the last update
      */
     function getLastUpdate() public view returns (uint64 lastUpdate_) {
-        return _lastUpdate;
+        ACompoundRateKeeperStorage storage $ = _getACompoundRateKeeperStorage();
+
+        return $.lastUpdate;
     }
 
     /**
@@ -148,7 +163,9 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
      * @return isMaxRateReached_ the boolean indicating if the max rate is reached
      */
     function getIsMaxRateReached() public view returns (bool isMaxRateReached_) {
-        return _isMaxRateReached;
+        ACompoundRateKeeperStorage storage $ = _getACompoundRateKeeperStorage();
+
+        return $.isMaxRateReached;
     }
 
     /**
@@ -156,7 +173,9 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
      * @return currentRate_ the current rate
      */
     function getCurrentRate() public view returns (uint256 currentRate_) {
-        return _currentRate;
+        ACompoundRateKeeperStorage storage $ = _getACompoundRateKeeperStorage();
+
+        return $.currentRate;
     }
 
     /**
@@ -181,10 +200,12 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
      * @notice The private function to update the compound rate
      */
     function _update() private {
-        if (_isMaxRateReached) revert MaxRateIsReached();
+        ACompoundRateKeeperStorage storage $ = _getACompoundRateKeeperStorage();
 
-        _currentRate = getCompoundRate();
-        _lastUpdate = uint64(block.timestamp);
+        if ($.isMaxRateReached) revert MaxRateIsReached();
+
+        $.currentRate = getCompoundRate();
+        $.lastUpdate = uint64(block.timestamp);
     }
 
     /**
@@ -193,7 +214,9 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
     function _changeCapitalizationRate(uint256 capitalizationRate_) private {
         if (capitalizationRate_ < PRECISION) revert RateIsLessThanOne(capitalizationRate_);
 
-        _capitalizationRate = capitalizationRate_;
+        ACompoundRateKeeperStorage storage $ = _getACompoundRateKeeperStorage();
+
+        $.capitalizationRate = capitalizationRate_;
 
         emit CapitalizationRateChanged(capitalizationRate_);
     }
@@ -204,7 +227,9 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
     function _changeCapitalizationPeriod(uint64 capitalizationPeriod_) private {
         if (capitalizationPeriod_ == 0) revert CapitalizationPeriodIsZero();
 
-        _capitalizationPeriod = capitalizationPeriod_;
+        ACompoundRateKeeperStorage storage $ = _getACompoundRateKeeperStorage();
+
+        $.capitalizationPeriod = capitalizationPeriod_;
 
         emit CapitalizationPeriodChanged(capitalizationPeriod_);
     }
@@ -233,5 +258,18 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
      */
     function _getMaxRate() private pure returns (uint256) {
         return type(uint128).max * PRECISION;
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getACompoundRateKeeperStorage()
+        private
+        pure
+        returns (ACompoundRateKeeperStorage storage $)
+    {
+        assembly {
+            $.slot := A_COMPOUND_RATE_KEEPER_STORAGE
+        }
     }
 }

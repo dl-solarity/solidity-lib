@@ -2,7 +2,7 @@
 // solhint-disable
 pragma solidity ^0.8.22;
 
-import {OwnableContractsRegistry} from "../../../contracts-registry/presets/OwnableContractsRegistry.sol";
+import {OwnableContractsRegistry} from "../../../presets/contracts-registry/OwnableContractsRegistry.sol";
 
 contract ContractsRegistryPoolMock is OwnableContractsRegistry {
     string public constant POOL_CONTRACTS_REGISTRY_NAME = "POOL_CONTRACTS_REGISTRY";

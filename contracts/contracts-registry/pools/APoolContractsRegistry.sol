@@ -28,10 +28,15 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
     using Paginator for EnumerableSet.AddressSet;
     using Math for uint256;
 
-    address internal _contractsRegistry;
+    struct APoolContractsRegistryStorage {
+        address contractsRegistry;
+        mapping(string name => UpgradeableBeacon beacon) beacons;
+        mapping(string name => EnumerableSet.AddressSet pools) pools;
+    }
 
-    mapping(string => UpgradeableBeacon) private _beacons;
-    mapping(string => EnumerableSet.AddressSet) private _pools; // name => pool
+    // bytes32(uint256(keccak256("solarity.contract.APoolContractsRegistry")) - 1)
+    bytes32 private constant A_POOL_CONTRACTS_REGISTRY_STORAGE =
+        0x8d5dd0f70e3c83ece432cedb954444f19062d979f9fc6b474d5ea33604196f67;
 
     error NoMappingExists(string poolName);
     error NoPoolsToInject(string poolName);
@@ -50,7 +55,9 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
         address contractsRegistry_,
         bytes memory
     ) public virtual override dependant {
-        _contractsRegistry = contractsRegistry_;
+        APoolContractsRegistryStorage storage $ = _getAPoolContractsRegistryStorage();
+
+        $.contractsRegistry = contractsRegistry_;
     }
 
     /**
@@ -69,9 +76,11 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
      * @return address_ the implementation these pools point to
      */
     function getImplementation(string memory name_) public view returns (address) {
-        if (address(_beacons[name_]) == address(0)) revert NoMappingExists(name_);
+        APoolContractsRegistryStorage storage $ = _getAPoolContractsRegistryStorage();
 
-        return _beacons[name_].implementation();
+        if (address($.beacons[name_]) == address(0)) revert NoMappingExists(name_);
+
+        return $.beacons[name_].implementation();
     }
 
     /**
@@ -80,7 +89,9 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
      * @return address the BeaconProxy address
      */
     function getProxyBeacon(string memory name_) public view returns (address) {
-        address beacon_ = address(_beacons[name_]);
+        APoolContractsRegistryStorage storage $ = _getAPoolContractsRegistryStorage();
+
+        address beacon_ = address($.beacons[name_]);
 
         if (beacon_ == address(0)) revert ProxyDoesNotExist(name_);
 
@@ -94,7 +105,9 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
      * @return true if pool_ is whithing the registry
      */
     function isPool(string memory name_, address pool_) public view returns (bool) {
-        return _pools[name_].contains(pool_);
+        APoolContractsRegistryStorage storage $ = _getAPoolContractsRegistryStorage();
+
+        return $.pools[name_].contains(pool_);
     }
 
     /**
@@ -103,7 +116,16 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
      * @return the number of pools with this name
      */
     function countPools(string memory name_) public view returns (uint256) {
-        return _pools[name_].length();
+        APoolContractsRegistryStorage storage $ = _getAPoolContractsRegistryStorage();
+
+        return $.pools[name_].length();
+    }
+
+    /**
+     * @dev Returns the address of the contracts registry
+     */
+    function getContractsRegistry() public view returns (address) {
+        return _getAPoolContractsRegistryStorage().contractsRegistry;
     }
 
     /**
@@ -118,7 +140,9 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
         uint256 offset_,
         uint256 limit_
     ) public view returns (address[] memory pools_) {
-        return _pools[name_].part(offset_, limit_);
+        APoolContractsRegistryStorage storage $ = _getAPoolContractsRegistryStorage();
+
+        return $.pools[name_].part(offset_, limit_);
     }
 
     /**
@@ -131,15 +155,17 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
         string[] memory names_,
         address[] memory newImplementations_
     ) internal virtual {
+        APoolContractsRegistryStorage storage $ = _getAPoolContractsRegistryStorage();
+
         for (uint256 i = 0; i < names_.length; i++) {
-            if (address(_beacons[names_[i]]) == address(0)) {
-                _beacons[names_[i]] = UpgradeableBeacon(
+            if (address($.beacons[names_[i]]) == address(0)) {
+                $.beacons[names_[i]] = UpgradeableBeacon(
                     _deployProxyBeacon(newImplementations_[i])
                 );
             }
 
-            if (_beacons[names_[i]].implementation() != newImplementations_[i]) {
-                _beacons[names_[i]].upgradeTo(newImplementations_[i]);
+            if ($.beacons[names_[i]].implementation() != newImplementations_[i]) {
+                $.beacons[names_[i]].upgradeTo(newImplementations_[i]);
             }
         }
     }
@@ -171,13 +197,15 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
         uint256 offset_,
         uint256 limit_
     ) internal virtual {
-        EnumerableSet.AddressSet storage _namedPools = _pools[name_];
+        APoolContractsRegistryStorage storage $ = _getAPoolContractsRegistryStorage();
+
+        EnumerableSet.AddressSet storage _namedPools = $.pools[name_];
 
         uint256 to_ = (offset_ + limit_).min(_namedPools.length()).max(offset_);
 
         if (to_ == offset_) revert NoPoolsToInject(name_);
 
-        address contractsRegistry_ = _contractsRegistry;
+        address contractsRegistry_ = $.contractsRegistry;
 
         for (uint256 i = offset_; i < to_; i++) {
             ADependant(_namedPools.at(i)).setDependencies(contractsRegistry_, data_);
@@ -190,7 +218,9 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
      * @param poolAddress_ the proxy address of the pool
      */
     function _addProxyPool(string memory name_, address poolAddress_) internal virtual {
-        _pools[name_].add(poolAddress_);
+        APoolContractsRegistryStorage storage $ = _getAPoolContractsRegistryStorage();
+
+        $.pools[name_].add(poolAddress_);
     }
 
     /**
@@ -199,5 +229,18 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
      */
     function _deployProxyBeacon(address implementation_) internal virtual returns (address) {
         return address(new UpgradeableBeacon(implementation_, address(this)));
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getAPoolContractsRegistryStorage()
+        private
+        pure
+        returns (APoolContractsRegistryStorage storage $)
+    {
+        assembly {
+            $.slot := A_POOL_CONTRACTS_REGISTRY_STORAGE
+        }
     }
 }

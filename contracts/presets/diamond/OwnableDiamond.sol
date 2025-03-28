@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import {Diamond} from "../Diamond.sol";
-import {DiamondOwnable} from "../access/ownable/DiamondOwnable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+import {Diamond} from "../../diamond/Diamond.sol";
 
 /**
  * @notice The Diamond standard module
  *
  * The Ownable preset of Diamond proxy
  */
-contract OwnableDiamond is Diamond, DiamondOwnable {
+contract OwnableDiamond is Diamond, OwnableUpgradeable {
     /**
      * @notice The function to manipulate the Diamond contract, as defined in [EIP-2535](https://eips.ethereum.org/EIPS/eip-2535)
      * @param facets_ the array of actions to be executed against the Diamond

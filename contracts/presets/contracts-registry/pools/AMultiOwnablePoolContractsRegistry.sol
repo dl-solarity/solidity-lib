@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import {APoolContractsRegistry} from "../APoolContractsRegistry.sol";
+import {APoolContractsRegistry} from "../../../contracts-registry/pools/APoolContractsRegistry.sol";
 import {AMultiOwnable} from "../../../access/AMultiOwnable.sol";
 
 /**

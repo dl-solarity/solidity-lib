@@ -71,7 +71,7 @@ describe("Vesting", () => {
 
       await expect(tx).to.emit(vesting, "ScheduleCreated").withArgs(1);
 
-      expect(await vesting.scheduleId()).to.equal(1);
+      expect(await vesting.getScheduleId()).to.equal(1);
       expect(await vesting.getSchedule(1)).to.deep.equal([Object.values(baseSchedule), LINEAR_EXPONENT]);
     });
 
@@ -83,7 +83,7 @@ describe("Vesting", () => {
 
       await expect(tx).to.emit(vesting, "ScheduleCreated").withArgs(1);
 
-      expect(await vesting.scheduleId()).to.equal(1);
+      expect(await vesting.getScheduleId()).to.equal(1);
       expect(await vesting.getSchedule(1)).to.deep.equal([Object.values(baseSchedule), exponent]);
     });
 
@@ -174,7 +174,7 @@ describe("Vesting", () => {
         .to.emit(vesting, "VestingCreated")
         .withArgs(2, exponentialVesting.beneficiary, exponentialVesting.vestingToken);
 
-      expect(await vesting.vestingId()).to.equal(2);
+      expect(await vesting.getVestingId()).to.equal(2);
       expect(await vesting.getVesting(1)).to.deep.equal(Object.values(linearVesting));
       expect(await vesting.getVesting(2)).to.deep.equal(Object.values(exponentialVesting));
 

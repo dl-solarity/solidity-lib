@@ -33,7 +33,7 @@ describe("Diamond", () => {
   describe("access", () => {
     it("should initialize only once", async () => {
       await expect(diamond.__OwnableDiamondMock_init())
-        .to.be.revertedWithCustomError(diamond, "AlreadyInitialized")
+        .to.be.revertedWithCustomError(diamond, "InvalidInitialization")
         .withArgs();
     });
 
@@ -63,20 +63,20 @@ describe("Diamond", () => {
 
     it("should not transfer ownership from non-owner", async () => {
       await expect(diamond.connect(SECOND).transferOwnership(SECOND.address))
-        .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
-        .withArgs(SECOND.address, OWNER.address);
+        .to.be.revertedWithCustomError(diamond, "OwnableUnauthorizedAccount")
+        .withArgs(SECOND.address);
     });
 
     it("should not renounce ownership from non-owner", async () => {
       await expect(diamond.connect(SECOND).renounceOwnership())
-        .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
-        .withArgs(SECOND.address, OWNER.address);
+        .to.be.revertedWithCustomError(diamond, "OwnableUnauthorizedAccount")
+        .withArgs(SECOND.address);
     });
 
     it("should not transfer ownership to zero address", async () => {
       await expect(diamond.transferOwnership(ethers.ZeroAddress))
-        .to.be.revertedWithCustomError(diamond, "InvalidOwner")
-        .withArgs();
+        .to.be.revertedWithCustomError(diamond, "OwnableInvalidOwner")
+        .withArgs(ethers.ZeroAddress);
     });
   });
 
@@ -185,12 +185,12 @@ describe("Diamond", () => {
 
       it("only owner should add facets", async () => {
         await expect(diamond.connect(SECOND).diamondCutShort(facets))
-          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
-          .withArgs(SECOND.address, OWNER.address);
+          .to.be.revertedWithCustomError(diamond, "OwnableUnauthorizedAccount")
+          .withArgs(SECOND.address);
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ethers.ZeroAddress, ethers.ZeroHash))
-          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
-          .withArgs(SECOND.address, OWNER.address);
+          .to.be.revertedWithCustomError(diamond, "OwnableUnauthorizedAccount")
+          .withArgs(SECOND.address);
       });
 
       it("should not add duplicate selectors", async () => {
@@ -273,12 +273,12 @@ describe("Diamond", () => {
 
       it("only owner should remove facets", async () => {
         await expect(diamond.connect(SECOND).diamondCutShort(facets))
-          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
-          .withArgs(SECOND.address, OWNER.address);
+          .to.be.revertedWithCustomError(diamond, "OwnableUnauthorizedAccount")
+          .withArgs(SECOND.address);
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ethers.ZeroAddress, ethers.ZeroHash))
-          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
-          .withArgs(SECOND.address, OWNER.address);
+          .to.be.revertedWithCustomError(diamond, "OwnableUnauthorizedAccount")
+          .withArgs(SECOND.address);
       });
     });
 
@@ -375,12 +375,12 @@ describe("Diamond", () => {
 
       it("only owner should replace facets", async () => {
         await expect(diamond.connect(SECOND).diamondCutShort(facets))
-          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
-          .withArgs(SECOND.address, OWNER.address);
+          .to.be.revertedWithCustomError(diamond, "OwnableUnauthorizedAccount")
+          .withArgs(SECOND.address);
 
         await expect(diamond.connect(SECOND).diamondCutLong(facets, ethers.ZeroAddress, ethers.ZeroHash))
-          .to.be.revertedWithCustomError(diamond, "CallerNotOwner")
-          .withArgs(SECOND.address, OWNER.address);
+          .to.be.revertedWithCustomError(diamond, "OwnableUnauthorizedAccount")
+          .withArgs(SECOND.address);
       });
     });
 

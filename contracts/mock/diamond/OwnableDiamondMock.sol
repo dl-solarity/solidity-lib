@@ -2,15 +2,15 @@
 // solhint-disable
 pragma solidity ^0.8.21;
 
-import {OwnableDiamond} from "../../diamond/presets/OwnableDiamond.sol";
+import {OwnableDiamond} from "../../presets/diamond/OwnableDiamond.sol";
 
 contract OwnableDiamondMock is OwnableDiamond {
     function __OwnableDiamondDirect_init() external {
-        __DiamondOwnable_init();
+        __Ownable_init(msg.sender);
     }
 
-    function __OwnableDiamondMock_init() external initializer(DIAMOND_OWNABLE_STORAGE_SLOT) {
-        __DiamondOwnable_init();
+    function __OwnableDiamondMock_init() external initializer {
+        __Ownable_init(msg.sender);
     }
 
     function diamondCutShort(Facet[] memory facets_) public {

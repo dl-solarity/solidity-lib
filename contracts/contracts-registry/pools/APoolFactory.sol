@@ -4,8 +4,8 @@ pragma solidity ^0.8.22;
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
-import {ADependant} from "../../../contracts-registry/ADependant.sol";
-import {APoolContractsRegistry} from "../APoolContractsRegistry.sol";
+import {ADependant} from "../../contracts-registry/ADependant.sol";
+import {APoolContractsRegistry} from "./APoolContractsRegistry.sol";
 
 /**
  * @notice The PoolContractsRegistry module
@@ -19,7 +19,13 @@ import {APoolContractsRegistry} from "../APoolContractsRegistry.sol";
  * Both "create1" and "create2" deployment modes are supported.
  */
 abstract contract APoolFactory is ADependant {
-    address internal _contractsRegistry;
+    struct APoolFactoryStorage {
+        address contractsRegistry;
+    }
+
+    // bytes32(uint256(keccak256("solarity.contract.APoolFactory")) - 1)
+    bytes32 private constant A_POOL_FACTORY_STORAGE =
+        0x1f5518d1b664801322096f1ea43578b6bee500653439ee8a900427e814b7cf43;
 
     /**
      * @notice The function that accepts dependencies from the ContractsRegistry, can be overridden
@@ -29,7 +35,16 @@ abstract contract APoolFactory is ADependant {
         address contractsRegistry_,
         bytes memory
     ) public virtual override dependant {
-        _contractsRegistry = contractsRegistry_;
+        APoolFactoryStorage storage $ = _getAPoolFactoryStorage();
+
+        $.contractsRegistry = contractsRegistry_;
+    }
+
+    /**
+     * @dev Returns the address of the contracts registry
+     */
+    function getContractsRegistry() public view returns (address) {
+        return _getAPoolFactoryStorage().contractsRegistry;
     }
 
     /**
@@ -83,7 +98,9 @@ abstract contract APoolFactory is ADependant {
      * provided PoolContractsRegistry as an injector
      */
     function _injectDependencies(address poolRegistry_, address proxy_) internal virtual {
-        ADependant(proxy_).setDependencies(_contractsRegistry, bytes(""));
+        APoolFactoryStorage storage $ = _getAPoolFactoryStorage();
+
+        ADependant(proxy_).setDependencies($.contractsRegistry, bytes(""));
         ADependant(proxy_).setInjector(poolRegistry_);
     }
 
@@ -106,5 +123,14 @@ abstract contract APoolFactory is ADependant {
         );
 
         return Create2.computeAddress(salt_, bytecodeHash);
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getAPoolFactoryStorage() private pure returns (APoolFactoryStorage storage $) {
+        assembly {
+            $.slot := A_POOL_FACTORY_STORAGE
+        }
     }
 }

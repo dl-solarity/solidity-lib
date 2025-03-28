@@ -48,8 +48,8 @@ describe("UniswapV2Oracle", () => {
 
   describe("init", () => {
     it("should set oracle correctly", async () => {
-      expect(await oracle.uniswapV2Factory()).to.equal(await uniswapV2Factory.getAddress());
-      expect(await oracle.timeWindow()).to.equal(ORACLE_TIME_WINDOW);
+      expect(await oracle.getUniswapV2Factory()).to.equal(await uniswapV2Factory.getAddress());
+      expect(await oracle.getTimeWindow()).to.equal(ORACLE_TIME_WINDOW);
     });
 
     it("should not initialize twice", async () => {
@@ -67,7 +67,7 @@ describe("UniswapV2Oracle", () => {
     it("should set timewindow correctly", async () => {
       await oracle.setTimeWindow(20);
 
-      expect(await oracle.timeWindow()).to.equal(20);
+      expect(await oracle.getTimeWindow()).to.equal(20);
     });
 
     it("shouldn't set 0 timewindow", async () => {
