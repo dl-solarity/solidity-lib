@@ -30,9 +30,24 @@ describe("MultiOwnable", () => {
   afterEach(reverter.revert);
 
   describe("access", () => {
+    it("should initialize", async () => {
+      const multiOwnableMock = await ethers.deployContract("MultiOwnableMock");
+
+      await expect(multiOwnableMock.__MultiOwnableMockMulti_init([]))
+        .to.be.revertedWithCustomError(multiOwnable, "InvalidOwner")
+        .withArgs();
+
+      await multiOwnableMock.__MultiOwnableMockMulti_init([FIRST.address]);
+
+      expect(await multiOwnableMock.isOwner(FIRST.address)).to.be.true;
+    });
+
     it("should not initialize twice", async () => {
       await expect(multiOwnable.mockInit()).to.be.revertedWithCustomError(multiOwnable, "NotInitializing").withArgs();
       await expect(multiOwnable.__MultiOwnableMock_init())
+        .to.be.revertedWithCustomError(multiOwnable, "InvalidInitialization")
+        .withArgs();
+      await expect(multiOwnable.__MultiOwnableMockMulti_init([FIRST.address]))
         .to.be.revertedWithCustomError(multiOwnable, "InvalidInitialization")
         .withArgs();
     });

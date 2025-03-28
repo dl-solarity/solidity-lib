@@ -9,6 +9,10 @@ contract MultiOwnableMock is AMultiOwnable {
         __AMultiOwnable_init();
     }
 
+    function __MultiOwnableMockMulti_init(address[] memory initialOwners_) external initializer {
+        __AMultiOwnable_init(initialOwners_);
+    }
+
     function mockInit() external {
         __AMultiOwnable_init();
     }
