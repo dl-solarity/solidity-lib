@@ -29,12 +29,14 @@ describe("InitializableStorage", () => {
 
   describe("init", () => {
     it("should initialize only once", async () => {
-      await expect(mock.__mockInitializer_init()).to.be.revertedWithCustomError(mock, "AlreadyInitialized").withArgs();
+      await expect(mock.__mockInitializer_init())
+        .to.be.revertedWithCustomError(mock, "DiamondAlreadyInitialized")
+        .withArgs();
     });
 
     it("should not initialize", async () => {
       await expect(mock.__mockOnlyInitializing_init())
-        .to.be.revertedWithCustomError(mock, "NotInitializing")
+        .to.be.revertedWithCustomError(mock, "DiamondNotInitializing")
         .withArgs();
     });
 
@@ -48,14 +50,14 @@ describe("InitializableStorage", () => {
       const invalidVersion = 1;
 
       await expect(mock.__mock_reinitializer(invalidVersion))
-        .to.be.revertedWithCustomError(mock, "InvalidInitialization")
+        .to.be.revertedWithCustomError(mock, "DiamondInvalidInitialization")
         .withArgs();
 
       const newMock = await Mock.deploy();
       const validVersion = 2;
 
       await expect(newMock.invalidReinitializer(validVersion))
-        .to.be.revertedWithCustomError(mock, "InvalidInitialization")
+        .to.be.revertedWithCustomError(mock, "DiamondInvalidInitialization")
         .withArgs();
     });
 
@@ -63,13 +65,13 @@ describe("InitializableStorage", () => {
       const newMock = await Mock.deploy();
 
       await expect(newMock.invalidDisableInitializers())
-        .to.be.revertedWithCustomError(newMock, "InvalidInitialization")
+        .to.be.revertedWithCustomError(newMock, "DiamondInvalidInitialization")
         .withArgs();
 
       await newMock.disableInitializers();
 
       await expect(newMock.__mockInitializer_init())
-        .to.be.revertedWithCustomError(newMock, "AlreadyInitialized")
+        .to.be.revertedWithCustomError(newMock, "DiamondAlreadyInitialized")
         .withArgs();
 
       await newMock.disableInitializers();
