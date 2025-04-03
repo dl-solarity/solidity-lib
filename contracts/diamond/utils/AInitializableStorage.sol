@@ -11,20 +11,20 @@ abstract contract AInitializableStorage {
     bytes32 internal constant INITIALIZABLE_STORAGE_SLOT =
         keccak256("diamond.standard.initializable.storage");
 
-    struct IStorage {
-        mapping(bytes32 => InitializableStorage) initializableStorage;
+    struct IDiamondInitializableStorage {
+        mapping(bytes32 => DiamondInitializableStorage) initializableStorage;
     }
 
-    struct InitializableStorage {
+    struct DiamondInitializableStorage {
         uint64 initialized;
         bool initializing;
     }
 
-    event Initialized(bytes32 storageSlot, uint64 version);
+    event DiamondInitialized(bytes32 storageSlot, uint64 version);
 
-    error AlreadyInitialized();
-    error InvalidInitialization();
-    error NotInitializing();
+    error DiamondAlreadyInitialized();
+    error DiamondInvalidInitialization();
+    error DiamondNotInitializing();
 
     /**
      * @dev A modifier that defines a protected initializer function that can be invoked at most
@@ -33,8 +33,8 @@ abstract contract AInitializableStorage {
      *
      * Emits an {Initialized} event.
      */
-    modifier initializer(bytes32 storageSlot_) {
-        if (_getInitializedVersion(storageSlot_) != 0) revert AlreadyInitialized();
+    modifier diamondInitializer(bytes32 storageSlot_) {
+        if (_getDiamondInitializedVersion(storageSlot_) != 0) revert DiamondAlreadyInitialized();
 
         _setInitializing(storageSlot_, true);
         _;
@@ -42,7 +42,7 @@ abstract contract AInitializableStorage {
 
         _setInitialized(storageSlot_, 1);
 
-        emit Initialized(storageSlot_, 1);
+        emit DiamondInitialized(storageSlot_, 1);
     }
 
     /**
@@ -58,9 +58,12 @@ abstract contract AInitializableStorage {
      *
      * Emits an {Initialized} event.
      */
-    modifier reinitializer(bytes32 storageSlot_, uint64 version_) {
-        if (_isInitializing(storageSlot_) || _getInitializedVersion(storageSlot_) >= version_) {
-            revert InvalidInitialization();
+    modifier diamondReinitializer(bytes32 storageSlot_, uint64 version_) {
+        if (
+            _isDiamondInitializing(storageSlot_) ||
+            _getDiamondInitializedVersion(storageSlot_) >= version_
+        ) {
+            revert DiamondInvalidInitialization();
         }
 
         _setInitialized(storageSlot_, version_);
@@ -69,19 +72,23 @@ abstract contract AInitializableStorage {
         _;
         _setInitializing(storageSlot_, false);
 
-        emit Initialized(storageSlot_, version_);
+        emit DiamondInitialized(storageSlot_, version_);
     }
 
     /**
      * @dev Modifier to protect an initialization function so that it can only be invoked by functions with the
      * {initializer} modifier, directly or indirectly.
      */
-    modifier onlyInitializing(bytes32 storageSlot_) {
-        if (!_isInitializing(storageSlot_)) revert NotInitializing();
+    modifier onlyDiamondInitializing(bytes32 storageSlot_) {
+        if (!_isDiamondInitializing(storageSlot_)) revert DiamondNotInitializing();
         _;
     }
 
-    function _getInitializableStorage() internal pure returns (IStorage storage _iss) {
+    function _getDiamondInitializableStorage()
+        internal
+        pure
+        returns (IDiamondInitializableStorage storage _iss)
+    {
         bytes32 slot_ = INITIALIZABLE_STORAGE_SLOT;
 
         assembly {
@@ -95,41 +102,41 @@ abstract contract AInitializableStorage {
      *
      * Emits an {Initialized} event the first time it is successfully executed.
      */
-    function _disableInitializers(bytes32 storageSlot_) internal virtual {
-        if (_isInitializing(storageSlot_)) revert InvalidInitialization();
+    function _disableDiamondInitializers(bytes32 storageSlot_) internal virtual {
+        if (_isDiamondInitializing(storageSlot_)) revert DiamondInvalidInitialization();
 
-        if (_getInitializedVersion(storageSlot_) != type(uint64).max) {
+        if (_getDiamondInitializedVersion(storageSlot_) != type(uint64).max) {
             _setInitialized(storageSlot_, type(uint64).max);
 
-            emit Initialized(storageSlot_, type(uint64).max);
+            emit DiamondInitialized(storageSlot_, type(uint64).max);
         }
     }
 
     /**
      * @dev Returns the highest version that has been initialized for the provided storage slot.
      */
-    function _getInitializedVersion(bytes32 storageSlot_) internal view returns (uint64) {
-        return _getInitializableStorage().initializableStorage[storageSlot_].initialized;
+    function _getDiamondInitializedVersion(bytes32 storageSlot_) internal view returns (uint64) {
+        return _getDiamondInitializableStorage().initializableStorage[storageSlot_].initialized;
     }
 
     /**
      * @dev Returns 1 if the storage at the specified slot is currently initializing, 0 otherwise.
      */
-    function _isInitializing(bytes32 storageSlot_) internal view returns (bool) {
-        return _getInitializableStorage().initializableStorage[storageSlot_].initializing;
+    function _isDiamondInitializing(bytes32 storageSlot_) internal view returns (bool) {
+        return _getDiamondInitializableStorage().initializableStorage[storageSlot_].initializing;
     }
 
     /**
      * @dev Internal function that sets the initialization version for the provided storage slot.
      */
     function _setInitialized(bytes32 storageSlot_, uint64 value_) private {
-        _getInitializableStorage().initializableStorage[storageSlot_].initialized = value_;
+        _getDiamondInitializableStorage().initializableStorage[storageSlot_].initialized = value_;
     }
 
     /**
      * @dev Internal function that sets the initializing value for the provided storage slot.
      */
     function _setInitializing(bytes32 storageSlot_, bool value_) private {
-        _getInitializableStorage().initializableStorage[storageSlot_].initializing = value_;
+        _getDiamondInitializableStorage().initializableStorage[storageSlot_].initializing = value_;
     }
 }
