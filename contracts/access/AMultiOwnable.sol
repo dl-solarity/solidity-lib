@@ -26,7 +26,13 @@ abstract contract AMultiOwnable is IMultiOwnable, Initializable {
     using TypeCaster for address;
     using SetHelper for EnumerableSet.AddressSet;
 
-    EnumerableSet.AddressSet private _owners;
+    struct AMultiOwnableStorage {
+        EnumerableSet.AddressSet owners;
+    }
+
+    // bytes32(uint256(keccak256("solarity.contract.AMultiOwnable")) - 1)
+    bytes32 private constant A_MULTI_OWNABLE_STORAGE =
+        0x54985b7dba18117ef28d5d113b6eab9fb186b92b1987f5efdadbc365eb2a5cba;
 
     error InvalidOwner();
     error UnauthorizedAccount(address account);
@@ -83,7 +89,9 @@ abstract contract AMultiOwnable is IMultiOwnable, Initializable {
      * @return the list of current owners
      */
     function getOwners() public view override returns (address[] memory) {
-        return _owners.values();
+        AMultiOwnableStorage storage $ = _getAMultiOwnableStorage();
+
+        return $.owners.values();
     }
 
     /**
@@ -92,7 +100,9 @@ abstract contract AMultiOwnable is IMultiOwnable, Initializable {
      * @return true if address_ is owner, false otherwise
      */
     function isOwner(address address_) public view override returns (bool) {
-        return _owners.contains(address_);
+        AMultiOwnableStorage storage $ = _getAMultiOwnableStorage();
+
+        return $.owners.contains(address_);
     }
 
     /**
@@ -101,9 +111,11 @@ abstract contract AMultiOwnable is IMultiOwnable, Initializable {
      * @param newOwners_ the array of addresses to add to _owners
      */
     function _addOwners(address[] memory newOwners_) private {
-        _owners.add(newOwners_);
+        AMultiOwnableStorage storage $ = _getAMultiOwnableStorage();
 
-        if (_owners.contains(address(0))) revert InvalidOwner();
+        $.owners.add(newOwners_);
+
+        if ($.owners.contains(address(0))) revert InvalidOwner();
 
         emit OwnersAdded(newOwners_);
     }
@@ -118,7 +130,9 @@ abstract contract AMultiOwnable is IMultiOwnable, Initializable {
      * @param oldOwners_ the array of addresses to remove from _owners
      */
     function _removeOwners(address[] memory oldOwners_) private {
-        _owners.remove(oldOwners_);
+        AMultiOwnableStorage storage $ = _getAMultiOwnableStorage();
+
+        $.owners.remove(oldOwners_);
 
         emit OwnersRemoved(oldOwners_);
     }
@@ -128,5 +142,14 @@ abstract contract AMultiOwnable is IMultiOwnable, Initializable {
      */
     function _checkOwner() private view {
         if (!isOwner(msg.sender)) revert UnauthorizedAccount(msg.sender);
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getAMultiOwnableStorage() private pure returns (AMultiOwnableStorage storage $) {
+        assembly {
+            $.slot := A_MULTI_OWNABLE_STORAGE
+        }
     }
 }
