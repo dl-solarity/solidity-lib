@@ -13,11 +13,6 @@ abstract contract ADiamondStorage {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     /**
-     * @notice The struct slot where the storage is
-     */
-    bytes32 public constant DIAMOND_STORAGE_SLOT = keccak256("diamond.standard.diamond.storage");
-
-    /**
      * @notice The storage of the Diamond proxy
      */
     struct DStorage {
@@ -30,6 +25,11 @@ abstract contract ADiamondStorage {
         address facetAddress;
         bytes4[] functionSelectors;
     }
+
+    /**
+     * @notice The struct slot where the storage is
+     */
+    bytes32 public constant DIAMOND_STORAGE_SLOT = keccak256("diamond.standard.diamond.storage");
 
     /**
      * @notice The internal function to get the diamond proxy storage

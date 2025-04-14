@@ -35,6 +35,12 @@ abstract contract ARBAC is IRBAC, Initializable {
     using SetHelper for DynamicSet.StringSet;
     using TypeCaster for string;
 
+    struct ARBACStorage {
+        mapping(string => mapping(bool => mapping(string => DynamicSet.StringSet))) rolePermissions;
+        mapping(string => mapping(bool => DynamicSet.StringSet)) roleResources;
+        mapping(address => DynamicSet.StringSet) userRoles;
+    }
+
     string public constant MASTER_ROLE = "MASTER";
 
     string public constant ALL_RESOURCE = "*";
@@ -47,11 +53,9 @@ abstract contract ARBAC is IRBAC, Initializable {
 
     string public constant RBAC_RESOURCE = "RBAC_RESOURCE";
 
-    mapping(string => mapping(bool => mapping(string => DynamicSet.StringSet)))
-        private _rolePermissions;
-    mapping(string => mapping(bool => DynamicSet.StringSet)) private _roleResources;
-
-    mapping(address => DynamicSet.StringSet) private _userRoles;
+    // bytes32(uint256(keccak256("solarity.contract.ARBAC")) - 1)
+    bytes32 private constant A_RBAC_STORAGE =
+        0xf2ad3663acdafb41a6feebdd394e5d1d04767a13f9432491d7491e61819b106e;
 
     error EmptyRoles();
     error NoPermissionForResource(address account, string permission, string resource);
@@ -145,7 +149,9 @@ abstract contract ARBAC is IRBAC, Initializable {
      * @return roles_ the roles of the user
      */
     function getUserRoles(address who_) public view override returns (string[] memory roles_) {
-        return _userRoles[who_].values();
+        ARBACStorage storage $ = _getARBACStorage();
+
+        return $.userRoles[who_].values();
     }
 
     /**
@@ -165,13 +171,15 @@ abstract contract ARBAC is IRBAC, Initializable {
             ResourceWithPermissions[] memory disallowed_
         )
     {
-        DynamicSet.StringSet storage _allowedResources = _roleResources[role_][true];
-        DynamicSet.StringSet storage _disallowedResources = _roleResources[role_][false];
+        ARBACStorage storage $ = _getARBACStorage();
 
-        mapping(string => DynamicSet.StringSet) storage _allowedPermissions = _rolePermissions[
+        DynamicSet.StringSet storage _allowedResources = $.roleResources[role_][true];
+        DynamicSet.StringSet storage _disallowedResources = $.roleResources[role_][false];
+
+        mapping(string => DynamicSet.StringSet) storage _allowedPermissions = $.rolePermissions[
             role_
         ][true];
-        mapping(string => DynamicSet.StringSet) storage _disallowedPermissions = _rolePermissions[
+        mapping(string => DynamicSet.StringSet) storage _disallowedPermissions = $.rolePermissions[
             role_
         ][false];
 
@@ -224,7 +232,9 @@ abstract contract ARBAC is IRBAC, Initializable {
      * @param rolesToGrant_ the roles to grant
      */
     function _grantRoles(address to_, string[] memory rolesToGrant_) internal {
-        _userRoles[to_].add(rolesToGrant_);
+        ARBACStorage storage $ = _getARBACStorage();
+
+        $.userRoles[to_].add(rolesToGrant_);
 
         emit GrantedRoles(to_, rolesToGrant_);
     }
@@ -235,7 +245,9 @@ abstract contract ARBAC is IRBAC, Initializable {
      * @param rolesToRevoke_ the roles to revoke
      */
     function _revokeRoles(address from_, string[] memory rolesToRevoke_) internal {
-        _userRoles[from_].remove(rolesToRevoke_);
+        ARBACStorage storage $ = _getARBACStorage();
+
+        $.userRoles[from_].remove(rolesToRevoke_);
 
         emit RevokedRoles(from_, rolesToRevoke_);
     }
@@ -253,8 +265,10 @@ abstract contract ARBAC is IRBAC, Initializable {
         string[] memory permissionsToAdd_,
         bool allowed_
     ) internal {
-        DynamicSet.StringSet storage _resources = _roleResources[role_][allowed_];
-        DynamicSet.StringSet storage _permissions = _rolePermissions[role_][allowed_][
+        ARBACStorage storage $ = _getARBACStorage();
+
+        DynamicSet.StringSet storage _resources = $.roleResources[role_][allowed_];
+        DynamicSet.StringSet storage _permissions = $.rolePermissions[role_][allowed_][
             resourceToAdd_
         ];
 
@@ -277,8 +291,10 @@ abstract contract ARBAC is IRBAC, Initializable {
         string[] memory permissionsToRemove_,
         bool allowed_
     ) internal {
-        DynamicSet.StringSet storage _resources = _roleResources[role_][allowed_];
-        DynamicSet.StringSet storage _permissions = _rolePermissions[role_][allowed_][
+        ARBACStorage storage $ = _getARBACStorage();
+
+        DynamicSet.StringSet storage _resources = $.roleResources[role_][allowed_];
+        DynamicSet.StringSet storage _permissions = $.rolePermissions[role_][allowed_][
             resourceToRemove_
         ];
 
@@ -303,7 +319,11 @@ abstract contract ARBAC is IRBAC, Initializable {
         string memory resource_,
         string memory permission_
     ) internal view returns (bool) {
-        mapping(string => DynamicSet.StringSet) storage _resources = _rolePermissions[role_][true];
+        ARBACStorage storage $ = _getARBACStorage();
+
+        mapping(string => DynamicSet.StringSet) storage _resources = $.rolePermissions[role_][
+            true
+        ];
 
         DynamicSet.StringSet storage _allAllowed = _resources[ALL_RESOURCE];
         DynamicSet.StringSet storage _allowed = _resources[resource_];
@@ -326,7 +346,9 @@ abstract contract ARBAC is IRBAC, Initializable {
         string memory resource_,
         string memory permission_
     ) internal view returns (bool) {
-        mapping(string => DynamicSet.StringSet) storage _resources = _rolePermissions[role_][
+        ARBACStorage storage $ = _getARBACStorage();
+
+        mapping(string => DynamicSet.StringSet) storage _resources = $.rolePermissions[role_][
             false
         ];
 
@@ -337,5 +359,14 @@ abstract contract ARBAC is IRBAC, Initializable {
             _allDisallowed.contains(permission_) ||
             _disallowed.contains(ALL_PERMISSION) ||
             _disallowed.contains(permission_));
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getARBACStorage() private pure returns (ARBACStorage storage $) {
+        assembly {
+            $.slot := A_RBAC_STORAGE
+        }
     }
 }

@@ -26,10 +26,15 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
     using DynamicSet for DynamicSet.StringSet;
     using SetHelper for DynamicSet.StringSet;
 
-    uint256 private _defaultGroupEnabled;
+    struct ARBACGroupableStorage {
+        uint256 defaultGroupEnabled;
+        mapping(address => DynamicSet.StringSet) userGroups;
+        mapping(string => DynamicSet.StringSet) groupRoles;
+    }
 
-    mapping(address => DynamicSet.StringSet) private _userGroups;
-    mapping(string => DynamicSet.StringSet) private _groupRoles;
+    // bytes32(uint256(keccak256("solarity.contract.ARBACGroupable")) - 1)
+    bytes32 private constant A_RBAC_GROUPABLE_STORAGE =
+        0xab4e470bc6d8bd03e03e00893f3fb3421c681ca906b5526a977b18200157a08e;
 
     error EmptyGroups();
 
@@ -106,7 +111,9 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
         override
         onlyPermission(RBAC_RESOURCE, UPDATE_PERMISSION)
     {
-        _defaultGroupEnabled ^= 1;
+        ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
+
+        $.defaultGroupEnabled ^= 1;
 
         emit ToggledDefaultGroup(getDefaultGroupEnabled());
     }
@@ -117,11 +124,12 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
      * @return groups_ the list of user groups
      */
     function getUserGroups(address who_) public view override returns (string[] memory groups_) {
-        DynamicSet.StringSet storage userGroups = _userGroups[who_];
+        ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
+        DynamicSet.StringSet storage userGroups = $.userGroups[who_];
 
         uint256 userGroupsLength_ = userGroups.length();
 
-        groups_ = new string[](userGroupsLength_ + _defaultGroupEnabled);
+        groups_ = new string[](userGroupsLength_ + $.defaultGroupEnabled);
 
         for (uint256 i = 0; i < userGroupsLength_; ++i) {
             groups_[i] = userGroups.at(i);
@@ -136,7 +144,9 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
     function getGroupRoles(
         string memory group_
     ) public view override returns (string[] memory roles_) {
-        return _groupRoles[group_].values();
+        ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
+
+        return $.groupRoles[group_].values();
     }
 
     /**
@@ -144,7 +154,9 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
      * @return defaultGroupEnabled_ the boolean indicating whether the default group is enabled
      */
     function getDefaultGroupEnabled() public view returns (bool defaultGroupEnabled_) {
-        return _defaultGroupEnabled > 0;
+        ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
+
+        return $.defaultGroupEnabled > 0;
     }
 
     /**
@@ -197,7 +209,9 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
      * @param groupsToAddTo_ the list of groups to be assigned
      */
     function _addUserToGroups(address who_, string[] memory groupsToAddTo_) internal {
-        _userGroups[who_].add(groupsToAddTo_);
+        ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
+
+        $.userGroups[who_].add(groupsToAddTo_);
 
         emit AddedToGroups(who_, groupsToAddTo_);
     }
@@ -208,7 +222,9 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
      * @param groupsToRemoveFrom_ the list of groups to remove the user from
      */
     function _removeUserFromGroups(address who_, string[] memory groupsToRemoveFrom_) internal {
-        _userGroups[who_].remove(groupsToRemoveFrom_);
+        ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
+
+        $.userGroups[who_].remove(groupsToRemoveFrom_);
 
         emit RemovedFromGroups(who_, groupsToRemoveFrom_);
     }
@@ -219,7 +235,9 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
      * @param rolesToGrant_ the list of roles to grant
      */
     function _grantGroupRoles(string memory groupTo_, string[] memory rolesToGrant_) internal {
-        _groupRoles[groupTo_].add(rolesToGrant_);
+        ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
+
+        $.groupRoles[groupTo_].add(rolesToGrant_);
 
         emit GrantedGroupRoles(groupTo_, rolesToGrant_);
     }
@@ -230,8 +248,19 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
      * @param rolesToRevoke_ the list of roles to revoke
      */
     function _revokeGroupRoles(string memory groupFrom_, string[] memory rolesToRevoke_) internal {
-        _groupRoles[groupFrom_].remove(rolesToRevoke_);
+        ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
+
+        $.groupRoles[groupFrom_].remove(rolesToRevoke_);
 
         emit RevokedGroupRoles(groupFrom_, rolesToRevoke_);
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getARBACGroupableStorage() private pure returns (ARBACGroupableStorage storage $) {
+        assembly {
+            $.slot := A_RBAC_GROUPABLE_STORAGE
+        }
     }
 }

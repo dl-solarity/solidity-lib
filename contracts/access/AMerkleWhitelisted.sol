@@ -20,7 +20,13 @@ import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProo
 abstract contract AMerkleWhitelisted {
     using MerkleProof for bytes32[];
 
-    bytes32 private _merkleRoot;
+    struct AMerkleWhitelistedStorage {
+        bytes32 merkleRoot;
+    }
+
+    // bytes32(uint256(keccak256("solarity.contract.AMerkleWhitelisted")) - 1)
+    bytes32 private constant A_MERKLE_WHITELISTED_STORAGE =
+        0x655e174042e5ffc37fc1cb8b514e651c61ae9bb4dd4f6ce06d8f229ee9767b24;
 
     error LeafNotWhitelisted(bytes data);
     error UserNotWhitelisted(address user);
@@ -40,7 +46,9 @@ abstract contract AMerkleWhitelisted {
      * @return the current Merkle root or zero bytes if it has not been set
      */
     function getMerkleRoot() public view returns (bytes32) {
-        return _merkleRoot;
+        AMerkleWhitelistedStorage storage $ = _getAMerkleWhitelistedStorage();
+
+        return $.merkleRoot;
     }
 
     /**
@@ -53,7 +61,9 @@ abstract contract AMerkleWhitelisted {
         bytes32 leaf_,
         bytes32[] memory merkleProof_
     ) internal view returns (bool) {
-        return merkleProof_.verify(_merkleRoot, leaf_);
+        AMerkleWhitelistedStorage storage $ = _getAMerkleWhitelistedStorage();
+
+        return merkleProof_.verify($.merkleRoot, leaf_);
     }
 
     /**
@@ -74,6 +84,21 @@ abstract contract AMerkleWhitelisted {
      * @param merkleRoot_ the Merkle root to be set
      */
     function _setMerkleRoot(bytes32 merkleRoot_) internal {
-        _merkleRoot = merkleRoot_;
+        AMerkleWhitelistedStorage storage $ = _getAMerkleWhitelistedStorage();
+
+        $.merkleRoot = merkleRoot_;
+    }
+
+    /**
+     * @dev Returns a pointer to the storage namespace
+     */
+    function _getAMerkleWhitelistedStorage()
+        private
+        pure
+        returns (AMerkleWhitelistedStorage storage $)
+    {
+        assembly {
+            $.slot := A_MERKLE_WHITELISTED_STORAGE
+        }
     }
 }
