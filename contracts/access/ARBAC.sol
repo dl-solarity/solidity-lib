@@ -35,6 +35,12 @@ abstract contract ARBAC is IRBAC, Initializable {
     using SetHelper for DynamicSet.StringSet;
     using TypeCaster for string;
 
+    struct ARBACStorage {
+        mapping(string => mapping(bool => mapping(string => DynamicSet.StringSet))) rolePermissions;
+        mapping(string => mapping(bool => DynamicSet.StringSet)) roleResources;
+        mapping(address => DynamicSet.StringSet) userRoles;
+    }
+
     string public constant MASTER_ROLE = "MASTER";
 
     string public constant ALL_RESOURCE = "*";
@@ -50,12 +56,6 @@ abstract contract ARBAC is IRBAC, Initializable {
     // bytes32(uint256(keccak256("solarity.contract.ARBAC")) - 1)
     bytes32 private constant A_RBAC_STORAGE =
         0xf2ad3663acdafb41a6feebdd394e5d1d04767a13f9432491d7491e61819b106e;
-
-    struct ARBACStorage {
-        mapping(string => mapping(bool => mapping(string => DynamicSet.StringSet))) rolePermissions;
-        mapping(string => mapping(bool => DynamicSet.StringSet)) roleResources;
-        mapping(address => DynamicSet.StringSet) userRoles;
-    }
 
     error EmptyRoles();
     error NoPermissionForResource(address account, string permission, string resource);
