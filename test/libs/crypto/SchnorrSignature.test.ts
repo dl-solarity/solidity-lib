@@ -1,5 +1,4 @@
 import { ethers } from "hardhat";
-import { expect } from "chai";
 import { Reverter } from "@/test/helpers/reverter";
 
 import { SchnorrSignatureMock } from "@ethers-v6";
@@ -7,7 +6,6 @@ import { SchnorrSignatureMock } from "@ethers-v6";
 import { bn254 } from "@noble/curves/bn254";
 import { bytesToNumberBE } from "@noble/curves/abstract/utils";
 import { AffinePoint } from "@noble/curves/abstract/curve";
-import { hash } from "crypto";
 
 describe.only("SchnorrSignature", () => {
   const schnorrKeyPair = () => {
