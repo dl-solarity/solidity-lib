@@ -134,8 +134,8 @@ library BN254 {
 
         uint256 lhs_ = mulmod(point_.y, point_.y, BASE_FIELD_SIZE);
         uint256 rhs_ = mulmod(point_.x, point_.x, BASE_FIELD_SIZE);
-        rhs_ = mulmod(point_.x, point_.x, BASE_FIELD_SIZE);
-        rhs_ = (point_.x + 3) % BASE_FIELD_SIZE;
+        rhs_ = mulmod(rhs_, point_.x, BASE_FIELD_SIZE);
+        rhs_ = (rhs_ + 3) % BASE_FIELD_SIZE;
 
         return lhs_ == rhs_;
     }
