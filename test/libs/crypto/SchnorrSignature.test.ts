@@ -3,14 +3,14 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import { SchnorrSignatureMock } from "@ethers-v6";
 
-import { bn254 } from "@noble/curves/bn254";
+import { secp256k1 } from "@noble/curves/secp256k1";
 import { bytesToNumberBE } from "@noble/curves/abstract/utils";
 import { AffinePoint } from "@noble/curves/abstract/curve";
 
 describe.only("SchnorrSignature", () => {
   const schnorrKeyPair = () => {
-    const privKey = bytesToNumberBE(bn254.utils.randomPrivateKey());
-    const pubKey = bn254.G1.ProjectivePoint.BASE.multiply(privKey).toAffine();
+    const privKey = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
+    const pubKey = secp256k1.ProjectivePoint.BASE.multiply(privKey).toAffine();
 
     return { privKey, pubKey };
   };
@@ -24,9 +24,13 @@ describe.only("SchnorrSignature", () => {
     const k = randomness.privKey;
     const R = randomness.pubKey;
 
-    const c = BigInt(ethers.solidityPackedKeccak256(["uint256", "uint256", "bytes32"], [R.x, R.y, hashedMessage]));
-
-    const e = bn254.fields.Fr.create(k + c * privKey);
+    const c = BigInt(
+      ethers.solidityPackedKeccak256(
+        ["uint256", "uint256", "uint256", "uint256", "bytes32"],
+        [secp256k1.CURVE.Gx, secp256k1.CURVE.Gy, R.x, R.y, hashedMessage],
+      ),
+    );
+    const e = (k + c * privKey) % secp256k1.CURVE.n;
 
     return ethers.solidityPacked(["uint256", "uint256", "uint256"], [R.x, R.y, e]);
   };
@@ -55,7 +59,7 @@ describe.only("SchnorrSignature", () => {
       const signature = schnorrSign(hashedMessage, privKey);
       const pubKeyBytes = serializePoint(pubKey);
 
-      console.log(await schnorr.verifySignature(hashedMessage, signature, pubKeyBytes));
+      console.log(await schnorr.verifySECP256k1(hashedMessage, signature, pubKeyBytes));
     });
   });
 });
