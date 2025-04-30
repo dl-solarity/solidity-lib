@@ -191,6 +191,30 @@ library EC {
         }
     }
 
+    function preComputeJacobianPoints(
+        uint256 x_,
+        uint256 y_,
+        uint256 p_,
+        uint256 a_
+    ) internal pure returns (Jpoint[16] memory points_) {
+        points_[0x00] = jacobianInfinity();
+        points_[0x01] = jacobianFromAffine(x_, y_);
+        points_[0x02] = jDoublePoint(points_[0x01], p_, a_);
+        points_[0x04] = jDoublePoint(points_[0x02], p_, a_);
+        points_[0x08] = jDoublePoint(points_[0x04], p_, a_);
+        points_[0x03] = jAddPoint(points_[0x01], points_[0x02], p_, a_);
+        points_[0x06] = jDoublePoint(points_[0x03], p_, a_);
+        points_[0x0c] = jDoublePoint(points_[0x06], p_, a_);
+        points_[0x05] = jAddPoint(points_[0x01], points_[0x04], p_, a_);
+        points_[0x0a] = jDoublePoint(points_[0x05], p_, a_);
+        points_[0x07] = jAddPoint(points_[0x01], points_[0x06], p_, a_);
+        points_[0x0e] = jDoublePoint(points_[0x07], p_, a_);
+        points_[0x09] = jAddPoint(points_[0x01], points_[0x08], p_, a_);
+        points_[0x0b] = jAddPoint(points_[0x01], points_[0x0a], p_, a_);
+        points_[0x0d] = jAddPoint(points_[0x01], points_[0x0c], p_, a_);
+        points_[0x0f] = jAddPoint(points_[0x01], points_[0x0e], p_, a_);
+    }
+
     /**
      * @dev Precompute a matrice of useful jacobian points associated with a given P. This can be seen as a 4x4 matrix
      * that contains combination of P and G (generator) up to 3 times each
@@ -219,47 +243,6 @@ library EC {
         points_[0x0d] = jAddPoint(points_[0x01], points_[0x0c], p_, a_);
         points_[0x0e] = jAddPoint(points_[0x02], points_[0x0c], p_, a_);
         points_[0x0f] = jAddPoint(points_[0x03], points_[0x0c], p_, a_);
-    }
-
-    function preComputeJacobianPoints(
-        uint256 x_,
-        uint256 y_,
-        uint256 p_,
-        uint256 a_
-    ) internal pure returns (Jpoint[16] memory points_) {
-        points_[0x00] = jacobianInfinity();
-        points_[0x01] = jacobianFromAffine(x_, y_);
-        points_[0x02] = jDoublePoint(points_[0x01], p_, a_);
-        points_[0x03] = jAddPoint(points_[0x01], points_[0x02], p_, a_);
-        points_[0x04] = jAddPoint(points_[0x01], points_[0x03], p_, a_);
-        points_[0x05] = jAddPoint(points_[0x01], points_[0x04], p_, a_);
-        points_[0x06] = jAddPoint(points_[0x01], points_[0x05], p_, a_);
-        points_[0x07] = jAddPoint(points_[0x01], points_[0x06], p_, a_);
-        points_[0x08] = jAddPoint(points_[0x01], points_[0x07], p_, a_);
-        points_[0x09] = jAddPoint(points_[0x01], points_[0x08], p_, a_);
-        points_[0x0a] = jAddPoint(points_[0x01], points_[0x09], p_, a_);
-        points_[0x0b] = jAddPoint(points_[0x01], points_[0x0a], p_, a_);
-        points_[0x0c] = jAddPoint(points_[0x01], points_[0x0b], p_, a_);
-        points_[0x0d] = jAddPoint(points_[0x01], points_[0x0c], p_, a_);
-        points_[0x0e] = jAddPoint(points_[0x01], points_[0x0d], p_, a_);
-        points_[0x0f] = jAddPoint(points_[0x01], points_[0x0e], p_, a_);
-
-        //        points_[0x00] = jacobianFromAffine(0, 0);
-        //        points_[0x01] = jacobianFromAffine(x_, y_);
-        //        points_[0x02] = jDoublePoint(points_[0x01], p_, a_);
-        //        points_[0x04] = jDoublePoint(points_[0x02], p_, a_);
-        //        points_[0x08] = jDoublePoint(points_[0x04], p_, a_);
-        //        points_[0x03] = jAddPoint(points_[0x01], points_[0x02], p_, a_);
-        //        points_[0x06] = jDoublePoint(points_[0x03], p_, a_);
-        //        points_[0x0c] = jDoublePoint(points_[0x06], p_, a_);
-        //        points_[0x05] = jAddPoint(points_[0x01], points_[0x04], p_, a_);
-        //        points_[0x0a] = jDoublePoint(points_[0x05], p_, a_);
-        //        points_[0x07] = jAddPoint(points_[0x01], points_[0x06], p_, a_);
-        //        points_[0x0e] = jDoublePoint(points_[0x07], p_, a_);
-        //        points_[0x09] = jAddPoint(points_[0x01], points_[0x08], p_, a_);
-        //        points_[0x0b] = jAddPoint(points_[0x01], points_[0x0a], p_, a_);
-        //        points_[0x0d] = jAddPoint(points_[0x01], points_[0x0c], p_, a_);
-        //        points_[0x0f] = jAddPoint(points_[0x01], points_[0x0e], p_, a_);
     }
 
     function jAddPoint(

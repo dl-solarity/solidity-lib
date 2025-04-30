@@ -24,6 +24,11 @@ library SchnorrSignature {
         uint256 py;
     }
 
+    error LengthIsNot64();
+    error LengthIsNot96();
+    error InvalidPubKey();
+    error InvalidSignature();
+
     function verify(
         Parameters memory curveParams_,
         bytes32 hashedMessage_,
@@ -35,13 +40,23 @@ library SchnorrSignature {
         (inputs_.rx, inputs_.ry, inputs_.e) = _parseSignature(signature_);
         (inputs_.px, inputs_.py) = _parsePubKey(pubKey_);
 
-        require(
-            EC.isOnCurve(inputs_.rx, inputs_.ry, curveParams_.a, curveParams_.b, curveParams_.p)
-        );
-        require(
-            EC.isOnCurve(inputs_.px, inputs_.py, curveParams_.a, curveParams_.b, curveParams_.p)
-        );
-        require(EC.isValidScalar(inputs_.e, curveParams_.n));
+        if (
+            !EC.isOnCurve(
+                inputs_.rx,
+                inputs_.ry,
+                curveParams_.a,
+                curveParams_.b,
+                curveParams_.p
+            ) || !EC.isValidScalar(inputs_.e, curveParams_.n)
+        ) {
+            revert InvalidSignature();
+        }
+
+        if (
+            !EC.isOnCurve(inputs_.px, inputs_.py, curveParams_.a, curveParams_.b, curveParams_.p)
+        ) {
+            revert InvalidPubKey();
+        }
 
         EC.Jpoint[16] memory baseShamir_ = EC.preComputeJacobianPoints(
             curveParams_.gx,
@@ -88,13 +103,17 @@ library SchnorrSignature {
     function _parseSignature(
         bytes memory signature_
     ) private pure returns (uint256 rx_, uint256 ry_, uint256 e_) {
-        require(signature_.length == 96);
+        if (signature_.length != 96) {
+            revert LengthIsNot96();
+        }
 
         (rx_, ry_, e_) = abi.decode(signature_, (uint256, uint256, uint256));
     }
 
     function _parsePubKey(bytes memory pubKey_) private pure returns (uint256 px_, uint256 py_) {
-        require(pubKey_.length == 64);
+        if (pubKey_.length != 64) {
+            revert LengthIsNot64();
+        }
 
         (px_, py_) = abi.decode(pubKey_, (uint256, uint256));
     }
