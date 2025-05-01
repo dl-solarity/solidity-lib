@@ -66,25 +66,6 @@ library ECDSA256 {
     }
 
     /**
-     * @dev Checks if (x, y) are valid coordinates of a point on the curve.
-     * In particular this function checks that x < P and y < P.
-     */
-    function _isOnCurve(
-        uint256 x_,
-        uint256 y_,
-        uint256 a_,
-        uint256 b_,
-        uint256 p_
-    ) private pure returns (bool result_) {
-        assembly ("memory-safe") {
-            let lhs_ := mulmod(y_, y_, p_)
-            let rhs_ := addmod(mulmod(addmod(mulmod(x_, x_, p_), a_, p_), x_, p_), b_, p_)
-
-            result_ := and(and(lt(x_, p_), lt(y_, p_)), eq(lhs_, rhs_)) // Should conform with the Weierstrass equation
-        }
-    }
-
-    /**
      * @dev Checks if (r, s) is a proper signature.
      * In particular, this checks that `s` is in the "lower-range", making the signature non-malleable
      */
