@@ -10,8 +10,6 @@ library SchnorrSignature {
 
     error LengthIsNot64();
     error LengthIsNot96();
-    error InvalidPubKey();
-    error InvalidSignature();
 
     function verify(
         EC256.Curve memory ec,
@@ -22,12 +20,8 @@ library SchnorrSignature {
         (EC256.Apoint memory r_, uint256 e_) = _parseSignature(signature_);
         EC256.Apoint memory p_ = _parsePubKey(pubKey_);
 
-        if (!ec.isOnCurve(r_) || !ec.isValidScalar(e_)) {
-            revert InvalidSignature();
-        }
-
-        if (!ec.isOnCurve(p_)) {
-            revert InvalidPubKey();
+        if (!ec.isOnCurve(r_) || !ec.isOnCurve(p_) || !ec.isValidScalar(e_)) {
+            return false;
         }
 
         EC256.Jpoint memory lhs_ = EC256.jMultShamir(ec, ec.basepoint().jacobianFromAffine(), e_);
