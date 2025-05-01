@@ -24,7 +24,7 @@ library EC256 {
         uint256 z;
     }
 
-    function basepoint(Curve memory ec) internal pure returns (Apoint memory point_) {
+    function basepoint(Curve memory ec) internal pure returns (Apoint memory aPoint_) {
         return Apoint(ec.gx, ec.gy);
     }
 
@@ -37,9 +37,9 @@ library EC256 {
 
     function isOnCurve(
         Curve memory ec,
-        Apoint memory point_
+        Apoint memory aPoint_
     ) internal pure returns (bool result_) {
-        return _isOnCurve(point_.x, point_.y, ec.a, ec.b, ec.p);
+        return _isOnCurve(aPoint_.x, aPoint_.y, ec.a, ec.b, ec.p);
     }
 
     function isValidScalar(Curve memory ec, uint256 scalar_) internal pure returns (bool result_) {
@@ -69,35 +69,39 @@ library EC256 {
         (aPoint_.x, aPoint_.y) = _affineFromJacobian(jPoint_, ec.p);
     }
 
-    function jacobianFromAffine(Apoint memory aPoint_) internal pure returns (Jpoint memory res_) {
+    function jacobianFromAffine(
+        Apoint memory aPoint_
+    ) internal pure returns (Jpoint memory jPoint_) {
         return Jpoint(aPoint_.x, aPoint_.y, 1);
     }
 
-    function isJacobianInfinity(Jpoint memory point_) internal pure returns (bool res_) {
-        return point_.z == 0;
+    function isJacobianInfinity(Jpoint memory jPoint_) internal pure returns (bool result_) {
+        return jPoint_.z == 0;
     }
 
-    function jacobianInfinity() internal pure returns (Jpoint memory res_) {
+    function jacobianInfinity() internal pure returns (Jpoint memory jPoint_) {
         return Jpoint(0, 0, 0);
     }
 
     function jMultShamir(
         Curve memory ec,
-        Jpoint[16] memory points_,
+        Jpoint memory jPoint_,
         uint256 u_
-    ) internal pure returns (Jpoint memory point_) {
+    ) internal pure returns (Jpoint memory jPoint2_) {
         unchecked {
+            Jpoint[16] memory jPoints_ = _preComputeJacobianPoints(ec, jPoint_);
+
             for (uint256 i = 0; i < 64; ++i) {
-                point_ = jDoublePoint(ec, point_);
-                point_ = jDoublePoint(ec, point_);
-                point_ = jDoublePoint(ec, point_);
-                point_ = jDoublePoint(ec, point_);
+                jPoint2_ = jDoublePoint(ec, jPoint2_);
+                jPoint2_ = jDoublePoint(ec, jPoint2_);
+                jPoint2_ = jDoublePoint(ec, jPoint2_);
+                jPoint2_ = jDoublePoint(ec, jPoint2_);
 
                 // Read 4 bits of u1 which corresponds to the lookup index in the table.
                 uint256 pos_ = u_ >> 252;
                 u_ <<= 4;
 
-                point_ = jAddPoint(ec, points_[pos_], point_);
+                jPoint2_ = jAddPoint(ec, jPoints_[pos_], jPoint2_);
             }
         }
     }
@@ -110,101 +114,61 @@ library EC256 {
      */
     function jMultShamir2(
         Curve memory ec,
-        Jpoint[16] memory points_,
+        Jpoint memory jPoint1_,
+        Jpoint memory jPoint2_,
         uint256 scalar1_,
         uint256 scalar2_
-    ) internal view returns (Jpoint memory point_) {
+    ) internal pure returns (Jpoint memory jPoint3_) {
         unchecked {
+            Jpoint[16] memory jPoints_ = _preComputeJacobianPoints2(ec, jPoint1_, jPoint2_);
+
             for (uint256 i = 0; i < 128; ++i) {
-                point_ = jDoublePoint(ec, point_);
-                point_ = jDoublePoint(ec, point_);
+                jPoint3_ = jDoublePoint(ec, jPoint3_);
+                jPoint3_ = jDoublePoint(ec, jPoint3_);
 
                 // Read 2 bits of u1, and 2 bits of u2. Combining the two gives the lookup index in the table.
                 uint256 pos_ = ((scalar1_ >> 252) & 0xc) | ((scalar2_ >> 254) & 0x3);
                 scalar1_ <<= 2;
                 scalar2_ <<= 2;
 
-                point_ = jAddPoint(ec, points_[pos_], point_);
+                jPoint3_ = jAddPoint(ec, jPoints_[pos_], jPoint3_);
             }
         }
     }
 
-    function preComputeJacobianPoints(
-        Curve memory ec,
-        Apoint memory point_
-    ) internal pure returns (Jpoint[16] memory points_) {
-        points_[0x00] = jacobianInfinity();
-        points_[0x01] = jacobianFromAffine(point_);
-        points_[0x02] = jDoublePoint(ec, points_[0x01]);
-        points_[0x04] = jDoublePoint(ec, points_[0x02]);
-        points_[0x08] = jDoublePoint(ec, points_[0x04]);
-        points_[0x03] = jAddPoint(ec, points_[0x01], points_[0x02]);
-        points_[0x06] = jDoublePoint(ec, points_[0x03]);
-        points_[0x0c] = jDoublePoint(ec, points_[0x06]);
-        points_[0x05] = jAddPoint(ec, points_[0x01], points_[0x04]);
-        points_[0x0a] = jDoublePoint(ec, points_[0x05]);
-        points_[0x07] = jAddPoint(ec, points_[0x01], points_[0x06]);
-        points_[0x0e] = jDoublePoint(ec, points_[0x07]);
-        points_[0x09] = jAddPoint(ec, points_[0x01], points_[0x08]);
-        points_[0x0b] = jAddPoint(ec, points_[0x01], points_[0x0a]);
-        points_[0x0d] = jAddPoint(ec, points_[0x01], points_[0x0c]);
-        points_[0x0f] = jAddPoint(ec, points_[0x01], points_[0x0e]);
-    }
-
-    /**
-     * @dev Precompute a matrice of useful jacobian points associated with a given P. This can be seen as a 4x4 matrix
-     * that contains combination of P and G (generator) up to 3 times each
-     */
-    function preComputeJacobianPoints2(
-        Curve memory ec,
-        Apoint memory point1_,
-        Apoint memory point2_
-    ) internal pure returns (Jpoint[16] memory points_) {
-        points_[0x00] = jacobianInfinity();
-        points_[0x01] = jacobianFromAffine(point1_);
-        points_[0x04] = jacobianFromAffine(point2_);
-        points_[0x02] = jDoublePoint(ec, points_[0x01]);
-        points_[0x08] = jDoublePoint(ec, points_[0x04]);
-        points_[0x03] = jAddPoint(ec, points_[0x01], points_[0x02]);
-        points_[0x05] = jAddPoint(ec, points_[0x01], points_[0x04]);
-        points_[0x06] = jAddPoint(ec, points_[0x02], points_[0x04]);
-        points_[0x07] = jAddPoint(ec, points_[0x03], points_[0x04]);
-        points_[0x09] = jAddPoint(ec, points_[0x01], points_[0x08]);
-        points_[0x0a] = jAddPoint(ec, points_[0x02], points_[0x08]);
-        points_[0x0b] = jAddPoint(ec, points_[0x03], points_[0x08]);
-        points_[0x0c] = jAddPoint(ec, points_[0x04], points_[0x08]);
-        points_[0x0d] = jAddPoint(ec, points_[0x01], points_[0x0c]);
-        points_[0x0e] = jAddPoint(ec, points_[0x02], points_[0x0c]);
-        points_[0x0f] = jAddPoint(ec, points_[0x03], points_[0x0c]);
-    }
-
     function jAddPoint(
         Curve memory ec,
-        Jpoint memory point1_,
-        Jpoint memory point2_
-    ) internal pure returns (Jpoint memory) {
-        if (isJacobianInfinity(point1_)) {
-            return Jpoint(point2_.x, point2_.y, point2_.z);
+        Jpoint memory jPoint1_,
+        Jpoint memory jPoint2_
+    ) internal pure returns (Jpoint memory jPoint3_) {
+        if (isJacobianInfinity(jPoint1_)) {
+            return Jpoint(jPoint2_.x, jPoint2_.y, jPoint2_.z);
         }
 
-        if (isJacobianInfinity(point2_)) {
-            return Jpoint(point1_.x, point1_.y, point1_.z);
+        if (isJacobianInfinity(jPoint2_)) {
+            return Jpoint(jPoint1_.x, jPoint1_.y, jPoint1_.z);
         }
 
-        (uint256 x_, uint256 y_, uint256 z_) = _jAdd(point1_, point2_, ec.p, ec.a);
+        (uint256 x_, uint256 y_, uint256 z_) = _jAdd(jPoint1_, jPoint2_, ec.p, ec.a);
 
         return Jpoint(x_, y_, z_);
     }
 
     function jDoublePoint(
         Curve memory ec,
-        Jpoint memory point_
-    ) internal pure returns (Jpoint memory) {
-        if (isJacobianInfinity(point_)) {
-            return Jpoint(point_.x, point_.y, point_.z);
+        Jpoint memory jPoint1_
+    ) internal pure returns (Jpoint memory jPoint2_) {
+        if (isJacobianInfinity(jPoint1_)) {
+            return Jpoint(jPoint1_.x, jPoint1_.y, jPoint1_.z);
         }
 
-        (uint256 x_, uint256 y_, uint256 z_) = _jDouble(point_.x, point_.y, point_.z, ec.p, ec.a);
+        (uint256 x_, uint256 y_, uint256 z_) = _jDouble(
+            jPoint1_.x,
+            jPoint1_.y,
+            jPoint1_.z,
+            ec.p,
+            ec.a
+        );
 
         return Jpoint(x_, y_, z_);
     }
@@ -214,33 +178,37 @@ library EC256 {
      * Reference: https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian.html#addition-add-1998-cmo-2
      */
     function _jAdd(
-        Jpoint memory point1_,
-        Jpoint memory point2_,
+        Jpoint memory jPoint1_,
+        Jpoint memory jPoint2_,
         uint256 p_,
         uint256 a_
-    ) private pure returns (uint256 resX_, uint256 resY_, uint256 resZ_) {
+    ) private pure returns (uint256 jx3_, uint256 jy3_, uint256 jz3_) {
         assembly ("memory-safe") {
-            let zz1_ := mulmod(mload(add(point1_, 0x40)), mload(add(point1_, 0x40)), p_)
+            let zz1_ := mulmod(mload(add(jPoint1_, 0x40)), mload(add(jPoint1_, 0x40)), p_)
             let s1_ := mulmod(
-                mload(add(point1_, 0x20)),
+                mload(add(jPoint1_, 0x20)),
                 mulmod(
-                    mulmod(mload(add(point2_, 0x40)), mload(add(point2_, 0x40)), p_),
-                    mload(add(point2_, 0x40)),
+                    mulmod(mload(add(jPoint2_, 0x40)), mload(add(jPoint2_, 0x40)), p_),
+                    mload(add(jPoint2_, 0x40)),
                     p_
                 ),
                 p_
             )
             let r_ := addmod(
-                mulmod(mload(add(point2_, 0x20)), mulmod(zz1_, mload(add(point1_, 0x40)), p_), p_),
+                mulmod(
+                    mload(add(jPoint2_, 0x20)),
+                    mulmod(zz1_, mload(add(jPoint1_, 0x40)), p_),
+                    p_
+                ),
                 sub(p_, s1_),
                 p_
             )
             let u1_ := mulmod(
-                mload(point1_),
-                mulmod(mload(add(point2_, 0x40)), mload(add(point2_, 0x40)), p_),
+                mload(jPoint1_),
+                mulmod(mload(add(jPoint2_, 0x40)), mload(add(jPoint2_, 0x40)), p_),
                 p_
             )
-            let h_ := addmod(mulmod(mload(point2_), zz1_, p_), sub(p_, u1_), p_)
+            let h_ := addmod(mulmod(mload(jPoint2_), zz1_, p_), sub(p_, u1_), p_)
 
             // detect edge cases where inputs are identical
             switch and(iszero(r_), iszero(h_))
@@ -248,40 +216,40 @@ library EC256 {
             case 0 {
                 let hh_ := mulmod(h_, h_, p_)
 
-                resX_ := addmod(
+                jx3_ := addmod(
                     addmod(mulmod(r_, r_, p_), sub(p_, mulmod(h_, hh_, p_)), p_),
                     sub(p_, mulmod(2, mulmod(u1_, hh_, p_), p_)),
                     p_
                 )
-                resY_ := addmod(
-                    mulmod(r_, addmod(mulmod(u1_, hh_, p_), sub(p_, resX_), p_), p_),
+                jy3_ := addmod(
+                    mulmod(r_, addmod(mulmod(u1_, hh_, p_), sub(p_, jx3_), p_), p_),
                     sub(p_, mulmod(s1_, mulmod(h_, hh_, p_), p_)),
                     p_
                 )
-                resZ_ := mulmod(
+                jz3_ := mulmod(
                     h_,
-                    mulmod(mload(add(point1_, 0x40)), mload(add(point2_, 0x40)), p_),
+                    mulmod(mload(add(jPoint1_, 0x40)), mload(add(jPoint2_, 0x40)), p_),
                     p_
                 )
             }
             // case 1: points are equal
             case 1 {
-                let yy_ := mulmod(mload(add(point2_, 0x20)), mload(add(point2_, 0x20)), p_)
-                let zz_ := mulmod(mload(add(point2_, 0x40)), mload(add(point2_, 0x40)), p_)
-                let xx_ := mulmod(mload(point2_), mload(point2_), p_)
+                let yy_ := mulmod(mload(add(jPoint2_, 0x20)), mload(add(jPoint2_, 0x20)), p_)
+                let zz_ := mulmod(mload(add(jPoint2_, 0x40)), mload(add(jPoint2_, 0x40)), p_)
+                let xx_ := mulmod(mload(jPoint2_), mload(jPoint2_), p_)
                 let m_ := addmod(mulmod(3, xx_, p_), mulmod(a_, mulmod(zz_, zz_, p_), p_), p_)
-                let s_ := mulmod(4, mulmod(mload(point2_), yy_, p_), p_)
+                let s_ := mulmod(4, mulmod(mload(jPoint2_), yy_, p_), p_)
 
-                resX_ := addmod(mulmod(m_, m_, p_), sub(p_, mulmod(2, s_, p_)), p_)
+                jx3_ := addmod(mulmod(m_, m_, p_), sub(p_, mulmod(2, s_, p_)), p_)
 
                 // cut the computation to avoid stack too deep
                 let rytmp1_ := sub(p_, mulmod(8, mulmod(yy_, yy_, p_), p_))
-                let rytmp2_ := addmod(s_, sub(p_, resX_), p_)
-                resY_ := addmod(mulmod(m_, rytmp2_, p_), rytmp1_, p_)
+                let rytmp2_ := addmod(s_, sub(p_, jx3_), p_)
+                jy3_ := addmod(mulmod(m_, rytmp2_, p_), rytmp1_, p_)
 
-                resZ_ := mulmod(
+                jz3_ := mulmod(
                     2,
-                    mulmod(mload(add(point2_, 0x20)), mload(add(point2_, 0x40)), p_),
+                    mulmod(mload(add(jPoint2_, 0x20)), mload(add(jPoint2_, 0x40)), p_),
                     p_
                 )
             }
@@ -293,61 +261,110 @@ library EC256 {
      * Reference: https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian.html#doubling-dbl-1998-cmo-2
      */
     function _jDouble(
-        uint256 x_,
-        uint256 y_,
-        uint256 z_,
+        uint256 jx1_,
+        uint256 jy1_,
+        uint256 jz1_,
         uint256 p_,
         uint256 a_
-    ) private pure returns (uint256 resX_, uint256 resY_, uint256 resZ_) {
+    ) private pure returns (uint256 jx2_, uint256 jy2_, uint256 jz2_) {
         assembly ("memory-safe") {
-            let yy_ := mulmod(y_, y_, p_)
-            let zz_ := mulmod(z_, z_, p_)
+            let yy_ := mulmod(jy1_, jy1_, p_)
+            let zz_ := mulmod(jz1_, jz1_, p_)
             let m_ := addmod(
-                mulmod(3, mulmod(x_, x_, p_), p_),
+                mulmod(3, mulmod(jx1_, jx1_, p_), p_),
                 mulmod(a_, mulmod(zz_, zz_, p_), p_),
                 p_
             )
-            let s_ := mulmod(4, mulmod(x_, yy_, p_), p_)
+            let s_ := mulmod(4, mulmod(jx1_, yy_, p_), p_)
 
-            resX_ := addmod(mulmod(m_, m_, p_), sub(p_, mulmod(2, s_, p_)), p_)
-            resY_ := addmod(
-                mulmod(m_, addmod(s_, sub(p_, resX_), p_), p_),
+            jx2_ := addmod(mulmod(m_, m_, p_), sub(p_, mulmod(2, s_, p_)), p_)
+            jy2_ := addmod(
+                mulmod(m_, addmod(s_, sub(p_, jx2_), p_), p_),
                 sub(p_, mulmod(8, mulmod(yy_, yy_, p_), p_)),
                 p_
             )
-            resZ_ := mulmod(2, mulmod(y_, z_, p_), p_)
+            jz2_ := mulmod(2, mulmod(jy1_, jz1_, p_), p_)
         }
     }
 
     function _affineFromJacobian(
-        Jpoint memory point_,
+        Jpoint memory jPoint_,
         uint256 p_
-    ) internal view returns (uint256 ax_, uint256 ay_) {
-        if (point_.z == 0) return (0, 0);
+    ) private view returns (uint256 ax_, uint256 ay_) {
+        if (jPoint_.z == 0) return (0, 0);
 
-        uint256 zInverse_ = Math.invModPrime(point_.z, p_);
+        uint256 zInverse_ = Math.invModPrime(jPoint_.z, p_);
 
         assembly ("memory-safe") {
             let zzInverse_ := mulmod(zInverse_, zInverse_, p_)
 
-            ax_ := mulmod(mload(point_), zzInverse_, p_)
-            ay_ := mulmod(mload(add(point_, 0x20)), mulmod(zzInverse_, zInverse_, p_), p_)
+            ax_ := mulmod(mload(jPoint_), zzInverse_, p_)
+            ay_ := mulmod(mload(add(jPoint_, 0x20)), mulmod(zzInverse_, zInverse_, p_), p_)
         }
     }
 
     function _isOnCurve(
-        uint256 x_,
-        uint256 y_,
+        uint256 ax_,
+        uint256 ay_,
         uint256 a_,
         uint256 b_,
         uint256 p_
     ) private pure returns (bool result_) {
         assembly ("memory-safe") {
-            let lhs_ := mulmod(y_, y_, p_)
-            let rhs_ := addmod(mulmod(addmod(mulmod(x_, x_, p_), a_, p_), x_, p_), b_, p_)
+            let lhs_ := mulmod(ay_, ay_, p_)
+            let rhs_ := addmod(mulmod(addmod(mulmod(ax_, ax_, p_), a_, p_), ax_, p_), b_, p_)
 
             // Should conform with the Weierstrass equation
-            result_ := and(and(lt(x_, p_), lt(y_, p_)), eq(lhs_, rhs_))
+            result_ := and(and(lt(ax_, p_), lt(ay_, p_)), eq(lhs_, rhs_))
         }
+    }
+
+    function _preComputeJacobianPoints(
+        Curve memory ec,
+        Jpoint memory jPoint_
+    ) private pure returns (Jpoint[16] memory jPoints_) {
+        jPoints_[0x00] = jacobianInfinity();
+        jPoints_[0x01] = Jpoint(jPoint_.x, jPoint_.y, jPoint_.z);
+        jPoints_[0x02] = jDoublePoint(ec, jPoints_[0x01]);
+        jPoints_[0x04] = jDoublePoint(ec, jPoints_[0x02]);
+        jPoints_[0x08] = jDoublePoint(ec, jPoints_[0x04]);
+        jPoints_[0x03] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x02]);
+        jPoints_[0x06] = jDoublePoint(ec, jPoints_[0x03]);
+        jPoints_[0x0c] = jDoublePoint(ec, jPoints_[0x06]);
+        jPoints_[0x05] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x04]);
+        jPoints_[0x0a] = jDoublePoint(ec, jPoints_[0x05]);
+        jPoints_[0x07] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x06]);
+        jPoints_[0x0e] = jDoublePoint(ec, jPoints_[0x07]);
+        jPoints_[0x09] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x08]);
+        jPoints_[0x0b] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x0a]);
+        jPoints_[0x0d] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x0c]);
+        jPoints_[0x0f] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x0e]);
+    }
+
+    /**
+     * @dev Precompute a matrice of useful jacobian points associated with a given P. This can be seen as a 4x4 matrix
+     * that contains combination of P and G (generator) up to 3 times each
+     */
+    function _preComputeJacobianPoints2(
+        Curve memory ec,
+        Jpoint memory jPoint1_,
+        Jpoint memory jPoint2_
+    ) private pure returns (Jpoint[16] memory jPoints_) {
+        jPoints_[0x00] = jacobianInfinity();
+        jPoints_[0x01] = Jpoint(jPoint1_.x, jPoint1_.y, jPoint1_.z);
+        jPoints_[0x04] = Jpoint(jPoint2_.x, jPoint2_.y, jPoint2_.z);
+        jPoints_[0x02] = jDoublePoint(ec, jPoints_[0x01]);
+        jPoints_[0x08] = jDoublePoint(ec, jPoints_[0x04]);
+        jPoints_[0x03] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x02]);
+        jPoints_[0x05] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x04]);
+        jPoints_[0x06] = jAddPoint(ec, jPoints_[0x02], jPoints_[0x04]);
+        jPoints_[0x07] = jAddPoint(ec, jPoints_[0x03], jPoints_[0x04]);
+        jPoints_[0x09] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x08]);
+        jPoints_[0x0a] = jAddPoint(ec, jPoints_[0x02], jPoints_[0x08]);
+        jPoints_[0x0b] = jAddPoint(ec, jPoints_[0x03], jPoints_[0x08]);
+        jPoints_[0x0c] = jAddPoint(ec, jPoints_[0x04], jPoints_[0x08]);
+        jPoints_[0x0d] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x0c]);
+        jPoints_[0x0e] = jAddPoint(ec, jPoints_[0x02], jPoints_[0x0c]);
+        jPoints_[0x0f] = jAddPoint(ec, jPoints_[0x03], jPoints_[0x0c]);
     }
 }

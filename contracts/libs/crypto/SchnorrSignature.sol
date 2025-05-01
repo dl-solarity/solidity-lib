@@ -6,7 +6,7 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
 
 library SchnorrSignature {
     using MemoryUtils for *;
-    using EC256 for EC256.Curve;
+    using EC256 for *;
 
     error LengthIsNot64();
     error LengthIsNot96();
@@ -30,16 +30,14 @@ library SchnorrSignature {
             revert InvalidPubKey();
         }
 
-        EC256.Jpoint[16] memory baseShamir_ = EC256.preComputeJacobianPoints(ec, ec.basepoint());
-        EC256.Jpoint memory lhs_ = EC256.jMultShamir(ec, baseShamir_, e_);
+        EC256.Jpoint memory lhs_ = EC256.jMultShamir(ec, ec.basepoint().jacobianFromAffine(), e_);
 
         uint256 c_ = ec.scalarFromU256(
             uint256(keccak256(abi.encodePacked(ec.gx, ec.gy, r_.x, r_.y, hashedMessage_)))
         );
 
-        EC256.Jpoint[16] memory pubKeyShamir_ = EC256.preComputeJacobianPoints(ec, p_);
-        EC256.Jpoint memory rhs_ = EC256.jMultShamir(ec, pubKeyShamir_, c_);
-        rhs_ = EC256.jAddPoint(ec, rhs_, EC256.jacobianFromAffine(r_));
+        EC256.Jpoint memory rhs_ = EC256.jMultShamir(ec, p_.jacobianFromAffine(), c_);
+        rhs_ = EC256.jAddPoint(ec, rhs_, r_.jacobianFromAffine());
 
         return EC256.jEqual(ec, lhs_, rhs_);
     }
