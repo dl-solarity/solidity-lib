@@ -57,7 +57,7 @@ library ECDSA256 {
 
             EC256.JPoint memory point_ = ec.jMultShamir2(
                 p_.toJacobian(),
-                ec.basepoint().toJacobian(),
+                ec.jbasepoint(),
                 u1_,
                 u2_
             );
