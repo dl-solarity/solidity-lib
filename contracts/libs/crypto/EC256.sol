@@ -6,7 +6,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 /**
  * @notice Cryptography module
  *
- * Elliptic curve arithmetic over a 256-bit prime field (Weierstrass curve y^2 = x^3 + ax + b).
+ * Elliptic curve arithmetic over a 256-bit prime field (Weierstrass curve y^2 = x^3 + ax + b (mod p)).
  */
 library EC256 {
     /**
