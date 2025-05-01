@@ -1,28 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import {EC} from "./EC.sol";
+import {EC256} from "./EC256.sol";
 import {MemoryUtils} from "../utils/MemoryUtils.sol";
 
 library SchnorrSignature {
     using MemoryUtils for *;
-
-    struct Parameters {
-        uint256 a;
-        uint256 b;
-        uint256 gx;
-        uint256 gy;
-        uint256 p;
-        uint256 n;
-    }
-
-    struct _Inputs {
-        uint256 rx;
-        uint256 ry;
-        uint256 e;
-        uint256 px;
-        uint256 py;
-    }
+    using EC256 for EC256.Curve;
 
     error LengthIsNot64();
     error LengthIsNot96();
@@ -30,91 +14,51 @@ library SchnorrSignature {
     error InvalidSignature();
 
     function verify(
-        Parameters memory curveParams_,
+        EC256.Curve memory ec,
         bytes32 hashedMessage_,
         bytes memory signature_,
         bytes memory pubKey_
     ) internal view returns (bool) {
-        _Inputs memory inputs_;
+        (EC256.Apoint memory r_, uint256 e_) = _parseSignature(signature_);
+        EC256.Apoint memory p_ = _parsePubKey(pubKey_);
 
-        (inputs_.rx, inputs_.ry, inputs_.e) = _parseSignature(signature_);
-        (inputs_.px, inputs_.py) = _parsePubKey(pubKey_);
-
-        if (
-            !EC.isOnCurve(
-                inputs_.rx,
-                inputs_.ry,
-                curveParams_.a,
-                curveParams_.b,
-                curveParams_.p
-            ) || !EC.isValidScalar(inputs_.e, curveParams_.n)
-        ) {
+        if (!ec.isOnCurve(r_) || !ec.isValidScalar(e_)) {
             revert InvalidSignature();
         }
 
-        if (
-            !EC.isOnCurve(inputs_.px, inputs_.py, curveParams_.a, curveParams_.b, curveParams_.p)
-        ) {
+        if (!ec.isOnCurve(p_)) {
             revert InvalidPubKey();
         }
 
-        EC.Jpoint[16] memory baseShamir_ = EC.preComputeJacobianPoints(
-            curveParams_.gx,
-            curveParams_.gy,
-            curveParams_.p,
-            curveParams_.a
-        );
-        EC.Jpoint memory lhs_ = EC.jMultShamir(
-            baseShamir_,
-            inputs_.e,
-            curveParams_.p,
-            curveParams_.a
+        EC256.Jpoint[16] memory baseShamir_ = EC256.preComputeJacobianPoints(ec, ec.basepoint());
+        EC256.Jpoint memory lhs_ = EC256.jMultShamir(ec, baseShamir_, e_);
+
+        uint256 c_ = ec.scalarFromU256(
+            uint256(keccak256(abi.encodePacked(ec.gx, ec.gy, r_.x, r_.y, hashedMessage_)))
         );
 
-        uint256 c_ = uint256(
-            keccak256(
-                abi.encodePacked(
-                    curveParams_.gx,
-                    curveParams_.gy,
-                    inputs_.rx,
-                    inputs_.ry,
-                    hashedMessage_
-                )
-            )
-        ) % curveParams_.n;
+        EC256.Jpoint[16] memory pubKeyShamir_ = EC256.preComputeJacobianPoints(ec, p_);
+        EC256.Jpoint memory rhs_ = EC256.jMultShamir(ec, pubKeyShamir_, c_);
+        rhs_ = EC256.jAddPoint(ec, rhs_, EC256.jacobianFromAffine(r_));
 
-        EC.Jpoint[16] memory pubKeyShamir_ = EC.preComputeJacobianPoints(
-            inputs_.px,
-            inputs_.py,
-            curveParams_.p,
-            curveParams_.a
-        );
-        EC.Jpoint memory rhs_ = EC.jMultShamir(pubKeyShamir_, c_, curveParams_.p, curveParams_.a);
-        rhs_ = EC.jAddPoint(
-            EC.jacobianFromAffine(inputs_.rx, inputs_.ry),
-            rhs_,
-            curveParams_.p,
-            curveParams_.a
-        );
-
-        return EC.jEqual(lhs_, rhs_, curveParams_.p);
+        return EC256.jEqual(ec, lhs_, rhs_);
     }
 
     function _parseSignature(
         bytes memory signature_
-    ) private pure returns (uint256 rx_, uint256 ry_, uint256 e_) {
+    ) private pure returns (EC256.Apoint memory r_, uint256 e_) {
         if (signature_.length != 96) {
             revert LengthIsNot96();
         }
 
-        (rx_, ry_, e_) = abi.decode(signature_, (uint256, uint256, uint256));
+        (r_.x, r_.y, e_) = abi.decode(signature_, (uint256, uint256, uint256));
     }
 
-    function _parsePubKey(bytes memory pubKey_) private pure returns (uint256 px_, uint256 py_) {
+    function _parsePubKey(bytes memory pubKey_) private pure returns (EC256.Apoint memory p_) {
         if (pubKey_.length != 64) {
             revert LengthIsNot64();
         }
 
-        (px_, py_) = abi.decode(pubKey_, (uint256, uint256));
+        (p_.x, p_.y) = abi.decode(pubKey_, (uint256, uint256));
     }
 }

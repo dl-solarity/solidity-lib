@@ -2,10 +2,11 @@
 pragma solidity ^0.8.21;
 
 import {SchnorrSignature} from "../../../libs/crypto/SchnorrSignature.sol";
+import {EC256} from "../../../libs/crypto/EC256.sol";
 
 contract SchnorrSignatureMock {
-    SchnorrSignature.Parameters private _secp256k1CurveParams =
-        SchnorrSignature.Parameters({
+    EC256.Curve private _secp256k1CurveParams =
+        EC256.Curve({
             a: 0x0000000000000000000000000000000000000000000000000000000000000000,
             b: 0x0000000000000000000000000000000000000000000000000000000000000007,
             gx: 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
