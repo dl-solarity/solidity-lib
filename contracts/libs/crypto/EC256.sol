@@ -387,7 +387,9 @@ library EC256 {
         Jpoint memory jPoint_,
         uint256 p_
     ) private view returns (uint256 ax_, uint256 ay_) {
-        if (jPoint_.z == 0) return (0, 0);
+        if (isJacobianInfinity(jPoint_)) {
+            return (0, 0);
+        }
 
         uint256 zInverse_ = Math.invModPrime(jPoint_.z, p_);
 
