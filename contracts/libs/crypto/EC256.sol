@@ -86,7 +86,7 @@ library EC256 {
     function jMultShamir(
         Curve memory ec,
         Jpoint memory jPoint_,
-        uint256 u_
+        uint256 scalar_
     ) internal pure returns (Jpoint memory jPoint2_) {
         unchecked {
             Jpoint[16] memory jPoints_ = _preComputeJacobianPoints(ec, jPoint_);
@@ -98,8 +98,8 @@ library EC256 {
                 jPoint2_ = jDoublePoint(ec, jPoint2_);
 
                 // Read 4 bits of u1 which corresponds to the lookup index in the table.
-                uint256 pos_ = u_ >> 252;
-                u_ <<= 4;
+                uint256 pos_ = scalar_ >> 252;
+                scalar_ <<= 4;
 
                 jPoint2_ = jAddPoint(ec, jPoints_[pos_], jPoint2_);
             }
