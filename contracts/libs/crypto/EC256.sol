@@ -3,7 +3,21 @@ pragma solidity ^0.8.21;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
+/**
+ * @notice Cryptography module
+ *
+ * Elliptic curve arithmetic over a 256-bit prime field (Weierstrass curve y^2 = x^3 + ax + b).
+ */
 library EC256 {
+    /**
+     * @notice 256-bit curve parameters.
+     * @param a The curve coefficient a.
+     * @param b The curve coefficient b.
+     * @param p The base field size.
+     * @param n The scalar field size.
+     * @param gx The x-coordinate of the basepoint G.
+     * @param gy The y-coordinate of the basepoint G.
+     */
     struct Curve {
         uint256 a;
         uint256 b;
@@ -13,21 +27,43 @@ library EC256 {
         uint256 gy;
     }
 
+    /**
+     * @notice Affine representation of a curve point.
+     * @param x The x-coordinate.
+     * @param y The y-coordinate.
+     */
     struct Apoint {
         uint256 x;
         uint256 y;
     }
 
+    /**
+     * @notice Jacobian representation of a curve point.
+     * @param x The Jacobian X coordinate.
+     * @param y The Jacobian Y coordinate.
+     * @param z The Jacobian Z coordinate.
+     */
     struct Jpoint {
         uint256 x;
         uint256 y;
         uint256 z;
     }
 
+    /**
+     * @notice Returns the generator (base) point of the curve in affine form.
+     * @param ec The curve parameters.
+     * @return aPoint_ The basepoint (gx, gy).
+     */
     function basepoint(Curve memory ec) internal pure returns (Apoint memory aPoint_) {
         return Apoint(ec.gx, ec.gy);
     }
 
+    /**
+     * @notice Reduces an arbitrary uint256 into the scalar field [0, n).
+     * @param ec The curve parameters.
+     * @param u256_ The integer to reduce.
+     * @return scalar_ The result of u256_ mod n.
+     */
     function scalarFromU256(
         Curve memory ec,
         uint256 u256_
@@ -35,6 +71,12 @@ library EC256 {
         return u256_ % ec.n;
     }
 
+    /**
+     * @notice Checks whether an affine point lies on the curve.
+     * @param ec The curve parameters.
+     * @param aPoint_ The affine point to test.
+     * @return result_ True if `aPoint_` satisfies y^2 = x^3 + ax + b (mod p).
+     */
     function isOnCurve(
         Curve memory ec,
         Apoint memory aPoint_
@@ -42,10 +84,23 @@ library EC256 {
         return _isOnCurve(aPoint_.x, aPoint_.y, ec.a, ec.b, ec.p);
     }
 
+    /**
+     * @notice Checks whether a scalar is in the valid range [0, n).
+     * @param ec The curve parameters.
+     * @param scalar_ The scalar to test.
+     * @return result_ True if scalar < n.
+     */
     function isValidScalar(Curve memory ec, uint256 scalar_) internal pure returns (bool result_) {
         return scalar_ < ec.n;
     }
 
+    /**
+     * @notice Compares two Jacobian points for equality in affine coordinates.
+     * @param ec The curve parameters.
+     * @param jPoint1_ The first Jacobian point.
+     * @param jPoint2_ The second Jacobian point.
+     * @return result_ True if their affine representations match.
+     */
     function jEqual(
         Curve memory ec,
         Jpoint memory jPoint1_,
@@ -58,9 +113,10 @@ library EC256 {
     }
 
     /**
-     * @dev Reduce from jacobian to affine coordinates
-     * @param jPoint_ point with jacobian coordinate x, y and z
-     * @return aPoint_ point with affine coordinate x and y
+     * @notice Converts a point from Jacobian to affine coordinates.
+     * @param ec The curve parameters.
+     * @param jPoint_ The Jacobian point (X, Y, Z).
+     * @return aPoint_ The equivalent affine point (x, y).
      */
     function affineFromJacobian(
         Curve memory ec,
@@ -69,20 +125,41 @@ library EC256 {
         (aPoint_.x, aPoint_.y) = _affineFromJacobian(jPoint_, ec.p);
     }
 
+    /**
+     * @notice Converts an affine point to Jacobian coordinates.
+     * @param aPoint_ The affine point (x, y).
+     * @return jPoint_ The Jacobian representation (x, y, 1).
+     */
     function jacobianFromAffine(
         Apoint memory aPoint_
     ) internal pure returns (Jpoint memory jPoint_) {
         return Jpoint(aPoint_.x, aPoint_.y, 1);
     }
 
+    /**
+     * @notice Checks whether a Jacobian point is the point at infinity.
+     * @param jPoint_ The Jacobian point to test.
+     * @return result_ True if Z == 0.
+     */
     function isJacobianInfinity(Jpoint memory jPoint_) internal pure returns (bool result_) {
         return jPoint_.z == 0;
     }
 
+    /**
+     * @notice Returns the Jacobian representation of the point at infinity.
+     * @return jPoint_ The point at infinity (0, 0, 0).
+     */
     function jacobianInfinity() internal pure returns (Jpoint memory jPoint_) {
         return Jpoint(0, 0, 0);
     }
 
+    /**
+     * @notice Point multiplication: R = u*P using 4-bit windowed method.
+     * @param ec The curve parameters.
+     * @param jPoint_ The Jacobian point P.
+     * @param scalar_ The scalar u.
+     * @return jPoint2_ The Jacobian representation of result point R.
+     */
     function jMultShamir(
         Curve memory ec,
         Jpoint memory jPoint_,
@@ -107,10 +184,13 @@ library EC256 {
     }
 
     /**
-     * @dev Compute G·u1 + P·u2 using the precomputed points for G and P (see {_preComputeJacobianPoints}).
-     *
-     * Uses Strauss Shamir trick for EC multiplication
-     * https://stackoverflow.com/questions/50993471/ec-scalar-multiplication-with-strauss-shamir-method
+     * @notice Simultaneous double-scalar multiplication: R = u1*P1 + u2*P2 via Strauss–Shamir.
+     * @param ec The curve parameters.
+     * @param jPoint1_ The first Jacobian point P1.
+     * @param jPoint2_ The second Jacobian point P2.
+     * @param scalar1_ The first scalar u1.
+     * @param scalar2_ The second scalar u2.
+     * @return jPoint3_ The Jacobian representation of result point R.
      */
     function jMultShamir2(
         Curve memory ec,
@@ -136,6 +216,13 @@ library EC256 {
         }
     }
 
+    /**
+     * @notice Adds two Jacobian points: R = P1 + P2.
+     * @param ec The curve parameters.
+     * @param jPoint1_ The first Jacobian point P1.
+     * @param jPoint2_ The second Jacobian point P2.
+     * @return jPoint3_ The Jacobian representation of result point R.
+     */
     function jAddPoint(
         Curve memory ec,
         Jpoint memory jPoint1_,
@@ -154,6 +241,12 @@ library EC256 {
         return Jpoint(x_, y_, z_);
     }
 
+    /**
+     * @notice Doubles a Jacobian point: R = 2*P.
+     * @param ec The curve parameters.
+     * @param jPoint1_ The Jacobian point P to double.
+     * @return jPoint2_ The Jacobian representation of result point R.
+     */
     function jDoublePoint(
         Curve memory ec,
         Jpoint memory jPoint1_
@@ -287,6 +380,9 @@ library EC256 {
         }
     }
 
+    /**
+     * @dev Internal conversion from Jacobian to affine coordinates.
+     */
     function _affineFromJacobian(
         Jpoint memory jPoint_,
         uint256 p_
@@ -303,6 +399,9 @@ library EC256 {
         }
     }
 
+    /**
+     * @dev Internal curve equation check in affine coordinates.
+     */
     function _isOnCurve(
         uint256 ax_,
         uint256 ay_,
@@ -319,6 +418,9 @@ library EC256 {
         }
     }
 
+    /**
+     * @dev Precomputes 4-bit window lookup table for one point (Shamir's trick)
+     */
     function _preComputeJacobianPoints(
         Curve memory ec,
         Jpoint memory jPoint_
@@ -342,8 +444,7 @@ library EC256 {
     }
 
     /**
-     * @dev Precompute a matrice of useful jacobian points associated with a given P. This can be seen as a 4x4 matrix
-     * that contains combination of P and G (generator) up to 3 times each
+     * @dev Precomputes 2-bit window lookup table for two points (Shamir's trick)
      */
     function _preComputeJacobianPoints2(
         Curve memory ec,
