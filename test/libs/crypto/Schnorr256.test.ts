@@ -8,7 +8,7 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import { bytesToNumberBE } from "@noble/curves/abstract/utils";
 import { AffinePoint } from "@noble/curves/abstract/curve";
 
-describe.only("Schnorr256", () => {
+describe("Schnorr256", () => {
   const schnorrKeyPair = () => {
     const privKey = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
     const pubKey = secp256k1.ProjectivePoint.BASE.multiply(privKey).toAffine();
@@ -55,9 +55,9 @@ describe.only("Schnorr256", () => {
   let schnorr: Schnorr256Mock;
 
   before(async () => {
-    const SchnorrSignature = await ethers.getContractFactory("Schnorr256Mock");
+    const Schnorr256 = await ethers.getContractFactory("Schnorr256Mock");
 
-    schnorr = await SchnorrSignature.deploy();
+    schnorr = await Schnorr256.deploy();
 
     await reverter.snapshot();
   });

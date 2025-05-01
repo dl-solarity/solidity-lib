@@ -4,7 +4,7 @@ import { Reverter } from "@/test/helpers/reverter";
 
 import { ECDSA256Mock } from "@ethers-v6";
 
-describe.only("ECDSA256", () => {
+describe("ECDSA256", () => {
   const reverter = new Reverter();
 
   let ecdsa256: ECDSA256Mock;
