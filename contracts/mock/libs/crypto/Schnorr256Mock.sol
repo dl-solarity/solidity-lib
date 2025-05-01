@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import {SchnorrSignature} from "../../../libs/crypto/SchnorrSignature.sol";
+import {Schnorr256} from "../../../libs/crypto/Schnorr256.sol";
 import {EC256} from "../../../libs/crypto/EC256.sol";
 
-contract SchnorrSignatureMock {
+contract Schnorr256Mock {
     EC256.Curve private _secp256k1CurveParams =
         EC256.Curve({
             a: 0x0000000000000000000000000000000000000000000000000000000000000000,
@@ -20,6 +20,6 @@ contract SchnorrSignatureMock {
         bytes memory signature_,
         bytes memory pubKey_
     ) external view returns (bool isVerified_) {
-        return SchnorrSignature.verify(_secp256k1CurveParams, hashedMessage_, signature_, pubKey_);
+        return Schnorr256.verify(_secp256k1CurveParams, hashedMessage_, signature_, pubKey_);
     }
 }

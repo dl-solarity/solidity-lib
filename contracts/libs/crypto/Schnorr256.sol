@@ -9,7 +9,7 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
  *
  * This library provides functionality for Schnorr signature verification over any 256-bit curve.
  */
-library SchnorrSignature {
+library Schnorr256 {
     using MemoryUtils for *;
     using EC256 for *;
 
@@ -29,23 +29,23 @@ library SchnorrSignature {
         bytes memory signature_,
         bytes memory pubKey_
     ) internal view returns (bool) {
-        (EC256.Apoint memory r_, uint256 e_) = _parseSignature(signature_);
-        EC256.Apoint memory p_ = _parsePubKey(pubKey_);
+        (EC256.APoint memory r_, uint256 e_) = _parseSignature(signature_);
+        EC256.APoint memory p_ = _parsePubKey(pubKey_);
 
         if (!ec.isOnCurve(r_) || !ec.isOnCurve(p_) || !ec.isValidScalar(e_)) {
             return false;
         }
 
-        EC256.Jpoint memory lhs_ = EC256.jMultShamir(ec, ec.basepoint().jacobianFromAffine(), e_);
+        EC256.JPoint memory lhs_ = ec.jMultShamir(ec.jbasepoint(), e_);
 
-        uint256 c_ = ec.scalarFromU256(
+        uint256 c_ = ec.toScalar(
             uint256(keccak256(abi.encodePacked(ec.gx, ec.gy, r_.x, r_.y, hashedMessage_)))
         );
 
-        EC256.Jpoint memory rhs_ = EC256.jMultShamir(ec, p_.jacobianFromAffine(), c_);
-        rhs_ = EC256.jAddPoint(ec, rhs_, r_.jacobianFromAffine());
+        EC256.JPoint memory rhs_ = ec.jMultShamir(p_.toJacobian(), c_);
+        rhs_ = ec.jAddPoint(rhs_, r_.toJacobian());
 
-        return EC256.jEqual(ec, lhs_, rhs_);
+        return ec.jEqual(lhs_, rhs_);
     }
 
     /**
@@ -53,7 +53,7 @@ library SchnorrSignature {
      */
     function _parseSignature(
         bytes memory signature_
-    ) private pure returns (EC256.Apoint memory r_, uint256 e_) {
+    ) private pure returns (EC256.APoint memory r_, uint256 e_) {
         if (signature_.length != 96) {
             revert LengthIsNot96();
         }
@@ -64,7 +64,7 @@ library SchnorrSignature {
     /**
      * @dev Helper function for converting 64-byte pub key into affine point.
      */
-    function _parsePubKey(bytes memory pubKey_) private pure returns (EC256.Apoint memory p_) {
+    function _parsePubKey(bytes memory pubKey_) private pure returns (EC256.APoint memory p_) {
         if (pubKey_.length != 64) {
             revert LengthIsNot64();
         }

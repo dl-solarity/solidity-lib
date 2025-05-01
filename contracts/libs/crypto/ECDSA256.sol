@@ -37,7 +37,8 @@ library ECDSA256 {
         unchecked {
             uint256 r_;
             uint256 s_;
-            EC256.Apoint memory p_;
+            EC256.APoint memory p_;
+
             (r_, s_) = _split(signature_);
             (p_.x, p_.y) = _split(pubKey_);
 
@@ -54,14 +55,14 @@ library ECDSA256 {
                 u2_ = mulmod(r_, w_, ec.n);
             }
 
-            EC256.Jpoint memory point_ = ec.jMultShamir2(
-                p_.jacobianFromAffine(),
-                ec.basepoint().jacobianFromAffine(),
+            EC256.JPoint memory point_ = ec.jMultShamir2(
+                p_.toJacobian(),
+                ec.basepoint().toJacobian(),
                 u1_,
                 u2_
             );
 
-            return ec.affineFromJacobian(point_).x % ec.n == r_;
+            return ec.toAffine(point_).x % ec.n == r_;
         }
     }
 

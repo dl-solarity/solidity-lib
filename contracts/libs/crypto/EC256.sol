@@ -32,7 +32,7 @@ library EC256 {
      * @param x The x-coordinate.
      * @param y The y-coordinate.
      */
-    struct Apoint {
+    struct APoint {
         uint256 x;
         uint256 y;
     }
@@ -43,7 +43,7 @@ library EC256 {
      * @param y The Jacobian Y coordinate.
      * @param z The Jacobian Z coordinate.
      */
-    struct Jpoint {
+    struct JPoint {
         uint256 x;
         uint256 y;
         uint256 z;
@@ -54,8 +54,17 @@ library EC256 {
      * @param ec The curve parameters.
      * @return aPoint_ The basepoint (gx, gy).
      */
-    function basepoint(Curve memory ec) internal pure returns (Apoint memory aPoint_) {
-        return Apoint(ec.gx, ec.gy);
+    function basepoint(Curve memory ec) internal pure returns (APoint memory aPoint_) {
+        return APoint(ec.gx, ec.gy);
+    }
+
+    /**
+     * @notice Returns the generator (base) point of the curve in jacobian form.
+     * @param ec The curve parameters.
+     * @return jPoint_ The basepoint (gx, gy, 1).
+     */
+    function jbasepoint(Curve memory ec) internal pure returns (JPoint memory jPoint_) {
+        return JPoint(ec.gx, ec.gy, 1);
     }
 
     /**
@@ -64,10 +73,7 @@ library EC256 {
      * @param u256_ The integer to reduce.
      * @return scalar_ The result of u256_ mod n.
      */
-    function scalarFromU256(
-        Curve memory ec,
-        uint256 u256_
-    ) internal pure returns (uint256 scalar_) {
+    function toScalar(Curve memory ec, uint256 u256_) internal pure returns (uint256 scalar_) {
         return u256_ % ec.n;
     }
 
@@ -79,7 +85,7 @@ library EC256 {
      */
     function isOnCurve(
         Curve memory ec,
-        Apoint memory aPoint_
+        APoint memory aPoint_
     ) internal pure returns (bool result_) {
         return _isOnCurve(aPoint_.x, aPoint_.y, ec.a, ec.b, ec.p);
     }
@@ -95,33 +101,15 @@ library EC256 {
     }
 
     /**
-     * @notice Compares two Jacobian points for equality in affine coordinates.
-     * @param ec The curve parameters.
-     * @param jPoint1_ The first Jacobian point.
-     * @param jPoint2_ The second Jacobian point.
-     * @return result_ True if their affine representations match.
-     */
-    function jEqual(
-        Curve memory ec,
-        Jpoint memory jPoint1_,
-        Jpoint memory jPoint2_
-    ) internal view returns (bool result_) {
-        Apoint memory aPoint1_ = affineFromJacobian(ec, jPoint1_);
-        Apoint memory aPoint2_ = affineFromJacobian(ec, jPoint2_);
-
-        return aPoint1_.x == aPoint2_.x && aPoint1_.y == aPoint2_.y;
-    }
-
-    /**
      * @notice Converts a point from Jacobian to affine coordinates.
      * @param ec The curve parameters.
      * @param jPoint_ The Jacobian point (X, Y, Z).
      * @return aPoint_ The equivalent affine point (x, y).
      */
-    function affineFromJacobian(
+    function toAffine(
         Curve memory ec,
-        Jpoint memory jPoint_
-    ) internal view returns (Apoint memory aPoint_) {
+        JPoint memory jPoint_
+    ) internal view returns (APoint memory aPoint_) {
         (aPoint_.x, aPoint_.y) = _affineFromJacobian(jPoint_, ec.p);
     }
 
@@ -130,10 +118,8 @@ library EC256 {
      * @param aPoint_ The affine point (x, y).
      * @return jPoint_ The Jacobian representation (x, y, 1).
      */
-    function jacobianFromAffine(
-        Apoint memory aPoint_
-    ) internal pure returns (Jpoint memory jPoint_) {
-        return Jpoint(aPoint_.x, aPoint_.y, 1);
+    function toJacobian(APoint memory aPoint_) internal pure returns (JPoint memory jPoint_) {
+        return JPoint(aPoint_.x, aPoint_.y, 1);
     }
 
     /**
@@ -141,7 +127,7 @@ library EC256 {
      * @param jPoint_ The Jacobian point to test.
      * @return result_ True if Z == 0.
      */
-    function isJacobianInfinity(Jpoint memory jPoint_) internal pure returns (bool result_) {
+    function isJacobianInfinity(JPoint memory jPoint_) internal pure returns (bool result_) {
         return jPoint_.z == 0;
     }
 
@@ -149,8 +135,26 @@ library EC256 {
      * @notice Returns the Jacobian representation of the point at infinity.
      * @return jPoint_ The point at infinity (0, 0, 0).
      */
-    function jacobianInfinity() internal pure returns (Jpoint memory jPoint_) {
-        return Jpoint(0, 0, 0);
+    function jinfinity() internal pure returns (JPoint memory jPoint_) {
+        return JPoint(0, 0, 0);
+    }
+
+    /**
+     * @notice Compares two Jacobian points for equality in affine coordinates.
+     * @param ec The curve parameters.
+     * @param jPoint1_ The first Jacobian point.
+     * @param jPoint2_ The second Jacobian point.
+     * @return result_ True if their affine representations match.
+     */
+    function jEqual(
+        Curve memory ec,
+        JPoint memory jPoint1_,
+        JPoint memory jPoint2_
+    ) internal view returns (bool result_) {
+        APoint memory aPoint1_ = toAffine(ec, jPoint1_);
+        APoint memory aPoint2_ = toAffine(ec, jPoint2_);
+
+        return aPoint1_.x == aPoint2_.x && aPoint1_.y == aPoint2_.y;
     }
 
     /**
@@ -162,11 +166,11 @@ library EC256 {
      */
     function jMultShamir(
         Curve memory ec,
-        Jpoint memory jPoint_,
+        JPoint memory jPoint_,
         uint256 scalar_
-    ) internal pure returns (Jpoint memory jPoint2_) {
+    ) internal pure returns (JPoint memory jPoint2_) {
         unchecked {
-            Jpoint[16] memory jPoints_ = _preComputeJacobianPoints(ec, jPoint_);
+            JPoint[16] memory jPoints_ = _preComputeJacobianPoints(ec, jPoint_);
 
             for (uint256 i = 0; i < 64; ++i) {
                 jPoint2_ = jDoublePoint(ec, jPoint2_);
@@ -194,13 +198,13 @@ library EC256 {
      */
     function jMultShamir2(
         Curve memory ec,
-        Jpoint memory jPoint1_,
-        Jpoint memory jPoint2_,
+        JPoint memory jPoint1_,
+        JPoint memory jPoint2_,
         uint256 scalar1_,
         uint256 scalar2_
-    ) internal pure returns (Jpoint memory jPoint3_) {
+    ) internal pure returns (JPoint memory jPoint3_) {
         unchecked {
-            Jpoint[16] memory jPoints_ = _preComputeJacobianPoints2(ec, jPoint1_, jPoint2_);
+            JPoint[16] memory jPoints_ = _preComputeJacobianPoints2(ec, jPoint1_, jPoint2_);
 
             for (uint256 i = 0; i < 128; ++i) {
                 jPoint3_ = jDoublePoint(ec, jPoint3_);
@@ -225,20 +229,20 @@ library EC256 {
      */
     function jAddPoint(
         Curve memory ec,
-        Jpoint memory jPoint1_,
-        Jpoint memory jPoint2_
-    ) internal pure returns (Jpoint memory jPoint3_) {
+        JPoint memory jPoint1_,
+        JPoint memory jPoint2_
+    ) internal pure returns (JPoint memory jPoint3_) {
         if (isJacobianInfinity(jPoint1_)) {
-            return Jpoint(jPoint2_.x, jPoint2_.y, jPoint2_.z);
+            return JPoint(jPoint2_.x, jPoint2_.y, jPoint2_.z);
         }
 
         if (isJacobianInfinity(jPoint2_)) {
-            return Jpoint(jPoint1_.x, jPoint1_.y, jPoint1_.z);
+            return JPoint(jPoint1_.x, jPoint1_.y, jPoint1_.z);
         }
 
         (uint256 x_, uint256 y_, uint256 z_) = _jAdd(jPoint1_, jPoint2_, ec.p, ec.a);
 
-        return Jpoint(x_, y_, z_);
+        return JPoint(x_, y_, z_);
     }
 
     /**
@@ -249,10 +253,10 @@ library EC256 {
      */
     function jDoublePoint(
         Curve memory ec,
-        Jpoint memory jPoint1_
-    ) internal pure returns (Jpoint memory jPoint2_) {
+        JPoint memory jPoint1_
+    ) internal pure returns (JPoint memory jPoint2_) {
         if (isJacobianInfinity(jPoint1_)) {
-            return Jpoint(jPoint1_.x, jPoint1_.y, jPoint1_.z);
+            return JPoint(jPoint1_.x, jPoint1_.y, jPoint1_.z);
         }
 
         (uint256 x_, uint256 y_, uint256 z_) = _jDouble(
@@ -263,7 +267,7 @@ library EC256 {
             ec.a
         );
 
-        return Jpoint(x_, y_, z_);
+        return JPoint(x_, y_, z_);
     }
 
     /**
@@ -271,8 +275,8 @@ library EC256 {
      * Reference: https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian.html#addition-add-1998-cmo-2
      */
     function _jAdd(
-        Jpoint memory jPoint1_,
-        Jpoint memory jPoint2_,
+        JPoint memory jPoint1_,
+        JPoint memory jPoint2_,
         uint256 p_,
         uint256 a_
     ) private pure returns (uint256 jx3_, uint256 jy3_, uint256 jz3_) {
@@ -384,7 +388,7 @@ library EC256 {
      * @dev Internal conversion from Jacobian to affine coordinates.
      */
     function _affineFromJacobian(
-        Jpoint memory jPoint_,
+        JPoint memory jPoint_,
         uint256 p_
     ) private view returns (uint256 ax_, uint256 ay_) {
         if (isJacobianInfinity(jPoint_)) {
@@ -425,10 +429,10 @@ library EC256 {
      */
     function _preComputeJacobianPoints(
         Curve memory ec,
-        Jpoint memory jPoint_
-    ) private pure returns (Jpoint[16] memory jPoints_) {
-        jPoints_[0x00] = jacobianInfinity();
-        jPoints_[0x01] = Jpoint(jPoint_.x, jPoint_.y, jPoint_.z);
+        JPoint memory jPoint_
+    ) private pure returns (JPoint[16] memory jPoints_) {
+        jPoints_[0x00] = jinfinity();
+        jPoints_[0x01] = JPoint(jPoint_.x, jPoint_.y, jPoint_.z);
         jPoints_[0x02] = jDoublePoint(ec, jPoints_[0x01]);
         jPoints_[0x04] = jDoublePoint(ec, jPoints_[0x02]);
         jPoints_[0x08] = jDoublePoint(ec, jPoints_[0x04]);
@@ -450,12 +454,12 @@ library EC256 {
      */
     function _preComputeJacobianPoints2(
         Curve memory ec,
-        Jpoint memory jPoint1_,
-        Jpoint memory jPoint2_
-    ) private pure returns (Jpoint[16] memory jPoints_) {
-        jPoints_[0x00] = jacobianInfinity();
-        jPoints_[0x01] = Jpoint(jPoint1_.x, jPoint1_.y, jPoint1_.z);
-        jPoints_[0x04] = Jpoint(jPoint2_.x, jPoint2_.y, jPoint2_.z);
+        JPoint memory jPoint1_,
+        JPoint memory jPoint2_
+    ) private pure returns (JPoint[16] memory jPoints_) {
+        jPoints_[0x00] = jinfinity();
+        jPoints_[0x01] = JPoint(jPoint1_.x, jPoint1_.y, jPoint1_.z);
+        jPoints_[0x04] = JPoint(jPoint2_.x, jPoint2_.y, jPoint2_.z);
         jPoints_[0x02] = jDoublePoint(ec, jPoints_[0x01]);
         jPoints_[0x08] = jDoublePoint(ec, jPoints_[0x04]);
         jPoints_[0x03] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x02]);
