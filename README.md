@@ -46,9 +46,11 @@ contracts
 │   ├── bn
 │   │   └── U512 — "A hyperoptimized uint512 implementation"
 │   ├── crypto
+│   │   ├── EC256 — "Elliptic curve arithmetic over a 256-bit prime field"
 │   │   ├── ECDSA256 — "ECDSA verification over any 256-bit curves"
 │   │   ├── ECDSA384 — "ECDSA verification over any 384-bit curves"
 │   │   ├── ECDSA512 — "ECDSA verification over any 512-bit curves"
+│   │   ├── Schnorr256 — "Schnorr signature verification over any 256-bit curves"
 │   │   └── RSASSAPSS — "RSASSA-PSS verification with MGF1"
 │   ├── data—structures
 │   │   ├── AvlTree — "AVL tree implementation with an iterator traversal"
