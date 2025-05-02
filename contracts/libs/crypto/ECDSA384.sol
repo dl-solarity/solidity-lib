@@ -28,7 +28,6 @@ library ECDSA384 {
         bytes gy;
         bytes p;
         bytes n;
-        bytes lowSmax;
     }
 
     // solhint-disable-next-line contract-name-capwords
@@ -39,7 +38,6 @@ library ECDSA384 {
         uint512 gy;
         uint512 p;
         uint512 n;
-        uint512 lowSmax;
     }
 
     // solhint-disable-next-line contract-name-capwords
@@ -52,7 +50,7 @@ library ECDSA384 {
 
     /**
      * @notice The function to verify the ECDSA signature
-     * @param curveParams_ the 384-bit curve parameters. `lowSmax` is `n / 2`.
+     * @param curveParams_ the 384-bit curve parameters.
      * @param hashedMessage_ the already hashed message to be verified.
      * @param signature_ the ECDSA signature. Equals to `bytes(r) + bytes(s)`.
      * @param pubKey_ the full public key of a signer. Equals to `bytes(x) + bytes(y)`.
@@ -78,8 +76,7 @@ library ECDSA384 {
                 gx: U512.fromBytes(curveParams_.gx),
                 gy: U512.fromBytes(curveParams_.gy),
                 p: U512.fromBytes(curveParams_.p),
-                n: U512.fromBytes(curveParams_.n),
-                lowSmax: U512.fromBytes(curveParams_.lowSmax)
+                n: U512.fromBytes(curveParams_.n)
             });
 
             call512 call_ = U512.initCall();
@@ -89,7 +86,7 @@ library ECDSA384 {
                 U512.eqU256(inputs_.r, 0) ||
                 U512.cmp(inputs_.r, params_.n) >= 0 ||
                 U512.eqU256(inputs_.s, 0) ||
-                U512.cmp(inputs_.s, params_.lowSmax) > 0
+                U512.cmp(inputs_.s, U512.shr(params_.n, 1)) > 0
             ) {
                 return false;
             }
