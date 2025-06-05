@@ -5,6 +5,7 @@
 [![Tests](https://github.com/dl-solarity/solidity-lib/actions/workflows/tests.yml/badge.svg)](https://github.com/dl-solarity/solidity-lib/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitPOAP Badge](https://public-api.gitpoap.io/v1/repo/dl-solarity/solidity-lib/badge)](https://www.gitpoap.io/gh/dl-solarity/solidity-lib)
+[![Twitter](https://img.shields.io/twitter/follow/distributedlab)](https://x.com/distributedlab)
 
 # Solarity Solidity Library
 
