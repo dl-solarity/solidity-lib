@@ -148,8 +148,9 @@ abstract contract AMultiOwnable is IMultiOwnable, Initializable {
      * @dev Returns a pointer to the storage namespace
      */
     function _getAMultiOwnableStorage() private pure returns (AMultiOwnableStorage storage $) {
+        bytes32 slot = A_MULTI_OWNABLE_STORAGE;
         assembly {
-            $.slot := A_MULTI_OWNABLE_STORAGE
+            $.slot := slot
         }
     }
 }
