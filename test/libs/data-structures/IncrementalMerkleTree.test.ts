@@ -205,7 +205,7 @@ describe("IncrementalMerkleTree", () => {
       const elements = [];
 
       for (let i = 1; i < 17; i++) {
-        const element = ethers.encodeBytes32String(`0x${i}234`);
+        const element = ethers.zeroPadValue(ethers.toUtf8Bytes(`${i}`), 32);
 
         await merkleTree.addBytes32(element);
 

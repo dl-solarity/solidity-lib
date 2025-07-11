@@ -11,7 +11,7 @@ import "tsconfig-paths/register";
 import { HardhatUserConfig } from "hardhat/config";
 
 import * as dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const config: HardhatUserConfig = {
   networks: {
