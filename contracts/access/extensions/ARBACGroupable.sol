@@ -176,7 +176,7 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
     ) public view virtual override returns (bool isAllowed_) {
         string[] memory roles_ = getUserRoles(who_);
 
-        for (uint256 i = 0; i < roles_.length; i++) {
+        for (uint256 i = 0; i < roles_.length; ++i) {
             string memory role_ = roles_[i];
 
             if (_isDisallowed(role_, resource_, permission_)) {
@@ -188,10 +188,10 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
 
         string[] memory groups_ = getUserGroups(who_);
 
-        for (uint256 i = 0; i < groups_.length; i++) {
+        for (uint256 i = 0; i < groups_.length; ++i) {
             roles_ = getGroupRoles(groups_[i]);
 
-            for (uint256 j = 0; j < roles_.length; j++) {
+            for (uint256 j = 0; j < roles_.length; ++j) {
                 string memory role_ = roles_[j];
 
                 if (_isDisallowed(role_, resource_, permission_)) {

@@ -52,7 +52,7 @@ abstract contract ADiamondStorage {
 
         facets_ = new FacetInfo[](_facets.length());
 
-        for (uint256 i = 0; i < facets_.length; i++) {
+        for (uint256 i = 0; i < facets_.length; ++i) {
             address facet_ = _facets.at(i);
 
             facets_[i].facetAddress = facet_;
@@ -72,7 +72,7 @@ abstract contract ADiamondStorage {
 
         selectors_ = new bytes4[](_f2s.length());
 
-        for (uint256 i = 0; i < selectors_.length; i++) {
+        for (uint256 i = 0; i < selectors_.length; ++i) {
             selectors_[i] = bytes4(_f2s.at(i));
         }
     }

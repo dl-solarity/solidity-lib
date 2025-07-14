@@ -32,7 +32,7 @@ contract PlonkVerifier2Mock is BasePlonkVerifierMock {
         uint256[24] memory,
         uint256[2] memory inputs_
     ) external view returns (bool) {
-        for (uint256 i = 0; i < inputs_.length; i++) {
+        for (uint256 i = 0; i < inputs_.length; ++i) {
             if (inputs_[i] != expectedInputs[i]) revert InvalidInputs();
         }
 
@@ -50,7 +50,7 @@ contract PlonkVerifier3Mock is BasePlonkVerifierMock {
         uint256[24] memory,
         uint256[3] memory inputs_
     ) external view returns (bool) {
-        for (uint256 i = 0; i < inputs_.length; i++) {
+        for (uint256 i = 0; i < inputs_.length; ++i) {
             if (inputs_[i] != expectedInputs[i]) revert InvalidInputs();
         }
 

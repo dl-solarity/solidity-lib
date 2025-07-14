@@ -1019,7 +1019,7 @@ library SparseMerkleTree {
         Node memory node_;
         uint256 nextNodeId_ = tree.merkleRootId;
 
-        for (uint256 i = 0; i <= maxDepth_; i++) {
+        for (uint256 i = 0; i <= maxDepth_; ++i) {
             node_ = _node(tree, nextNodeId_);
 
             if (node_.nodeType == NodeType.EMPTY) {
@@ -1090,7 +1090,7 @@ library SparseMerkleTree {
         Node memory node_;
         uint256 nextNodeId_ = tree.merkleRootId;
 
-        for (uint256 i = 0; i <= tree.maxDepth; i++) {
+        for (uint256 i = 0; i <= tree.maxDepth; ++i) {
             node_ = tree.nodes[nextNodeId_];
 
             if (node_.nodeType == NodeType.EMPTY) {

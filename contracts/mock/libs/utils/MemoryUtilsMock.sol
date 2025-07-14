@@ -61,7 +61,7 @@ contract MemoryUtilsMock {
             someBytes_.length
         );
 
-        for (uint256 i = 0; i < someBytes_.length; i++) {
+        for (uint256 i = 0; i < someBytes_.length; ++i) {
             if (someBytes_[i] != data_[i]) revert PartialCopyError(false);
         }
     }

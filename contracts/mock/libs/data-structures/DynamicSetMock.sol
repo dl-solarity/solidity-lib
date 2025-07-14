@@ -61,7 +61,7 @@ contract DynamicSetMock {
     function getBytesSet() external view returns (bytes[] memory set_) {
         set_ = new bytes[](_bytesSet.length());
 
-        for (uint256 i = 0; i < set_.length; i++) {
+        for (uint256 i = 0; i < set_.length; ++i) {
             set_[i] = _bytesSet.at(i);
         }
     }
@@ -69,7 +69,7 @@ contract DynamicSetMock {
     function getStringSet() external view returns (string[] memory set_) {
         set_ = new string[](_stringSet.length());
 
-        for (uint256 i = 0; i < set_.length; i++) {
+        for (uint256 i = 0; i < set_.length; ++i) {
             set_[i] = _stringSet.at(i);
         }
     }

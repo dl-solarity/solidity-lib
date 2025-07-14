@@ -83,7 +83,7 @@ contract Diamond is ADiamondStorage {
         address initFacet_,
         bytes memory initData_
     ) internal virtual {
-        for (uint256 i; i < facets_.length; i++) {
+        for (uint256 i; i < facets_.length; ++i) {
             bytes4[] memory _functionSelectors = facets_[i].functionSelectors;
             address _facetAddress = facets_[i].facetAddress;
 
@@ -113,7 +113,7 @@ contract Diamond is ADiamondStorage {
 
         DStorage storage _ds = _getDiamondStorage();
 
-        for (uint256 i = 0; i < selectors_.length; i++) {
+        for (uint256 i = 0; i < selectors_.length; ++i) {
             if (_ds.selectorToFacet[selectors_[i]] != address(0))
                 revert SelectorAlreadyAdded(_ds.selectorToFacet[selectors_[i]], selectors_[i]);
 
@@ -134,7 +134,7 @@ contract Diamond is ADiamondStorage {
 
         DStorage storage _ds = _getDiamondStorage();
 
-        for (uint256 i = 0; i < selectors_.length; i++) {
+        for (uint256 i = 0; i < selectors_.length; ++i) {
             if (_ds.selectorToFacet[selectors_[i]] != facet_)
                 revert SelectorFromAnotherFacet(selectors_[i]);
 
@@ -157,7 +157,7 @@ contract Diamond is ADiamondStorage {
 
         DStorage storage _ds = _getDiamondStorage();
 
-        for (uint256 i; i < selectors_.length; i++) {
+        for (uint256 i; i < selectors_.length; ++i) {
             bytes4 selector_ = selectors_[i];
             address oldFacet_ = facetAddress(selector_);
 

@@ -41,10 +41,10 @@ abstract contract ADependant {
     function setDependencies(address contractsRegistry_, bytes memory data_) public virtual;
 
     /**
-     * @notice The function is made external to allow for the factories to set the injector to the ContractsRegistry
+     * @notice The function is made public to allow for the factories to set the injector to the ContractsRegistry
      * @param injector_ the new injector
      */
-    function setInjector(address injector_) external {
+    function setInjector(address injector_) public virtual {
         _checkInjector();
         _setInjector(injector_);
     }

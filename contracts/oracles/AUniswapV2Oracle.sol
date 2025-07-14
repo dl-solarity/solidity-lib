@@ -75,7 +75,7 @@ abstract contract AUniswapV2Oracle is Initializable {
 
         uint256 pairsLength_ = $.pairs.length();
 
-        for (uint256 i = 0; i < pairsLength_; i++) {
+        for (uint256 i = 0; i < pairsLength_; ++i) {
             address pair_ = $.pairs.at(i);
 
             PairInfo storage pairInfo = $.pairInfos[pair_];
@@ -115,7 +115,7 @@ abstract contract AUniswapV2Oracle is Initializable {
 
         address tokenOut_ = path[pathLength_ - 1];
 
-        for (uint256 i = 0; i < pathLength_ - 1; i++) {
+        for (uint256 i = 0; i < pathLength_ - 1; ++i) {
             (address currentToken_, address nextToken_) = (path[i], path[i + 1]);
             address pair_ = $.uniswapV2Factory.getPair(currentToken_, nextToken_);
             uint256 price_ = _getPrice(pair_, currentToken_);
@@ -216,20 +216,20 @@ abstract contract AUniswapV2Oracle is Initializable {
 
         uint256 numberOfPaths_ = paths_.length;
 
-        for (uint256 i = 0; i < numberOfPaths_; i++) {
+        for (uint256 i = 0; i < numberOfPaths_; ++i) {
             uint256 pathLength_ = paths_[i].length;
             address tokenIn_ = paths_[i][0];
 
             if (pathLength_ < 2) revert InvalidPath(tokenIn_, pathLength_);
             if ($.paths[tokenIn_].length != 0) revert PathAlreadyRegistered(tokenIn_);
 
-            for (uint256 j = 0; j < pathLength_ - 1; j++) {
+            for (uint256 j = 0; j < pathLength_ - 1; ++j) {
                 (bool exists_, address pair_) = _pairExists(paths_[i][j], paths_[i][j + 1]);
 
                 if (!exists_) revert PairDoesNotExist(paths_[i][j], paths_[i][j + 1]);
 
                 $.pairs.add(pair_);
-                $.pairInfos[pair_].refs++;
+                ++$.pairInfos[pair_].refs;
             }
 
             $.paths[tokenIn_] = paths_[i];
@@ -247,7 +247,7 @@ abstract contract AUniswapV2Oracle is Initializable {
 
         uint256 numberOfPaths_ = tokenIns_.length;
 
-        for (uint256 i = 0; i < numberOfPaths_; i++) {
+        for (uint256 i = 0; i < numberOfPaths_; ++i) {
             address tokenIn_ = tokenIns_[i];
             uint256 pathLength_ = $.paths[tokenIn_].length;
 
@@ -255,7 +255,7 @@ abstract contract AUniswapV2Oracle is Initializable {
                 continue;
             }
 
-            for (uint256 j = 0; j < pathLength_ - 1; j++) {
+            for (uint256 j = 0; j < pathLength_ - 1; ++j) {
                 address pair_ = $.uniswapV2Factory.getPair(
                     $.paths[tokenIn_][j],
                     $.paths[tokenIn_][j + 1]
@@ -264,7 +264,7 @@ abstract contract AUniswapV2Oracle is Initializable {
                 PairInfo storage _pairInfo = $.pairInfos[pair_];
 
                 /// @dev can't underflow
-                _pairInfo.refs--;
+                --_pairInfo.refs;
 
                 if (_pairInfo.refs == 0) {
                     $.pairs.remove(pair_);

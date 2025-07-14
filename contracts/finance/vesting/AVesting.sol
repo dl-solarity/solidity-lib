@@ -208,7 +208,7 @@ abstract contract AVesting is Initializable {
         uint256[] memory ids_ = $.beneficiaryIds[beneficiary_].values();
         VestingData[] memory beneficiaryVestings_ = new VestingData[](ids_.length);
 
-        for (uint256 i = 0; i < ids_.length; i++) {
+        for (uint256 i = 0; i < ids_.length; ++i) {
             beneficiaryVestings_[i] = $.vestings[ids_[i]];
         }
 

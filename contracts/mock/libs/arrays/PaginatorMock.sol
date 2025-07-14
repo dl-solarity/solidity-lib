@@ -24,34 +24,34 @@ contract PaginatorMock {
     DynamicSet.StringSet internal _stringSet;
 
     function pushUint(uint256 length_) external {
-        for (uint256 i; i < length_; i++) {
+        for (uint256 i; i < length_; ++i) {
             _uintArr.push(100 + i);
             _uintSet.add(100 + i);
         }
     }
 
     function pushAddress(uint256 length_) external {
-        for (uint256 i; i < length_; i++) {
+        for (uint256 i; i < length_; ++i) {
             _addressArr.push(address(uint160(i)));
             _addressSet.add(address(uint160(i)));
         }
     }
 
     function pushBytes32(uint256 length_) external {
-        for (uint256 i; i < length_; i++) {
+        for (uint256 i; i < length_; ++i) {
             _bytes32Arr.push(bytes32(i));
             _bytes32Set.add(bytes32(i));
         }
     }
 
     function pushBytes(uint256 length_) external {
-        for (uint256 i = 0; i < length_; i++) {
+        for (uint256 i = 0; i < length_; ++i) {
             _bytesSet.add(abi.encode(i));
         }
     }
 
     function pushString(uint256 length_) external {
-        for (uint256 i = 0; i < length_; i++) {
+        for (uint256 i = 0; i < length_; ++i) {
             _stringSet.add(i.toString());
         }
     }

@@ -718,7 +718,7 @@ library CartesianMerkleTree {
                     ? rootNode.childRight
                     : rootNode.childLeft;
 
-                treaple.deletedNodesCount++;
+                ++treaple.deletedNodesCount;
                 delete treaple.nodes[nodeIdToRemove_];
             } else if (leftRootChildNode.priority < rightRootChildNode.priority) {
                 rootNodeId_ = _leftRotate(treaple, rootNodeId_);

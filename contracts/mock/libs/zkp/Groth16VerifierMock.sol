@@ -34,7 +34,7 @@ contract Groth16Verifier2Mock is BaseGroth16VerifierMock {
         uint256[2] memory,
         uint256[2] memory inputs_
     ) external view returns (bool) {
-        for (uint256 i = 0; i < inputs_.length; i++) {
+        for (uint256 i = 0; i < inputs_.length; ++i) {
             if (inputs_[i] != expectedInputs[i]) revert InvalidInputs();
         }
 
@@ -54,7 +54,7 @@ contract Groth16Verifier3Mock is BaseGroth16VerifierMock {
         uint256[2] memory,
         uint256[3] memory inputs_
     ) external view returns (bool) {
-        for (uint256 i = 0; i < inputs_.length; i++) {
+        for (uint256 i = 0; i < inputs_.length; ++i) {
             if (inputs_[i] != expectedInputs[i]) revert InvalidInputs();
         }
 
