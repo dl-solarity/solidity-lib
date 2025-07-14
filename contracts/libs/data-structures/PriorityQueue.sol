@@ -62,6 +62,17 @@ library PriorityQueue {
     }
 
     /**
+     * @notice The function to remove a specific element from the uint256 queue. O(n) complex for search + O(log(n)) for removal
+     * In case of duplicate elements, removes the one with the highest priority.
+     * @param queue self
+     * @param value_ the element value to remove
+     * @return true if element was found and removed, false otherwise
+     */
+    function remove(UintQueue storage queue, uint256 value_) internal returns (bool) {
+        return _remove(queue._queue, bytes32(value_));
+    }
+
+    /**
      * @notice The function to read the value of the element with the highest priority. O(1) complex
      * @param queue self
      * @return the value of the element with the highest priority
@@ -114,16 +125,6 @@ library PriorityQueue {
     }
 
     /**
-     * @notice The function to remove a specific element from the uint256 queue. O(n) complex for search + O(log(n)) for removal
-     * @param queue self
-     * @param value_ the element value to remove
-     * @return true if element was found and removed, false otherwise
-     */
-    function remove(UintQueue storage queue, uint256 value_) internal returns (bool) {
-        return _remove(queue._queue, bytes32(value_));
-    }
-
-    /**
      ************************
      *     Bytes32Queue     *
      ************************
@@ -145,6 +146,14 @@ library PriorityQueue {
      */
     function removeTop(Bytes32Queue storage queue) internal {
         _removeTop(queue._queue);
+    }
+
+    /**
+     * @notice The function to remove a specific element from the bytes32 queue. O(n) complex for search + O(log(n)) for removal
+     * In case of duplicate elements, removes the one with the highest priority.
+     */
+    function remove(Bytes32Queue storage queue, bytes32 value_) internal returns (bool) {
+        return _remove(queue._queue, value_);
     }
 
     /**
@@ -188,16 +197,6 @@ library PriorityQueue {
     }
 
     /**
-     * @notice The function to remove a specific element from the bytes32 queue. O(n) complex for search + O(log(n)) for removal
-     * @param queue self
-     * @param value_ the element value to remove
-     * @return true if element was found and removed, false otherwise
-     */
-    function remove(Bytes32Queue storage queue, bytes32 value_) internal returns (bool) {
-        return _remove(queue._queue, value_);
-    }
-
-    /**
      ************************
      *     AddressQueue     *
      ************************
@@ -219,6 +218,14 @@ library PriorityQueue {
      */
     function removeTop(AddressQueue storage queue) internal {
         _removeTop(queue._queue);
+    }
+
+    /**
+     * @notice The function to remove a specific element from the address queue. O(n) complex for search + O(log(n)) for removal
+     * In case of duplicate elements, removes the one with the highest priority.
+     */
+    function remove(AddressQueue storage queue, address value_) internal returns (bool) {
+        return _remove(queue._queue, bytes32(uint256(uint160(value_))));
     }
 
     /**
@@ -263,16 +270,6 @@ library PriorityQueue {
     }
 
     /**
-     * @notice The function to remove a specific element from the address queue. O(n) complex for search + O(log(n)) for removal
-     * @param queue self
-     * @param value_ the element value to remove
-     * @return true if element was found and removed, false otherwise
-     */
-    function remove(AddressQueue storage queue, address value_) internal returns (bool) {
-        return _remove(queue._queue, bytes32(uint256(uint160(value_))));
-    }
-
-    /**
      ************************
      *    Internal Queue    *
      ************************
@@ -302,6 +299,44 @@ library PriorityQueue {
         queue._priorities.pop();
 
         _shiftDown(queue, 0);
+    }
+
+    function _remove(Queue storage queue, bytes32 value_) private returns (bool) {
+        uint256 length_ = _length(queue);
+
+        if (length_ == 0) {
+            return false;
+        }
+
+        uint256 indexToRemove_ = type(uint256).max;
+
+        for (uint256 i = 0; i < length_; ++i) {
+            if (queue._values[i] == value_) {
+                indexToRemove_ = i;
+                break;
+            }
+        }
+
+        if (indexToRemove_ == type(uint256).max) {
+            return false;
+        }
+
+        if (indexToRemove_ == length_ - 1) {
+            queue._values.pop();
+            queue._priorities.pop();
+
+            return true;
+        }
+
+        queue._values[indexToRemove_] = queue._values[length_ - 1];
+        queue._priorities[indexToRemove_] = queue._priorities[length_ - 1];
+
+        queue._values.pop();
+        queue._priorities.pop();
+
+        _shiftDown(queue, indexToRemove_);
+
+        return true;
     }
 
     function _topValue(Queue storage queue) private view returns (bytes32) {
@@ -398,36 +433,6 @@ library PriorityQueue {
 
     function _rightChild(uint256 index_) private pure returns (uint256) {
         return index_ * 2 + 2;
-    }
-
-    function _remove(Queue storage queue, bytes32 value_) private returns (bool) {
-        uint256 length_ = _length(queue);
-        if (length_ == 0) return false;
-
-        uint256 indexToRemove_ = type(uint256).max;
-        for (uint256 i = 0; i < length_; ++i) {
-            if (queue._values[i] == value_) {
-                indexToRemove_ = i;
-                break;
-            }
-        }
-
-        if (indexToRemove_ == type(uint256).max) return false;
-
-        if (indexToRemove_ == length_ - 1) {
-            queue._values.pop();
-            queue._priorities.pop();
-
-            return true;
-        }
-
-        queue._priorities[indexToRemove_] = type(uint256).max;
-
-        _shiftUp(queue, indexToRemove_);
-
-        _removeTop(queue);
-
-        return true;
     }
 
     function _requireNotEmpty(Queue storage queue) private view {

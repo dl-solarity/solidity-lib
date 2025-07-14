@@ -96,7 +96,7 @@ describe("PriorityQueue", () => {
     });
   });
 
-  describe("remove()", async () => {
+  describe("removeTop()", async () => {
     describe("uint", () => {
       it("should add and remove the top elements", async () => {
         await mock.addUint(1, 1);
@@ -191,7 +191,7 @@ describe("PriorityQueue", () => {
     });
   });
 
-  describe("remove(element)", () => {
+  describe("remove()", () => {
     describe("uint", () => {
       it("should remove a specific element from the middle", async () => {
         await mock.addUint(1, 1);
@@ -233,6 +233,22 @@ describe("PriorityQueue", () => {
 
         expect(await mock.lengthUint()).to.equal(2n);
         expect(await mock.topValueUint()).to.equal(3n);
+      });
+
+      it("should remove the element with the same priority", async () => {
+        await mock.addUint(1, ethers.MaxUint256);
+        await mock.addUint(2, ethers.MaxUint256);
+        await mock.addUint(3, ethers.MaxUint256);
+
+        await mock.removeUint(2);
+
+        expect(await mock.lengthUint()).to.equal(2n);
+        expect(await mock.topValueUint()).to.equal(1n);
+
+        await mock.removeUint(3);
+
+        expect(await mock.lengthUint()).to.equal(1n);
+        expect(await mock.topValueUint()).to.equal(1n);
       });
 
       it("should return false when removing non-existent element", async () => {
