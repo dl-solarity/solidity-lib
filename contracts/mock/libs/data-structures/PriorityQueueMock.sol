@@ -21,6 +21,10 @@ contract PriorityQueueMock {
         _uintQueue.removeTop();
     }
 
+    function removeUint(uint256 value_) external returns (bool) {
+        return _uintQueue.remove(value_);
+    }
+
     function topValueUint() external view returns (uint256) {
         return _uintQueue.topValue();
     }
@@ -51,6 +55,10 @@ contract PriorityQueueMock {
         _bytes32Queue.removeTop();
     }
 
+    function removeBytes32(bytes32 value_) external returns (bool) {
+        return _bytes32Queue.remove(value_);
+    }
+
     function topValueBytes32() external view returns (bytes32) {
         return _bytes32Queue.topValue();
     }
@@ -79,6 +87,10 @@ contract PriorityQueueMock {
 
     function removeTopAddress() external {
         _addressQueue.removeTop();
+    }
+
+    function removeAddress(address value_) external returns (bool) {
+        return _addressQueue.remove(value_);
     }
 
     function topValueAddress() external view returns (address) {
