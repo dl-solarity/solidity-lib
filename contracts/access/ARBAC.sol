@@ -112,7 +112,7 @@ abstract contract ARBAC is IRBAC, Initializable {
         ResourceWithPermissions[] memory permissionsToAdd_,
         bool allowed_
     ) public virtual override onlyPermission(RBAC_RESOURCE, CREATE_PERMISSION) {
-        for (uint256 i = 0; i < permissionsToAdd_.length; i++) {
+        for (uint256 i = 0; i < permissionsToAdd_.length; ++i) {
             _addPermissionsToRole(
                 role_,
                 permissionsToAdd_[i].resource,
@@ -133,7 +133,7 @@ abstract contract ARBAC is IRBAC, Initializable {
         ResourceWithPermissions[] memory permissionsToRemove_,
         bool allowed_
     ) public virtual override onlyPermission(RBAC_RESOURCE, DELETE_PERMISSION) {
-        for (uint256 i = 0; i < permissionsToRemove_.length; i++) {
+        for (uint256 i = 0; i < permissionsToRemove_.length; ++i) {
             _removePermissionsFromRole(
                 role_,
                 permissionsToRemove_[i].resource,
@@ -186,12 +186,12 @@ abstract contract ARBAC is IRBAC, Initializable {
         allowed_ = new ResourceWithPermissions[](_allowedResources.length());
         disallowed_ = new ResourceWithPermissions[](_disallowedResources.length());
 
-        for (uint256 i = 0; i < allowed_.length; i++) {
+        for (uint256 i = 0; i < allowed_.length; ++i) {
             allowed_[i].resource = _allowedResources.at(i);
             allowed_[i].permissions = _allowedPermissions[allowed_[i].resource].values();
         }
 
-        for (uint256 i = 0; i < disallowed_.length; i++) {
+        for (uint256 i = 0; i < disallowed_.length; ++i) {
             disallowed_[i].resource = _disallowedResources.at(i);
             disallowed_[i].permissions = _disallowedPermissions[disallowed_[i].resource].values();
         }
@@ -215,7 +215,7 @@ abstract contract ARBAC is IRBAC, Initializable {
     ) public view virtual override returns (bool isAllowed_) {
         string[] memory roles_ = getUserRoles(who_);
 
-        for (uint256 i = 0; i < roles_.length; i++) {
+        for (uint256 i = 0; i < roles_.length; ++i) {
             string memory role_ = roles_[i];
 
             if (_isDisallowed(role_, resource_, permission_)) {

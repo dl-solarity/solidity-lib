@@ -63,7 +63,7 @@ contract UniswapV3Oracle {
 
         uint32 minPeriod_ = period_;
 
-        for (uint256 i = 0; i < pathLength_ - 1; i++) {
+        for (uint256 i = 0; i < pathLength_ - 1; ++i) {
             uint32 currentPeriod_;
             (amount_, currentPeriod_) = _getPriceOfTokenInToken(
                 path_[i],

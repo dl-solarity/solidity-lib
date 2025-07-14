@@ -440,7 +440,7 @@ library AvlTree {
     function _insert(Tree storage tree, bytes32 key_, bytes32 value_) private {
         if (key_ == 0) revert KeyIsZero();
 
-        tree.totalCount++;
+        ++tree.totalCount;
 
         tree.root = _insertNode(
             tree.tree,
@@ -458,7 +458,7 @@ library AvlTree {
 
         tree.root = _removeNode(tree.tree, tree.root, 0, bytes32(key_), _getComparator(tree));
 
-        tree.removedCount++;
+        ++tree.removedCount;
     }
 
     function _insertNode(

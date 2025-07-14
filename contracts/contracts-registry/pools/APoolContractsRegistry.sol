@@ -157,7 +157,7 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
     ) internal virtual {
         APoolContractsRegistryStorage storage $ = _getAPoolContractsRegistryStorage();
 
-        for (uint256 i = 0; i < names_.length; i++) {
+        for (uint256 i = 0; i < names_.length; ++i) {
             if (address($.beacons[names_[i]]) == address(0)) {
                 $.beacons[names_[i]] = UpgradeableBeacon(
                     _deployProxyBeacon(newImplementations_[i])
@@ -207,7 +207,7 @@ abstract contract APoolContractsRegistry is Initializable, ADependant {
 
         address contractsRegistry_ = $.contractsRegistry;
 
-        for (uint256 i = offset_; i < to_; i++) {
+        for (uint256 i = offset_; i < to_; ++i) {
             ADependant(_namedPools.at(i)).setDependencies(contractsRegistry_, data_);
         }
     }

@@ -36,7 +36,7 @@ library Paginator {
 
         list_ = new uint256[](to_ - offset_);
 
-        for (uint256 i = offset_; i < to_; i++) {
+        for (uint256 i = offset_; i < to_; ++i) {
             list_[i - offset_] = arr[i];
         }
     }
@@ -53,7 +53,7 @@ library Paginator {
 
         list_ = new address[](to_ - offset_);
 
-        for (uint256 i = offset_; i < to_; i++) {
+        for (uint256 i = offset_; i < to_; ++i) {
             list_[i - offset_] = arr[i];
         }
     }
@@ -70,7 +70,7 @@ library Paginator {
 
         list_ = new bytes32[](to_ - offset_);
 
-        for (uint256 i = offset_; i < to_; i++) {
+        for (uint256 i = offset_; i < to_; ++i) {
             list_[i - offset_] = arr[i];
         }
     }
@@ -90,7 +90,7 @@ library Paginator {
 
         list_ = new uint256[](to_ - offset_);
 
-        for (uint256 i = offset_; i < to_; i++) {
+        for (uint256 i = offset_; i < to_; ++i) {
             list_[i - offset_] = set.at(i);
         }
     }
@@ -107,7 +107,7 @@ library Paginator {
 
         list_ = new address[](to_ - offset_);
 
-        for (uint256 i = offset_; i < to_; i++) {
+        for (uint256 i = offset_; i < to_; ++i) {
             list_[i - offset_] = set.at(i);
         }
     }
@@ -124,7 +124,7 @@ library Paginator {
 
         list_ = new bytes32[](to_ - offset_);
 
-        for (uint256 i = offset_; i < to_; i++) {
+        for (uint256 i = offset_; i < to_; ++i) {
             list_[i - offset_] = set.at(i);
         }
     }
@@ -141,7 +141,7 @@ library Paginator {
 
         list_ = new bytes[](to_ - offset_);
 
-        for (uint256 i = offset_; i < to_; i++) {
+        for (uint256 i = offset_; i < to_; ++i) {
             list_[i - offset_] = set.at(i);
         }
     }
@@ -158,7 +158,7 @@ library Paginator {
 
         list_ = new string[](to_ - offset_);
 
-        for (uint256 i = offset_; i < to_; i++) {
+        for (uint256 i = offset_; i < to_; ++i) {
             list_[i - offset_] = set.at(i);
         }
     }

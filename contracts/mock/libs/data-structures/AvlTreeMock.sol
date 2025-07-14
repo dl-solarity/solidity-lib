@@ -154,7 +154,7 @@ contract AvlTreeMock {
         bytes32 bytesKey_;
         bytes32 bytesValue_;
 
-        for (uint256 i = 0; i < 12; i++) {
+        for (uint256 i = 0; i < 12; ++i) {
             (bytesKey_, bytesValue_) = iterator_.value();
 
             keys_[i] = uint256(bytesKey_);

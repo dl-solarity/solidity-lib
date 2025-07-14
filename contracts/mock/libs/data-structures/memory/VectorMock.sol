@@ -40,7 +40,7 @@ contract VectorMock {
 
         if (vector2_.length() != 3) revert();
 
-        for (uint256 i = 0; i < vector2_.length(); i++) {
+        for (uint256 i = 0; i < vector2_.length(); ++i) {
             if (vector2_.at(i) != 0) revert();
         }
     }
@@ -68,7 +68,7 @@ contract VectorMock {
 
         if (vector_.length() != 3) revert();
 
-        for (uint256 i = 0; i < vector_.length(); i++) {
+        for (uint256 i = 0; i < vector_.length(); ++i) {
             if (vector_.at(i) != i + 1) revert();
         }
 
@@ -87,7 +87,7 @@ contract VectorMock {
         if (vector_._vector._allocation != 1) revert();
         if (vector_.length() != 0) revert();
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < 10; ++i) {
             vector_.push(i);
         }
 
@@ -98,7 +98,7 @@ contract VectorMock {
 
         if (array_.length != 10) revert();
 
-        for (uint256 i = 0; i < array_.length; i++) {
+        for (uint256 i = 0; i < array_.length; ++i) {
             if (array_[i] != i) revert();
         }
     }
@@ -109,7 +109,7 @@ contract VectorMock {
         if (vector1_.length() != 1) revert();
         if (vector1_.at(0) != 0) revert();
 
-        for (uint256 i = 1; i < 50; i++) {
+        for (uint256 i = 1; i < 50; ++i) {
             vector1_.push(i);
         }
 
@@ -121,7 +121,7 @@ contract VectorMock {
 
         if (vector2_.length() != 50) revert();
 
-        for (uint256 i = 0; i < 50; i++) {
+        for (uint256 i = 0; i < 50; ++i) {
             if (vector2_.at(i) != i) revert();
 
             vector2_.set(i, 50 - i);

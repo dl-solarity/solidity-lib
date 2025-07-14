@@ -123,7 +123,7 @@ library ArrayHelper {
         prefixes_ = new uint256[](arr_.length);
         prefixes_[0] = arr_[0];
 
-        for (uint256 i = 1; i < prefixes_.length; i++) {
+        for (uint256 i = 1; i < prefixes_.length; ++i) {
             prefixes_[i] = prefixes_[i - 1] + arr_[i];
         }
     }
@@ -138,7 +138,7 @@ library ArrayHelper {
         uint256 i = arr_.length;
 
         while (i > 0) {
-            i--;
+            --i;
             reversed_[arr_.length - 1 - i] = arr_[i];
         }
     }
@@ -151,7 +151,7 @@ library ArrayHelper {
         uint256 i = arr_.length;
 
         while (i > 0) {
-            i--;
+            --i;
             reversed_[arr_.length - 1 - i] = arr_[i];
         }
     }
@@ -164,7 +164,7 @@ library ArrayHelper {
         uint256 i = arr_.length;
 
         while (i > 0) {
-            i--;
+            --i;
             reversed_[arr_.length - 1 - i] = arr_[i];
         }
     }
@@ -177,7 +177,7 @@ library ArrayHelper {
         uint256 i = arr_.length;
 
         while (i > 0) {
-            i--;
+            --i;
             reversed_[arr_.length - 1 - i] = arr_[i];
         }
     }
@@ -190,7 +190,7 @@ library ArrayHelper {
         uint256 i = arr_.length;
 
         while (i > 0) {
-            i--;
+            --i;
             reversed_[arr_.length - 1 - i] = arr_[i];
         }
     }
@@ -207,7 +207,7 @@ library ArrayHelper {
         uint256 index_,
         uint256[] memory what_
     ) internal pure returns (uint256) {
-        for (uint256 i = 0; i < what_.length; i++) {
+        for (uint256 i = 0; i < what_.length; ++i) {
             to_[index_ + i] = what_[i];
         }
 
@@ -222,7 +222,7 @@ library ArrayHelper {
         uint256 index_,
         address[] memory what_
     ) internal pure returns (uint256) {
-        for (uint256 i = 0; i < what_.length; i++) {
+        for (uint256 i = 0; i < what_.length; ++i) {
             to_[index_ + i] = what_[i];
         }
 
@@ -237,7 +237,7 @@ library ArrayHelper {
         uint256 index_,
         bool[] memory what_
     ) internal pure returns (uint256) {
-        for (uint256 i = 0; i < what_.length; i++) {
+        for (uint256 i = 0; i < what_.length; ++i) {
             to_[index_ + i] = what_[i];
         }
 
@@ -252,7 +252,7 @@ library ArrayHelper {
         uint256 index_,
         string[] memory what_
     ) internal pure returns (uint256) {
-        for (uint256 i = 0; i < what_.length; i++) {
+        for (uint256 i = 0; i < what_.length; ++i) {
             to_[index_ + i] = what_[i];
         }
 
@@ -267,7 +267,7 @@ library ArrayHelper {
         uint256 index_,
         bytes32[] memory what_
     ) internal pure returns (uint256) {
-        for (uint256 i = 0; i < what_.length; i++) {
+        for (uint256 i = 0; i < what_.length; ++i) {
             to_[index_ + i] = what_[i];
         }
 
