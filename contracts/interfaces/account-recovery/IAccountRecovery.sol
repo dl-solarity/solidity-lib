@@ -3,6 +3,8 @@ pragma solidity ^0.8.21;
 
 /**
  * @notice The Account Recovery module
+ *
+ * For more information please refer to [EIP-7947](https://eips.ethereum.org/EIPS/eip-7947).
  */
 interface IAccountRecovery {
     event OwnershipRecovered(address indexed oldOwner, address indexed newOwner);
