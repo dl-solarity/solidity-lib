@@ -29,19 +29,19 @@ abstract contract AAccountRecovery is IAccountRecovery {
     error ProviderAlreadyAdded(address provider);
     error ProviderNotRegistered(address provider);
 
-    function recoveryProviderAdded(address provider_) public view returns (bool) {
+    function recoveryProviderAdded(address provider_) public view virtual returns (bool) {
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
         return $.recoveryProviders.contains(provider_);
     }
 
-    function getRecoveryProviders() public view returns (address[] memory) {
+    function getRecoveryProviders() public view virtual returns (address[] memory) {
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
         return $.recoveryProviders.values();
     }
 
-    function _addRecoveryProvider(address provider_, bytes memory recoveryData_) internal {
+    function _addRecoveryProvider(address provider_, bytes memory recoveryData_) internal virtual {
         if (provider_ == address(0)) revert ZeroAddress();
 
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
@@ -53,7 +53,7 @@ abstract contract AAccountRecovery is IAccountRecovery {
         emit RecoveryProviderAdded(provider_);
     }
 
-    function _removeRecoveryProvider(address provider_) internal {
+    function _removeRecoveryProvider(address provider_) internal virtual {
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
         if (!$.recoveryProviders.remove(provider_)) revert ProviderNotRegistered(provider_);
@@ -67,7 +67,7 @@ abstract contract AAccountRecovery is IAccountRecovery {
         address newOwner_,
         address provider_,
         bytes memory proof_
-    ) internal {
+    ) internal virtual {
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
         if (!$.recoveryProviders.contains(provider_)) revert ProviderNotRegistered(provider_);
