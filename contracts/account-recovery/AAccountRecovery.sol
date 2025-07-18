@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
 import {IAccountRecovery} from "../interfaces/account-recovery/IAccountRecovery.sol";
 import {IRecoveryProvider} from "../interfaces/account-recovery/IRecoveryProvider.sol";
 
@@ -13,8 +15,10 @@ import {IRecoveryProvider} from "../interfaces/account-recovery/IRecoveryProvide
  * The recovery providers are used to recover the account ownership.
  */
 abstract contract AAccountRecovery is IAccountRecovery {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     struct AAccountRecoveryStorage {
-        mapping(address => bool) recoveryProviders;
+        EnumerableSet.AddressSet recoveryProviders;
     }
 
     // bytes32(uint256(keccak256("solarity.contract.AAccountRecovery")) - 1)
@@ -28,7 +32,13 @@ abstract contract AAccountRecovery is IAccountRecovery {
     function recoveryProviderAdded(address provider_) public view returns (bool) {
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
-        return $.recoveryProviders[provider_];
+        return $.recoveryProviders.contains(provider_);
+    }
+
+    function getRecoveryProviders() public view returns (address[] memory) {
+        AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
+
+        return $.recoveryProviders.values();
     }
 
     function _addRecoveryProvider(address provider_, bytes memory recoveryData_) internal {
@@ -36,11 +46,9 @@ abstract contract AAccountRecovery is IAccountRecovery {
 
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
-        if ($.recoveryProviders[provider_]) revert ProviderAlreadyAdded(provider_);
+        if (!$.recoveryProviders.add(provider_)) revert ProviderAlreadyAdded(provider_);
 
         IRecoveryProvider(provider_).subscribe(recoveryData_);
-
-        $.recoveryProviders[provider_] = true;
 
         emit RecoveryProviderAdded(provider_);
     }
@@ -48,11 +56,9 @@ abstract contract AAccountRecovery is IAccountRecovery {
     function _removeRecoveryProvider(address provider_) internal {
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
-        if (!$.recoveryProviders[provider_]) revert ProviderNotRegistered(provider_);
+        if (!$.recoveryProviders.remove(provider_)) revert ProviderNotRegistered(provider_);
 
         IRecoveryProvider(provider_).unsubscribe();
-
-        delete $.recoveryProviders[provider_];
 
         emit RecoveryProviderRemoved(provider_);
     }
@@ -66,7 +72,7 @@ abstract contract AAccountRecovery is IAccountRecovery {
 
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
-        if (!$.recoveryProviders[provider_]) revert ProviderNotRegistered(provider_);
+        if (!$.recoveryProviders.contains(provider_)) revert ProviderNotRegistered(provider_);
 
         IRecoveryProvider(provider_).recover(newOwner_, proof_);
     }

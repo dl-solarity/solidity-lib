@@ -41,4 +41,10 @@ interface IAccountRecovery {
      * @return true if the provider exists in the account, false otherwise
      */
     function recoveryProviderAdded(address provider_) external view returns (bool);
+
+    /**
+     * @notice The function to get the list of current recovery providers.
+     * @return the list of current recovery providers
+     */
+    function getRecoveryProviders() external view returns (address[] memory);
 }
