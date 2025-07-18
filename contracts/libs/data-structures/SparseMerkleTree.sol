@@ -55,6 +55,8 @@ pragma solidity ^0.8.21;
  *
  * SparseMerkleTree.Proof memory proof = uintTree.getProof(100);
  *
+ * uintTree.verifyProof(proof);
+ *
  * uintTree.getNodeByKey(100);
  *
  * uintTree.remove(100);
@@ -175,6 +177,18 @@ library SparseMerkleTree {
      */
     function getProof(UintSMT storage tree, bytes32 key_) internal view returns (Proof memory) {
         return _proof(tree._tree, bytes32(key_));
+    }
+
+    /**
+     * @notice The function to verify the proof for inclusion or exclusion of a node in the SMT.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param proof_ The SMT proof struct.
+     * @return True if the proof is valid, false otherwise.
+     */
+    function verifyProof(UintSMT storage tree, Proof memory proof_) internal view returns (bool) {
+        return _verifyProof(tree._tree, proof_);
     }
 
     /**
@@ -345,6 +359,21 @@ library SparseMerkleTree {
      */
     function getProof(Bytes32SMT storage tree, bytes32 key_) internal view returns (Proof memory) {
         return _proof(tree._tree, key_);
+    }
+
+    /**
+     * @notice The function to verify the proof for inclusion or exclusion of a node in the SMT.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param proof_ The SMT proof struct.
+     * @return True if the proof is valid, false otherwise.
+     */
+    function verifyProof(
+        Bytes32SMT storage tree,
+        Proof memory proof_
+    ) internal view returns (bool) {
+        return _verifyProof(tree._tree, proof_);
     }
 
     /**
@@ -521,6 +550,21 @@ library SparseMerkleTree {
      */
     function getProof(AddressSMT storage tree, bytes32 key_) internal view returns (Proof memory) {
         return _proof(tree._tree, key_);
+    }
+
+    /**
+     * @notice The function to verify the proof for inclusion or exclusion of a node in the SMT.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param tree self.
+     * @param proof_ The SMT proof struct.
+     * @return True if the proof is valid, false otherwise.
+     */
+    function verifyProof(
+        AddressSMT storage tree,
+        Proof memory proof_
+    ) internal view returns (bool) {
+        return _verifyProof(tree._tree, proof_);
     }
 
     /**
@@ -1052,6 +1096,42 @@ library SparseMerkleTree {
         }
 
         return proof_;
+    }
+
+    /**
+     * @dev Computes the root by hashing up the path from the leaf or aux leaf of the proof.
+     * The `tree` argument is used only to access its configured hash functions.
+     * If no custom hash functions are configured, default hashing implementations are used instead.
+     */
+    function _verifyProof(SMT storage tree, Proof memory proof_) private view returns (bool) {
+        // invalid exclusion proof
+        if (!proof_.existence && proof_.auxExistence && proof_.key == proof_.auxKey) {
+            return false;
+        }
+
+        bytes32 computedHash_;
+
+        if (proof_.existence) {
+            computedHash_ = tree.hash3(proof_.key, proof_.value, bytes32(uint256(1)));
+        } else if (proof_.auxExistence) {
+            computedHash_ = tree.hash3(proof_.auxKey, proof_.auxValue, bytes32(uint256(1)));
+        } else {
+            computedHash_ = bytes32(0);
+        }
+
+        uint256 pathIndex_ = uint256(proof_.key);
+
+        for (uint256 i = proof_.siblings.length; i > 0; i--) {
+            uint256 sIndex_ = i - 1;
+
+            if ((pathIndex_ >> sIndex_) & 1 == 1) {
+                computedHash_ = tree.hash2(proof_.siblings[sIndex_], computedHash_);
+            } else {
+                computedHash_ = tree.hash2(computedHash_, proof_.siblings[sIndex_]);
+            }
+        }
+
+        return computedHash_ == proof_.root;
     }
 
     function _hash2(bytes32 a_, bytes32 b_) private pure returns (bytes32 result_) {

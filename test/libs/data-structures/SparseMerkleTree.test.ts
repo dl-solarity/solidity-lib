@@ -55,14 +55,18 @@ describe("SparseMerkleTree", () => {
     return toBeHex((await tree.root()).bigInt(), 32);
   }
 
-  function getOnchainProof(onchainProof: SparseMerkleTree.ProofStructOutput): Proof {
+  function getProofSiblings(onchainProof: SparseMerkleTree.ProofStructOutput): string[] {
     const modifiableArray = JSON.parse(JSON.stringify(onchainProof.siblings)).reverse() as string[];
     const reversedKey = modifiableArray.findIndex((value) => value !== ethers.ZeroHash);
     const lastKey = reversedKey !== -1 ? onchainProof.siblings.length - 1 - reversedKey : -1;
 
-    const siblings = onchainProof.siblings
-      .filter((value, key) => value != ethers.ZeroHash || key <= lastKey)
-      .map((sibling: string) => new Hash(Hash.fromHex(sibling.slice(2)).value.reverse()));
+    return onchainProof.siblings.filter((value, key) => value != ethers.ZeroHash || key <= lastKey);
+  }
+
+  function getOnchainProof(onchainProof: SparseMerkleTree.ProofStructOutput): Proof {
+    const stringSiblings = getProofSiblings(onchainProof);
+
+    const siblings = stringSiblings.map((sibling: string) => new Hash(Hash.fromHex(sibling.slice(2)).value.reverse()));
 
     let nodeAux: { key: Hash; value: Hash } | undefined = undefined;
 
@@ -85,6 +89,21 @@ describe("SparseMerkleTree", () => {
 
     expect(node.key).to.equal(toBeHex(localNode.key, 32));
     expect(node.value).to.equal(toBeHex(localNode.value, 32));
+  }
+
+  function trimProofSiblings(proof: SparseMerkleTree.ProofStructOutput, mockRoot?: string) {
+    const { root, key, value, existence, auxKey, auxValue, auxExistence } = proof;
+
+    return {
+      root: mockRoot ?? root,
+      siblings: Array.from(getProofSiblings(proof)),
+      key,
+      value,
+      existence,
+      auxKey,
+      auxValue,
+      auxExistence,
+    };
   }
 
   describe("Uint SMT", () => {
@@ -410,6 +429,51 @@ describe("SparseMerkleTree", () => {
 
       expect((await merkleTree.getUintNodeByKey(5n)).nodeType).to.be.equal(0);
     });
+
+    it("should handle proof verification correctly", async () => {
+      const treeSize = 20;
+
+      const keys: string[] = new Array(treeSize);
+
+      for (let i = 1; i <= treeSize; i++) {
+        const value = BigInt(toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32));
+        const key = poseidonHash(toBeHex(`0x` + value.toString(16), 32));
+
+        keys[i - 1] = key;
+
+        await merkleTree.addUint(key, value);
+
+        await localMerkleTree.add(BigInt(key), BigInt(value));
+      }
+
+      const randomNum = Math.floor(Math.random() * (treeSize - 1));
+      const randomKey = keys[randomNum];
+
+      const inclusionProof = await merkleTree.getUintProof(randomKey);
+
+      expect(await merkleTree.verifyUintProof(trimProofSiblings(inclusionProof))).to.be.true;
+      expect(await merkleTree.verifyUintProof(trimProofSiblings(inclusionProof, inclusionProof.auxKey))).to.be.false;
+
+      await merkleTree.removeUint(randomKey);
+
+      const exclusionProof = await merkleTree.getUintProof(randomKey);
+
+      expect(await merkleTree.verifyUintProof(trimProofSiblings(exclusionProof))).to.be.true;
+      expect(await merkleTree.verifyUintProof(trimProofSiblings(exclusionProof, inclusionProof.root))).to.be.false;
+
+      const invalidExlusionProof = {
+        root: exclusionProof.root,
+        siblings: Array.from(getProofSiblings(exclusionProof)),
+        key: randomKey,
+        value: exclusionProof.value,
+        existence: false,
+        auxKey: randomKey,
+        auxValue: exclusionProof.auxValue,
+        auxExistence: true,
+      };
+
+      expect(await merkleTree.verifyUintProof(invalidExlusionProof)).to.be.false;
+    });
   });
 
   describe("Bytes32 SMT", () => {
@@ -525,6 +589,35 @@ describe("SparseMerkleTree", () => {
         expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(key), BigInt(value))).to.be.true;
       }
     });
+
+    it("should handle proof verification correctly", async () => {
+      const treeSize = 20;
+
+      const keys: string[] = new Array(treeSize);
+
+      for (let i = 1; i <= treeSize; i++) {
+        const value = toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32);
+        const key = poseidonHash(value);
+
+        keys[i - 1] = key;
+
+        await merkleTree.addBytes32(key, value);
+      }
+
+      const randomKey = keys[Math.floor(Math.random() * (treeSize - 1))];
+
+      const inclusionProof = await merkleTree.getBytes32Proof(randomKey);
+
+      expect(await merkleTree.verifyBytes32Proof(trimProofSiblings(inclusionProof))).to.be.true;
+      expect(await merkleTree.verifyBytes32Proof(trimProofSiblings(inclusionProof, inclusionProof.auxKey))).to.be.false;
+
+      await merkleTree.removeBytes32(randomKey);
+
+      const exclusionProof = await merkleTree.getBytes32Proof(randomKey);
+
+      expect(await merkleTree.verifyBytes32Proof(trimProofSiblings(exclusionProof))).to.be.true;
+      expect(await merkleTree.verifyBytes32Proof(trimProofSiblings(exclusionProof, inclusionProof.root))).to.be.false;
+    });
   });
 
   describe("Address SMT", () => {
@@ -639,6 +732,35 @@ describe("SparseMerkleTree", () => {
         const onchainProof = getOnchainProof(await merkleTree.getAddressProof(key));
         expect(await verifyProof(await localMerkleTree.root(), onchainProof, BigInt(key), BigInt(value))).to.be.true;
       }
+    });
+
+    it("should handle proof verification correctly", async () => {
+      const treeSize = 20;
+
+      const keys: string[] = new Array(treeSize);
+
+      for (let i = 1; i <= treeSize; i++) {
+        const value = toBeHex(BigInt(await USER1.getAddress()) + BigInt(i));
+        const key = poseidonHash(value);
+
+        keys[i - 1] = key;
+
+        await merkleTree.addAddress(key, value);
+      }
+
+      const randomKey = keys[Math.floor(Math.random() * (treeSize - 1))];
+
+      const inclusionProof = await merkleTree.getAddressProof(randomKey);
+
+      expect(await merkleTree.verifyAddressProof(trimProofSiblings(inclusionProof))).to.be.true;
+      expect(await merkleTree.verifyAddressProof(trimProofSiblings(inclusionProof, inclusionProof.auxKey))).to.be.false;
+
+      await merkleTree.removeAddress(randomKey);
+
+      const exclusionProof = await merkleTree.getAddressProof(randomKey);
+
+      expect(await merkleTree.verifyAddressProof(trimProofSiblings(exclusionProof))).to.be.true;
+      expect(await merkleTree.verifyAddressProof(trimProofSiblings(exclusionProof, inclusionProof.root))).to.be.false;
     });
   });
 });
