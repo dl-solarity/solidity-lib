@@ -68,8 +68,6 @@ abstract contract AAccountRecovery is IAccountRecovery {
         address provider_,
         bytes memory proof_
     ) internal {
-        if (newOwner_ == address(0)) revert ZeroAddress();
-
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
         if (!$.recoveryProviders.contains(provider_)) revert ProviderNotRegistered(provider_);
