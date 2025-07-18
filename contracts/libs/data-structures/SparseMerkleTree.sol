@@ -1032,12 +1032,10 @@ library SparseMerkleTree {
      * non-empty nodes and is not intended for external use.
      */
     function _getNodeHash(SMT storage tree, Node memory node_) private view returns (bytes32) {
-        function(bytes32, bytes32) view returns (bytes32) hash2_ = tree.isCustomHasherSet
-            ? tree.hash2
-            : _hash2;
-        function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_ = tree.isCustomHasherSet
-            ? tree.hash3
-            : _hash3;
+        (
+            function(bytes32, bytes32) view returns (bytes32) hash2_,
+            function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
+        ) = _getHashFunctions(tree);
 
         if (node_.nodeType == NodeType.LEAF) {
             return hash3_(node_.key, node_.value, bytes32(uint256(1)));
@@ -1109,29 +1107,54 @@ library SparseMerkleTree {
             return false;
         }
 
+        (
+            function(bytes32, bytes32) view returns (bytes32) hash2_,
+            function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
+        ) = _getHashFunctions(tree);
+
         bytes32 computedHash_;
 
         if (proof_.existence) {
-            computedHash_ = tree.hash3(proof_.key, proof_.value, bytes32(uint256(1)));
+            computedHash_ = hash3_(proof_.key, proof_.value, bytes32(uint256(1)));
         } else if (proof_.auxExistence) {
-            computedHash_ = tree.hash3(proof_.auxKey, proof_.auxValue, bytes32(uint256(1)));
+            computedHash_ = hash3_(proof_.auxKey, proof_.auxValue, bytes32(uint256(1)));
         } else {
             computedHash_ = bytes32(0);
         }
 
         uint256 pathIndex_ = uint256(proof_.key);
 
-        for (uint256 i = proof_.siblings.length; i > 0; i--) {
+        uint256 depth_ = proof_.siblings.length;
+
+        while (depth_ > 0 && proof_.siblings[depth_ - 1] == bytes32(0)) {
+            depth_--;
+        }
+
+        for (uint256 i = depth_; i > 0; --i) {
             uint256 sIndex_ = i - 1;
 
             if ((pathIndex_ >> sIndex_) & 1 == 1) {
-                computedHash_ = tree.hash2(proof_.siblings[sIndex_], computedHash_);
+                computedHash_ = hash2_(proof_.siblings[sIndex_], computedHash_);
             } else {
-                computedHash_ = tree.hash2(computedHash_, proof_.siblings[sIndex_]);
+                computedHash_ = hash2_(computedHash_, proof_.siblings[sIndex_]);
             }
         }
 
         return computedHash_ == proof_.root;
+    }
+
+    function _getHashFunctions(
+        SMT storage tree
+    )
+        private
+        view
+        returns (
+            function(bytes32, bytes32) view returns (bytes32) hash2_,
+            function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
+        )
+    {
+        hash2_ = tree.isCustomHasherSet ? tree.hash2 : _hash2;
+        hash3_ = tree.isCustomHasherSet ? tree.hash3 : _hash3;
     }
 
     function _hash2(bytes32 a_, bytes32 b_) private pure returns (bytes32 result_) {

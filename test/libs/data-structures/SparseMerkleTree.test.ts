@@ -55,18 +55,14 @@ describe("SparseMerkleTree", () => {
     return toBeHex((await tree.root()).bigInt(), 32);
   }
 
-  function getProofSiblings(onchainProof: SparseMerkleTree.ProofStructOutput): string[] {
+  function getOnchainProof(onchainProof: SparseMerkleTree.ProofStructOutput): Proof {
     const modifiableArray = JSON.parse(JSON.stringify(onchainProof.siblings)).reverse() as string[];
     const reversedKey = modifiableArray.findIndex((value) => value !== ethers.ZeroHash);
     const lastKey = reversedKey !== -1 ? onchainProof.siblings.length - 1 - reversedKey : -1;
 
-    return onchainProof.siblings.filter((value, key) => value != ethers.ZeroHash || key <= lastKey);
-  }
-
-  function getOnchainProof(onchainProof: SparseMerkleTree.ProofStructOutput): Proof {
-    const stringSiblings = getProofSiblings(onchainProof);
-
-    const siblings = stringSiblings.map((sibling: string) => new Hash(Hash.fromHex(sibling.slice(2)).value.reverse()));
+    const siblings = onchainProof.siblings
+      .filter((value, key) => value != ethers.ZeroHash || key <= lastKey)
+      .map((sibling: string) => new Hash(Hash.fromHex(sibling.slice(2)).value.reverse()));
 
     let nodeAux: { key: Hash; value: Hash } | undefined = undefined;
 
@@ -89,21 +85,6 @@ describe("SparseMerkleTree", () => {
 
     expect(node.key).to.equal(toBeHex(localNode.key, 32));
     expect(node.value).to.equal(toBeHex(localNode.value, 32));
-  }
-
-  function trimProofSiblings(proof: SparseMerkleTree.ProofStructOutput, mockRoot?: string) {
-    const { root, key, value, existence, auxKey, auxValue, auxExistence } = proof;
-
-    return {
-      root: mockRoot ?? root,
-      siblings: Array.from(getProofSiblings(proof)),
-      key,
-      value,
-      existence,
-      auxKey,
-      auxValue,
-      auxExistence,
-    };
   }
 
   describe("Uint SMT", () => {
@@ -449,30 +430,44 @@ describe("SparseMerkleTree", () => {
       const randomNum = Math.floor(Math.random() * (treeSize - 1));
       const randomKey = keys[randomNum];
 
-      const inclusionProof = await merkleTree.getUintProof(randomKey);
+      const inclusionProof = JSON.parse(JSON.stringify(await merkleTree.getUintProof(randomKey)));
 
-      expect(await merkleTree.verifyUintProof(trimProofSiblings(inclusionProof))).to.be.true;
-      expect(await merkleTree.verifyUintProof(trimProofSiblings(inclusionProof, inclusionProof.auxKey))).to.be.false;
+      expect(await merkleTree.verifyUintProof(inclusionProof)).to.be.true;
+
+      inclusionProof[0] = inclusionProof[3];
+      expect(await merkleTree.verifyUintProof(inclusionProof)).to.be.false;
 
       await merkleTree.removeUint(randomKey);
 
-      const exclusionProof = await merkleTree.getUintProof(randomKey);
+      let exclusionProof = JSON.parse(JSON.stringify(await merkleTree.getUintProof(randomKey)));
 
-      expect(await merkleTree.verifyUintProof(trimProofSiblings(exclusionProof))).to.be.true;
-      expect(await merkleTree.verifyUintProof(trimProofSiblings(exclusionProof, inclusionProof.root))).to.be.false;
+      expect(await merkleTree.verifyUintProof(exclusionProof)).to.be.true;
 
-      const invalidExlusionProof = {
-        root: exclusionProof.root,
-        siblings: Array.from(getProofSiblings(exclusionProof)),
+      exclusionProof[0] = exclusionProof[3];
+      expect(await merkleTree.verifyUintProof(exclusionProof)).to.be.false;
+
+      const [root, siblings, , , value, , , auxValue] = exclusionProof;
+
+      const invalidExclusionProof = {
+        root,
+        siblings,
         key: randomKey,
-        value: exclusionProof.value,
+        value,
         existence: false,
         auxKey: randomKey,
-        auxValue: exclusionProof.auxValue,
+        auxValue,
         auxExistence: true,
       };
 
-      expect(await merkleTree.verifyUintProof(invalidExlusionProof)).to.be.false;
+      expect(await merkleTree.verifyUintProof(invalidExclusionProof)).to.be.false;
+
+      do {
+        const outOfRangeKey = toBeHex(ethers.hexlify(ethers.randomBytes(28)), 32);
+
+        exclusionProof = JSON.parse(JSON.stringify(await merkleTree.getUintProof(outOfRangeKey)));
+      } while (exclusionProof[2] || exclusionProof[5]);
+
+      expect(await merkleTree.verifyUintProof(exclusionProof)).to.be.true;
     });
   });
 
@@ -606,17 +601,21 @@ describe("SparseMerkleTree", () => {
 
       const randomKey = keys[Math.floor(Math.random() * (treeSize - 1))];
 
-      const inclusionProof = await merkleTree.getBytes32Proof(randomKey);
+      const inclusionProof = JSON.parse(JSON.stringify(await merkleTree.getBytes32Proof(randomKey)));
 
-      expect(await merkleTree.verifyBytes32Proof(trimProofSiblings(inclusionProof))).to.be.true;
-      expect(await merkleTree.verifyBytes32Proof(trimProofSiblings(inclusionProof, inclusionProof.auxKey))).to.be.false;
+      expect(await merkleTree.verifyBytes32Proof(inclusionProof)).to.be.true;
+
+      inclusionProof[0] = inclusionProof[3];
+      expect(await merkleTree.verifyBytes32Proof(inclusionProof)).to.be.false;
 
       await merkleTree.removeBytes32(randomKey);
 
-      const exclusionProof = await merkleTree.getBytes32Proof(randomKey);
+      const exclusionProof = JSON.parse(JSON.stringify(await merkleTree.getBytes32Proof(randomKey)));
 
-      expect(await merkleTree.verifyBytes32Proof(trimProofSiblings(exclusionProof))).to.be.true;
-      expect(await merkleTree.verifyBytes32Proof(trimProofSiblings(exclusionProof, inclusionProof.root))).to.be.false;
+      expect(await merkleTree.verifyBytes32Proof(exclusionProof)).to.be.true;
+
+      exclusionProof[0] = exclusionProof[3];
+      expect(await merkleTree.verifyBytes32Proof(exclusionProof)).to.be.false;
     });
   });
 
@@ -750,17 +749,21 @@ describe("SparseMerkleTree", () => {
 
       const randomKey = keys[Math.floor(Math.random() * (treeSize - 1))];
 
-      const inclusionProof = await merkleTree.getAddressProof(randomKey);
+      const inclusionProof = JSON.parse(JSON.stringify(await merkleTree.getAddressProof(randomKey)));
 
-      expect(await merkleTree.verifyAddressProof(trimProofSiblings(inclusionProof))).to.be.true;
-      expect(await merkleTree.verifyAddressProof(trimProofSiblings(inclusionProof, inclusionProof.auxKey))).to.be.false;
+      expect(await merkleTree.verifyAddressProof(inclusionProof)).to.be.true;
+
+      inclusionProof[0] = inclusionProof[3];
+      expect(await merkleTree.verifyAddressProof(inclusionProof)).to.be.false;
 
       await merkleTree.removeAddress(randomKey);
 
-      const exclusionProof = await merkleTree.getAddressProof(randomKey);
+      const exclusionProof = JSON.parse(JSON.stringify(await merkleTree.getAddressProof(randomKey)));
 
-      expect(await merkleTree.verifyAddressProof(trimProofSiblings(exclusionProof))).to.be.true;
-      expect(await merkleTree.verifyAddressProof(trimProofSiblings(exclusionProof, inclusionProof.root))).to.be.false;
+      expect(await merkleTree.verifyAddressProof(exclusionProof)).to.be.true;
+
+      exclusionProof[0] = exclusionProof[3];
+      expect(await merkleTree.verifyAddressProof(exclusionProof)).to.be.false;
     });
   });
 });
