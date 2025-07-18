@@ -1123,11 +1123,10 @@ library SparseMerkleTree {
         }
 
         uint256 pathIndex_ = uint256(proof_.key);
-
         uint256 depth_ = proof_.siblings.length;
 
         while (depth_ > 0 && proof_.siblings[depth_ - 1] == bytes32(0)) {
-            depth_--;
+            --depth_;
         }
 
         for (uint256 i = depth_; i > 0; --i) {
