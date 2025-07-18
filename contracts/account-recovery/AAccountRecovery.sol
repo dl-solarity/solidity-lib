@@ -23,7 +23,7 @@ abstract contract AAccountRecovery is IAccountRecovery {
 
     // bytes32(uint256(keccak256("solarity.contract.AAccountRecovery")) - 1)
     bytes32 private constant A_ACCOUNT_RECOVERY_STORAGE =
-        0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef;
+        0x828c412330620ced6ea61864e26a29daa3e4c6ed06ccbde7b849e007ed9dd85a;
 
     error ZeroAddress();
     error ProviderAlreadyAdded(address provider);
