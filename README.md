@@ -21,7 +21,7 @@ contracts
 │   └── extensions
 │       └── ARBACGroupable — "Groupable extension of ARBAC"
 ├── account-recovery
-│   ├── AAccountRecovery — "Account recovery implementation of ERC-7947 interface"
+│   └── AAccountRecovery — "Account recovery implementation of ERC-7947 interface"
 ├── contracts—registry
 │   ├── AContractsRegistry — "Reference registry implementation of ERC-6224 pattern"
 │   ├── ADependant — "Reference dependant implementation of ERC-6224 pattern"

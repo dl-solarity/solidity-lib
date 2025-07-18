@@ -32,7 +32,7 @@ describe("AccountRecovery", () => {
 
   afterEach(reverter.revert);
 
-  describe("_addRecoveryProvider", () => {
+  describe("addRecoveryProvider", () => {
     it("should add a recovery provider", async () => {
       expect(await accountRecovery.getRecoveryProviders()).to.be.deep.equal([]);
 
@@ -61,7 +61,7 @@ describe("AccountRecovery", () => {
     });
   });
 
-  describe("_removeRecoveryProvider", () => {
+  describe("removeRecoveryProvider", () => {
     beforeEach(async () => {
       await accountRecovery.addRecoveryProvider(provider1, RECOVERY_DATA);
     });
@@ -87,7 +87,7 @@ describe("AccountRecovery", () => {
     });
   });
 
-  describe("_validateRecovery", () => {
+  describe("validateRecovery", () => {
     beforeEach(async () => {
       await accountRecovery.addRecoveryProvider(provider1, RECOVERY_DATA);
     });
