@@ -3,8 +3,8 @@ pragma solidity ^0.8.21;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {IAccountRecovery} from "../interfaces/account-recovery/IAccountRecovery.sol";
-import {IRecoveryProvider} from "../interfaces/account-recovery/IRecoveryProvider.sol";
+import {IAccountRecovery} from "../interfaces/account-abstraction/IAccountRecovery.sol";
+import {IRecoveryProvider} from "../interfaces/account-abstraction/IRecoveryProvider.sol";
 
 /**
  * @notice The Account Recovery module

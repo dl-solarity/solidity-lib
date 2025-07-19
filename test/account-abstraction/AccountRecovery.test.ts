@@ -6,7 +6,7 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { AccountRecoveryMock, RecoveryProviderMock } from "@/generated-types/ethers";
 import { Reverter } from "@/test/helpers/reverter";
 
-describe("AccountRecovery", () => {
+describe.only("AccountRecovery", () => {
   const reverter = new Reverter();
 
   let OWNER: SignerWithAddress;

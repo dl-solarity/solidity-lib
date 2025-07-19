@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import {AAccountRecovery} from "../../account-recovery/AAccountRecovery.sol";
+import {AAccountRecovery} from "../../account-abstraction/AAccountRecovery.sol";
 
 contract AccountRecoveryMock is AAccountRecovery {
     function addRecoveryProvider(address provider_, bytes memory recoveryData_) external {
