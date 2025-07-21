@@ -4,11 +4,11 @@ pragma solidity ^0.8.21;
 import {AAccountRecovery} from "../../account-abstraction/AAccountRecovery.sol";
 
 contract AccountRecoveryMock is AAccountRecovery {
-    function addRecoveryProvider(address provider_, bytes memory recoveryData_) external {
+    function addRecoveryProvider(address provider_, bytes memory recoveryData_) external override {
         _addRecoveryProvider(provider_, recoveryData_);
     }
 
-    function removeRecoveryProvider(address provider_) external {
+    function removeRecoveryProvider(address provider_) external override {
         _removeRecoveryProvider(provider_);
     }
 
@@ -16,5 +16,9 @@ contract AccountRecoveryMock is AAccountRecovery {
         _validateRecovery(newOwner_, provider_, proof_);
     }
 
-    function recoverOwnership(address, address, bytes memory) external pure returns (bool) {}
+    function recoverOwnership(
+        address,
+        address,
+        bytes memory
+    ) external pure override returns (bool) {}
 }
