@@ -20,6 +20,8 @@ contracts
 │   ├── ARBAC — "A powerful implementation of a true RBAC"
 │   └── extensions
 │       └── ARBACGroupable — "Groupable extension of ARBAC"
+├── account-abstraction
+│   └── AAccountRecovery — "ERC-7947 account recovery base implementation"
 ├── contracts—registry
 │   ├── AContractsRegistry — "Reference registry implementation of ERC-6224 pattern"
 │   ├── ADependant — "Reference dependant implementation of ERC-6224 pattern"
