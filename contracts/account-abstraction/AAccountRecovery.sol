@@ -32,18 +32,47 @@ abstract contract AAccountRecovery is IAccountRecovery {
     error ProviderAlreadyAdded(address provider);
     error ProviderNotRegistered(address provider);
 
+    /**
+     * @inheritdoc IAccountRecovery
+     */
+    function addRecoveryProvider(address provider_, bytes memory recoveryData_) external virtual;
+
+    /**
+     * @inheritdoc IAccountRecovery
+     */
+    function removeRecoveryProvider(address provider_) external virtual;
+
+    /**
+     * @inheritdoc IAccountRecovery
+     */
+    function recoverOwnership(
+        address newOwner,
+        address provider,
+        bytes memory proof
+    ) external virtual returns (bool);
+
+    /**
+     * @inheritdoc IAccountRecovery
+     */
     function recoveryProviderAdded(address provider_) public view virtual returns (bool) {
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
         return $.recoveryProviders.contains(provider_);
     }
 
+    /**
+     * @notice A function to get the list of all the recovery providers added to the account
+     * @return the list of recovery providers
+     */
     function getRecoveryProviders() public view virtual returns (address[] memory) {
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
         return $.recoveryProviders.values();
     }
 
+    /**
+     * @notice Should be called in the `addRecoveryProvider` function
+     */
     function _addRecoveryProvider(address provider_, bytes memory recoveryData_) internal virtual {
         if (provider_ == address(0)) revert ZeroAddress();
 
@@ -56,6 +85,9 @@ abstract contract AAccountRecovery is IAccountRecovery {
         emit RecoveryProviderAdded(provider_);
     }
 
+    /**
+     * @notice Should be called in the `removeRecoveryProvider` function
+     */
     function _removeRecoveryProvider(address provider_) internal virtual {
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
@@ -66,6 +98,9 @@ abstract contract AAccountRecovery is IAccountRecovery {
         emit RecoveryProviderRemoved(provider_);
     }
 
+    /**
+     * @notice Should be called in the `recoverOwnership` function before updating the account owner
+     */
     function _validateRecovery(
         address newOwner_,
         address provider_,
