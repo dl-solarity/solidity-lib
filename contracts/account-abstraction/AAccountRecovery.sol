@@ -9,10 +9,13 @@ import {IRecoveryProvider} from "../interfaces/account-abstraction/IRecoveryProv
 /**
  * @notice The Account Recovery module
  *
- * Contract module which provides a basic account recovery mechanism.
+ * Contract module which provides a basic account recovery mechanism as specified in EIP-7947.
+ * You may use this module as a base contract for your own account recovery mechanism.
  *
  * The Account Recovery module allows to add recovery providers to the account.
  * The recovery providers are used to recover the account ownership.
+ *
+ * For more information please refer to [EIP-7947](https://eips.ethereum.org/EIPS/eip-7947).
  */
 abstract contract AAccountRecovery is IAccountRecovery {
     using EnumerableSet for EnumerableSet.AddressSet;
