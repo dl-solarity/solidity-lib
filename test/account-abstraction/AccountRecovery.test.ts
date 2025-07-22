@@ -102,6 +102,12 @@ describe("AccountRecovery", () => {
         .to.be.revertedWithCustomError(accountRecovery, "ProviderNotRegistered")
         .withArgs(provider2);
     });
+
+    it("should revert if a new owner is zero address", async () => {
+      await expect(
+        accountRecovery.validateRecovery(ethers.ZeroAddress, provider1, RECOVERY_DATA),
+      ).to.be.revertedWithCustomError(accountRecovery, "ZeroAddress");
+    });
   });
 
   describe("recoveryProviderAdded", () => {
