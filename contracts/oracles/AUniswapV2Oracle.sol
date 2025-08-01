@@ -23,7 +23,6 @@ import {ArrayHelper} from "../libs/arrays/ArrayHelper.sol";
 abstract contract AUniswapV2Oracle is Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using ArrayHelper for uint256[];
-    using Math for uint256;
 
     struct PairInfo {
         uint256[] prices0Cumulative;
@@ -120,7 +119,7 @@ abstract contract AUniswapV2Oracle is Initializable {
             address pair_ = $.uniswapV2Factory.getPair(currentToken_, nextToken_);
             uint256 price_ = _getPrice(pair_, currentToken_);
 
-            amount_ = price_.mulDiv(amount_, 2 ** 112);
+            amount_ = Math.mulDiv(price_, amount_, 2 ** 112);
         }
 
         return (amount_, tokenOut_);

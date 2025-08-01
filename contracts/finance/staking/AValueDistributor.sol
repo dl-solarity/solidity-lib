@@ -3,6 +3,8 @@ pragma solidity ^0.8.21;
 
 import {PRECISION} from "../../utils/Globals.sol";
 
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+
 /**
  * @notice The Staking module
  *
@@ -96,10 +98,11 @@ abstract contract AValueDistributor {
         UserDistribution storage userDist = $.userDistributions[user_];
 
         return
-            (userDist.shares *
-                (_getFutureCumulativeSum(block.timestamp) - userDist.cumulativeSum)) /
-            precision() +
-            userDist.owedValue;
+            Math.mulDiv(
+                userDist.shares,
+                _getFutureCumulativeSum(block.timestamp) - userDist.cumulativeSum,
+                precision()
+            ) + userDist.owedValue;
     }
 
     /**
@@ -244,9 +247,11 @@ abstract contract AValueDistributor {
         if (user_ != address(0)) {
             UserDistribution storage _userDist = $.userDistributions[user_];
 
-            _userDist.owedValue +=
-                (_userDist.shares * ($.cumulativeSum - _userDist.cumulativeSum)) /
-                precision();
+            _userDist.owedValue += Math.mulDiv(
+                _userDist.shares,
+                $.cumulativeSum - _userDist.cumulativeSum,
+                precision()
+            );
             _userDist.cumulativeSum = $.cumulativeSum;
         }
     }
@@ -279,7 +284,7 @@ abstract contract AValueDistributor {
 
         uint256 value_ = _getValueToDistribute(timeUpTo_, $.updatedAt);
 
-        return $.cumulativeSum + (value_ * precision()) / $.totalShares;
+        return $.cumulativeSum + Math.mulDiv(value_, precision(), $.totalShares);
     }
 
     function precision() public pure virtual returns (uint256) {
