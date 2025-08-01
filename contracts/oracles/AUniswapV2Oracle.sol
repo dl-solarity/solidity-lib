@@ -345,12 +345,16 @@ abstract contract AUniswapV2Oracle is Initializable {
             if (timestampLast_ != blockTimestamp_) {
                 uint32 timeElapsed_ = blockTimestamp_ - timestampLast_;
 
-                price0Cumulative_ +=
-                    uint256((uint224(reserve1_) << 112) / reserve0_) *
-                    timeElapsed_;
-                price1Cumulative_ +=
-                    uint256((uint224(reserve0_) << 112) / reserve1_) *
-                    timeElapsed_;
+                price0Cumulative_ += Math.mulDiv(
+                    uint256(uint224(reserve1_) << 112),
+                    timeElapsed_,
+                    reserve0_
+                );
+                price1Cumulative_ += Math.mulDiv(
+                    uint256(uint224(reserve0_) << 112),
+                    timeElapsed_,
+                    reserve1_
+                );
             }
         }
     }
