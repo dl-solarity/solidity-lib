@@ -98,7 +98,7 @@ abstract contract AValueDistributor {
         return
             (userDist.shares *
                 (_getFutureCumulativeSum(block.timestamp) - userDist.cumulativeSum)) /
-            PRECISION +
+            precision() +
             userDist.owedValue;
     }
 
@@ -246,7 +246,7 @@ abstract contract AValueDistributor {
 
             _userDist.owedValue +=
                 (_userDist.shares * ($.cumulativeSum - _userDist.cumulativeSum)) /
-                PRECISION;
+                precision();
             _userDist.cumulativeSum = $.cumulativeSum;
         }
     }
@@ -279,7 +279,11 @@ abstract contract AValueDistributor {
 
         uint256 value_ = _getValueToDistribute(timeUpTo_, $.updatedAt);
 
-        return $.cumulativeSum + (value_ * PRECISION) / $.totalShares;
+        return $.cumulativeSum + (value_ * precision()) / $.totalShares;
+    }
+
+    function precision() public pure virtual returns (uint256) {
+        return PRECISION;
     }
 
     /**
