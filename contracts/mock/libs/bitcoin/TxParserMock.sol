@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
-import {BtcTxParser} from "../../../libs/bitcoin/BtcTxParser.sol";
+import {TxParser} from "../../../libs/bitcoin/TxParser.sol";
 
-contract BtcTxParserMock {
-    using BtcTxParser for *;
+contract TxParserMock {
+    using TxParser for *;
 
     function calculateTxId(bytes calldata data_) external pure returns (bytes32) {
         return data_.calculateTxId();
@@ -16,7 +16,7 @@ contract BtcTxParserMock {
 
     function parseBTCTransaction(
         bytes calldata txBytes_
-    ) external pure returns (BtcTxParser.Transaction memory tx_) {
+    ) external pure returns (TxParser.Transaction memory tx_) {
         uint256 consumed_;
         (tx_, consumed_) = txBytes_.parseTransaction();
 
@@ -35,7 +35,7 @@ contract BtcTxParserMock {
     }
 
     function formatTransaction(
-        BtcTxParser.Transaction calldata tx_,
+        TxParser.Transaction calldata tx_,
         bool withWitness_
     ) external pure returns (bytes memory) {
         return tx_.formatTransaction(withWitness_);

@@ -4,11 +4,11 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 import { Reverter } from "@/test/helpers/reverter";
-import { BtcTxParserMock } from "@/generated-types/ethers";
-import { BtcTxParser } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/BtcTxParserMock";
+import { TxParserMock } from "@/generated-types/ethers";
+import { TxParser } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/TxParserMock";
 import { parseCuint, reverseBytes } from "@/test/helpers/bytes-helper";
 
-function showParsedTx(tx: BtcTxParser.TransactionStructOutput) {
+function showParsedTx(tx: TxParser.TransactionStructOutput) {
   console.log("version:", tx.version);
   console.log("inputs:", tx.inputs);
   console.log("outputs:", tx.outputs);
@@ -16,14 +16,14 @@ function showParsedTx(tx: BtcTxParser.TransactionStructOutput) {
   console.log("hasWitness:", tx.hasWitness);
 }
 
-function formatOutput(tx: BtcTxParser.TransactionStructOutput, index: number) {
+function formatOutput(tx: TxParser.TransactionStructOutput, index: number) {
   return {
     value: tx.outputs[index].value,
     script: tx.outputs[index].script,
   };
 }
 
-function formatInput(tx: BtcTxParser.TransactionStructOutput, index: number) {
+function formatInput(tx: TxParser.TransactionStructOutput, index: number) {
   return {
     previousHash: tx.inputs[index].previousHash,
     previousIndex: tx.inputs[index].previousIndex,
@@ -33,7 +33,7 @@ function formatInput(tx: BtcTxParser.TransactionStructOutput, index: number) {
   };
 }
 
-function formatTx(tx: BtcTxParser.TransactionStructOutput) {
+function formatTx(tx: TxParser.TransactionStructOutput) {
   const inputs = [];
   const outputs = [];
 
@@ -54,18 +54,18 @@ function formatTx(tx: BtcTxParser.TransactionStructOutput) {
   };
 }
 
-describe("BTC Transaction Parser", () => {
+describe("Transaction Parser", () => {
   const reverter = new Reverter();
 
   let OWNER: SignerWithAddress;
 
-  let btc: BtcTxParserMock;
+  let btc: TxParserMock;
 
   before(async () => {
     [OWNER] = await ethers.getSigners();
 
-    const BtcTxParserMock = await ethers.getContractFactory("BtcTxParserMock");
-    btc = await BtcTxParserMock.deploy();
+    const TxParserMock = await ethers.getContractFactory("TxParserMock");
+    btc = await TxParserMock.deploy();
 
     await reverter.snapshot();
   });

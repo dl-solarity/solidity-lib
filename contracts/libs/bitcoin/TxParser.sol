@@ -9,7 +9,7 @@ import {EndianConverter} from "../utils/EndianConverter.sol";
  * @notice A library for parsing Bitcoin transactions.
  * Provides functions for parsing, formatting, and transaction ID calculation
  */
-library BtcTxParser {
+library TxParser {
     using LibBytes for bytes;
     using EndianConverter for *;
 
