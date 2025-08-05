@@ -1,6 +1,6 @@
 import { BigNumberish } from "ethers";
 
-export type BlockHeaderData = {
+export type HeaderData = {
   height: BigNumberish;
   blockHash: string;
   rawHeader: string;

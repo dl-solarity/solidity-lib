@@ -6,6 +6,7 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { Reverter } from "@/test/helpers/reverter";
 import { BtcTxParserMock } from "@/generated-types/ethers";
 import { BtcTxParser } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/BtcTxParserMock";
+import { parseCuint, reverseBytes } from "@/test/helpers/bytes-helper";
 
 function showParsedTx(tx: BtcTxParser.TransactionStructOutput) {
   console.log("version:", tx.version);
@@ -13,6 +14,44 @@ function showParsedTx(tx: BtcTxParser.TransactionStructOutput) {
   console.log("outputs:", tx.outputs);
   console.log("locktime:", tx.locktime);
   console.log("hasWitness:", tx.hasWitness);
+}
+
+function formatOutput(tx: BtcTxParser.TransactionStructOutput, index: number) {
+  return {
+    value: tx.outputs[index].value,
+    script: tx.outputs[index].script,
+  };
+}
+
+function formatInput(tx: BtcTxParser.TransactionStructOutput, index: number) {
+  return {
+    previousHash: tx.inputs[index].previousHash,
+    previousIndex: tx.inputs[index].previousIndex,
+    sequence: tx.inputs[index].sequence,
+    script: tx.inputs[index].script,
+    witnesses: [...tx.inputs[index].witnesses],
+  };
+}
+
+function formatTx(tx: BtcTxParser.TransactionStructOutput) {
+  const inputs = [];
+  const outputs = [];
+
+  for (let i = 0; i < tx.inputs.length; i++) {
+    inputs.push(formatInput(tx, i));
+  }
+
+  for (let i = 0; i < tx.outputs.length; i++) {
+    outputs.push(formatOutput(tx, i));
+  }
+
+  return {
+    inputs: inputs,
+    outputs: outputs,
+    version: tx.version,
+    locktime: tx.locktime,
+    hasWitness: tx.hasWitness,
+  };
 }
 
 describe("BTC Transaction Parser", () => {
@@ -33,6 +72,30 @@ describe("BTC Transaction Parser", () => {
 
   afterEach(reverter.revert);
 
+  describe("#calculateTxId", () => {
+    it("should calculate correctly", async () => {
+      let rawTx =
+        "0x01000000013652ebc8c4efec4015c4c2e6f7f693bf5307bcc68f59510957e302b89208eb0c060000006a47304402202955e3df921fa6893b898db5117ec92441757d90b485ed3015d427a1aa7631a6022063859ae9fb657b3ceb28c1771076da62e967b3872db6599a08ac982f62ef67810121037a35df3a9314039a2361bd37df3ee846c7a259a7c83f522704517bb7e8748f1effffffff0138ed000000000000160014b9edb07641abc03085f3971e48c6cafbdc854baf00000000";
+
+      let expectedTxid = reverseBytes("0x16a7875987d0be57af2283de4c38f0f4b1ad9c65b936cbc36e101665d8dff891");
+      let txid = await btc.calculateTxId(rawTx);
+
+      expect(txid).to.be.eq(expectedTxid);
+    });
+  });
+
+  describe("#calculateWTxId", () => {
+    it("should calculate correctly", async () => {
+      let rawTx =
+        "0x0200000000010170b05de09b7b57a609b1617c8cb1bbc5f32140bafa238f3340793897c3f2a59c5100000000ffffffff016c440e00000000001976a9149c08058bf18404fe70150761e0f4f786e733b7b688ac0247304402204dca07b9de6aa7ea42dc13cfa261360fbfb807b7bcc94657781c4308a5c40ce902207b3d5e987a3b06c3c0d3d44d79751fd52969056cec0595e36140c7dbd0f4a1f60121026387d8d68fb3deafce92b5d8a0295691edfc131d6568c59c4ed56fabf5ee1a1000000000";
+
+      let expectedWTxid = reverseBytes("0x35308e2c6ccc530a1fa25ef41c8d00e60ff556d060b885ac915c052d075b728d");
+      let wtxid = await btc.calculateWTxId(rawTx);
+
+      expect(wtxid).to.be.eq(expectedWTxid);
+    });
+  });
+
   describe("#parse", () => {
     it("should parse correctly", async () => {
       let tx = await btc.parseBTCTransaction(
@@ -40,6 +103,7 @@ describe("BTC Transaction Parser", () => {
       );
 
       showParsedTx(tx);
+      //todo: more fields
 
       expect(tx.version).to.be.eq(1);
       expect(tx.hasWitness).to.be.true;
@@ -77,84 +141,114 @@ describe("BTC Transaction Parser", () => {
   });
 
   describe("#format", () => {
-    it("formatTransactionInput", async () => {
-      let originalInput0 = "0xac25a2dde5cae58b8f486495fcb91833767dc6fcc41e29dde07a26e3bdd892314100000000fdffffff";
-      let tx = await btc.parseBTCTransaction(
-        "0x01000000000101ac25a2dde5cae58b8f486495fcb91833767dc6fcc41e29dde07a26e3bdd892314100000000fdffffff026504000000000000160014806a28235d319ec80b2d6a32d725381acabd347b0000000000000000116a5d0eff7f818cec82d08bc0a88281d2150140240b847cd78c8803cee41f708e154345ba07adde2af6e2fdc66453678d681b76a2a499a37b5ab3e4414c1360fc0552206350744eeeea4b1e9c35f8f08bdc3b8900000000",
-      );
+    it("formatTransaction", async () => {
+      let rawTx =
+        "0x01000000000101cf337081287de9b93bb8ea17fbaf80e38f24389ab1f5b5519394741e1d91d34d0200000000ffffffff04c7e70800000000001976a914c250b1198b5770a2d00365f0b1660906ddc459e488ac524504000000000017a914c7f0b23c10270adefbe5d2c07b91c281172ca910874cc10100000000001600144d0e22355a0a85c735cd1292ce25dae949f4b538bbd9ea0200000000160014af6aa4350ca438793fa8fc965661df5e4b311640024730440220749a385c9fc2d32728ac4c0ac338ef1ec74a279f8c49677b745e0e6ee55aadad02202f0b7f72980cca5992bfd47a872592cb23bf23cf801e5403f688648feda44f77012103cbb1ede1735af832852b78ebbe9afaf38d233fbaeffe1d90dfb87bbd5a70e14300000000";
 
-      let input0Parsed = {
-        previousHash: tx.inputs[0].previousHash,
-        previousIndex: tx.inputs[0].previousIndex,
-        sequence: tx.inputs[0].sequence,
-        script: tx.inputs[0].script,
-        witnesses: [...tx.inputs[0].witnesses],
-      };
+      let tx = await btc.parseBTCTransaction(rawTx);
 
-      expect(await btc.formatTransactionInput(input0Parsed)).to.be.eq(originalInput0);
+      let formattedTx = await btc.formatTransaction(formatTx(tx), tx.hasWitness);
 
-      const txWithScript =
-        "0x02000000072a36b8c4bea06fa980f11774a9db8c50911ab263382a7920123266e07e7dea1a000000006a47304402202c1caf8fa24dd1818fb423502c1ac00a1320ef30c2f9a3e0f987c8dd5865056f02206628632d51b3adcf1c94284a853ec853e1c6ca27864106b3611612b34636175c012103581ea6d3b0666ce712ff7697043a0085e4fc52e10fe819b32b6f7bec5c10164ffdffffff0e94ad3b3623e22b9e7c520f587f19636d978eaf42f2547c914f294202c81655010000006a47304402200b667ef3b76f5ad125fafe732857305f64d19ba9557764afb4ccdb38848de40602207f285a5270cc259cd3140c9b923967f7ab985fa412de6395aec4b6e214b4946e01210356dc58d43a2d2558832c97ce8b2dedfee42aa64a7b2ad279a3738f5d4b9abb7bfdffffffc4bc9a85db21efd8b5c9fae9c4dccd57e7ba79e1110fa5dde32e99e870543156000000006a47304402207a82f741e40510e229c7c76f8cc39e669c3f4381ab58b5abe02d355ecbde3d2802205675a6a23bd601f9d6ca9d1ca22b317985de6e99e14991b9ade44331404d00b5012103ae0db296ccb9b4b9bec08874ac452845777f77cc9d0f5cd77cc70d9db20bd031fdffffff8ac8f75df1a18e87c3589b2c7095f2e4935c7acfc28f53a565d799744771296f000000006a4730440220206887979f1b1af6168e6cbdb6185bf21a140e3d30c69abbaf470251baf58d2d0220683366a718b5436b74ff2366c3919b8359bea32e3b3ec9d0d54b8ae3c758da86012103ac68ec6bffa573aef22873989b0a703adf73b44c02097885e1afb53f463a3ad8fdffffffc8c380d96f52e37aa2582b4c7856abf402e18be753c7e35f6178cebf5fa8b793000000006a473044022063843a0fb2420c37d14d4741be1da0f709998031cf071f4991a6cba7c6f3283a02202d159254cadfda23bb8d35d77212c9dba139dee7ce351fda0878ed5e4b950d55012103e1d81aced6558aecc226720d8e83b0eba3903f7db4223c12024731ee0432c18cfdffffff12ef772edcf67f70c26818840bf22a03d9fd0bc3eaaef0d4b5094b52508de793000000006a473044022076c8ad98446684787a6d4936c7ce06e7c0ea888cf6cb6c978960e73baae2450202200695b30aa8399d479bbf10d45e5a117108ae37fc71289f88e8d5c9ee6ca9081c012102b8bf904223d8c222e7482f6c8634d907147743ad79b38d48aaf60758c6cc9715fdffffff1296f9db6929240f4b2ed97f8a5bce3516ad6d2174696361e908aef1168abccb000000006a4730440220732346d671f9b37277cea31442746e12caba6edf60293a2ff3a754d58c201969022042c3a98ce1da779d821cdc332d1077305ff33ef4d24b51a198949bbf2cb67d29012103581ea6d3b0666ce712ff7697043a0085e4fc52e10fe819b32b6f7bec5c10164ffdffffff02cc880500000000001976a914f5f0fff638ce7ecaa94b8d728ea3506e7e598edd88ac78a99c000000000016001424cf6cc7b9b17d3a65ce1d2528ce4e7c7db2059bdbc80d00";
-      originalInput0 =
-        "0x2a36b8c4bea06fa980f11774a9db8c50911ab263382a7920123266e07e7dea1a000000006a47304402202c1caf8fa24dd1818fb423502c1ac00a1320ef30c2f9a3e0f987c8dd5865056f02206628632d51b3adcf1c94284a853ec853e1c6ca27864106b3611612b34636175c012103581ea6d3b0666ce712ff7697043a0085e4fc52e10fe819b32b6f7bec5c10164ffdffffff";
+      expect(formattedTx).to.be.eq(rawTx);
 
-      tx = await btc.parseBTCTransaction(txWithScript);
+      rawTx =
+        "0x0200000001273ad5266d581ad7d22d7292d63646884da6b2e057655ca5e5ef3bb725539385010000006b483045022100feb480f5d8a8db40fc7584d0f66bcc1234f8d153d935aca854b2ae9fd12075100220712b5d66eacd9784e7464c3c86182d1c82cdfce66f83f8390fbf88a9a3d44d600121038a460a2d12fabe8b0b6a4252cee64984720e7bde699cd3099c741d7b04de4eb9fdffffff01effa4300000000001976a9145e44821c5abd14e2162bc25449ff9835a5ba388288ac00000000";
 
-      input0Parsed = {
-        previousHash: tx.inputs[0].previousHash,
-        previousIndex: tx.inputs[0].previousIndex,
-        sequence: tx.inputs[0].sequence,
-        script: tx.inputs[0].script,
-        witnesses: [...tx.inputs[0].witnesses],
-      };
+      tx = await btc.parseBTCTransaction(rawTx);
 
-      expect(await btc.formatTransactionInput(input0Parsed)).to.be.eq(originalInput0);
+      formattedTx = await btc.formatTransaction(formatTx(tx), tx.hasWitness);
+
+      expect(formattedTx).to.be.eq(rawTx);
+
+      rawTx =
+        "0x010000000bf6caa9c815d7057191fe101dcec19da5dc9aa130b7713005d1df1c36af0280f2000000006a473044022005c059272466eb985d7423242efb654b091d6f4f7ac6f22006a873abb5769f7d02201c37aad50ffcb5fd2ad4df83f722351ae0825345d5940400da2777c3c026462201210396caf2fc5b7526975c452d665804457fd287c73e25a0025fe59dd88a61c735dbfdfffffffc03f549b6e4dd9026194ca7696ce69062b86a14112f92b77f22f5d0a55e7496000000006b483045022100b00df4b0578ec22f76a368ddd9e2e7f6003e6ee7a5063d90e2b78e0829b555450220164f295fe4303bfc4a916945830ea7012bcb0d545c8e3610556e47d0a70d2c1801210396caf2fc5b7526975c452d665804457fd287c73e25a0025fe59dd88a61c735dbfdffffff1b36def255bef66962cd2adee199e03a63b0933a6c36ddd4f44e00953b39cc8a000000006a4730440220716c12d017cd42b646e3a7c324387660f65309aec185f92c25acf8631a10848802204e4e4c92656676f0add33dfab458c7abce4536a9f6ed00e2f5eac1173da9c1ca01210396caf2fc5b7526975c452d665804457fd287c73e25a0025fe59dd88a61c735dbfdffffff154342956fb660c595dfb3a49515ffa99f680c5c1908c9f2e0c8abb4f444eb76000000006a47304402203dc44ca8ae7e61c2757e87af7f087122c0ae81541e3379a9b105f13bd24bf8e102206da4f3113cc0f0bb823bdc45cbb8361f74857e0362403e0b019e653aaa3672ac01210396caf2fc5b7526975c452d665804457fd287c73e25a0025fe59dd88a61c735dbfdffffff92cc0b1d060a7048f1e71974d72912edcebf1c8c3cff6d2226c59a8e305aa54e000000006b4830450221008ebedcf877d2a5d4d4adc59daee2ce972c02e59512d73b645f2c321b2002b8b3022053a36c479a7d0a7387886032279b85e6277134131847d3c561502bd9c0e47f7401210396caf2fc5b7526975c452d665804457fd287c73e25a0025fe59dd88a61c735dbfdffffffb42446198aa01d8fb3fdcff38c1aa2cb03293ca5c509a1f5f07dd38885e9c525000000006b483045022100bd0391fd59fdc8f3ea8bef09bd322cb39a3ef25f77ab86af14d35b471e0fecb002203b82882c23b36861c5b5d45f41ad563546e66a148bdca06d11fbdf23026cef4101210396caf2fc5b7526975c452d665804457fd287c73e25a0025fe59dd88a61c735dbfdffffff0ea5f647befb4e34ba1347a9efeeb4710db23cfd2b830935e47fded7357a4571000000006b4830450221009c997e6005b6d8463c9f340f631970f6cfdc6d5e0ab8c7d8019afb2e4e2cb3910220391e2d4e8dfa5c676354171984fc34e871c16538692b1997b983209fd429cefa01210396caf2fc5b7526975c452d665804457fd287c73e25a0025fe59dd88a61c735dbfdffffffc829b7c94a70537070321ff032d0cddae5d78933d272ceee9f91254747f9ae02000000006b4830450221009707a956c94fb829e1c14e050e2e2e925b5f9b5a9b5c739d866d54e8948a4d2e02202f05e24b2f0233248da3bac6343abd16e23da5a158f8431be8c05b81be4c154a01210396caf2fc5b7526975c452d665804457fd287c73e25a0025fe59dd88a61c735dbfdffffffe10f5908aabd33c577ba73755b0fc59c66e565b2f9bd282af7506f9371df211a000000006a47304402201068855260c6b16ef60684b6e367b0d0ce0c9cc190bc6fae8c8cf7c482b1b2b7022033e70897218c69283bdb5315bd7181cf96862bec5c6b9a1f7ee13e799e4ac44801210396caf2fc5b7526975c452d665804457fd287c73e25a0025fe59dd88a61c735dbfdffffffc594e81017f56f33596cf9d42ae6b5a728065179d2c7bc38c3f25c0a3af0290c000000006b483045022100f5d65b52b02b85313ce8d6f0f2299f0205ffc273580974e87c0d4ed0ff6c7d3d02204b8c0c4d115084c3e3b29b79b51938ed763124fadc96b9e75bdfa04ecb4dbbcf01210396caf2fc5b7526975c452d665804457fd287c73e25a0025fe59dd88a61c735dbfdffffff3f6f1f62b719cb7387a9b5b54107fda30d520c7b7312604ac178806ce4299356000000006a4730440220308fc668fd22354c50cd93af6b9cfa02fc444b3476b17f9191f7d1f23a360fbf022019a55dfca913e2ba1ce5a8c10047ea5bc726cba4046c306da89cdffd8d954c3a01210396caf2fc5b7526975c452d665804457fd287c73e25a0025fe59dd88a61c735dbfdffffff03e6d3fc050000000017a9149f95ba786db3afb2052804ea7945c3e5479bd07487e34205000000000017a9149baa094d1a9f68c22f49228a760bb73695cbfa3a87c86a010000000000160014742d660d7077258430040c0fe114d6490cee7cc300000000";
+
+      tx = await btc.parseBTCTransaction(rawTx);
+
+      formattedTx = await btc.formatTransaction(formatTx(tx), tx.hasWitness);
+
+      expect(formattedTx).to.be.eq(rawTx);
     });
 
-    it("formatTransactionOutput", async () => {
-      const originalOutput0 = "0x6504000000000000160014806a28235d319ec80b2d6a32d725381acabd347b";
-      const originalOutput1 = "0x0000000000000000116a5d0eff7f818cec82d08bc0a88281d215";
+    it("formatCuint", async () => {
+      let inputNumber = "0xfd0001";
+      let parsed = await btc.parseCuint(inputNumber, 0);
 
-      const tx = await btc.parseBTCTransaction(
-        "0x01000000000101ac25a2dde5cae58b8f486495fcb91833767dc6fcc41e29dde07a26e3bdd892314100000000fdffffff026504000000000000160014806a28235d319ec80b2d6a32d725381acabd347b0000000000000000116a5d0eff7f818cec82d08bc0a88281d2150140240b847cd78c8803cee41f708e154345ba07adde2af6e2fdc66453678d681b76a2a499a37b5ab3e4414c1360fc0552206350744eeeea4b1e9c35f8f08bdc3b8900000000",
-      );
+      let formatted = await btc.formatCuint(parsed[0]);
 
-      const output0Parsed = {
-        value: tx.outputs[0].value,
-        script: tx.outputs[0].script,
-      };
+      expect(formatted).to.be.eq(inputNumber);
 
-      const output1Parsed = {
-        value: tx.outputs[1].value,
-        script: tx.outputs[1].script,
-      };
+      inputNumber = "0xfeffffffff";
+      parsed = await btc.parseCuint(inputNumber, 0);
 
-      expect(await btc.formatTransactionOutput(output0Parsed)).to.be.eq(originalOutput0);
-      expect(await btc.formatTransactionOutput(output1Parsed)).to.be.eq(originalOutput1);
+      formatted = await btc.formatCuint(parsed[0]);
+
+      expect(formatted).to.be.eq(inputNumber);
+
+      inputNumber = "0xfeff0f14fa";
+      parsed = await btc.parseCuint(inputNumber, 0);
+
+      formatted = await btc.formatCuint(parsed[0]);
+
+      expect(formatted).to.be.eq(inputNumber);
+
+      inputNumber = "0xffffffffffffffffff";
+      parsed = await btc.parseCuint(inputNumber, 0);
+
+      formatted = await btc.formatCuint(parsed[0]);
+
+      expect(formatted).to.be.eq(inputNumber);
+
+      inputNumber = "0xff01ffbf07efffaafd";
+      parsed = await btc.parseCuint(inputNumber, 0);
+
+      formatted = await btc.formatCuint(parsed[0]);
+
+      expect(formatted).to.be.eq(inputNumber);
     });
   });
 
   describe("#parseCuint", () => {
     it("should parse correctly", async () => {
-      const cuint = "0x03";
+      let inputNumber = "0xfd0001";
+      let parsed = await btc.parseCuint(inputNumber, 0);
 
-      let parsed = await btc.parseCuint(cuint, 0);
-      expect(parsed).to.be.deep.eq([3, 1]);
+      let [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
 
-      const cuint2 = "0xfd0001";
+      expect(parsed[0]).to.be.eq(expectedNumber);
+      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
 
-      parsed = await btc.parseCuint(cuint2, 0);
-      expect(parsed).to.be.deep.eq([256, 3]);
+      inputNumber = "0xfeffffffff";
+      parsed = await btc.parseCuint(inputNumber, 0);
 
-      const cuint3 = "0xfe01000000";
+      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
 
-      parsed = await btc.parseCuint(cuint3, 0);
-      expect(parsed).to.be.deep.eq([1, 5]);
+      expect(parsed[0]).to.be.eq(expectedNumber);
+      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
 
-      const cuint4 = "0xff0010000000000000";
+      inputNumber = "0xfeff0f14fa";
+      parsed = await btc.parseCuint(inputNumber, 0);
 
-      parsed = await btc.parseCuint(cuint4, 0);
-      expect(parsed).to.be.deep.eq([4096, 9]);
+      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
+
+      expect(parsed[0]).to.be.eq(expectedNumber);
+      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
+
+      inputNumber = "0xffffffffffffffffff";
+      parsed = await btc.parseCuint(inputNumber, 0);
+
+      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
+
+      expect(parsed[0]).to.be.eq(expectedNumber);
+      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
+
+      inputNumber = "0xff01ffbf07efffaafd";
+      parsed = await btc.parseCuint(inputNumber, 0);
+
+      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
+
+      expect(parsed[0]).to.be.eq(expectedNumber);
+      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
     });
   });
 });

@@ -3,9 +3,9 @@ import path from "path";
 import { expect } from "chai";
 import { randomInt } from "crypto";
 
-import { BlockHeaderData } from "./types";
-import { BlockHeaderDataStructOutput } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/BlockHeaderMock";
+import { HeaderData } from "./types";
 import { reverseBytes } from "./bytes-helper";
+import { BlockHeader } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/BlockHeaderMock";
 
 export function getRandomBlockHeaderData(pathToDataFile: string, minHeight: number, maxHeight: number) {
   const randHeight = randomInt(minHeight, maxHeight + 1);
@@ -17,16 +17,16 @@ export function getBlocksDataFilePath(fileName: string): string {
   return path.join(__dirname, "../libs/bitcoin/data", fileName);
 }
 
-export function getBlockHeaderData(pathToDataFile: string, height: number): BlockHeaderData {
-  const allBlocksDataArr = JSON.parse(fs.readFileSync(pathToDataFile, "utf-8")) as BlockHeaderData[];
+export function getBlockHeaderData(pathToDataFile: string, height: number): HeaderData {
+  const allBlocksDataArr = JSON.parse(fs.readFileSync(pathToDataFile, "utf-8")) as HeaderData[];
   const firstElementHeight = allBlocksDataArr[0].height;
 
   return formatBlockHeaderData(allBlocksDataArr[height - Number(firstElementHeight)]);
 }
 
 export function checkBlockHeaderData(
-  actualBlockHeaderData: BlockHeaderDataStructOutput,
-  expectedBlockHeaderData: BlockHeaderData,
+  actualBlockHeaderData: BlockHeader.HeaderDataStruct,
+  expectedBlockHeaderData: HeaderData,
 ) {
   expect(actualBlockHeaderData.version).to.be.eq(expectedBlockHeaderData.parsedBlockHeader.version);
   expect(actualBlockHeaderData.bits).to.be.eq(expectedBlockHeaderData.parsedBlockHeader.bits);
@@ -37,8 +37,8 @@ export function checkBlockHeaderData(
 }
 
 export function checkBlockHeaderDataDiffEncodings(
-  actualBlockHeaderData: BlockHeaderDataStructOutput,
-  expectedBlockHeaderData: BlockHeaderData,
+  actualBlockHeaderData: BlockHeader.HeaderDataStruct,
+  expectedBlockHeaderData: HeaderData,
 ) {
   expect(actualBlockHeaderData.version).to.be.eq(expectedBlockHeaderData.parsedBlockHeader.version);
   expect(actualBlockHeaderData.bits).to.be.eq(reverseBytes(expectedBlockHeaderData.parsedBlockHeader.bits));
@@ -50,7 +50,7 @@ export function checkBlockHeaderDataDiffEncodings(
   expect(actualBlockHeaderData.time).to.be.eq(expectedBlockHeaderData.parsedBlockHeader.time);
 }
 
-export function formatBlockHeaderData(headerData: BlockHeaderData): BlockHeaderData {
+export function formatBlockHeaderData(headerData: HeaderData): HeaderData {
   headerData.blockHash = addHexPrefix(headerData.blockHash);
   headerData.rawHeader = addHexPrefix(headerData.rawHeader);
   headerData.parsedBlockHeader.hash = addHexPrefix(headerData.parsedBlockHeader.hash);

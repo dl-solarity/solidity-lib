@@ -34,13 +34,13 @@ library TxMerkleProof {
      */
     function verify(
         bytes32[] calldata proof_,
-        HashDirection[] calldata directions_,
+        bytes32 root_,
         bytes32 leaf_,
-        bytes32 root_
+        HashDirection[] calldata directions_
     ) internal pure returns (bool) {
         if (directions_.length != proof_.length) revert InvalidLengths();
 
-        return processProof(proof_, directions_, leaf_) == root_;
+        return processProof(proof_, leaf_, directions_) == root_;
     }
 
     /**
@@ -54,8 +54,8 @@ library TxMerkleProof {
      */
     function processProof(
         bytes32[] calldata proof_,
-        HashDirection[] calldata directions_,
-        bytes32 leaf_
+        bytes32 leaf_,
+        HashDirection[] calldata directions_
     ) internal pure returns (bytes32) {
         bytes32 computedHash_ = leaf_;
         uint256 proofLength_ = proof_.length;

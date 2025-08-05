@@ -29,6 +29,10 @@ library EndianConverter {
         return abi.encodePacked(leBytes32ToUint256(input_));
     }
 
+    function reverseUint16(uint16 input_) internal pure returns (uint16) {
+        return ((input_ & 0x00FF) << 8) | ((input_ & 0xFF00) >> 8);
+    }
+
     /**
      * @notice Converts between little-endian and big-endian formats
      * @param input_ The uint32 to reverse
@@ -40,6 +44,38 @@ library EndianConverter {
             ((input_ & 0x0000FF00) << 8) |
             ((input_ & 0x00FF0000) >> 8) |
             ((input_ & 0xFF000000) >> 24);
+    }
+
+    function reverseUint64(uint64 input_) internal pure returns (uint64) {
+        return
+            ((input_ & 0x00000000000000FF) << 56) |
+            ((input_ & 0x000000000000FF00) << 40) |
+            ((input_ & 0x0000000000FF0000) << 24) |
+            ((input_ & 0x00000000FF000000) << 8) |
+            ((input_ & 0x000000FF00000000) >> 8) |
+            ((input_ & 0x0000FF0000000000) >> 24) |
+            ((input_ & 0x00FF000000000000) >> 40) |
+            ((input_ & 0xFF00000000000000) >> 56);
+    }
+
+    function reverseUint128(uint128 input_) internal pure returns (uint128) {
+        return
+            ((input_ & 0x000000000000000000000000000000FF) << 120) |
+            ((input_ & 0x0000000000000000000000000000FF00) << 104) |
+            ((input_ & 0x00000000000000000000000000FF0000) << 88) |
+            ((input_ & 0x000000000000000000000000FF000000) << 72) |
+            ((input_ & 0x0000000000000000000000FF00000000) << 56) |
+            ((input_ & 0x00000000000000000000FF0000000000) << 40) |
+            ((input_ & 0x000000000000000000FF000000000000) << 24) |
+            ((input_ & 0x0000000000000000FF00000000000000) << 8) |
+            ((input_ & 0x00000000000000FF0000000000000000) >> 8) |
+            ((input_ & 0x000000000000FF000000000000000000) >> 24) |
+            ((input_ & 0x0000000000FF00000000000000000000) >> 40) |
+            ((input_ & 0x00000000FF0000000000000000000000) >> 56) |
+            ((input_ & 0x000000FF000000000000000000000000) >> 72) |
+            ((input_ & 0x0000FF00000000000000000000000000) >> 88) |
+            ((input_ & 0x00FF0000000000000000000000000000) >> 104) |
+            ((input_ & 0xFF000000000000000000000000000000) >> 120);
     }
 
     /**
@@ -79,25 +115,6 @@ library EndianConverter {
     }
 
     /**
-     * @notice Converts array of bytes in little-endian encoding to big-endian uint32
-     * @return The uint32 result
-     */
-    function leBytes1ToUint32(
-        bytes1 byte1,
-        bytes1 byte2,
-        bytes1 byte3,
-        bytes1 byte4
-    ) internal pure returns (uint32) {
-        return
-            uint32(
-                uint8(byte1) |
-                    (uint256(uint8(byte2)) << 8) |
-                    (uint256(uint8(byte3)) << 16) |
-                    (uint256(uint8(byte4)) << 24)
-            );
-    }
-
-    /**
      * @notice Converts uint32 to little-endian bytes
      * @param input_ The uint32 to convert
      * @return The bytes in little-endian encoding
@@ -107,11 +124,11 @@ library EndianConverter {
     }
 
     /**
-     * @notice Converts int64 to little-endian bytes
-     * @param input_ The int64 to convert
+     * @notice Converts uint64 to little-endian bytes
+     * @param input_ The uint64 to convert
      * @return The bytes in little-endian encoding
      */
-    function int64ToBytesLE(int64 input_) internal pure returns (bytes memory) {
-        return (abi.encodePacked(uint256(uint64(input_)).reverseBytes())).slice(0, 8);
+    function uint64ToBytesLE(uint64 input_) internal pure returns (bytes memory) {
+        return (abi.encodePacked(uint256(input_).reverseBytes())).slice(0, 8);
     }
 }

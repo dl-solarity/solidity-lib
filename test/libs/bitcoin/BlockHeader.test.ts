@@ -30,11 +30,11 @@ describe("BlockHeader", () => {
 
   afterEach(reverter.revert);
 
-  describe("#parseBlockHeaderData", () => {
+  describe("#parseBlockHeader", () => {
     it("should correctly parse block header data to big-endian format", async () => {
       for (let i = 0; i < 10; ++i) {
         const blockData = getRandomBlockHeaderData(blocksDataFilePath, 1, 10000);
-        const parsedResult = await blockHeaderLib.parseBlockHeaderData(blockData.rawHeader, true);
+        const parsedResult = await blockHeaderLib.parseBlockHeader(blockData.rawHeader, true);
 
         expect(parsedResult[1]).to.be.eq(blockData.blockHash);
         checkBlockHeaderData(parsedResult[0], blockData);
@@ -44,7 +44,7 @@ describe("BlockHeader", () => {
     it("should correctly parse block header data to little-endian format", async () => {
       for (let i = 0; i < 10; ++i) {
         const blockData = getRandomBlockHeaderData(blocksDataFilePath, 1, 10000);
-        const parsedResult = await blockHeaderLib.parseBlockHeaderData(blockData.rawHeader, false);
+        const parsedResult = await blockHeaderLib.parseBlockHeader(blockData.rawHeader, false);
 
         expect(parsedResult[1]).to.be.eq(reverseBytes(blockData.blockHash));
         checkBlockHeaderDataDiffEncodings(parsedResult[0], blockData);
@@ -53,7 +53,7 @@ describe("BlockHeader", () => {
 
     it("should get exception if try to pass invalid block header raw data", async () => {
       await expect(
-        blockHeaderLib.parseBlockHeaderData(
+        blockHeaderLib.parseBlockHeader(
           "0x01000000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e36299",
           false,
         ),

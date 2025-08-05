@@ -36,9 +36,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot1),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
     });
@@ -53,9 +53,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot943),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
     });
@@ -70,9 +70,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot943),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
     });
@@ -87,9 +87,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot546),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
     });
@@ -104,9 +104,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot586),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
     });
@@ -121,9 +121,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot586),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
     });
@@ -140,9 +140,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot2812),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -155,9 +155,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot2812),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -170,9 +170,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot2812),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -185,9 +185,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot2812),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -200,9 +200,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot2812),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -215,9 +215,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot2812),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
     });
@@ -225,7 +225,7 @@ describe("TxMerkleProof", () => {
     it("should revert if proof and directions have different lengths", async () => {
       const txid = "0x0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098";
 
-      await expect(txMerkleProof.verify([], [1], txid, txid)).to.be.revertedWithCustomError(
+      await expect(txMerkleProof.verify([], txid, txid, [1])).to.be.revertedWithCustomError(
         txMerkleProof,
         "InvalidLengths",
       );
@@ -242,9 +242,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          wrongTxId,
           reverseBytes(merkleRoot586),
+          wrongTxId,
+          parser.getDirections(),
         ),
       ).to.be.false;
     });
@@ -261,9 +261,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot802368),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -276,9 +276,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot802368),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -291,9 +291,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot802368),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -306,9 +306,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot802368),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -321,9 +321,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot802368),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -336,9 +336,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot802368),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -351,9 +351,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot802368),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -366,9 +366,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot802368),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
 
@@ -381,9 +381,9 @@ describe("TxMerkleProof", () => {
       expect(
         await txMerkleProof.verify(
           parser.getSortedHashes(),
-          parser.getDirections(),
-          parser.getTxidReversed(),
           reverseBytes(merkleRoot802368),
+          parser.getTxidReversed(),
+          parser.getDirections(),
         ),
       ).to.be.true;
     });

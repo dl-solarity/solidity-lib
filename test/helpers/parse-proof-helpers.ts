@@ -26,20 +26,20 @@ export class MerkleRawProofParser {
 
     offset += hashCountSize;
 
-    const rawHashes = withoutHeader.slice(offset, offset + hashCount * 64);
+    const rawHashes = withoutHeader.slice(offset, offset + Number(hashCount) * 64);
 
     this.hashes = [];
     for (let i = 0; i < hashCount; i++) {
       this.hashes.push("0x" + rawHashes.slice(i * 64, (i + 1) * 64));
     }
 
-    offset = offset + hashCount * 64;
+    offset = offset + Number(hashCount) * 64;
 
     const [byteFlagsCount, byteFlagsCountSize] = parseCuint(withoutHeader, offset);
 
     offset += byteFlagsCountSize;
 
-    const byteFlags = withoutHeader.slice(offset, offset + 2 * byteFlagsCount);
+    const byteFlags = withoutHeader.slice(offset, offset + 2 * Number(byteFlagsCount));
 
     this.flagPath = this.processFlags(byteFlags);
     this.maxDepth = Math.ceil(Math.log2(this.txCountInBlock));

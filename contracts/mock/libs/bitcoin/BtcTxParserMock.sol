@@ -6,6 +6,14 @@ import {BtcTxParser} from "../../../libs/bitcoin/BtcTxParser.sol";
 contract BtcTxParserMock {
     using BtcTxParser for *;
 
+    function calculateTxId(bytes calldata data_) external pure returns (bytes32) {
+        return data_.calculateTxId();
+    }
+
+    function calculateWTxId(bytes calldata data_) external pure returns (bytes32) {
+        return data_.calculateWTxId();
+    }
+
     function parseBTCTransaction(
         bytes calldata txBytes_
     ) external pure returns (BtcTxParser.Transaction memory tx_) {
@@ -26,15 +34,10 @@ contract BtcTxParserMock {
         return value_.formatCuint();
     }
 
-    function formatTransactionInput(
-        BtcTxParser.TransactionInput calldata input_
+    function formatTransaction(
+        BtcTxParser.Transaction calldata tx_,
+        bool withWitness_
     ) external pure returns (bytes memory) {
-        return input_.formatTransactionInput();
-    }
-
-    function formatTransactionOutput(
-        BtcTxParser.TransactionOutput calldata output_
-    ) external pure returns (bytes memory) {
-        return output_.formatTransactionOutput();
+        return tx_.formatTransaction(withWitness_);
     }
 }

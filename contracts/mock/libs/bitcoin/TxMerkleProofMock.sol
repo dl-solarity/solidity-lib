@@ -6,10 +6,10 @@ import {TxMerkleProof} from "../../../libs/bitcoin/TxMerkleProof.sol";
 contract TxMerkleProofMock {
     function verify(
         bytes32[] calldata merkleProof_,
-        TxMerkleProof.HashDirection[] calldata directions_,
         bytes32 reversedRoot_,
-        bytes32 txid_
+        bytes32 txid_,
+        TxMerkleProof.HashDirection[] calldata directions_
     ) external pure returns (bool) {
-        return TxMerkleProof.verify(merkleProof_, directions_, reversedRoot_, txid_);
+        return TxMerkleProof.verify(merkleProof_, reversedRoot_, txid_, directions_);
     }
 }
