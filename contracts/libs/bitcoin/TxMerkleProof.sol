@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
-import {BitcoinHelper} from "./BitcoinHelper.sol";
-
 /**
  * @notice A library for verifying transaction inclusion in Bitcoin block.
  * Provides functions for processing and verifying Merkle tree proofs
@@ -71,6 +69,6 @@ library TxMerkleProof {
     }
 
     function _doubleSHA256(bytes32 left_, bytes32 right_) private pure returns (bytes32) {
-        return BitcoinHelper.doubleSHA256(abi.encodePacked(left_, right_));
+        return sha256(abi.encodePacked(sha256(abi.encodePacked(left_, right_))));
     }
 }

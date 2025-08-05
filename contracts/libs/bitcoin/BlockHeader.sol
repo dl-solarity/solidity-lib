@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
-import {BitcoinHelper} from "./BitcoinHelper.sol";
+import {EndianConverter} from "../utils/EndianConverter.sol";
 
 /**
  * @notice Represents the essential data contained within a Bitcoin block header
@@ -26,7 +26,7 @@ struct BlockHeaderData {
  * Provides functions for parsing, hashing, and converting block header data
  */
 library BlockHeader {
-    using BitcoinHelper for *;
+    using EndianConverter for *;
 
     /**
      * @notice The standard length of a Bitcoin block header in bytes

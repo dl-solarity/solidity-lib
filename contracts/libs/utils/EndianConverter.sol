@@ -5,10 +5,9 @@ import {LibBit} from "solady/src/utils/LibBit.sol";
 import {LibBytes} from "solady/src/utils/LibBytes.sol";
 
 /**
- * @notice A library with useful functions for working with Bitcoin.
- * Provides functions for converting between little-endian and big-endian formats, as well as for hashing
+ * @notice A library with functions for converting between little-endian and big-endian formats
  */
-library BitcoinHelper {
+library EndianConverter {
     using LibBit for uint256;
     using LibBytes for bytes;
 
@@ -114,13 +113,5 @@ library BitcoinHelper {
      */
     function int64ToBytesLE(int64 input_) internal pure returns (bytes memory) {
         return (abi.encodePacked(uint256(uint64(input_)).reverseBytes())).slice(0, 8);
-    }
-    /**
-     * @notice Compute double SHA256 hash
-     * @param data_ The data to hash
-     * @return The hash result
-     */
-    function doubleSHA256(bytes memory data_) internal pure returns (bytes32) {
-        return sha256(abi.encodePacked(sha256(data_)));
     }
 }

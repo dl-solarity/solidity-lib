@@ -3,7 +3,7 @@ pragma solidity ^0.8.22;
 
 import {LibBytes} from "solady/src/utils/LibBytes.sol";
 
-import {BitcoinHelper} from "./BitcoinHelper.sol";
+import {EndianConverter} from "../utils/EndianConverter.sol";
 
 /**
  * @notice A library for parsing Bitcoin transactions.
@@ -11,7 +11,7 @@ import {BitcoinHelper} from "./BitcoinHelper.sol";
  */
 library BtcTxParser {
     using LibBytes for bytes;
-    using BitcoinHelper for *;
+    using EndianConverter for *;
 
     struct Transaction {
         TransactionInput[] inputs;
@@ -52,7 +52,7 @@ library BtcTxParser {
         _checkForBufferOverflow(position_ + 4, data_.length);
 
         tx_.version = int32(
-            BitcoinHelper.leBytes1ToUint32(
+            EndianConverter.leBytes1ToUint32(
                 data_[position_],
                 data_[position_ + 1],
                 data_[position_ + 2],
@@ -141,7 +141,7 @@ library BtcTxParser {
 
         _checkForBufferOverflow(position_ + 4, data_.length);
 
-        tx_.locktime = BitcoinHelper.leBytes1ToUint32(
+        tx_.locktime = EndianConverter.leBytes1ToUint32(
             data_[position_],
             data_[position_ + 1],
             data_[position_ + 2],
@@ -175,7 +175,7 @@ library BtcTxParser {
 
         _checkForBufferOverflow(position_ + 4, data_.length);
 
-        input_.previousIndex = BitcoinHelper.leBytes1ToUint32(
+        input_.previousIndex = EndianConverter.leBytes1ToUint32(
             data_[position_],
             data_[position_ + 1],
             data_[position_ + 2],
@@ -199,7 +199,7 @@ library BtcTxParser {
 
         _checkForBufferOverflow(position_ + 4, data_.length);
 
-        input_.sequence = BitcoinHelper.leBytes1ToUint32(
+        input_.sequence = EndianConverter.leBytes1ToUint32(
             data_[position_],
             data_[position_ + 1],
             data_[position_ + 2],
@@ -281,7 +281,7 @@ library BtcTxParser {
             _checkForBufferOverflow(offset_ + 5, data_.length);
 
             value_ = uint256(
-                BitcoinHelper.leBytes1ToUint32(
+                EndianConverter.leBytes1ToUint32(
                     data_[offset_ + 1],
                     data_[offset_ + 2],
                     data_[offset_ + 3],
@@ -332,7 +332,7 @@ library BtcTxParser {
     ) internal pure returns (bytes memory) {
         bool includeWitness_ = withWitness_ && tx_.hasWitness;
 
-        bytes memory result_ = abi.encodePacked(tx_.version);
+        bytes memory result_ = EndianConverter.uint32ToBytesLE(uint32(tx_.version));
 
         if (includeWitness_) {
             result_ = abi.encodePacked(result_, uint8(0), uint8(1));
@@ -345,15 +345,19 @@ library BtcTxParser {
             result_ = abi.encodePacked(result_, formatTransactionInput(tx_.inputs[i]));
         }
 
-        result_ = abi.encodePacked(result_, formatCuint(tx_.outputs.length)); //todo and check optimization
-        for (uint256 i = 0; i < tx_.outputs.length; ++i) {
+        uint256 txOutputsLength_ = tx_.outputs.length;
+        result_ = abi.encodePacked(result_, formatCuint(txOutputsLength_));
+
+        for (uint256 i = 0; i < txOutputsLength_; ++i) {
             result_ = abi.encodePacked(result_, formatTransactionOutput(tx_.outputs[i]));
         }
 
         if (includeWitness_) {
             for (uint256 i = 0; i < txInputsLength_; ++i) {
-                result_ = abi.encodePacked(result_, formatCuint(tx_.inputs[i].witnesses.length));
-                for (uint256 j = 0; j < tx_.inputs[i].witnesses.length; ++j) {
+                uint256 witnessesLength_ = tx_.inputs[i].witnesses.length;
+                result_ = abi.encodePacked(result_, formatCuint(witnessesLength_));
+
+                for (uint256 j = 0; j < witnessesLength_; ++j) {
                     result_ = abi.encodePacked(
                         result_,
                         formatCuint(tx_.inputs[i].witnesses[j].length),
@@ -412,7 +416,7 @@ library BtcTxParser {
     function calculateTxId(Transaction calldata tx_) internal pure returns (bytes32) {
         bytes memory serialized_ = formatTransaction(tx_, false);
 
-        return serialized_.doubleSHA256();
+        return _doubleSHA256(serialized_);
     }
 
     /**
@@ -423,12 +427,16 @@ library BtcTxParser {
     function calculateWTxId(Transaction calldata tx_) internal pure returns (bytes32) {
         bytes memory serialized_ = formatTransaction(tx_, true);
 
-        return serialized_.doubleSHA256();
+        return _doubleSHA256(serialized_);
     }
 
     function _checkForBufferOverflow(uint256 positionToCheck_, uint256 dataLength_) private pure {
         if (positionToCheck_ > dataLength_) {
             revert BufferOverflow();
         }
+    }
+
+    function _doubleSHA256(bytes memory data_) private pure returns (bytes32) {
+        return sha256(abi.encodePacked(sha256(data_)));
     }
 }
