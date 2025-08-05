@@ -26,9 +26,11 @@ library TxMerkleProof {
 
     /**
      * @notice Returns true if `leaf_` can be proven to be part of a Merkle tree
-     * defined by `root_`. Requires a `proof_` containing the sibling hashes along
-     * the path from the leaf to the root. Each element of `directions_` indicates
-     * the hashing order for each pair. Uses double SHA-256 hashing
+     * defined by `root_`. Uses double SHA-256 hashing
+     * @param proof_ The array of sibling hashes from the leaf to the root
+     * @param directions_ The array of uint8, indicating hashing order for each pair
+     * @param leaf_ Element that need to be proven included in a tree
+     * @param root_ Merkle root in little-endian format
      */
     function verify(
         bytes32[] calldata proof_,
@@ -46,6 +48,9 @@ library TxMerkleProof {
      * from `leaf_` using `proof_`. A `proof_` is valid if and only if the rebuilt
      * hash matches the given tree root. The pre-images are hashed in the order
      * specified by the `directions_` elements. Uses double SHA-256 hashing
+     * @param proof_ The array of sibling hashes from the leaf to the root
+     * @param directions_ The array of uint8, indicating hashing order for each pair
+     * @param leaf_ The leaf of the Merkle tree
      */
     function processProof(
         bytes32[] calldata proof_,
