@@ -1,5 +1,5 @@
 import { ZeroHash } from "ethers";
-import { parseCuint, reverseByte, reverseBytes } from "./bytes-helper";
+import { parseCuint, reverseByte, reverseBytes } from "./bytes-helpers";
 
 export class MerkleRawProofParser {
   private txidReversed: string;

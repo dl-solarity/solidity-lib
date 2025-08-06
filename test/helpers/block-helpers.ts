@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { randomInt } from "crypto";
 
 import { HeaderData } from "./types";
-import { reverseBytes } from "./bytes-helper";
+import { reverseBytes } from "./bytes-helpers";
 import { BlockHeader } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/BlockHeaderMock";
 
 export function getRandomBlockHeaderData(pathToDataFile: string, minHeight: number, maxHeight: number) {

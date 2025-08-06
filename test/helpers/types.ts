@@ -24,3 +24,36 @@ export type ParsedBlockHeaderData = {
   previousblockhash: string;
   nextblockhash: string;
 };
+
+export type TransactionData = {
+  txid: string;
+  hash: string;
+  version: number;
+  size: number;
+  vsize: number;
+  weight: number;
+  locktime: number;
+  vin: Vin[];
+  vout: Vout[];
+  hex: string;
+  confirmations: number;
+  time: number;
+  blocktime: number;
+};
+
+type Vin = {
+  coinbase?: string;
+  txid: string;
+  vout: number;
+  scriptSig: {
+    hex: string;
+  };
+  txinwitness: string[];
+  sequence: number;
+};
+
+type Vout = {
+  value: number;
+  n: number;
+  scriptPubKey: { hex: string };
+};

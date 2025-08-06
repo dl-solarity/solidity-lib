@@ -11,7 +11,7 @@ import {
 import { Reverter } from "@/test/helpers/reverter";
 
 import { BlockHeaderMock } from "@ethers-v6";
-import { reverseBytes } from "@/test/helpers/bytes-helper";
+import { reverseBytes } from "@/test/helpers/bytes-helpers";
 
 describe("BlockHeader", () => {
   const reverter = new Reverter();
