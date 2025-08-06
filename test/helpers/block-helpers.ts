@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { randomInt } from "crypto";
 
 import { HeaderData } from "./types";
-import { reverseBytes } from "./bytes-helpers";
+import { reverseBytes, reverseNumber } from "./bytes-helpers";
 import { BlockHeader } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/BlockHeaderMock";
 
 export function getRandomBlockHeaderData(pathToDataFile: string, minHeight: number, maxHeight: number) {
@@ -24,7 +24,7 @@ export function getBlockHeaderData(pathToDataFile: string, height: number): Head
   return formatBlockHeaderData(allBlocksDataArr[height - Number(firstElementHeight)]);
 }
 
-export function checkBlockHeaderData(
+export function checkBlockHeaderDataInBE(
   actualBlockHeaderData: BlockHeader.HeaderDataStruct,
   expectedBlockHeaderData: HeaderData,
 ) {
@@ -36,18 +36,22 @@ export function checkBlockHeaderData(
   expect(actualBlockHeaderData.time).to.be.eq(expectedBlockHeaderData.parsedBlockHeader.time);
 }
 
-export function checkBlockHeaderDataDiffEncodings(
+export function checkBlockHeaderDataInLE(
   actualBlockHeaderData: BlockHeader.HeaderDataStruct,
   expectedBlockHeaderData: HeaderData,
 ) {
-  expect(actualBlockHeaderData.version).to.be.eq(expectedBlockHeaderData.parsedBlockHeader.version);
+  expect(actualBlockHeaderData.version).to.be.eq(reverseNumber(expectedBlockHeaderData.parsedBlockHeader.version));
+
   expect(actualBlockHeaderData.bits).to.be.eq(reverseBytes(expectedBlockHeaderData.parsedBlockHeader.bits));
+
   expect(actualBlockHeaderData.prevBlockHash).to.be.eq(
     reverseBytes(expectedBlockHeaderData.parsedBlockHeader.previousblockhash),
   );
+
   expect(actualBlockHeaderData.merkleRoot).to.be.eq(reverseBytes(expectedBlockHeaderData.parsedBlockHeader.merkleroot));
-  expect(actualBlockHeaderData.nonce).to.be.eq(expectedBlockHeaderData.parsedBlockHeader.nonce);
-  expect(actualBlockHeaderData.time).to.be.eq(expectedBlockHeaderData.parsedBlockHeader.time);
+
+  expect(actualBlockHeaderData.nonce).to.be.eq(reverseNumber(expectedBlockHeaderData.parsedBlockHeader.nonce));
+  expect(actualBlockHeaderData.time).to.be.eq(reverseNumber(expectedBlockHeaderData.parsedBlockHeader.time));
 }
 
 export function formatBlockHeaderData(headerData: HeaderData): HeaderData {

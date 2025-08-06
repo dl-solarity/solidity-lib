@@ -4,8 +4,8 @@ import { ethers } from "hardhat";
 import {
   getBlocksDataFilePath,
   getRandomBlockHeaderData,
-  checkBlockHeaderData,
-  checkBlockHeaderDataDiffEncodings,
+  checkBlockHeaderDataInBE,
+  checkBlockHeaderDataInLE,
 } from "@/test/helpers/block-helpers";
 
 import { Reverter } from "@/test/helpers/reverter";
@@ -37,7 +37,7 @@ describe("BlockHeader", () => {
         const parsedResult = await blockHeaderLib.parseBlockHeader(blockData.rawHeader, true);
 
         expect(parsedResult[1]).to.be.eq(blockData.blockHash);
-        checkBlockHeaderData(parsedResult[0], blockData);
+        checkBlockHeaderDataInBE(parsedResult[0], blockData);
       }
     });
 
@@ -47,7 +47,7 @@ describe("BlockHeader", () => {
         const parsedResult = await blockHeaderLib.parseBlockHeader(blockData.rawHeader, false);
 
         expect(parsedResult[1]).to.be.eq(reverseBytes(blockData.blockHash));
-        checkBlockHeaderDataDiffEncodings(parsedResult[0], blockData);
+        checkBlockHeaderDataInLE(parsedResult[0], blockData);
       }
     });
 

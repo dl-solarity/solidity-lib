@@ -1,3 +1,5 @@
+import { BigNumberish } from "ethers";
+
 export function reverseBytes(str: string) {
   if (str.slice(0, 2) == "0x") str = str.slice(2);
 
@@ -7,6 +9,7 @@ export function reverseBytes(str: string) {
 export function reverseByte(byte: string): string {
   const binary = parseInt(byte, 16).toString(2);
   const padded = binary.padStart(8, "0");
+
   return padded.split("").reverse().join("");
 }
 
@@ -20,4 +23,11 @@ export function parseCuint(data: string, offset: number): [bigint, number] {
   if (firstByte == 0xfe) return [BigInt(reverseBytes(data.slice(offset + 2, offset + 10))), 10];
 
   return [BigInt(reverseBytes(data.slice(offset + 2, offset + 18))), 18];
+}
+
+export function reverseNumber(decimalNumber: BigNumberish): BigInt {
+  const hex = decimalNumber.toString(16);
+  const bytes4 = hex.padStart(8, "0");
+
+  return BigInt(reverseBytes(bytes4));
 }

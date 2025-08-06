@@ -55,20 +55,23 @@ library BlockHeader {
             revert InvalidBlockHeaderDataLength();
 
         headerData_ = HeaderData({
-            version: blockHeaderRaw_[0:4].leBytesToUint32(),
+            version: uint32(bytes4(blockHeaderRaw_[0:4])),
             prevBlockHash: bytes32(blockHeaderRaw_[4:36]),
             merkleRoot: bytes32(blockHeaderRaw_[36:68]),
-            time: blockHeaderRaw_[68:72].leBytesToUint32(),
+            time: uint32(bytes4(blockHeaderRaw_[68:72])),
             bits: bytes4(blockHeaderRaw_[72:76]),
-            nonce: blockHeaderRaw_[76:80].leBytesToUint32()
+            nonce: uint32(bytes4(blockHeaderRaw_[76:80]))
         });
 
         blockHash_ = _getBlockHeaderHash(blockHeaderRaw_);
 
         if (returnInBEFormat_) {
+            headerData_.version = headerData_.version.reverseUint32();
             headerData_.prevBlockHash = headerData_.prevBlockHash.reverseBytes();
             headerData_.merkleRoot = headerData_.merkleRoot.reverseBytes();
-            headerData_.bits = bytes4(bytes32(headerData_.bits).leBytes32ToUint32());
+            headerData_.time = headerData_.time.reverseUint32();
+            headerData_.bits = bytes4(uint32(headerData_.bits).reverseUint32());
+            headerData_.nonce = headerData_.nonce.reverseUint32();
 
             blockHash_ = blockHash_.reverseBytes();
         }
