@@ -171,7 +171,7 @@ library TxParser {
     ) internal pure returns (bytes memory) {
         bool includeWitness_ = withWitness_ && tx_.hasWitness;
 
-        bytes memory result_ = abi.encodePacked(tx_.version.uint32BEtoBytesLE());
+        bytes memory result_ = abi.encodePacked(tx_.version.uint32BEtoBytes4LE());
 
         if (includeWitness_) {
             result_ = abi.encodePacked(result_, uint8(0), uint8(1));
@@ -337,8 +337,8 @@ library TxParser {
         TransactionInput calldata input_
     ) private pure returns (bytes memory) {
         bytes memory prevHash_ = abi.encodePacked((input_.previousHash).bytes32BEtoLE());
-        bytes memory previousIndex_ = abi.encodePacked(input_.previousIndex.uint32BEtoBytesLE());
-        bytes memory sequence_ = abi.encodePacked(input_.sequence.uint32BEtoBytesLE());
+        bytes memory previousIndex_ = abi.encodePacked(input_.previousIndex.uint32BEtoBytes4LE());
+        bytes memory sequence_ = abi.encodePacked(input_.sequence.uint32BEtoBytes4LE());
 
         return
             abi.encodePacked(
@@ -358,7 +358,7 @@ library TxParser {
     function _formatTransactionOutput(
         TransactionOutput calldata output_
     ) private pure returns (bytes memory) {
-        bytes memory value_ = abi.encodePacked(output_.value.uint64BEtoBytesLE());
+        bytes memory value_ = abi.encodePacked(output_.value.uint64BEtoBytes8LE());
 
         return
             abi.encodePacked(value_, formatCuint(uint64(output_.script.length)), output_.script);
