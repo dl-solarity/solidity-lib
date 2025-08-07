@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 
 import {
   getBlocksDataFilePath,
-  getRandomBlockHeaderData,
+  getBlockHeaderData,
   checkBlockHeaderDataInBE,
   checkBlockHeaderDataInLE,
 } from "@/test/helpers/block-helpers";
@@ -23,7 +23,7 @@ describe("BlockHeader", () => {
   before(async () => {
     blockHeaderLib = await ethers.deployContract("BlockHeaderMock");
 
-    blocksDataFilePath = getBlocksDataFilePath("headers_1_10000.json");
+    blocksDataFilePath = getBlocksDataFilePath("headers_814991_815000.json");
 
     await reverter.snapshot();
   });
@@ -33,7 +33,7 @@ describe("BlockHeader", () => {
   describe("#parseBlockHeader", () => {
     it("should correctly parse block header data to big-endian format", async () => {
       for (let i = 0; i < 10; ++i) {
-        const blockData = getRandomBlockHeaderData(blocksDataFilePath, 1, 10000);
+        const blockData = getBlockHeaderData(blocksDataFilePath, 814991 + i);
         const parsedResult = await blockHeaderLib.parseBlockHeader(blockData.rawHeader, true);
 
         expect(parsedResult[1]).to.be.eq(blockData.blockHash);
@@ -43,7 +43,7 @@ describe("BlockHeader", () => {
 
     it("should correctly parse block header data to little-endian format", async () => {
       for (let i = 0; i < 10; ++i) {
-        const blockData = getRandomBlockHeaderData(blocksDataFilePath, 1, 10000);
+        const blockData = getBlockHeaderData(blocksDataFilePath, 814991 + i);
         const parsedResult = await blockHeaderLib.parseBlockHeader(blockData.rawHeader, false);
 
         expect(parsedResult[1]).to.be.eq(reverseBytes(blockData.blockHash));
@@ -64,7 +64,7 @@ describe("BlockHeader", () => {
   describe("#toRawBytes", () => {
     it("should correctly convert block header data to the raw bytes", async () => {
       for (let i = 0; i < 10; ++i) {
-        const blockData = getRandomBlockHeaderData(blocksDataFilePath, 1, 10000);
+        const blockData = getBlockHeaderData(blocksDataFilePath, 814991 + i);
 
         expect(
           await blockHeaderLib.toRawBytes({
