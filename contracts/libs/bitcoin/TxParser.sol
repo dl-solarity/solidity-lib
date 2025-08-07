@@ -292,7 +292,8 @@ library TxParser {
         _checkForBufferOverflow(position_ + 32, data_.length);
 
         // Converting to big-endian format
-        input_.previousHash = (bytes32(data_.slice(position_, position_ + 32))).bytesLEtoBE();
+        input_.previousHash = (bytes32(data_.slice(position_, position_ + 32)))
+            .bytes32LEtoBytes32BE();
 
         position_ += 32;
 
@@ -367,7 +368,7 @@ library TxParser {
     function _formatTransactionInput(
         TransactionInput calldata input_
     ) private pure returns (bytes memory) {
-        bytes memory prevHash_ = abi.encodePacked((input_.previousHash).bytesBEtoLE());
+        bytes memory prevHash_ = abi.encodePacked((input_.previousHash).bytes32BEtoBytes32LE());
         bytes memory previousIndex_ = abi.encodePacked(input_.previousIndex.uint32BEtoBytesLE());
         bytes memory sequence_ = abi.encodePacked(input_.sequence.uint32BEtoBytesLE());
 
