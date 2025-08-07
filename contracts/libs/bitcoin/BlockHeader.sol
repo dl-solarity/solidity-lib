@@ -66,14 +66,14 @@ library BlockHeader {
         blockHash_ = _getBlockHeaderHash(blockHeaderRaw_);
 
         if (returnInBEFormat_) {
-            headerData_.version = headerData_.version.reverseUint32();
-            headerData_.prevBlockHash = headerData_.prevBlockHash.reverseBytes();
-            headerData_.merkleRoot = headerData_.merkleRoot.reverseBytes();
-            headerData_.time = headerData_.time.reverseUint32();
-            headerData_.bits = bytes4(uint32(headerData_.bits).reverseUint32());
-            headerData_.nonce = headerData_.nonce.reverseUint32();
+            headerData_.version = headerData_.version.uint32LEtoBE();
+            headerData_.prevBlockHash = headerData_.prevBlockHash.bytesLEtoBE();
+            headerData_.merkleRoot = headerData_.merkleRoot.bytesLEtoBE();
+            headerData_.time = headerData_.time.uint32LEtoBE();
+            headerData_.bits = bytes4(uint32(headerData_.bits).uint32LEtoBE());
+            headerData_.nonce = headerData_.nonce.uint32LEtoBE();
 
-            blockHash_ = blockHash_.reverseBytes();
+            blockHash_ = blockHash_.bytesLEtoBE();
         }
     }
 
@@ -87,12 +87,12 @@ library BlockHeader {
     function toRawBytes(HeaderData memory headerData_) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
-                headerData_.version.reverseUint32(),
-                headerData_.prevBlockHash.reverseBytes(),
-                headerData_.merkleRoot.reverseBytes(),
-                headerData_.time.reverseUint32(),
-                (uint32(headerData_.bits)).reverseUint32(),
-                headerData_.nonce.reverseUint32()
+                headerData_.version.uint32BEtoLE(),
+                headerData_.prevBlockHash.bytesBEtoLE(),
+                headerData_.merkleRoot.bytesBEtoLE(),
+                headerData_.time.uint32BEtoLE(),
+                (uint32(headerData_.bits)).uint32BEtoLE(),
+                headerData_.nonce.uint32BEtoLE()
             );
     }
 

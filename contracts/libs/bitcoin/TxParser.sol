@@ -69,9 +69,7 @@ library TxParser {
 
         _checkForBufferOverflow(position_ + 4, data_.length);
 
-        tx_.version = EndianConverter.reverseUint32(
-            uint32((bytes4(data_[position_:position_ + 4])))
-        );
+        tx_.version = uint32(bytes4(data_[position_:position_ + 4])).uint32LEtoBE();
 
         position_ += 4;
 
@@ -154,9 +152,7 @@ library TxParser {
 
         _checkForBufferOverflow(position_ + 4, data_.length);
 
-        tx_.locktime = EndianConverter.reverseUint32(
-            uint32((bytes4(data_[position_:position_ + 4])))
-        );
+        tx_.locktime = uint32(bytes4(data_[position_:position_ + 4])).uint32LEtoBE();
 
         position_ += 4;
 
@@ -175,7 +171,7 @@ library TxParser {
     ) internal pure returns (bytes memory) {
         bool includeWitness_ = withWitness_ && tx_.hasWitness;
 
-        bytes memory result_ = EndianConverter.uint32ToBytesLE(tx_.version);
+        bytes memory result_ = abi.encodePacked(tx_.version.uint32BEtoBytesLE());
 
         if (includeWitness_) {
             result_ = abi.encodePacked(result_, uint8(0), uint8(1));
@@ -231,15 +227,13 @@ library TxParser {
         uint8 firstByte_ = uint8(data_[offset_]);
 
         if (firstByte_ < 0xfd) {
-            return (uint256(firstByte_), 1);
+            return (uint8(firstByte_), 1);
         }
 
         if (firstByte_ == 0xfd) {
             _checkForBufferOverflow(offset_ + 3, data_.length);
 
-            value_ =
-                uint256(uint8(data_[offset_ + 1])) |
-                (uint256(uint8(data_[offset_ + 2])) << 8);
+            value_ = bytes2(data_[offset_ + 1:offset_ + 3]).bytesLEtoUint16BE();
 
             return (value_, 3);
         }
@@ -247,14 +241,14 @@ library TxParser {
         if (firstByte_ == 0xfe) {
             _checkForBufferOverflow(offset_ + 5, data_.length);
 
-            value_ = EndianConverter.reverseUint32(uint32(bytes4(data_[offset_ + 1:offset_ + 5])));
+            value_ = bytes4(data_[offset_ + 1:offset_ + 5]).bytesLEtoUint32BE();
 
             return (value_, 5);
         }
 
         _checkForBufferOverflow(offset_ + 9, data_.length);
 
-        value_ = bytes32(data_.slice(offset_ + 1, offset_ + 9)).leBytes32ToUint256();
+        value_ = bytes8(data_.slice(offset_ + 1, offset_ + 9)).bytesLEtoUint64BE();
 
         return (value_, 9);
     }
@@ -266,19 +260,20 @@ library TxParser {
      * @return The encoded bytes
      */
     function formatCuint(uint256 value_) internal pure returns (bytes memory) {
+        //64 max?
         if (value_ < 0xfd) {
             return abi.encodePacked(uint8(value_));
         }
 
         if (value_ <= 0xffff) {
-            return abi.encodePacked(uint8(0xfd), uint16(value_).reverseUint16());
+            return abi.encodePacked(uint8(0xfd), uint16(value_).uint16BEtoLE());
         }
 
         if (value_ <= 0xffffffff) {
-            return abi.encodePacked(uint8(0xfe), uint32(value_).reverseUint32());
+            return abi.encodePacked(uint8(0xfe), uint32(value_).uint32BEtoLE());
         }
 
-        return abi.encodePacked(uint8(0xff), uint64(value_).reverseUint64());
+        return abi.encodePacked(uint8(0xff), uint64(value_).uint64BEtoLE());
     }
 
     /**
@@ -297,15 +292,13 @@ library TxParser {
         _checkForBufferOverflow(position_ + 32, data_.length);
 
         // Converting to big-endian format
-        input_.previousHash = (bytes32(data_.slice(position_, position_ + 32))).reverseBytes();
+        input_.previousHash = (bytes32(data_.slice(position_, position_ + 32))).bytesLEtoBE();
 
         position_ += 32;
 
         _checkForBufferOverflow(position_ + 4, data_.length);
 
-        input_.previousIndex = EndianConverter.reverseUint32(
-            uint32((bytes4(data_[position_:position_ + 4])))
-        );
+        input_.previousIndex = uint32(bytes4(data_[position_:position_ + 4])).uint32LEtoBE();
 
         position_ += 4;
 
@@ -324,9 +317,7 @@ library TxParser {
 
         _checkForBufferOverflow(position_ + 4, data_.length);
 
-        input_.sequence = EndianConverter.reverseUint32(
-            uint32(bytes4((data_[position_:position_ + 4])))
-        );
+        input_.sequence = uint32(bytes4(data_[position_:position_ + 4])).uint32LEtoBE();
 
         position_ += 4;
 
@@ -348,9 +339,7 @@ library TxParser {
 
         _checkForBufferOverflow(position_ + 8, data_.length);
 
-        output_.value = uint64(
-            (bytes32(data_.slice(position_, position_ + 8))).leBytes32ToUint256()
-        );
+        output_.value = bytes8(data_.slice(position_, position_ + 8)).bytesLEtoUint64BE();
 
         position_ += 8;
 
@@ -378,10 +367,9 @@ library TxParser {
     function _formatTransactionInput(
         TransactionInput calldata input_
     ) private pure returns (bytes memory) {
-        bytes memory prevHash_ = (input_.previousHash).reverseBytes32ToBytes();
-
-        bytes memory previousIndex_ = (input_.previousIndex).uint32ToBytesLE();
-        bytes memory sequence_ = (input_.sequence).uint32ToBytesLE();
+        bytes memory prevHash_ = abi.encodePacked((input_.previousHash).bytesBEtoLE());
+        bytes memory previousIndex_ = abi.encodePacked(input_.previousIndex.uint32BEtoBytesLE());
+        bytes memory sequence_ = abi.encodePacked(input_.sequence.uint32BEtoBytesLE());
 
         return
             abi.encodePacked(
@@ -401,7 +389,7 @@ library TxParser {
     function _formatTransactionOutput(
         TransactionOutput calldata output_
     ) private pure returns (bytes memory) {
-        bytes memory value_ = (output_.value).uint64ToBytesLE();
+        bytes memory value_ = abi.encodePacked(output_.value.uint64BEtoBytesLE());
 
         return abi.encodePacked(value_, formatCuint(output_.script.length), output_.script);
     }
