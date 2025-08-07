@@ -62,19 +62,43 @@ describe("BlockHeader", () => {
   });
 
   describe("#toRawBytes", () => {
-    it("should correctly convert block header data to the raw bytes", async () => {
+    it("should correctly convert block header data to the raw bytes from big-endian format", async () => {
       for (let i = 0; i < 10; ++i) {
         const blockData = getBlockHeaderData(blocksDataFilePath, 814991 + i);
 
         expect(
-          await blockHeaderLib.toRawBytes({
-            prevBlockHash: blockData.parsedBlockHeader.previousblockhash,
-            merkleRoot: blockData.parsedBlockHeader.merkleroot,
-            version: blockData.parsedBlockHeader.version,
-            time: blockData.parsedBlockHeader.time,
-            nonce: blockData.parsedBlockHeader.nonce,
-            bits: blockData.parsedBlockHeader.bits,
-          }),
+          await blockHeaderLib.toRawBytes(
+            {
+              prevBlockHash: blockData.parsedBlockHeader.previousblockhash,
+              merkleRoot: blockData.parsedBlockHeader.merkleroot,
+              version: blockData.parsedBlockHeader.version,
+              time: blockData.parsedBlockHeader.time,
+              nonce: blockData.parsedBlockHeader.nonce,
+              bits: blockData.parsedBlockHeader.bits,
+            },
+            true,
+          ),
+        ).to.be.eq(blockData.rawHeader);
+      }
+    });
+
+    it("should correctly convert block header data to the raw bytes from little-endian format", async () => {
+      for (let i = 0; i < 10; ++i) {
+        const blockData = getBlockHeaderData(blocksDataFilePath, 814991 + i);
+        const parsed = await blockHeaderLib.parseBlockHeader(blockData.rawHeader, false);
+
+        expect(
+          await blockHeaderLib.toRawBytes(
+            {
+              prevBlockHash: parsed[0].prevBlockHash,
+              merkleRoot: parsed[0].merkleRoot,
+              version: parsed[0].version,
+              time: parsed[0].time,
+              nonce: parsed[0].nonce,
+              bits: parsed[0].bits,
+            },
+            false,
+          ),
         ).to.be.eq(blockData.rawHeader);
       }
     });

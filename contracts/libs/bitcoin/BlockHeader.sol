@@ -43,7 +43,7 @@ library BlockHeader {
      * @notice Parses a raw byte array into a structured `HeaderData` and calculates its hash.
      * It validates the length of the input and correctly decodes each field
      * @param blockHeaderRaw_ The raw bytes of the block header
-     * @param returnInBEFormat_ Whether to return the hashes in big-endian format
+     * @param returnInBEFormat_ Whether to return the hashes in big-endian encoding
      * @return headerData_ The parsed `HeaderData` structure
      * @return blockHash_ The calculated hash of the block header
      */
@@ -80,19 +80,34 @@ library BlockHeader {
     /**
      * @notice Converts a `HeaderData` structure back into its raw byte representation.
      * This function reconstructs the original byte sequence of the block header
-     * @dev headerData_ is expected to be in big-endian encoding
      * @param headerData_ The `HeaderData` structure to convert
+     * @param inputInBEFormat_ Whether headerData_ is expected to be in big-endian encoding
      * @return The raw byte representation of the block header
      */
-    function toRawBytes(HeaderData memory headerData_) internal pure returns (bytes memory) {
+    function toRawBytes(
+        HeaderData memory headerData_,
+        bool inputInBEFormat_
+    ) internal pure returns (bytes memory) {
+        if (inputInBEFormat_) {
+            return
+                abi.encodePacked(
+                    headerData_.version.uint32BEtoLE(),
+                    headerData_.prevBlockHash.bytes32BEtoBytes32LE(),
+                    headerData_.merkleRoot.bytes32BEtoBytes32LE(),
+                    headerData_.time.uint32BEtoLE(),
+                    (uint32(headerData_.bits)).uint32BEtoLE(),
+                    headerData_.nonce.uint32BEtoLE()
+                );
+        }
+
         return
             abi.encodePacked(
-                headerData_.version.uint32BEtoLE(),
-                headerData_.prevBlockHash.bytes32BEtoBytes32LE(),
-                headerData_.merkleRoot.bytes32BEtoBytes32LE(),
-                headerData_.time.uint32BEtoLE(),
-                (uint32(headerData_.bits)).uint32BEtoLE(),
-                headerData_.nonce.uint32BEtoLE()
+                headerData_.version,
+                headerData_.prevBlockHash,
+                headerData_.merkleRoot,
+                headerData_.time,
+                headerData_.bits,
+                headerData_.nonce
             );
     }
 

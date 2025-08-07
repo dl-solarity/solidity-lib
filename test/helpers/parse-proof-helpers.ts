@@ -166,12 +166,12 @@ export class MerkleRawProofParser {
     );
   }
 
-  private nodesCountIsUneven(level: number): boolean {
+  private nodesCountIsOdd(level: number): boolean {
     return this.nodeCountPerLevel[level]! % 2 == 1;
   }
 
   private isNodeWithoutPair(depth: number, nodePosition: number): boolean {
-    return depth != 0 && this.nodesCountIsUneven(depth) && nodePosition + 1 == this.nodeCountPerLevel[depth];
+    return depth != 0 && this.nodesCountIsOdd(depth) && nodePosition + 1 == this.nodeCountPerLevel[depth];
   }
 
   private isLeftNode(depth: number, nodePosition: number): boolean {

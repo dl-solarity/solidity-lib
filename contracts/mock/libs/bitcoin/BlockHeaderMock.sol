@@ -14,8 +14,9 @@ contract BlockHeaderMock {
     }
 
     function toRawBytes(
-        BlockHeader.HeaderData memory headerData_
+        BlockHeader.HeaderData memory headerData_,
+        bool inputInBEFormat_
     ) external pure returns (bytes memory) {
-        return BlockHeader.toRawBytes(headerData_);
+        return BlockHeader.toRawBytes(headerData_, inputInBEFormat_);
     }
 }

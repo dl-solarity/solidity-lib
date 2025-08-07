@@ -33,10 +33,10 @@ library TxMerkleProof {
      * @param root_ Merkle root in little-endian format
      */
     function verify(
-        bytes32[] calldata proof_,
+        bytes32[] memory proof_,
         bytes32 root_,
         bytes32 leaf_,
-        HashDirection[] calldata directions_
+        HashDirection[] memory directions_
     ) internal pure returns (bool) {
         if (directions_.length != proof_.length) revert InvalidLengths();
 
@@ -53,9 +53,9 @@ library TxMerkleProof {
      * @param leaf_ The leaf of the Merkle tree
      */
     function processProof(
-        bytes32[] calldata proof_,
+        bytes32[] memory proof_,
         bytes32 leaf_,
-        HashDirection[] calldata directions_
+        HashDirection[] memory directions_
     ) internal pure returns (bytes32) {
         bytes32 computedHash_ = leaf_;
         uint256 proofLength_ = proof_.length;
