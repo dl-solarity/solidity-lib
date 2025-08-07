@@ -67,13 +67,13 @@ library BlockHeader {
 
         if (returnInBEFormat_) {
             headerData_.version = headerData_.version.uint32LEtoBE();
-            headerData_.prevBlockHash = headerData_.prevBlockHash.bytes32LEtoBytes32BE();
-            headerData_.merkleRoot = headerData_.merkleRoot.bytes32LEtoBytes32BE();
+            headerData_.prevBlockHash = headerData_.prevBlockHash.bytes32LEtoBE();
+            headerData_.merkleRoot = headerData_.merkleRoot.bytes32LEtoBE();
             headerData_.time = headerData_.time.uint32LEtoBE();
             headerData_.bits = bytes4(uint32(headerData_.bits).uint32LEtoBE());
             headerData_.nonce = headerData_.nonce.uint32LEtoBE();
 
-            blockHash_ = blockHash_.bytes32LEtoBytes32BE();
+            blockHash_ = blockHash_.bytes32LEtoBE();
         }
     }
 
@@ -92,8 +92,8 @@ library BlockHeader {
             return
                 abi.encodePacked(
                     headerData_.version.uint32BEtoLE(),
-                    headerData_.prevBlockHash.bytes32BEtoBytes32LE(),
-                    headerData_.merkleRoot.bytes32BEtoBytes32LE(),
+                    headerData_.prevBlockHash.bytes32BEtoLE(),
+                    headerData_.merkleRoot.bytes32BEtoLE(),
                     headerData_.time.uint32BEtoLE(),
                     (uint32(headerData_.bits)).uint32BEtoLE(),
                     headerData_.nonce.uint32BEtoLE()

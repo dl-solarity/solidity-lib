@@ -261,8 +261,7 @@ library TxParser {
         _checkForBufferOverflow(position_ + 32, data_.length);
 
         // Converting to big-endian format
-        input_.previousHash = (bytes32(data_.slice(position_, position_ + 32)))
-            .bytes32LEtoBytes32BE();
+        input_.previousHash = (bytes32(data_.slice(position_, position_ + 32))).bytes32LEtoBE();
 
         position_ += 32;
 
@@ -309,7 +308,7 @@ library TxParser {
 
         _checkForBufferOverflow(position_ + 8, data_.length);
 
-        output_.value = bytes8(data_.slice(position_, position_ + 8)).bytesLEtoUint64BE();
+        output_.value = bytes8(data_.slice(position_, position_ + 8)).bytes8LEtoUint64BE();
 
         position_ += 8;
 
@@ -337,7 +336,7 @@ library TxParser {
     function _formatTransactionInput(
         TransactionInput calldata input_
     ) private pure returns (bytes memory) {
-        bytes memory prevHash_ = abi.encodePacked((input_.previousHash).bytes32BEtoBytes32LE());
+        bytes memory prevHash_ = abi.encodePacked((input_.previousHash).bytes32BEtoLE());
         bytes memory previousIndex_ = abi.encodePacked(input_.previousIndex.uint32BEtoBytesLE());
         bytes memory sequence_ = abi.encodePacked(input_.sequence.uint32BEtoBytesLE());
 
@@ -380,7 +379,7 @@ library TxParser {
         if (firstByte_ == 0xfd) {
             _checkForBufferOverflow(offset_ + 3, data_.length);
 
-            value_ = bytes2(data_[offset_ + 1:offset_ + 3]).bytesLEtoUint16BE();
+            value_ = bytes2(data_[offset_ + 1:offset_ + 3]).bytes2LEtoUint16BE();
 
             return (value_, 3);
         }
@@ -388,14 +387,14 @@ library TxParser {
         if (firstByte_ == 0xfe) {
             _checkForBufferOverflow(offset_ + 5, data_.length);
 
-            value_ = bytes4(data_[offset_ + 1:offset_ + 5]).bytesLEtoUint32BE();
+            value_ = bytes4(data_[offset_ + 1:offset_ + 5]).bytes4LEtoUint32BE();
 
             return (value_, 5);
         }
 
         _checkForBufferOverflow(offset_ + 9, data_.length);
 
-        value_ = bytes8(data_.slice(offset_ + 1, offset_ + 9)).bytesLEtoUint64BE();
+        value_ = bytes8(data_.slice(offset_ + 1, offset_ + 9)).bytes8LEtoUint64BE();
 
         return (value_, 9);
     }

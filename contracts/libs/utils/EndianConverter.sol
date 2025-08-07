@@ -14,23 +14,23 @@ library EndianConverter {
      * @param input_ The bytes2 to convert
      * @return The uint16 in little-endian encoding
      */
-    function bytesBEtoUint16LE(bytes2 input_) internal pure returns (uint16) {
+    function byte2BEtoUint16LE(bytes2 input_) internal pure returns (uint16) {
         return _reverseUint16(uint16(input_));
     }
 
-    function bytesBEtoUint32LE(bytes4 input_) internal pure returns (uint32) {
+    function bytes4BEtoUint32LE(bytes4 input_) internal pure returns (uint32) {
         return _reverseUint32(uint32(input_));
     }
 
-    function bytesBEtoUint64LE(bytes8 input_) internal pure returns (uint64) {
+    function bytes8BEtoUint64LE(bytes8 input_) internal pure returns (uint64) {
         return _reverseUint64(uint64(input_));
     }
 
-    function bytesBEtoUint128LE(bytes16 input_) internal pure returns (uint128) {
+    function bytes16BEtoUint128LE(bytes16 input_) internal pure returns (uint128) {
         return _reverseUint128(uint128(input_));
     }
 
-    function bytesBEtoUint256LE(bytes32 input_) internal pure returns (uint256) {
+    function bytes32BEtoUint256LE(bytes32 input_) internal pure returns (uint256) {
         return uint256(input_).reverseBytes();
     }
 
@@ -39,23 +39,23 @@ library EndianConverter {
      * @param input_ The bytes2 to convert
      * @return The uint16 in big-endian encoding
      */
-    function bytesLEtoUint16BE(bytes2 input_) internal pure returns (uint16) {
+    function bytes2LEtoUint16BE(bytes2 input_) internal pure returns (uint16) {
         return _reverseUint16(uint16(input_));
     }
 
-    function bytesLEtoUint32BE(bytes4 input_) internal pure returns (uint32) {
+    function bytes4LEtoUint32BE(bytes4 input_) internal pure returns (uint32) {
         return _reverseUint32(uint32(input_));
     }
 
-    function bytesLEtoUint64BE(bytes8 input_) internal pure returns (uint64) {
+    function bytes8LEtoUint64BE(bytes8 input_) internal pure returns (uint64) {
         return _reverseUint64(uint64(input_));
     }
 
-    function bytesLEtoUint128BE(bytes16 input_) internal pure returns (uint128) {
+    function bytes16LEtoUint128BE(bytes16 input_) internal pure returns (uint128) {
         return _reverseUint128(uint128(input_));
     }
 
-    function bytesLEtoUint256BE(bytes32 input_) internal pure returns (uint256) {
+    function bytes32LEtoUint256BE(bytes32 input_) internal pure returns (uint256) {
         return uint256(input_).reverseBytes();
     }
 
@@ -64,23 +64,23 @@ library EndianConverter {
      * @param input_ The bytes2 to convert
      * @return The bytes in little-endian encoding
      */
-    function bytes2BEtoBytes2LE(bytes2 input_) internal pure returns (bytes2) {
+    function bytes2BEtoLE(bytes2 input_) internal pure returns (bytes2) {
         return bytes2(_reverseUint16(uint16(input_)));
     }
 
-    function bytes4BEtoBytes4LE(bytes4 input_) internal pure returns (bytes4) {
+    function bytes4BEtoLE(bytes4 input_) internal pure returns (bytes4) {
         return bytes4(_reverseUint32(uint32(input_)));
     }
 
-    function bytes8BEtoBytes8LE(bytes8 input_) internal pure returns (bytes8) {
+    function bytes8BEtoLE(bytes8 input_) internal pure returns (bytes8) {
         return bytes8(_reverseUint64(uint64(input_)));
     }
 
-    function bytes16BEtoBytes16LE(bytes16 input_) internal pure returns (bytes16) {
+    function bytes16BEtoLE(bytes16 input_) internal pure returns (bytes16) {
         return bytes16(_reverseUint128(uint128(input_)));
     }
 
-    function bytes32BEtoBytes32LE(bytes32 input_) internal pure returns (bytes32) {
+    function bytes32BEtoLE(bytes32 input_) internal pure returns (bytes32) {
         return bytes32(uint256(input_).reverseBytes());
     }
 
@@ -89,23 +89,23 @@ library EndianConverter {
      * @param input_ The bytes2 to convert
      * @return The bytes2 in big-endian encoding
      */
-    function bytes2LEtoBytes2BE(bytes2 input_) internal pure returns (bytes2) {
+    function bytes2LEtoBE(bytes2 input_) internal pure returns (bytes2) {
         return bytes2(_reverseUint16(uint16(input_)));
     }
 
-    function bytes4LEtoBytes4BE(bytes4 input_) internal pure returns (bytes4) {
+    function bytes4LEtoBE(bytes4 input_) internal pure returns (bytes4) {
         return bytes4(_reverseUint32(uint32(input_)));
     }
 
-    function bytes8LEtoBytes8BE(bytes8 input_) internal pure returns (bytes8) {
+    function bytes8LEtoBE(bytes8 input_) internal pure returns (bytes8) {
         return bytes8(_reverseUint64(uint64(input_)));
     }
 
-    function bytes16LEtoBytes16BE(bytes16 input_) internal pure returns (bytes16) {
+    function bytes16LEtoBE(bytes16 input_) internal pure returns (bytes16) {
         return bytes16(_reverseUint128(uint128(input_)));
     }
 
-    function bytes32LEtoBytes32BE(bytes32 input_) internal pure returns (bytes32) {
+    function bytes32LEtoBE(bytes32 input_) internal pure returns (bytes32) {
         return bytes32(uint256(input_).reverseBytes());
     }
 
