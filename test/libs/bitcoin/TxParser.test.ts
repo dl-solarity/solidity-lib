@@ -131,42 +131,42 @@ describe("Transaction Parser", () => {
 
     it("formatCuint", async () => {
       let inputNumber = "0xfd0001";
-      let parsed = await parser.parseCuint(inputNumber, 0);
+      let parsed = await parser.parseCuint(inputNumber);
 
       let formatted = await parser.formatCuint(parsed[0]);
 
       expect(formatted).to.be.eq(inputNumber);
 
       inputNumber = "0xfeffffffff";
-      parsed = await parser.parseCuint(inputNumber, 0);
+      parsed = await parser.parseCuint(inputNumber);
 
       formatted = await parser.formatCuint(parsed[0]);
 
       expect(formatted).to.be.eq(inputNumber);
 
       inputNumber = "0xfeff0f14fa";
-      parsed = await parser.parseCuint(inputNumber, 0);
+      parsed = await parser.parseCuint(inputNumber);
 
       formatted = await parser.formatCuint(parsed[0]);
 
       expect(formatted).to.be.eq(inputNumber);
 
       inputNumber = "0xffffffffffffffffff";
-      parsed = await parser.parseCuint(inputNumber, 0);
+      parsed = await parser.parseCuint(inputNumber);
 
       formatted = await parser.formatCuint(parsed[0]);
 
       expect(formatted).to.be.eq(inputNumber);
 
       inputNumber = "0xff0000000001000000";
-      parsed = await parser.parseCuint(inputNumber, 0);
+      parsed = await parser.parseCuint(inputNumber);
 
       formatted = await parser.formatCuint(parsed[0]);
 
       expect(formatted).to.be.eq(inputNumber);
 
       inputNumber = "0xff01ffbf07efffaafd";
-      parsed = await parser.parseCuint(inputNumber, 0);
+      parsed = await parser.parseCuint(inputNumber);
 
       formatted = await parser.formatCuint(parsed[0]);
 
@@ -177,7 +177,7 @@ describe("Transaction Parser", () => {
   describe("#parseCuint", () => {
     it("should parse correctly", async () => {
       let inputNumber = "0xfd0001";
-      let parsed = await parser.parseCuint(inputNumber, 0);
+      let parsed = await parser.parseCuint(inputNumber);
 
       let [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
 
@@ -185,7 +185,7 @@ describe("Transaction Parser", () => {
       expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
 
       inputNumber = "0xfeffffffff";
-      parsed = await parser.parseCuint(inputNumber, 0);
+      parsed = await parser.parseCuint(inputNumber);
 
       [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
 
@@ -193,7 +193,7 @@ describe("Transaction Parser", () => {
       expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
 
       inputNumber = "0xfeff0f14fa";
-      parsed = await parser.parseCuint(inputNumber, 0);
+      parsed = await parser.parseCuint(inputNumber);
 
       [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
 
@@ -201,7 +201,7 @@ describe("Transaction Parser", () => {
       expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
 
       inputNumber = "0xffffffffffffffffff";
-      parsed = await parser.parseCuint(inputNumber, 0);
+      parsed = await parser.parseCuint(inputNumber);
 
       [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
 
@@ -209,7 +209,7 @@ describe("Transaction Parser", () => {
       expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
 
       inputNumber = "0xff0000000001000000";
-      parsed = await parser.parseCuint(inputNumber, 0);
+      parsed = await parser.parseCuint(inputNumber);
 
       [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
 
@@ -217,7 +217,7 @@ describe("Transaction Parser", () => {
       expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
 
       inputNumber = "0xff01ffbf07efffaafd";
-      parsed = await parser.parseCuint(inputNumber, 0);
+      parsed = await parser.parseCuint(inputNumber);
 
       [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
 

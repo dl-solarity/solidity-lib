@@ -80,7 +80,7 @@ library TxParser {
         uint256 inputCount_;
         uint256 lenSize_;
 
-        (inputCount_, lenSize_) = parseCuint(data_, position_);
+        (inputCount_, lenSize_) = _parseCuint(data_, position_);
 
         if (inputCount_ == 0) {
             tx_.hasWitness = true;
@@ -96,7 +96,7 @@ library TxParser {
 
             ++position_;
 
-            (inputCount_, lenSize_) = parseCuint(data_, position_);
+            (inputCount_, lenSize_) = _parseCuint(data_, position_);
         }
 
         position_ += lenSize_;
@@ -112,7 +112,7 @@ library TxParser {
         }
 
         uint256 outputCount_;
-        (outputCount_, lenSize_) = parseCuint(data_, position_);
+        (outputCount_, lenSize_) = _parseCuint(data_, position_);
 
         position_ += lenSize_;
         tx_.outputs = new TransactionOutput[](outputCount_);
@@ -129,7 +129,7 @@ library TxParser {
             for (uint256 i = 0; i < inputCount_; ++i) {
                 uint256 witnessCount_;
 
-                (witnessCount_, lenSize_) = parseCuint(data_, position_);
+                (witnessCount_, lenSize_) = _parseCuint(data_, position_);
 
                 position_ += lenSize_;
                 tx_.inputs[i].witnesses = new bytes[](witnessCount_);
@@ -137,7 +137,7 @@ library TxParser {
                 for (uint256 j = 0; j < witnessCount_; ++j) {
                     uint256 witnessLen_;
 
-                    (witnessLen_, lenSize_) = parseCuint(data_, position_);
+                    (witnessLen_, lenSize_) = _parseCuint(data_, position_);
 
                     position_ += lenSize_;
 
@@ -178,14 +178,14 @@ library TxParser {
         }
 
         uint256 txInputsLength_ = tx_.inputs.length;
-        result_ = abi.encodePacked(result_, formatCuint(txInputsLength_));
+        result_ = abi.encodePacked(result_, formatCuint(uint64(txInputsLength_)));
 
         for (uint256 i = 0; i < txInputsLength_; ++i) {
             result_ = abi.encodePacked(result_, _formatTransactionInput(tx_.inputs[i]));
         }
 
         uint256 txOutputsLength_ = tx_.outputs.length;
-        result_ = abi.encodePacked(result_, formatCuint(txOutputsLength_));
+        result_ = abi.encodePacked(result_, formatCuint(uint64(txOutputsLength_)));
 
         for (uint256 i = 0; i < txOutputsLength_; ++i) {
             result_ = abi.encodePacked(result_, _formatTransactionOutput(tx_.outputs[i]));
@@ -194,12 +194,12 @@ library TxParser {
         if (includeWitness_) {
             for (uint256 i = 0; i < txInputsLength_; ++i) {
                 uint256 witnessesLength_ = tx_.inputs[i].witnesses.length;
-                result_ = abi.encodePacked(result_, formatCuint(witnessesLength_));
+                result_ = abi.encodePacked(result_, formatCuint(uint64(witnessesLength_)));
 
                 for (uint256 j = 0; j < witnessesLength_; ++j) {
                     result_ = abi.encodePacked(
                         result_,
-                        formatCuint(tx_.inputs[i].witnesses[j].length),
+                        formatCuint(uint64(tx_.inputs[i].witnesses[j].length)),
                         tx_.inputs[i].witnesses[j]
                     );
                 }
@@ -214,43 +214,13 @@ library TxParser {
     /**
      * @notice Parse a compact unsigned integer (Bitcoin's variable length encoding)
      * @param data_ The byte array containing the cuint in little-endian encoding
-     * @param offset_ The starting position
      * @return value_ The parsed integer value
      * @return consumed_ Number of bytes consumed
      */
     function parseCuint(
-        bytes calldata data_,
-        uint256 offset_
-    ) internal pure returns (uint256 value_, uint256 consumed_) {
-        _checkForBufferOverflow(offset_ + 1, data_.length);
-
-        uint8 firstByte_ = uint8(data_[offset_]);
-
-        if (firstByte_ < 0xfd) {
-            return (uint8(firstByte_), 1);
-        }
-
-        if (firstByte_ == 0xfd) {
-            _checkForBufferOverflow(offset_ + 3, data_.length);
-
-            value_ = bytes2(data_[offset_ + 1:offset_ + 3]).bytesLEtoUint16BE();
-
-            return (value_, 3);
-        }
-
-        if (firstByte_ == 0xfe) {
-            _checkForBufferOverflow(offset_ + 5, data_.length);
-
-            value_ = bytes4(data_[offset_ + 1:offset_ + 5]).bytesLEtoUint32BE();
-
-            return (value_, 5);
-        }
-
-        _checkForBufferOverflow(offset_ + 9, data_.length);
-
-        value_ = bytes8(data_.slice(offset_ + 1, offset_ + 9)).bytesLEtoUint64BE();
-
-        return (value_, 9);
+        bytes calldata data_
+    ) internal pure returns (uint64 value_, uint8 consumed_) {
+        return _parseCuint(data_, 0);
     }
 
     /**
@@ -259,8 +229,7 @@ library TxParser {
      * @param value_ The integer to encode
      * @return The encoded bytes
      */
-    function formatCuint(uint256 value_) internal pure returns (bytes memory) {
-        //64 max?
+    function formatCuint(uint64 value_) internal pure returns (bytes memory) {
         if (value_ < 0xfd) {
             return abi.encodePacked(uint8(value_));
         }
@@ -273,7 +242,7 @@ library TxParser {
             return abi.encodePacked(uint8(0xfe), uint32(value_).uint32BEtoLE());
         }
 
-        return abi.encodePacked(uint8(0xff), uint64(value_).uint64BEtoLE());
+        return abi.encodePacked(uint8(0xff), value_.uint64BEtoLE());
     }
 
     /**
@@ -306,7 +275,7 @@ library TxParser {
         uint256 scriptLen_;
         uint256 lenSize_;
 
-        (scriptLen_, lenSize_) = parseCuint(data_, position_);
+        (scriptLen_, lenSize_) = _parseCuint(data_, position_);
 
         position_ += lenSize_;
 
@@ -347,7 +316,7 @@ library TxParser {
         uint256 scriptLen_;
         uint256 lenSize_;
 
-        (scriptLen_, lenSize_) = parseCuint(data_, position_);
+        (scriptLen_, lenSize_) = _parseCuint(data_, position_);
 
         position_ += lenSize_;
 
@@ -376,7 +345,7 @@ library TxParser {
             abi.encodePacked(
                 prevHash_,
                 previousIndex_,
-                formatCuint(input_.script.length),
+                formatCuint(uint64(input_.script.length)),
                 input_.script,
                 sequence_
             );
@@ -392,7 +361,43 @@ library TxParser {
     ) private pure returns (bytes memory) {
         bytes memory value_ = abi.encodePacked(output_.value.uint64BEtoBytesLE());
 
-        return abi.encodePacked(value_, formatCuint(output_.script.length), output_.script);
+        return
+            abi.encodePacked(value_, formatCuint(uint64(output_.script.length)), output_.script);
+    }
+
+    function _parseCuint(
+        bytes calldata data_,
+        uint256 offset_
+    ) private pure returns (uint64 value_, uint8 consumed_) {
+        _checkForBufferOverflow(offset_ + 1, data_.length);
+
+        uint8 firstByte_ = uint8(data_[offset_]);
+
+        if (firstByte_ < 0xfd) {
+            return (uint8(firstByte_), 1);
+        }
+
+        if (firstByte_ == 0xfd) {
+            _checkForBufferOverflow(offset_ + 3, data_.length);
+
+            value_ = bytes2(data_[offset_ + 1:offset_ + 3]).bytesLEtoUint16BE();
+
+            return (value_, 3);
+        }
+
+        if (firstByte_ == 0xfe) {
+            _checkForBufferOverflow(offset_ + 5, data_.length);
+
+            value_ = bytes4(data_[offset_ + 1:offset_ + 5]).bytesLEtoUint32BE();
+
+            return (value_, 5);
+        }
+
+        _checkForBufferOverflow(offset_ + 9, data_.length);
+
+        value_ = bytes8(data_.slice(offset_ + 1, offset_ + 9)).bytesLEtoUint64BE();
+
+        return (value_, 9);
     }
 
     function _checkForBufferOverflow(uint256 positionToCheck_, uint256 dataLength_) private pure {
