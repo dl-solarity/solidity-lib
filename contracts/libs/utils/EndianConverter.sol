@@ -226,6 +226,10 @@ library EndianConverter {
      * @notice Converts between little-endian and big-endian formats
      */
     function _reverseUint128(uint128 input_) private pure returns (uint128) {
+        return _reverseUint128LeftHalf(input_) | _reverseUint128RightHalf(input_);
+    }
+
+    function _reverseUint128LeftHalf(uint128 input_) private pure returns (uint128) {
         return
             ((input_ & 0x000000000000000000000000000000FF) << 120) |
             ((input_ & 0x0000000000000000000000000000FF00) << 104) |
@@ -234,7 +238,11 @@ library EndianConverter {
             ((input_ & 0x0000000000000000000000FF00000000) << 56) |
             ((input_ & 0x00000000000000000000FF0000000000) << 40) |
             ((input_ & 0x000000000000000000FF000000000000) << 24) |
-            ((input_ & 0x0000000000000000FF00000000000000) << 8) |
+            ((input_ & 0x0000000000000000FF00000000000000) << 8);
+    }
+
+    function _reverseUint128RightHalf(uint128 input_) private pure returns (uint128) {
+        return
             ((input_ & 0x00000000000000FF0000000000000000) >> 8) |
             ((input_ & 0x000000000000FF000000000000000000) >> 24) |
             ((input_ & 0x0000000000FF00000000000000000000) >> 40) |
