@@ -5,9 +5,9 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 import { Reverter } from "@/test/helpers/reverter";
 
-import { ERC20UpgradeableMock } from "@ethers-v6";
+import type { ERC20UpgradeableMock } from "@ethers-v6";
 
-describe("DepInitializer", () => {
+describe("DeployerGuard", () => {
   const reverter = new Reverter();
 
   let FIRST: SignerWithAddress;

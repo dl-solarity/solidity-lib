@@ -2,21 +2,20 @@
 // solhint-disable
 pragma solidity ^0.8.21;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-import {DepInitializer} from "../../utils/DepInitializer.sol";
+import {DeployerGuard} from "../../utils/DeployerGuard.sol";
 
-contract ERC20UpgradeableMock is DepInitializer, ERC20Upgradeable {
+contract ERC20UpgradeableMock is DeployerGuard, ERC20Upgradeable {
     uint8 internal _decimals;
 
-    constructor() DepInitializer(msg.sender) {}
+    constructor() DeployerGuard(msg.sender) {}
 
     function __ERC20UpgradeableMock_init(
         string memory name_,
         string memory symbol_,
         uint8 decimalPlaces_
-    ) external reinitializer(1) onlyDeployer {
+    ) external initializer onlyDeployer {
         __ERC20_init(name_, symbol_);
 
         _decimals = decimalPlaces_;
