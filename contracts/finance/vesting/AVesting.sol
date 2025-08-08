@@ -432,13 +432,17 @@ abstract contract AVesting is Initializable {
             return totalVestingAmount_;
         }
 
-        uint256 elapsedPeriodsPercentage_ = (elapsedPeriods_ * PRECISION) /
-            _baseData.durationInPeriods;
+        uint256 elapsedPeriodsPercentage_ = Math.mulDiv(
+            elapsedPeriods_,
+            PRECISION,
+            _baseData.durationInPeriods
+        );
 
-        vestedAmount_ =
-            (_raiseToPower(elapsedPeriodsPercentage_, _schedule.exponent) *
-                (totalVestingAmount_)) /
-            _raiseToPower(PRECISION, _schedule.exponent);
+        vestedAmount_ = Math.mulDiv(
+            _raiseToPower(elapsedPeriodsPercentage_, _schedule.exponent),
+            totalVestingAmount_,
+            _raiseToPower(PRECISION, _schedule.exponent)
+        );
 
         return vestedAmount_.min(totalVestingAmount_);
     }
@@ -500,10 +504,10 @@ abstract contract AVesting is Initializable {
         result_ = exponent_ & 1 == 0 ? PRECISION : base_;
 
         while ((exponent_ >>= 1) > 0) {
-            base_ = (base_ * base_) / PRECISION;
+            base_ = Math.mulDiv(base_, base_, PRECISION);
 
             if (exponent_ & 1 == 1) {
-                result_ = (result_ * base_) / PRECISION;
+                result_ = Math.mulDiv(result_, base_, PRECISION);
             }
         }
     }
