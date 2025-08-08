@@ -25,7 +25,7 @@ export function parseCuint(data: string, offset: number): [bigint, number] {
   return [BigInt(reverseBytes(data.slice(offset + 2, offset + 18))), 18];
 }
 
-export function reverseNumber(decimalNumber: BigNumberish): BigInt {
+export function reverseUint32(decimalNumber: BigNumberish): BigInt {
   const hex = decimalNumber.toString(16);
   const bytes4 = hex.padStart(8, "0");
 

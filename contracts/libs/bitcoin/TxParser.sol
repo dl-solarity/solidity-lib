@@ -171,7 +171,7 @@ library TxParser {
     ) internal pure returns (bytes memory) {
         bool includeWitness_ = withWitness_ && tx_.hasWitness;
 
-        bytes memory result_ = abi.encodePacked(tx_.version.uint32BEtoBytes4LE());
+        bytes memory result_ = abi.encodePacked(tx_.version.uint32BEtoLE());
 
         if (includeWitness_) {
             result_ = abi.encodePacked(result_, uint8(0), uint8(1));
@@ -308,7 +308,7 @@ library TxParser {
 
         _checkForBufferOverflow(position_ + 8, data_.length);
 
-        output_.value = bytes8(data_.slice(position_, position_ + 8)).bytes8LEtoUint64BE();
+        output_.value = uint64(bytes8(data_.slice(position_, position_ + 8))).uint64LEtoBE();
 
         position_ += 8;
 
@@ -337,8 +337,8 @@ library TxParser {
         TransactionInput calldata input_
     ) private pure returns (bytes memory) {
         bytes memory prevHash_ = abi.encodePacked((input_.previousHash).bytes32BEtoLE());
-        bytes memory previousIndex_ = abi.encodePacked(input_.previousIndex.uint32BEtoBytes4LE());
-        bytes memory sequence_ = abi.encodePacked(input_.sequence.uint32BEtoBytes4LE());
+        bytes memory previousIndex_ = abi.encodePacked(input_.previousIndex.uint32BEtoLE());
+        bytes memory sequence_ = abi.encodePacked(input_.sequence.uint32BEtoLE());
 
         return
             abi.encodePacked(
@@ -358,7 +358,7 @@ library TxParser {
     function _formatTransactionOutput(
         TransactionOutput calldata output_
     ) private pure returns (bytes memory) {
-        bytes memory value_ = abi.encodePacked(output_.value.uint64BEtoBytes8LE());
+        bytes memory value_ = abi.encodePacked(output_.value.uint64BEtoLE());
 
         return
             abi.encodePacked(value_, formatCuint(uint64(output_.script.length)), output_.script);
@@ -379,7 +379,7 @@ library TxParser {
         if (firstByte_ == 0xfd) {
             _checkForBufferOverflow(offset_ + 3, data_.length);
 
-            value_ = bytes2(data_[offset_ + 1:offset_ + 3]).bytes2LEtoUint16BE();
+            value_ = uint16(bytes2(data_[offset_ + 1:offset_ + 3])).uint16LEtoBE();
 
             return (value_, 3);
         }
@@ -387,14 +387,14 @@ library TxParser {
         if (firstByte_ == 0xfe) {
             _checkForBufferOverflow(offset_ + 5, data_.length);
 
-            value_ = bytes4(data_[offset_ + 1:offset_ + 5]).bytes4LEtoUint32BE();
+            value_ = uint32(bytes4(data_[offset_ + 1:offset_ + 5])).uint32LEtoBE();
 
             return (value_, 5);
         }
 
         _checkForBufferOverflow(offset_ + 9, data_.length);
 
-        value_ = bytes8(data_.slice(offset_ + 1, offset_ + 9)).bytes8LEtoUint64BE();
+        value_ = uint64(bytes8(data_.slice(offset_ + 1, offset_ + 9))).uint64LEtoBE();
 
         return (value_, 9);
     }

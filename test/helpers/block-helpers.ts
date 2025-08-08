@@ -3,7 +3,7 @@ import path from "path";
 import { expect } from "chai";
 
 import { HeaderData } from "./types";
-import { reverseBytes, reverseNumber } from "./bytes-helpers";
+import { reverseBytes, reverseUint32 } from "./bytes-helpers";
 import { BlockHeader } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/BlockHeaderMock";
 
 export function getBlocksDataFilePath(fileName: string): string {
@@ -33,14 +33,14 @@ export function checkBlockHeaderDataInLE(
   actualBlockHeaderData: BlockHeader.HeaderDataStruct,
   expectedBlockHeaderData: HeaderData,
 ) {
-  expect(actualBlockHeaderData.version).to.be.eq(reverseNumber(expectedBlockHeaderData.parsedBlockHeader.version));
+  expect(actualBlockHeaderData.version).to.be.eq(reverseUint32(expectedBlockHeaderData.parsedBlockHeader.version));
   expect(actualBlockHeaderData.bits).to.be.eq(reverseBytes(expectedBlockHeaderData.parsedBlockHeader.bits));
   expect(actualBlockHeaderData.prevBlockHash).to.be.eq(
     reverseBytes(expectedBlockHeaderData.parsedBlockHeader.previousblockhash),
   );
   expect(actualBlockHeaderData.merkleRoot).to.be.eq(reverseBytes(expectedBlockHeaderData.parsedBlockHeader.merkleroot));
-  expect(actualBlockHeaderData.nonce).to.be.eq(reverseNumber(expectedBlockHeaderData.parsedBlockHeader.nonce));
-  expect(actualBlockHeaderData.time).to.be.eq(reverseNumber(expectedBlockHeaderData.parsedBlockHeader.time));
+  expect(actualBlockHeaderData.nonce).to.be.eq(reverseUint32(expectedBlockHeaderData.parsedBlockHeader.nonce));
+  expect(actualBlockHeaderData.time).to.be.eq(reverseUint32(expectedBlockHeaderData.parsedBlockHeader.time));
 }
 
 function formatBlockHeaderData(headerData: HeaderData): HeaderData {
