@@ -22,7 +22,7 @@ contract DeployerGuard {
      * to ensure only the original deployer can establish cross-contract references
      */
     modifier onlyDeployer() {
-        _requireDeployer();
+        _requireDeployer(msg.sender);
         _;
     }
 
@@ -36,17 +36,17 @@ contract DeployerGuard {
     /**
      * @dev Reverts if the caller is not the deployer
      */
-    function _requireDeployer() internal view {
-        if (!_isDeployer()) {
-            revert OnlyDeployer(msg.sender);
+    function _requireDeployer(address account_) internal view {
+        if (!_isDeployer(account_)) {
+            revert OnlyDeployer(account_);
         }
     }
 
     /**
      * @dev Internal function to check if the given address is the deployer
      */
-    function _isDeployer() internal view returns (bool) {
-        return _deployer() == msg.sender;
+    function _isDeployer(address account_) internal view returns (bool) {
+        return _deployer() == account_;
     }
 
     /**
