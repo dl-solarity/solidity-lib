@@ -46,6 +46,10 @@ contracts
 │   │   ├── ArrayHelper — "Common functions to work with arrays"
 │   │   ├── Paginator — "Return array slices from view function"
 │   │   └── SetHelper — "Array abstraction over sets"
+│   ├── bitcoin
+│   │   ├── BlockHeader — "Parse, hash and convert Bitcoin block header data"
+│   │   ├── TxMerkleProof — "Verify transaction inclusion in Bitcoin block"
+│   │   └── TxParser — "Parse and format Bitcoin transactions"
 │   ├── bn
 │   │   └── U512 — "A hyperoptimized uint512 implementation"
 │   ├── crypto
@@ -66,6 +70,7 @@ contracts
 │   │       └── Vector — "A pushable memory array"
 │   ├── utils
 │   │   ├── DecimalsConverter — "Simplify interaction with ERC-20 decimals"
+│   │   ├── EndianConverter — "Convert between little-endian and big-endian formats"
 │   │   ├── MemoryUtils — "Functions for memory manipulation"
 │   │   ├── ReturnDataProxy — "Bypass extra returndata copy when returning data"
 │   │   └── Typecaster — "Cast between various Solidity types"
