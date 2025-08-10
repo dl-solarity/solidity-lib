@@ -4,12 +4,12 @@ pragma solidity ^0.8.21;
 
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-import {DeployerGuard} from "../../utils/DeployerGuard.sol";
+import {ADeployerGuard} from "../../utils/ADeployerGuard.sol";
 
-contract ERC20UpgradeableMock is DeployerGuard, ERC20Upgradeable {
+contract ERC20UpgradeableMock is ADeployerGuard, ERC20Upgradeable {
     uint8 internal _decimals;
 
-    constructor() DeployerGuard(msg.sender) {}
+    constructor() ADeployerGuard(msg.sender) {}
 
     function __ERC20UpgradeableMock_init(
         string memory name_,

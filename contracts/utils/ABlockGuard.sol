@@ -10,7 +10,7 @@ pragma solidity ^0.8.21;
  * ## Usage example:
  *
  * ```
- * contract NotFlashloanable is BlockGuard {
+ * contract NotFlashloanable is ABlockGuard {
  *     function deposit(uint256 amount) external lockBlock("DEPOSIT", msg.sender) {
  *         . . .
  *     }
