@@ -13,15 +13,17 @@ pragma solidity ^0.8.21;
  * ## Usage example:
  *
  * ```
- * contract ProtectedImpl is ADeployerGuard {
+ * contract ProtectedERC20 is ADeployerGuard, ERC20 {
  *     constructor() ADeployerGuard(msg.sender) {}
  *
- *     function __ERC20_init(
+ *     function __ProtectedERC20_init(
  *         string memory name_,
  *         string memory symbol_,
  *     ) external initializer onlyDeployer {
  *         __ERC20_init(name_, symbol_);
  *     }
+ *
+ *     ...
  * }
  * ```
  */

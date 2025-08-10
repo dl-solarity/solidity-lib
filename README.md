@@ -83,6 +83,7 @@ contracts
 │   └── ASBT — "A minimal implementation of an SBT"
 ├── utils
 │   ├── ABlockGuard — "Protect against flashloans"
+│   ├── ADeployerGuard — "Prevent proxy initialization frontrunning"
 │   └── Globals — "Some commonly used constants"
 ├── presets — "Presets for the library contracts"
 ├── interfaces — "Interfaces for the library contracts"
