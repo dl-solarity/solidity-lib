@@ -3,7 +3,7 @@ name: changelog-validate
 on:
   pull_request:
     branches:
-      - main
+      - master
       - dev
 
 jobs:
