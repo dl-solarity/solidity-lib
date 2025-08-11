@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 
 import fs from "fs";
-import path from "path";
 
-import { bumpBase, parseRc, readJSON } from "./utils";
+import { bumpBase, parseRc, readJSON, getPkgPath, getChangelogPath } from "./utils";
 import { allowedWhenNotRc, allowedWhenRc } from "./constants";
 
 import type { Level } from "./types";
 
 export default function computeNextVersion(): { current: string; level: Level; next: string } {
-  const pkgPath = path.resolve(process.cwd(), "package.json");
-  const changelogPath = path.resolve(process.cwd(), "CHANGELOG.md");
+  const pkgPath = getPkgPath();
+  const changelogPath = getChangelogPath();
   const pkg = readJSON<{ version: string }>(pkgPath);
   if (!fs.existsSync(changelogPath)) {
     throw new Error("CHANGELOG.md not found");

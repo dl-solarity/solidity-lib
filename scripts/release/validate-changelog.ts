@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "fs";
-import path from "path";
+import { getChangelogPath, getPkgPath, readJSON } from "./utils";
 
 import { allowedWhenNotRc, allowedWhenRc } from "./constants";
 
@@ -12,7 +12,7 @@ function fail(message: string): never {
 }
 
 export default function validateChangelog(): void {
-  const changelogPath = path.resolve(process.cwd(), "CHANGELOG.md");
+  const changelogPath = getChangelogPath();
   if (!fs.existsSync(changelogPath)) {
     fail("CHANGELOG.md not found at repository root");
   }
@@ -37,7 +37,7 @@ export default function validateChangelog(): void {
     fail('No H2 heading like "## [patch|minor|major|none]" found');
   }
 
-  const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf8")) as { version: string };
+  const pkg = readJSON<{ version: string }>(getPkgPath());
   const isRc = /-rc\.\d+$/.test(pkg.version);
   const normalized = firstH2Tag.toLowerCase() as Level;
 

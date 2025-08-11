@@ -1,18 +1,16 @@
 #!/usr/bin/env node
 
 import fs from "fs";
-import path from "path";
+import { getChangelogPath, getPkgPath, readJSON } from "./utils";
 
 export default function extractReleaseNotes({ version }: { version?: string } = {}): string {
-  const root = process.cwd();
-  const changelogPath = path.resolve(root, "CHANGELOG.md");
+  const changelogPath = getChangelogPath();
   if (!fs.existsSync(changelogPath)) {
     return "";
   }
   const changelog = fs.readFileSync(changelogPath, "utf8");
 
-  const pkgVersion =
-    version || (JSON.parse(fs.readFileSync(path.resolve(root, "package.json"), "utf8")) as { version: string }).version;
+  const pkgVersion = version || readJSON<{ version: string }>(getPkgPath()).version;
   const escapedVersion = pkgVersion.replace(/\./g, "\\.");
   const header = new RegExp(`^##\\s*\\[${escapedVersion}\\]\\s*$`, "m");
 

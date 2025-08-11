@@ -1,14 +1,13 @@
-import path from "path";
 import { execSync } from "node:child_process";
 
 import extractReleaseNotes from "./extract-release-notes";
 
-import { readJSON } from "./utils";
+import { readJSON, getPkgPath } from "./utils";
 
 import type { Core } from "./types";
 
 export default async function computeReleaseState(core: Core) {
-  const pkgPath = path.join(process.cwd(), "package.json");
+  const pkgPath = getPkgPath();
 
   const isReleaseCommit = /^chore\(release\):/m.test(execSync("git log -1 --pretty=%B", { encoding: "utf8" }));
 

@@ -1,4 +1,6 @@
 import fs from "fs";
+import path from "path";
+import { allowedWhenNotRc, allowedWhenRc } from "./constants";
 
 import type { Level, TopSection } from "./types";
 
@@ -8,6 +10,14 @@ export function readJSON<T = any>(filePath: string): T {
 
 export function writeJSON(filePath: string, obj: unknown): void {
   fs.writeFileSync(filePath, `${JSON.stringify(obj, null, 2)}\n`);
+}
+
+export function getPkgPath(): string {
+  return path.resolve(process.cwd(), "package.json");
+}
+
+export function getChangelogPath(): string {
+  return path.resolve(process.cwd(), "CHANGELOG.md");
 }
 
 export function parseRc(version: string): { base: string; rc: number | null } {
@@ -67,4 +77,25 @@ export function getTopSection(changelogContent: string): TopSection {
     .join("\n")
     .trim();
   return { level, body, start: topIdx, end: endIdx };
+}
+
+export function validateReleaseTopSection({
+  level,
+  body,
+  pkgIsRc,
+}: {
+  level: string | null;
+  body: string;
+  pkgIsRc: boolean;
+}): void {
+  if (!level) throw new Error("Top H2 tag not found");
+  const normalized = String(level).toLowerCase() as Level;
+  if (!(pkgIsRc ? allowedWhenRc.has(normalized) : allowedWhenNotRc.has(normalized))) {
+    if (pkgIsRc) {
+      throw new Error("Top H2 tag must be one of rc|release when current version is an RC");
+    } else {
+      throw new Error("Top H2 tag must be one of patch|minor|major|none|patch-rc|minor-rc|major-rc when not in RC");
+    }
+  }
+  if (body.trim().length === 0) throw new Error("Release notes section is empty");
 }
