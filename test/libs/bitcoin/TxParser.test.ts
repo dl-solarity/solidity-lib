@@ -1,8 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-
 import { Reverter } from "@/test/helpers/reverter";
 import { TxParserMock } from "@/generated-types/ethers";
 import { parseCuint, reverseBytes } from "@/test/helpers/bytes-helpers";
@@ -11,16 +9,12 @@ import { checkTransaction, formatTx, getTxData, getTxDataFilePath } from "@/test
 describe("Transaction Parser", () => {
   const reverter = new Reverter();
 
-  let OWNER: SignerWithAddress;
-
   let parser: TxParserMock;
 
   let txData802_368: string;
   let txData568: string;
 
   before(async () => {
-    [OWNER] = await ethers.getSigners();
-
     const TxParserMock = await ethers.getContractFactory("TxParserMock");
     parser = await TxParserMock.deploy();
 
