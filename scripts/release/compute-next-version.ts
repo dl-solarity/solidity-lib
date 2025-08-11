@@ -8,13 +8,9 @@ import { allowedWhenNotRc, allowedWhenRc } from "./constants";
 import type { Level } from "./types";
 
 export default function computeNextVersion(): { current: string; level: Level; next: string } {
-  const pkgPath = getPkgPath();
-  const changelogPath = getChangelogPath();
-  const pkg = readJSON<{ version: string }>(pkgPath);
-  if (!fs.existsSync(changelogPath)) {
-    throw new Error("CHANGELOG.md not found");
-  }
-  const changelog = fs.readFileSync(changelogPath, "utf8");
+  const pkg = readJSON<{ version: string }>(getPkgPath());
+
+  const changelog = fs.readFileSync(getChangelogPath(), "utf8");
   const match = changelog.match(/^##\s*\[(.+?)\]\s*$/m);
   if (!match) {
     throw new Error("Could not find top H2 tag in CHANGELOG.md");
@@ -67,5 +63,6 @@ export default function computeNextVersion(): { current: string; level: Level; n
         throw new Error(`Tag ${level} is not valid while in RC`);
     }
   }
+
   return { current: pkg.version, level, next };
 }

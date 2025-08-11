@@ -13,8 +13,6 @@ export default async function applyRelease(core: Core): Promise<void> {
   const pkgPath = getPkgPath();
   const changelogPath = getChangelogPath();
 
-  if (!fs.existsSync(changelogPath)) throw new Error("CHANGELOG.md not found");
-
   const pkg = readJSON<{ version: string }>(pkgPath);
   const changelog = fs.readFileSync(changelogPath, "utf8");
 

@@ -12,12 +12,7 @@ function fail(message: string): never {
 }
 
 export default function validateChangelog(): void {
-  const changelogPath = getChangelogPath();
-  if (!fs.existsSync(changelogPath)) {
-    fail("CHANGELOG.md not found at repository root");
-  }
-
-  const content = fs.readFileSync(changelogPath, "utf8");
+  const content = fs.readFileSync(getChangelogPath(), "utf8");
   const lines = content.split(/\r?\n/);
 
   // Find first H2 (## [xxx])

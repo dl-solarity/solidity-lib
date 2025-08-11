@@ -17,7 +17,9 @@ export function getPkgPath(): string {
 }
 
 export function getChangelogPath(): string {
-  return path.resolve(process.cwd(), "CHANGELOG.md");
+  const changelogPath = path.resolve(process.cwd(), "CHANGELOG.md");
+  if (!fs.existsSync(changelogPath)) throw new Error("CHANGELOG.md not found");
+  return changelogPath;
 }
 
 export function parseRc(version: string): { base: string; rc: number | null } {
