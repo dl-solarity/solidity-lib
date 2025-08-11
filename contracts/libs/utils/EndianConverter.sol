@@ -7,7 +7,7 @@ import {LibBit} from "solady/src/utils/LibBit.sol";
  * @notice A library with functions for converting between little-endian and big-endian formats
  */
 library EndianConverter {
-    using LibBit for uint256;
+    using LibBit for *;
 
     /**
      * @notice Converts big-endian bytes2 to little-endian
@@ -225,31 +225,18 @@ library EndianConverter {
     /**
      * @notice Converts between little-endian and big-endian formats
      */
-    function _reverseUint128(uint128 input_) private pure returns (uint128) {
-        return _reverseUint128LeftHalf(input_) | _reverseUint128RightHalf(input_);
-    }
+    function _reverseUint128(uint128 input_) private pure returns (uint128 result_) {
+        unchecked {
+            uint128 mask0_ = 0x10000000000000001 *
+                (~uint128((input_ == uint128(0)).toUint()) >> 96);
 
-    function _reverseUint128LeftHalf(uint128 input_) private pure returns (uint128) {
-        return
-            ((input_ & 0x000000000000000000000000000000FF) << 120) |
-            ((input_ & 0x0000000000000000000000000000FF00) << 104) |
-            ((input_ & 0x00000000000000000000000000FF0000) << 88) |
-            ((input_ & 0x000000000000000000000000FF000000) << 72) |
-            ((input_ & 0x0000000000000000000000FF00000000) << 56) |
-            ((input_ & 0x00000000000000000000FF0000000000) << 40) |
-            ((input_ & 0x000000000000000000FF000000000000) << 24) |
-            ((input_ & 0x0000000000000000FF00000000000000) << 8);
-    }
+            uint128 mask1_ = mask0_ ^ (mask0_ << 16);
+            uint128 mask2_ = mask1_ ^ (mask1_ << 8);
 
-    function _reverseUint128RightHalf(uint128 input_) private pure returns (uint128) {
-        return
-            ((input_ & 0x00000000000000FF0000000000000000) >> 8) |
-            ((input_ & 0x000000000000FF000000000000000000) >> 24) |
-            ((input_ & 0x0000000000FF00000000000000000000) >> 40) |
-            ((input_ & 0x00000000FF0000000000000000000000) >> 56) |
-            ((input_ & 0x000000FF000000000000000000000000) >> 72) |
-            ((input_ & 0x0000FF00000000000000000000000000) >> 88) |
-            ((input_ & 0x00FF0000000000000000000000000000) >> 104) |
-            ((input_ & 0xFF000000000000000000000000000000) >> 120);
+            result_ = (mask2_ & (input_ >> 8)) | ((mask2_ & input_) << 8);
+            result_ = (mask1_ & (result_ >> 16)) | ((mask1_ & result_) << 16);
+            result_ = (mask0_ & (result_ >> 32)) | ((mask0_ & result_) << 32);
+            result_ = (result_ >> 64) | (result_ << 64);
+        }
     }
 }
