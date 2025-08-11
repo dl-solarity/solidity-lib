@@ -5,10 +5,11 @@ on:
   workflow_run:
     workflows:
       - tests
+      - pre-release
     types:
       - completed
     branches:
-      - master
+      - main
 
 jobs:
   state:
@@ -16,48 +17,63 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
       - name: Set up environment
         uses: ./.github/actions/setup
-      - name: Fetch State
-        id: state
-        run: bash ./scripts/versions.sh
+
+      - id: state
+        name: Compute release state
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            require('ts-node/register/transpile-only');
+            await require('./scripts/release/compute-release-state.ts').default(core);
     outputs:
       local_version: ${{ steps.state.outputs.local_version }}
-      version_changed: ${{ steps.state.outputs.version_changed }}
+      notes: ${{ steps.state.outputs.notes }}
+      is_release_commit: ${{ steps.state.outputs.is_release_commit }}
 
   release:
     runs-on: ubuntu-latest
     needs: state
-    if: needs.state.outputs.version_changed != 'not_changed'
+    if: needs.state.outputs.is_release_commit == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.ARVOLEAR_RELEASER }}
-          tag_name: ${{ needs.state.outputs.local_version }}
+          tag_name: v${{ needs.state.outputs.local_version }}
           name: Release v${{ needs.state.outputs.local_version }}
           body: |
-            # Release notes v${{ needs.state.outputs.local_version }} 🎉
-
-            ## This is a ${{ needs.state.outputs.version_changed }} release
-
-            To be filled...
+            ${{ needs.state.outputs.notes }}
           draft: false
           prerelease: false
 
   publish:
     runs-on: ubuntu-latest
     needs: state
-    if: needs.state.outputs.version_changed != 'not_changed'
+    if: needs.state.outputs.is_release_commit == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3
-      - name: Setup
-        uses: ./.github/actions/setup
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: npm
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Install packages
+        run: npm install
+        shell: bash
+
       - name: Publish to npm
-        run: |
-          npm config set //registry.npmjs.org/:_authToken ${{ secrets.NPM_ACCESS_TOKEN }}
-          npm run publish-to-npm
+        run: npm run publish-to-npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+

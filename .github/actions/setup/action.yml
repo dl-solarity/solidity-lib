@@ -6,8 +6,9 @@ runs:
     - name: Setup node
       uses: actions/setup-node@v3
       with:
-        node-version: "18.18.x"
+        node-version: "20.x"
         cache: npm
+
     - name: Install packages
       run: npm install
       shell: bash
