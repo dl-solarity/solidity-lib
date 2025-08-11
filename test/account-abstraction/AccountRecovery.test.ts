@@ -1,15 +1,11 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-
 import { AccountRecoveryMock, RecoveryProviderMock } from "@/generated-types/ethers";
 import { Reverter } from "@/test/helpers/reverter";
 
 describe("AccountRecovery", () => {
   const reverter = new Reverter();
-
-  let OWNER: SignerWithAddress;
 
   let accountRecovery: AccountRecoveryMock;
   let provider1: RecoveryProviderMock;
@@ -19,8 +15,6 @@ describe("AccountRecovery", () => {
   const RECOVERY_DATA = "0x1234";
 
   before(async () => {
-    [OWNER] = await ethers.getSigners();
-
     const AccountRecoveryMock = await ethers.getContractFactory("AccountRecoveryMock");
     accountRecovery = await AccountRecoveryMock.deploy();
 
