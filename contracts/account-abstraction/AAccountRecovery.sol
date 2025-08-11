@@ -13,7 +13,7 @@ import {IRecoveryProvider} from "../interfaces/account-abstraction/IRecoveryProv
  * You may use this module as a base contract for your own account recovery mechanism.
  *
  * The Account Recovery module allows to add recovery providers to the account.
- * The recovery providers are used to recover the account ownership.
+ * The recovery providers are used to recover the account access.
  *
  * For more information please refer to [EIP-7947](https://eips.ethereum.org/EIPS/eip-7947).
  */
@@ -35,20 +35,23 @@ abstract contract AAccountRecovery is IAccountRecovery {
     /**
      * @inheritdoc IAccountRecovery
      */
-    function addRecoveryProvider(address provider_, bytes memory recoveryData_) external virtual;
+    function addRecoveryProvider(
+        address provider_,
+        bytes memory recoveryData_
+    ) external payable virtual;
 
     /**
      * @inheritdoc IAccountRecovery
      */
-    function removeRecoveryProvider(address provider_) external virtual;
+    function removeRecoveryProvider(address provider_) external payable virtual;
 
     /**
      * @inheritdoc IAccountRecovery
      */
-    function recoverOwnership(
-        address newOwner,
-        address provider,
-        bytes memory proof
+    function recoverAccess(
+        bytes memory subject_,
+        address provider_,
+        bytes memory proof_
     ) external virtual returns (bool);
 
     /**
@@ -99,20 +102,18 @@ abstract contract AAccountRecovery is IAccountRecovery {
     }
 
     /**
-     * @notice Should be called in the `recoverOwnership` function before updating the account owner
+     * @notice Should be called in the `recoverAccess` function before updating the account access
      */
     function _validateRecovery(
-        address newOwner_,
+        bytes memory object_,
         address provider_,
         bytes memory proof_
     ) internal virtual {
-        if (newOwner_ == address(0)) revert ZeroAddress();
-
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
         if (!$.recoveryProviders.contains(provider_)) revert ProviderNotRegistered(provider_);
 
-        IRecoveryProvider(provider_).recover(newOwner_, proof_);
+        IRecoveryProvider(provider_).recover(object_, proof_);
     }
 
     /**

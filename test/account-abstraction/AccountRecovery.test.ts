@@ -15,6 +15,7 @@ describe("AccountRecovery", () => {
   let provider1: RecoveryProviderMock;
   let provider2: RecoveryProviderMock;
 
+  const OBJECT_DATA = "0x5678";
   const RECOVERY_DATA = "0x1234";
 
   before(async () => {
@@ -93,20 +94,14 @@ describe("AccountRecovery", () => {
     });
 
     it("should call a `recover` function of a recovery provider", async () => {
-      const tx = await accountRecovery.validateRecovery(OWNER, provider1, RECOVERY_DATA);
-      await expect(tx).to.emit(provider1, "RecoverCalled").withArgs(OWNER, RECOVERY_DATA);
+      const tx = await accountRecovery.validateRecovery(OBJECT_DATA, provider1, RECOVERY_DATA);
+      await expect(tx).to.emit(provider1, "RecoverCalled").withArgs(OBJECT_DATA, RECOVERY_DATA);
     });
 
     it("should revert if a provider is not added", async () => {
-      await expect(accountRecovery.validateRecovery(OWNER, provider2, RECOVERY_DATA))
+      await expect(accountRecovery.validateRecovery(OBJECT_DATA, provider2, RECOVERY_DATA))
         .to.be.revertedWithCustomError(accountRecovery, "ProviderNotRegistered")
         .withArgs(provider2);
-    });
-
-    it("should revert if a new owner is zero address", async () => {
-      await expect(
-        accountRecovery.validateRecovery(ethers.ZeroAddress, provider1, RECOVERY_DATA),
-      ).to.be.revertedWithCustomError(accountRecovery, "ZeroAddress");
     });
   });
 
