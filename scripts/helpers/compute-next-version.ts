@@ -2,8 +2,8 @@
 
 import fs from "fs";
 
-import { bumpBase, parseRc, readJSON, getPkgPath, getChangelogPath } from "./utils";
 import { allowedWhenNotRc, allowedWhenRc } from "./constants";
+import { bumpBase, parseRc, readJSON, getPkgPath, getChangelogPath } from "./utils";
 
 import type { Level } from "./types";
 

@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 
 import fs from "fs";
-import { getChangelogPath, getPkgPath, readJSON } from "./utils";
 
-import { allowedWhenNotRc, allowedWhenRc } from "./constants";
+import { getChangelogPath, getPkgPath, readJSON, allowedWhenNotRc, allowedWhenRc } from "../helpers";
 
-import type { Level } from "./types";
+import type { Level } from "../helpers";
 
 function fail(message: string): never {
   throw new Error(`CHANGELOG validation failed: ${message}`);
@@ -39,7 +38,9 @@ export default function validateChangelog(): void {
   const isAllowed = isRc ? allowedWhenRc.has(normalized) : allowedWhenNotRc.has(normalized);
   if (!isAllowed) {
     if (isRc) {
-      fail(`Project is currently in RC (${pkg.version}). Top H2 tag must be one of [rc, release], got "${firstH2Tag}"`);
+      fail(
+        `Project is currently in RC (${pkg.version}). Top H2 tag must be one of [rc, none, release], got "${firstH2Tag}"`,
+      );
     } else {
       fail(`Top H2 tag must be one of [patch, minor, major, none, patch-rc, minor-rc, major-rc], got "${firstH2Tag}"`);
     }

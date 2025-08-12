@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+
 import { allowedWhenNotRc, allowedWhenRc } from "./constants";
 
 import type { Level, TopSection } from "./types";
@@ -94,7 +95,7 @@ export function validateReleaseTopSection({
   const normalized = String(level).toLowerCase() as Level;
   if (!(pkgIsRc ? allowedWhenRc.has(normalized) : allowedWhenNotRc.has(normalized))) {
     if (pkgIsRc) {
-      throw new Error("Top H2 tag must be one of rc|release when current version is an RC");
+      throw new Error("Top H2 tag must be one of rc|nonce|release when current version is an RC");
     } else {
       throw new Error("Top H2 tag must be one of patch|minor|major|none|patch-rc|minor-rc|major-rc when not in RC");
     }

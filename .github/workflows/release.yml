@@ -29,7 +29,7 @@ jobs:
           result-encoding: string
           script: |
             require('ts-node/register/transpile-only');
-            await require('./scripts/release/compute-release-state.ts').default(core);
+            await require('./scripts/release/get-release-state.ts').default(core);
     outputs:
       local_version: ${{ steps.state.outputs.local_version }}
       notes: ${{ steps.state.outputs.notes }}
@@ -49,6 +49,8 @@ jobs:
           tag_name: v${{ needs.state.outputs.local_version }}
           name: Release v${{ needs.state.outputs.local_version }}
           body: |
+            # Release notes v${{ needs.state.outputs.local_version }} 🎉
+            
             ${{ needs.state.outputs.notes }}
           draft: false
           prerelease: false
@@ -61,12 +63,8 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
 
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: npm
-          registry-url: 'https://registry.npmjs.org/'
+      - name: Set up environment
+        uses: ./.github/actions/setup
 
       - name: Install packages
         run: npm install

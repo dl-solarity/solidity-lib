@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import fs from "fs";
-import { getChangelogPath, getPkgPath, readJSON } from "./utils";
+
+import { getChangelogPath, getPkgPath, readJSON } from "../helpers";
 
 export default function extractReleaseNotes({ version }: { version?: string } = {}): string {
   const changelog = fs.readFileSync(getChangelogPath(), "utf8");

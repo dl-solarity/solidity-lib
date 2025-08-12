@@ -4,11 +4,8 @@ runs:
   using: composite
   steps:
     - name: Setup node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: "20.x"
         cache: npm
-
-    - name: Install packages
-      run: npm install
-      shell: bash
+        registry-url: 'https://registry.npmjs.org/'
