@@ -14,6 +14,13 @@ describe("Transaction Parser", () => {
   let txData802_368: string;
   let txData568: string;
 
+  const invalidVersionTx =
+    "0x03000000000101cf337081287de9b93bb8ea17fbaf80e38f24389ab1f5b5519394741e1d91d34d0200000000ffffffff04c7e70800000000001976a914c250b1198b5770a2d00365f0b1660906ddc459e488ac524504000000000017a914c7f0b23c10270adefbe5d2c07b91c281172ca910874cc10100000000001600144d0e22355a0a85c735cd1292ce25dae949f4b538bbd9ea0200000000160014af6aa4350ca438793fa8fc965661df5e4b311640024730440220749a385c9fc2d32728ac4c0ac338ef1ec74a279f8c49677b745e0e6ee55aadad02202f0b7f72980cca5992bfd47a872592cb23bf23cf801e5403f688648feda44f77012103cbb1ede1735af832852b78ebbe9afaf38d233fbaeffe1d90dfb87bbd5a70e14300000000";
+  const invalidFlagTx =
+    "0x02000000000201cf251026b2625d4b4ddd8f94dba9205ae963e757177972e5a0a36b446283c1090200000000fdffffff02e6c9010000000000160014b201b5368f2a65048b72f0b4ca3845b1c299a26e0000000000000000116a5d0eff7f818cec82d08bc0a88281d21502483045022100ca4f0302f7e22e589918fe13cb61367baf1b6f4c23b5bae55ba508dc8657243202204d5f7dc80d126f7c35440a6ea5718938bcf7cb8c9307a06d6f1f585c38fbd7c4012103a46fa6d023dddc643cfb5a26753dabf1f6bdf366f3d5f101cf01abe9ffb70bb600000000";
+  const shortFlagTx = "0x0200000000";
+  const shortTx = "0x01000000";
+
   before(async () => {
     const TxParserMock = await ethers.getContractFactory("TxParserMock");
     parser = await TxParserMock.deploy();
@@ -70,13 +77,6 @@ describe("Transaction Parser", () => {
     });
 
     it("should revert", async () => {
-      const invalidVersionTx =
-        "0x03000000000101cf337081287de9b93bb8ea17fbaf80e38f24389ab1f5b5519394741e1d91d34d0200000000ffffffff04c7e70800000000001976a914c250b1198b5770a2d00365f0b1660906ddc459e488ac524504000000000017a914c7f0b23c10270adefbe5d2c07b91c281172ca910874cc10100000000001600144d0e22355a0a85c735cd1292ce25dae949f4b538bbd9ea0200000000160014af6aa4350ca438793fa8fc965661df5e4b311640024730440220749a385c9fc2d32728ac4c0ac338ef1ec74a279f8c49677b745e0e6ee55aadad02202f0b7f72980cca5992bfd47a872592cb23bf23cf801e5403f688648feda44f77012103cbb1ede1735af832852b78ebbe9afaf38d233fbaeffe1d90dfb87bbd5a70e14300000000";
-      const invalidFlagTx =
-        "0x02000000000201cf251026b2625d4b4ddd8f94dba9205ae963e757177972e5a0a36b446283c1090200000000fdffffff02e6c9010000000000160014b201b5368f2a65048b72f0b4ca3845b1c299a26e0000000000000000116a5d0eff7f818cec82d08bc0a88281d21502483045022100ca4f0302f7e22e589918fe13cb61367baf1b6f4c23b5bae55ba508dc8657243202204d5f7dc80d126f7c35440a6ea5718938bcf7cb8c9307a06d6f1f585c38fbd7c4012103a46fa6d023dddc643cfb5a26753dabf1f6bdf366f3d5f101cf01abe9ffb70bb600000000";
-      const shortFlagTx = "0x0200000000";
-      const shortTx = "0x01000000";
-
       await expect(parser.parseBTCTransaction(invalidVersionTx))
         .to.be.revertedWithCustomError(parser, "UnsupportedVersion")
         .withArgs(3);
@@ -217,6 +217,112 @@ describe("Transaction Parser", () => {
 
       expect(parsed[0]).to.be.eq(expectedNumber);
       expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
+    });
+  });
+
+  describe("#parseCuintMemory", () => {
+    it("should parse correctly", async () => {
+      let inputNumber = "0xfd0001";
+      let parsed = await parser.parseCuint(inputNumber);
+
+      let [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
+
+      expect(parsed[0]).to.be.eq(expectedNumber);
+      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
+
+      inputNumber = "0xfeffffffff";
+      parsed = await parser.parseCuintMemory(inputNumber);
+
+      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
+
+      expect(parsed[0]).to.be.eq(expectedNumber);
+      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
+
+      inputNumber = "0xfeff0f14fa";
+      parsed = await parser.parseCuintMemory(inputNumber);
+
+      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
+
+      expect(parsed[0]).to.be.eq(expectedNumber);
+      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
+
+      inputNumber = "0xffffffffffffffffff";
+      parsed = await parser.parseCuintMemory(inputNumber);
+
+      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
+
+      expect(parsed[0]).to.be.eq(expectedNumber);
+      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
+
+      inputNumber = "0xff0000000001000000";
+      parsed = await parser.parseCuintMemory(inputNumber);
+
+      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
+
+      expect(parsed[0]).to.be.eq(expectedNumber);
+      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
+
+      inputNumber = "0xff01ffbf07efffaafd";
+      parsed = await parser.parseCuintMemory(inputNumber);
+
+      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
+
+      expect(parsed[0]).to.be.eq(expectedNumber);
+      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
+    });
+  });
+
+  describe("#isBitcoinTransaction", () => {
+    it("should return true for a valid transaction", async () => {
+      for (let i = 0; i < 10; ++i) {
+        const actualTxData = getTxData(txData802_368, i);
+
+        expect(await parser.isBitcoinTransaction("0x" + actualTxData.hex)).to.be.true;
+      }
+    });
+
+    it("should return false for a invalid transaction", async () => {
+      const zeroVersion =
+        "0x00000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0804ffff001d024006ffffffff0100f2052a0100000043410431e1cb363a76c8f15f008026af465f48aaca8bb4c8ce4b3880ec9efa1db59c3a11274f85db20508abd28bae4b10e5d6b871274d86da351a3837895dd4b20dbadac00000000";
+      const invalidVersionBytes1 =
+        "0x01010000010000000000000000000000000000000000000000000000000000000000000000ffffffff0804ffff001d024006ffffffff0100f2052a0100000043410431e1cb363a76c8f15f008026af465f48aaca8bb4c8ce4b3880ec9efa1db59c3a11274f85db20508abd28bae4b10e5d6b871274d86da351a3837895dd4b20dbadac00000000";
+      const invalidVersionBytes2 =
+        "0x01000500010000000000000000000000000000000000000000000000000000000000000000ffffffff0804ffff001d024006ffffffff0100f2052a0100000043410431e1cb363a76c8f15f008026af465f48aaca8bb4c8ce4b3880ec9efa1db59c3a11274f85db20508abd28bae4b10e5d6b871274d86da351a3837895dd4b20dbadac00000000";
+      const invalidVersionBytes3 =
+        "0x010000ff010000000000000000000000000000000000000000000000000000000000000000ffffffff0804ffff001d024006ffffffff0100f2052a0100000043410431e1cb363a76c8f15f008026af465f48aaca8bb4c8ce4b3880ec9efa1db59c3a11274f85db20508abd28bae4b10e5d6b871274d86da351a3837895dd4b20dbadac00000000";
+      const invalidWitnessTx =
+        "0x02000000000f013bb96379452d332e87150d75057b5f553c4a8d421c1f046ee4aa59c8bd5a811f0100000000fdffffff02a8c51900000000001600146e20dfddae7c9a3bde8a0e21aa631644394efb0ce5c7820a0000000016001453fc77b67d4cd25db14bb90efbbb674187e72dda024730440220241048cf1f79f7b7dd00b48a7a3b218494e2917b3625fa85f9e494ed7f889963022063aff33776141adcd90ac1990d1d8d1a853f6c0c9960dfccc0ee6e3317d81491012102a83617720912ae0119692e4e1c8118682c7365983119c890d972d7d59d5cd3649ebb0d00";
+      const invalidInputCount =
+        "0x020000000001902e0d83414d9b5ee709773a0c1ce2325cad3b650468755d244087304e99f0ae450000000000010000800190650000000000001600148c676a1c175fdc55c370b7574fad98d5be7506970140067a7b2cea28dab27de68fee4ea92580cb307d687c5ab257a46d2c13018f755e2fce754bd4c649902cd63ec0ee657c2ab3c3d98521ac58fedaa08e4bef5f355700000000";
+      const invalidScriptLen =
+        "0x020000000001012e0d83414d9b5ee709773a0c1ce2325cad3b650468755d244087304e99f0ae4500000000ff010000800190650000000000001600148c676a1c175fdc55c370b7574fad98d5be7506970140067a7b2cea28dab27de68fee4ea92580cb307d687c5ab257a46d2c13018f755e2fce754bd4c649902cd63ec0ee657c2ab3c3d98521ac58fedaa08e4bef5f355700000000";
+      const invalidOutputCount =
+        "0x020000000001012e0d83414d9b5ee709773a0c1ce2325cad3b650468755d244087304e99f0ae45000000000001000080af90650000000000001600148c676a1c175fdc55c370b7574fad98d5be7506970140067a7b2cea28dab27de68fee4ea92580cb307d687c5ab257a46d2c13018f755e2fce754bd4c649902cd63ec0ee657c2ab3c3d98521ac58fedaa08e4bef5f355700000000";
+      const invalidOutputScriptLen =
+        "0x020000000001012e0d83414d9b5ee709773a0c1ce2325cad3b650468755d244087304e99f0ae45000000000001000080019065000000000000ee00148c676a1c175fdc55c370b7574fad98d5be7506970140067a7b2cea28dab27de68fee4ea92580cb307d687c5ab257a46d2c13018f755e2fce754bd4c649902cd63ec0ee657c2ab3c3d98521ac58fedaa08e4bef5f355700000000";
+      const invalidWitnessCount =
+        "0x020000000001012e0d83414d9b5ee709773a0c1ce2325cad3b650468755d244087304e99f0ae450000000000010000800190650000000000001600148c676a1c175fdc55c370b7574fad98d5be750697ff40067a7b2cea28dab27de68fee4ea92580cb307d687c5ab257a46d2c13018f755e2fce754bd4c649902cd63ec0ee657c2ab3c3d98521ac58fedaa08e4bef5f355700000000";
+      const invalidWScriptLen =
+        "0x020000000001012e0d83414d9b5ee709773a0c1ce2325cad3b650468755d244087304e99f0ae450000000000010000800190650000000000001600148c676a1c175fdc55c370b7574fad98d5be7506970150067a7b2cea28dab27de68fee4ea92580cb307d687c5ab257a46d2c13018f755e2fce754bd4c649902cd63ec0ee657c2ab3c3d98521ac58fedaa08e4bef5f355700000000";
+      const tooLong =
+        "0x020000000001012e0d83414d9b5ee709773a0c1ce2325cad3b650468755d244087304e99f0ae450000000000010000800190650000000000001600148c676a1c175fdc55c370b7574fad98d5be7506970140067a7b2cea28dab27de68fee4ea92580cb307d687c5ab257a46d2c13018f755e2fce754bd4c649902cd63ec0ee657c2ab3c3d98521ac58fedaa08e4bef5f355700000000ff";
+
+      expect(await parser.isBitcoinTransaction(zeroVersion)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidVersionTx)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidFlagTx)).to.be.false;
+      expect(await parser.isBitcoinTransaction(shortFlagTx)).to.be.false;
+      expect(await parser.isBitcoinTransaction(shortTx)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidVersionBytes1)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidVersionBytes2)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidVersionBytes3)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidWitnessTx)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidInputCount)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidScriptLen)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidOutputCount)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidOutputScriptLen)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidWitnessCount)).to.be.false;
+      expect(await parser.isBitcoinTransaction(invalidWScriptLen)).to.be.false;
+      expect(await parser.isBitcoinTransaction(tooLong)).to.be.false;
     });
   });
 });

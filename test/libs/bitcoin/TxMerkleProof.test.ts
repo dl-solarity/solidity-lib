@@ -6,6 +6,8 @@ import { Reverter } from "@/test/helpers/reverter";
 import { MerkleRawProofParser } from "@/test/helpers/parse-proof-helpers";
 import { TxMerkleProofMock } from "@/generated-types/ethers";
 import { reverseBytes } from "@/test/helpers/bytes-helpers";
+import { addHexPrefix } from "@/test/helpers/block-helpers";
+import { sha256 } from "ethers";
 
 describe("TxMerkleProof", () => {
   const reverter = new Reverter();
@@ -386,6 +388,34 @@ describe("TxMerkleProof", () => {
           parser.getDirections(),
         ),
       ).to.be.true;
+    });
+
+    it("should revert when a Merkle tree node is a valid transaction", async () => {
+      const tx64Bytes =
+        "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0404ffff00ffffffff0100f2052a010000000000000000";
+      const insertedTx1 = addHexPrefix(tx64Bytes.slice(0, 64));
+      const insertedTx2 = addHexPrefix(tx64Bytes.slice(64));
+
+      const txid = sha256(sha256(addHexPrefix(tx64Bytes)));
+      const merkleRoot = txid;
+
+      expect(await txMerkleProof.verify([], merkleRoot, txid, [])).to.be.true;
+
+      let proof = [insertedTx1];
+      let leaf = insertedTx2;
+
+      await expect(txMerkleProof.verify(proof, merkleRoot, leaf, [1])).to.be.revertedWithCustomError(
+        txMerkleProof,
+        "InvalidMerkleNode",
+      );
+
+      proof = [insertedTx2];
+      leaf = insertedTx1;
+
+      await expect(txMerkleProof.verify(proof, merkleRoot, leaf, [0])).to.be.revertedWithCustomError(
+        txMerkleProof,
+        "InvalidMerkleNode",
+      );
     });
   });
 });

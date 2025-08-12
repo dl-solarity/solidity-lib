@@ -43,6 +43,10 @@ export function checkBlockHeaderDataInLE(
   expect(actualBlockHeaderData.time).to.be.eq(reverseUint32(expectedBlockHeaderData.parsedBlockHeader.time));
 }
 
+export function addHexPrefix(str: string): string {
+  return `0x${str}`;
+}
+
 function formatBlockHeaderData(headerData: HeaderData): HeaderData {
   headerData.blockHash = addHexPrefix(headerData.blockHash);
   headerData.rawHeader = addHexPrefix(headerData.rawHeader);
@@ -54,8 +58,4 @@ function formatBlockHeaderData(headerData: HeaderData): HeaderData {
   headerData.parsedBlockHeader.chainwork = addHexPrefix(headerData.parsedBlockHeader.chainwork);
 
   return headerData;
-}
-
-function addHexPrefix(str: string): string {
-  return `0x${str}`;
 }

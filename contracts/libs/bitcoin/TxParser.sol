@@ -212,13 +212,141 @@ library TxParser {
     }
 
     /**
+     * @notice Checks whether bytes may be a valid Bitcoin transaction
+     * @param rawTx_ The raw transaction data
+     */
+    function isBitcoinTransaction(bytes memory rawTx_) internal pure returns (bool) {
+        uint256 size_ = rawTx_.length;
+
+        if (size_ < 60) {
+            return false;
+        }
+
+        {
+            uint256 version_ = uint8(bytes1(rawTx_[0]));
+
+            if (version_ < 1 || version_ > 2) {
+                return false;
+            }
+        }
+
+        if (bytes1(rawTx_[1]) != bytes1(0)) return false;
+        if (bytes1(rawTx_[2]) != bytes1(0)) return false;
+        if (bytes1(rawTx_[3]) != bytes1(0)) return false;
+
+        uint256 offset_ = 4;
+
+        uint256 inputCount_;
+        uint256 lenSize_;
+        (inputCount_, lenSize_) = TxParser.parseCuintMemory(rawTx_.slice(offset_));
+
+        bool hasWitness_;
+
+        if (inputCount_ == 0) {
+            hasWitness_ = true;
+            ++offset_;
+
+            if (uint8(rawTx_[offset_]) != 1) {
+                return false;
+            }
+
+            ++offset_;
+
+            (inputCount_, lenSize_) = TxParser.parseCuintMemory(rawTx_.slice(offset_));
+        }
+
+        offset_ += lenSize_;
+
+        // the locktime at the end has a fixed length, so we can already take it into account
+        uint256 sizeWithoutLocktime_ = size_ - 4;
+
+        // previousHash: 32 bytes, previousIndex: 4 bytes, script ≥ 1 byte, sequence: 4 bytes
+        if (inputCount_ * (32 + 4 + 1 + 4) + offset_ >= sizeWithoutLocktime_) return false;
+
+        uint256 scriptLen_;
+
+        for (uint256 i = 0; i < inputCount_; ++i) {
+            offset_ += 32; //previousHash
+            offset_ += 4; //previousIndex
+
+            (scriptLen_, lenSize_) = TxParser.parseCuintMemory(rawTx_.slice(offset_));
+
+            offset_ += scriptLen_ + lenSize_;
+
+            if (offset_ >= sizeWithoutLocktime_) return false;
+
+            offset_ += 4; //sequence
+        }
+
+        {
+            uint256 outputCount_;
+            (outputCount_, lenSize_) = TxParser.parseCuintMemory(rawTx_.slice(offset_));
+
+            // value: 8 bytes, script length ≥ 1 byte
+            if (outputCount_ * (8 + 1) + offset_ > sizeWithoutLocktime_) return false;
+
+            offset_ += lenSize_;
+
+            for (uint256 i = 0; i < outputCount_; ++i) {
+                offset_ += 8; //value
+
+                (scriptLen_, lenSize_) = TxParser.parseCuintMemory(rawTx_.slice(offset_));
+
+                offset_ += scriptLen_ + lenSize_;
+
+                if (offset_ > sizeWithoutLocktime_) return false;
+            }
+        }
+
+        {
+            if (hasWitness_) {
+                for (uint256 i = 0; i < inputCount_; ++i) {
+                    uint256 witnessCount_;
+
+                    (witnessCount_, lenSize_) = TxParser.parseCuintMemory(rawTx_.slice(offset_));
+
+                    offset_ += lenSize_;
+
+                    if (witnessCount_ + offset_ > sizeWithoutLocktime_) return false;
+
+                    for (uint256 j = 0; j < witnessCount_; ++j) {
+                        uint256 witnessLen_;
+
+                        (witnessLen_, lenSize_) = TxParser.parseCuintMemory(rawTx_.slice(offset_));
+
+                        offset_ += lenSize_ + witnessLen_;
+
+                        if (offset_ > sizeWithoutLocktime_) return false;
+                    }
+                }
+            }
+        }
+
+        if (offset_ != sizeWithoutLocktime_) return false;
+
+        return true;
+    }
+
+    /**
      * @notice Parse a compact unsigned integer (Bitcoin's variable length encoding)
-     * @param data_ The byte array containing the cuint in little-endian encoding
+     * @param data_ The byte calldata array containing the cuint in little-endian encoding
      * @return value_ The parsed integer value
      * @return consumed_ Number of bytes consumed
      */
     function parseCuint(
         bytes calldata data_
+    ) internal pure returns (uint64 value_, uint8 consumed_) {
+        return _parseCuint(data_, 0);
+    }
+
+    /**
+     * @notice Parse a compact unsigned integer (Bitcoin's variable length encoding)
+     * @param data_ The byte memory array containing the cuint in little-endian encoding
+     * @return value_ The parsed integer value
+     * @return consumed_ Number of bytes consumed
+     */
+    function parseCuintMemory(
+        bytes memory data_
     ) internal pure returns (uint64 value_, uint8 consumed_) {
         return _parseCuint(data_, 0);
     }
@@ -365,7 +493,7 @@ library TxParser {
     }
 
     function _parseCuint(
-        bytes calldata data_,
+        bytes memory data_,
         uint256 offset_
     ) private pure returns (uint64 value_, uint8 consumed_) {
         _checkForBufferOverflow(offset_ + 1, data_.length);
@@ -379,7 +507,7 @@ library TxParser {
         if (firstByte_ == 0xfd) {
             _checkForBufferOverflow(offset_ + 3, data_.length);
 
-            value_ = uint16(bytes2(data_[offset_ + 1:offset_ + 3])).uint16LEtoBE();
+            value_ = uint16(bytes2(data_.slice(offset_ + 1, offset_ + 3))).uint16LEtoBE();
 
             return (value_, 3);
         }
@@ -387,7 +515,7 @@ library TxParser {
         if (firstByte_ == 0xfe) {
             _checkForBufferOverflow(offset_ + 5, data_.length);
 
-            value_ = uint32(bytes4(data_[offset_ + 1:offset_ + 5])).uint32LEtoBE();
+            value_ = uint32(bytes4(data_.slice(offset_ + 1, offset_ + 5))).uint32LEtoBE();
 
             return (value_, 5);
         }

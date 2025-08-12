@@ -23,10 +23,20 @@ contract TxParserMock {
         return tx_;
     }
 
+    function isBitcoinTransaction(bytes memory rawTx_) external pure returns (bool) {
+        return rawTx_.isBitcoinTransaction();
+    }
+
     function parseCuint(
         bytes calldata data_
     ) external pure returns (uint64 value_, uint8 consumed_) {
         return data_.parseCuint();
+    }
+
+    function parseCuintMemory(
+        bytes memory data_
+    ) external pure returns (uint64 value_, uint8 consumed_) {
+        return data_.parseCuintMemory();
     }
 
     function formatCuint(uint64 value_) external pure returns (bytes memory) {

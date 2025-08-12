@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
+import {TxParser} from "./TxParser.sol";
+
 /**
  * @notice A library for verifying transaction inclusion in Bitcoin block.
  * Provides functions for processing and verifying Merkle tree proofs
  */
 library TxMerkleProof {
+    using TxParser for bytes;
+
     /**
      * @notice Possible directions for hashing:
      * Left: computed hash is on the left, sibling hash is on the right.
@@ -23,6 +27,12 @@ library TxMerkleProof {
      * This error ensures that only correctly sized proofs are processed
      */
     error InvalidLengths();
+
+    /**
+     * @notice Emitted when the concateneted hashes of the Merkle tree is a valid Bitcoin transaction.
+     * This error ensures that insertion attack is not possible
+     */
+    error InvalidMerkleNode();
 
     /**
      * @notice Returns true if `leaf_` can be proven to be part of a Merkle tree
@@ -59,21 +69,26 @@ library TxMerkleProof {
     ) internal pure returns (bytes32) {
         bytes32 computedHash_ = leaf_;
         uint256 proofLength_ = proof_.length;
+        bytes memory pair_;
 
         for (uint256 i = 0; i < proofLength_; ++i) {
             if (directions_[i] == HashDirection.Left) {
-                computedHash_ = _doubleSHA256(computedHash_, proof_[i]);
+                pair_ = abi.encodePacked(computedHash_, proof_[i]);
             } else if (directions_[i] == HashDirection.Right) {
-                computedHash_ = _doubleSHA256(proof_[i], computedHash_);
+                pair_ = abi.encodePacked(proof_[i], computedHash_);
             } else {
-                computedHash_ = _doubleSHA256(computedHash_, computedHash_);
+                pair_ = abi.encodePacked(computedHash_, computedHash_);
             }
+
+            if (pair_.isBitcoinTransaction()) revert InvalidMerkleNode();
+
+            computedHash_ = _doubleSHA256(pair_);
         }
 
         return computedHash_;
     }
 
-    function _doubleSHA256(bytes32 left_, bytes32 right_) private pure returns (bytes32) {
-        return sha256(abi.encodePacked(sha256(abi.encodePacked(left_, right_))));
+    function _doubleSHA256(bytes memory data_) private pure returns (bytes32) {
+        return sha256(abi.encodePacked(sha256(data_)));
     }
 }
