@@ -9,3 +9,7 @@ runs:
         node-version: "20.x"
         cache: npm
         registry-url: 'https://registry.npmjs.org/'
+
+    - name: Install packages
+      run: npm install
+      shell: bash
