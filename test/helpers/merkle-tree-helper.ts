@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 
 import { MerkleTree } from "merkletreejs";
+import { addHexPrefix } from "./block-helpers";
 
 export function getRoot(tree: MerkleTree): string {
   const root = tree.getRoot();
@@ -9,11 +10,11 @@ export function getRoot(tree: MerkleTree): string {
     return ethers.ZeroHash;
   }
 
-  return "0x" + root.toString("hex");
+  return addHexPrefix(root.toString("hex"));
 }
 
 export function getProof(tree: MerkleTree, leaf: any, hashFn: any = ethers.keccak256): string[] {
-  return tree.getProof(hashFn(leaf)).map((e) => "0x" + e.data.toString("hex"));
+  return tree.getProof(hashFn(leaf)).map((e) => addHexPrefix(e.data.toString("hex")));
 }
 
 export function buildTree(leaves: any, hashFn: any = ethers.keccak256): MerkleTree {

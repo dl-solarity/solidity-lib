@@ -1,9 +1,10 @@
 import { BigNumberish } from "ethers";
+import { addHexPrefix } from "./block-helpers";
 
 export function reverseBytes(str: string) {
   if (str.slice(0, 2) == "0x") str = str.slice(2);
 
-  return "0x" + Buffer.from(str, "hex").reverse().toString("hex");
+  return addHexPrefix(Buffer.from(str, "hex").reverse().toString("hex"));
 }
 
 export function reverseByte(byte: string): string {

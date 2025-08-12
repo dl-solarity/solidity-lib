@@ -1,5 +1,6 @@
 import { ZeroHash } from "ethers";
 import { parseCuint, reverseByte, reverseBytes } from "./bytes-helpers";
+import { addHexPrefix } from "./block-helpers";
 
 export class MerkleRawProofParser {
   private txidReversed: string;
@@ -30,7 +31,7 @@ export class MerkleRawProofParser {
 
     this.hashes = [];
     for (let i = 0; i < hashCount; i++) {
-      this.hashes.push("0x" + rawHashes.slice(i * 64, (i + 1) * 64));
+      this.hashes.push(addHexPrefix(rawHashes.slice(i * 64, (i + 1) * 64)));
     }
 
     offset = offset + Number(hashCount) * 64;

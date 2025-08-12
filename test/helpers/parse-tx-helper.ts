@@ -5,6 +5,7 @@ import { expect } from "chai";
 
 import { TxParser } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/TxParserMock";
 import { ZeroHash } from "ethers";
+import { addHexPrefix } from "./block-helpers";
 
 export function getTxDataFilePath(fileName: string): string {
   return path.join(__dirname, "../libs/bitcoin/data", fileName);
@@ -29,7 +30,7 @@ export function checkTransaction(expectedTx: TxParser.TransactionStructOutput, a
     if (!actualTx.vin[i].txid) {
       expect(expectedTx.inputs[i].previousHash).to.be.eq(ZeroHash);
     } else {
-      expect(expectedTx.inputs[i].previousHash).to.be.eq("0x" + actualTx.vin[i].txid);
+      expect(expectedTx.inputs[i].previousHash).to.be.eq(addHexPrefix(actualTx.vin[i].txid));
     }
 
     if (actualTx.vin[i].vout === undefined) {
@@ -41,16 +42,16 @@ export function checkTransaction(expectedTx: TxParser.TransactionStructOutput, a
     expect(expectedTx.inputs[i].sequence).to.be.eq(actualTx.vin[i].sequence);
 
     if (!actualTx.vin[i].coinbase) {
-      expect(expectedTx.inputs[i].script).to.be.eq("0x" + actualTx.vin[i].scriptSig.hex);
+      expect(expectedTx.inputs[i].script).to.be.eq(addHexPrefix(actualTx.vin[i].scriptSig.hex));
     } else {
-      expect(expectedTx.inputs[i].script).to.be.eq("0x" + actualTx.vin[i].coinbase);
+      expect(expectedTx.inputs[i].script).to.be.eq(addHexPrefix(actualTx.vin[i].coinbase!));
     }
 
     if (actualTx.vin[i].txinwitness) {
       expect(expectedTx.inputs[i].witnesses.length).to.be.eq(actualTx.vin[i].txinwitness.length);
 
       for (let j = 0; j < actualTx.vin[i].txinwitness.length; j++) {
-        expect(expectedTx.inputs[i].witnesses[j]).to.be.eq("0x" + actualTx.vin[i].txinwitness[j]);
+        expect(expectedTx.inputs[i].witnesses[j]).to.be.eq(addHexPrefix(actualTx.vin[i].txinwitness[j]));
       }
     }
   }
@@ -59,7 +60,7 @@ export function checkTransaction(expectedTx: TxParser.TransactionStructOutput, a
 
   for (let i = 0; i < actualTx.vout.length; i++) {
     expect(expectedTx.outputs[i].value).to.be.eq(actualTx.vout[i].value * 10 ** 8);
-    expect(expectedTx.outputs[i].script).to.be.eq("0x" + actualTx.vout[i].scriptPubKey.hex);
+    expect(expectedTx.outputs[i].script).to.be.eq(addHexPrefix(actualTx.vout[i].scriptPubKey.hex));
   }
 }
 
