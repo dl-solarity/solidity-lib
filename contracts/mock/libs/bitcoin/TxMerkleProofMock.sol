@@ -8,8 +8,8 @@ contract TxMerkleProofMock {
         bytes32[] calldata merkleProof_,
         bytes32 reversedRoot_,
         bytes32 txid_,
-        TxMerkleProof.HashDirection[] calldata directions_
+        uint256 txIndex_
     ) external pure returns (bool) {
-        return TxMerkleProof.verify(merkleProof_, reversedRoot_, txid_, directions_);
+        return TxMerkleProof.verify(merkleProof_, reversedRoot_, txid_, txIndex_);
     }
 }

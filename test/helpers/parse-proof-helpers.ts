@@ -1,4 +1,4 @@
-import { ZeroHash } from "ethers";
+import { sha256, ZeroHash } from "ethers";
 import { parseCuint, reverseByte, reverseBytes } from "./bytes-helpers";
 import { addHexPrefix } from "./block-helpers";
 
@@ -10,8 +10,7 @@ export class MerkleRawProofParser {
   private maxDepth: number;
   private nodeCountPerLevel: number[];
   private txIndex: number;
-  private sortedHashes: string[];
-  private directions: number[];
+  private siblings: string[];
 
   constructor(txid: string, rawProof: string) {
     this.txidReversed = reverseBytes(txid);
@@ -46,9 +45,7 @@ export class MerkleRawProofParser {
     this.maxDepth = Math.ceil(Math.log2(this.txCountInBlock));
     this.nodeCountPerLevel = this.getNodeCountPerLevel(this.txCountInBlock, this.maxDepth);
 
-    [this.txIndex, this.sortedHashes] = this.processTree(0, 0, 0, 0, 0, []);
-
-    this.directions = this.processDirections(this.txIndex, this.txCountInBlock);
+    [this.txIndex, this.siblings] = this.processTree(0, 0, 0, 0, 0, []);
   }
 
   getTxidReversed(): string {
@@ -59,12 +56,8 @@ export class MerkleRawProofParser {
     return this.txIndex;
   }
 
-  getSortedHashes(): string[] {
-    return this.sortedHashes;
-  }
-
-  getDirections(): number[] {
-    return this.directions;
+  getSiblings(): string[] {
+    return this.siblings;
   }
 
   private processFlags(flagBytes: string): string {
@@ -91,22 +84,25 @@ export class MerkleRawProofParser {
     return result;
   }
 
-  private processDirections(txIndex: number, totalTransactions: number) {
-    let directions: number[] = [];
-    let curIndex = txIndex;
-    let levelSize = totalTransactions;
+  private calculateSiblings(leaf: string, txIndex: number, sortedHashes: string[]): string[] {
+    let computedHash = leaf;
 
-    while (levelSize > 1) {
-      if (curIndex % 2 == 0) {
-        if (levelSize % 2 == 1 && levelSize - 1 == curIndex) directions.push(2);
-        else directions.push(0);
-      } else directions.push(1);
+    for (let i = 0; i < sortedHashes.length; i++) {
+      if (sortedHashes[i] == ZeroHash) {
+        sortedHashes[i] = computedHash;
+      }
 
-      curIndex = Math.floor(curIndex / 2);
-      levelSize = Math.ceil(levelSize / 2);
+      const pairToHash =
+        (txIndex & 1) == 0
+          ? computedHash.slice(2) + sortedHashes[i].slice(2)
+          : sortedHashes[i].slice(2) + computedHash.slice(2);
+
+      computedHash = sha256(sha256(addHexPrefix(pairToHash)));
+
+      txIndex = txIndex / 2;
     }
 
-    return directions;
+    return sortedHashes;
   }
 
   private processTree(
@@ -119,17 +115,19 @@ export class MerkleRawProofParser {
   ): [number, string[]] {
     if (depth == this.maxDepth && this.flagPath.at(currentFlag) == "1") {
       //this is the tx we searched for
-      ++currentHash;
+      const leaf = this.hashes[currentHash];
 
       if (this.isNodeWithoutPair(depth, nodePosition)) {
-        sortedHashes.push(ZeroHash);
-      } else if (this.isLastLeaf(nodePosition, currentHash)) {
         sortedHashes.push(this.hashes[currentHash]);
+      } else if (this.hasSiblingAtRight(nodePosition, currentHash)) {
+        sortedHashes.push(this.hashes[currentHash + 1]);
       }
 
       sortedHashes.reverse();
 
-      return [txIndex, sortedHashes];
+      const siblings = this.calculateSiblings(leaf, txIndex, sortedHashes);
+
+      return [txIndex, siblings];
     }
 
     if (depth == this.maxDepth) {
@@ -168,7 +166,7 @@ export class MerkleRawProofParser {
   }
 
   private nodesCountIsOdd(level: number): boolean {
-    return this.nodeCountPerLevel[level]! % 2 == 1;
+    return (this.nodeCountPerLevel[level]! & 1) == 1;
   }
 
   private isNodeWithoutPair(depth: number, nodePosition: number): boolean {
@@ -176,10 +174,10 @@ export class MerkleRawProofParser {
   }
 
   private isLeftNode(depth: number, nodePosition: number): boolean {
-    return depth != 0 && nodePosition % 2 == 0;
+    return depth != 0 && (nodePosition & 1) == 0;
   }
 
-  private isLastLeaf(nodePosition: number, currentHash: number): boolean {
-    return nodePosition % 2 == 0 && currentHash < this.hashes.length;
+  private hasSiblingAtRight(nodePosition: number, currentHash: number): boolean {
+    return (nodePosition & 1) == 0 && currentHash + 1 < this.hashes.length;
   }
 }
