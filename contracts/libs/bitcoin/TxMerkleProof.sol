@@ -37,7 +37,7 @@ library TxMerkleProof {
      * @notice Returns the rebuilt hash obtained by traversing the Merkle tree
      * from `leaf_` using `proof_`. A `proof_` is valid if and only if the rebuilt
      * hash matches the given tree root. The pre-images are hashed in the order
-     * specified by the `directions_` elements. Uses double SHA-256 hashing
+     * calculated by the `txIndex_` position. Uses double SHA-256 hashing
      * @param proof_ The array of sibling hashes from the leaf to the root
      * @param leaf_ The leaf of the Merkle tree
      * @param txIndex_ The transaction index in the block, indicating hashing order for each pair
