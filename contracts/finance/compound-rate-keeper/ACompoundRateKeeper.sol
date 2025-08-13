@@ -115,14 +115,17 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
                 capitalizationRate_,
                 capitalizationPeriodsNum_
             );
-            rate_ = (rate_ * capitalizationPeriodRate_) / PRECISION;
+            rate_ = Math.mulDiv(rate_, capitalizationPeriodRate_, PRECISION);
         }
 
         if (secondsLeft_ > 0) {
             uint256 rateLeft_ = PRECISION +
-                ((capitalizationRate_ - PRECISION) * secondsLeft_) /
-                capitalizationPeriod_;
-            rate_ = (rate_ * rateLeft_) / PRECISION;
+                Math.mulDiv(
+                    (capitalizationRate_ - PRECISION),
+                    secondsLeft_,
+                    capitalizationPeriod_
+                );
+            rate_ = Math.mulDiv(rate_, rateLeft_, PRECISION);
         }
 
         return rate_.min(_getMaxRate());
@@ -245,10 +248,10 @@ abstract contract ACompoundRateKeeper is ICompoundRateKeeper, Initializable {
         result_ = exponent_ & 1 == 0 ? PRECISION : base_;
 
         while ((exponent_ >>= 1) > 0) {
-            base_ = (base_ * base_) / PRECISION;
+            base_ = Math.mulDiv(base_, base_, PRECISION);
 
             if (exponent_ & 1 == 1) {
-                result_ = (result_ * base_) / PRECISION;
+                result_ = Math.mulDiv(result_, base_, PRECISION);
             }
         }
     }

@@ -23,7 +23,6 @@ import {ArrayHelper} from "../libs/arrays/ArrayHelper.sol";
 abstract contract AUniswapV2Oracle is Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using ArrayHelper for uint256[];
-    using Math for uint256;
 
     struct PairInfo {
         uint256[] prices0Cumulative;
@@ -120,7 +119,7 @@ abstract contract AUniswapV2Oracle is Initializable {
             address pair_ = $.uniswapV2Factory.getPair(currentToken_, nextToken_);
             uint256 price_ = _getPrice(pair_, currentToken_);
 
-            amount_ = price_.mulDiv(amount_, 2 ** 112);
+            amount_ = Math.mulDiv(price_, amount_, 2 ** 112);
         }
 
         return (amount_, tokenOut_);
@@ -346,12 +345,16 @@ abstract contract AUniswapV2Oracle is Initializable {
             if (timestampLast_ != blockTimestamp_) {
                 uint32 timeElapsed_ = blockTimestamp_ - timestampLast_;
 
-                price0Cumulative_ +=
-                    uint256((uint224(reserve1_) << 112) / reserve0_) *
-                    timeElapsed_;
-                price1Cumulative_ +=
-                    uint256((uint224(reserve0_) << 112) / reserve1_) *
-                    timeElapsed_;
+                price0Cumulative_ += Math.mulDiv(
+                    uint256(uint224(reserve1_) << 112),
+                    timeElapsed_,
+                    reserve0_
+                );
+                price1Cumulative_ += Math.mulDiv(
+                    uint256(uint224(reserve0_) << 112),
+                    timeElapsed_,
+                    reserve1_
+                );
             }
         }
     }
