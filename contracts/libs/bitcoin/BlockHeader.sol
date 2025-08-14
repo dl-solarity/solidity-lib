@@ -115,8 +115,6 @@ library BlockHeader {
      * @notice Calculates the double SHA256 hash of a raw block header.
      * This is the standard method for deriving a Bitcoin block hash
      * @dev Returns block hash in little-endian encoding
-     * @param blockHeaderRaw_ The raw bytes of the block header
-     * @return The calculated block hash
      */
     function _getBlockHeaderHash(bytes calldata blockHeaderRaw_) private pure returns (bytes32) {
         bytes32 rawBlockHash_ = sha256(abi.encode(sha256(blockHeaderRaw_)));

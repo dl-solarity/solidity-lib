@@ -23,6 +23,7 @@ library TxMerkleProof {
      * @param root_ Merkle root in little-endian format
      * @param leaf_ Element that need to be proven included in a tree
      * @param txIndex_ The transaction index in the block, indicating hashing order for each pair
+     * @return Whether the leaf is the part of a Merkle tree
      */
     function verify(
         bytes32[] memory proof_,
@@ -43,6 +44,7 @@ library TxMerkleProof {
      * @param proof_ The array of sibling hashes from the leaf to the root
      * @param leaf_ The leaf of the Merkle tree
      * @param txIndex_ The transaction index in the block, indicating hashing order for each pair
+     * @return The computed Merkle root
      */
     function processProof(
         bytes32[] memory proof_,
@@ -67,6 +69,9 @@ library TxMerkleProof {
         return computedHash_;
     }
 
+    /**
+     * @notice Double sha256 hashing
+     */
     function _doubleSHA256(bytes memory data_) private pure returns (bytes32) {
         return sha256(abi.encodePacked(sha256(data_)));
     }

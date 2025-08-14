@@ -205,6 +205,7 @@ library TxParser {
     /**
      * @notice Checks whether bytes may be a valid Bitcoin transaction
      * @param data_ The raw transaction data
+     * @return Whether the transaction is valid
      */
     function isTransaction(bytes memory data_) internal pure returns (bool) {
         if (data_.length < 60) {
@@ -362,10 +363,6 @@ library TxParser {
 
     /**
      * @notice Parse a transaction input from raw bytes
-     * @param data_ The raw transaction data
-     * @param offset_ The starting position
-     * @return input_ The parsed transaction input
-     * @return consumed_ Number of bytes consumed
      */
     function _parseTransactionInput(
         bytes calldata data_,
@@ -409,10 +406,6 @@ library TxParser {
 
     /**
      * @notice Parse a transaction output from raw bytes
-     * @param data_ The raw transaction data
-     * @param offset_ The starting position
-     * @return output_ The parsed transaction output
-     * @return consumed_ Number of bytes consumed
      */
     function _parseTransactionOutput(
         bytes calldata data_,
@@ -444,8 +437,6 @@ library TxParser {
 
     /**
      * @notice Format a transaction input into raw bytes
-     * @param input_ The transaction input to format
-     * @return The formatted bytes
      */
     function _formatTransactionInput(
         TransactionInput calldata input_
@@ -466,8 +457,6 @@ library TxParser {
 
     /**
      * @notice Format a transaction output into raw bytes
-     * @param output_ The transaction output to format
-     * @return The formatted bytes
      */
     function _formatTransactionOutput(
         TransactionOutput calldata output_
@@ -513,12 +502,18 @@ library TxParser {
         return (value_, 9);
     }
 
+    /**
+     * @notice Checks whether byte position will exceed data length
+     */
     function _checkForBufferOverflow(uint256 positionToCheck_, uint256 dataLength_) private pure {
         if (positionToCheck_ > dataLength_) {
             revert BufferOverflow();
         }
     }
 
+    /**
+     * @notice Double sha256 hashing
+     */
     function _doubleSHA256(bytes memory data_) private pure returns (bytes32) {
         return sha256(abi.encodePacked(sha256(data_)));
     }
