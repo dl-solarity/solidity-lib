@@ -208,58 +208,6 @@ describe("Transaction Parser", () => {
     });
   });
 
-  describe("#parseCuintMemory", () => {
-    it("should parse correctly", async () => {
-      let inputNumber = "0xfd0001";
-      let parsed = await parser.parseCuint(inputNumber);
-
-      let [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
-
-      expect(parsed[0]).to.be.eq(expectedNumber);
-      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
-
-      inputNumber = "0xfeffffffff";
-      parsed = await parser.parseCuintMemory(inputNumber);
-
-      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
-
-      expect(parsed[0]).to.be.eq(expectedNumber);
-      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
-
-      inputNumber = "0xfeff0f14fa";
-      parsed = await parser.parseCuintMemory(inputNumber);
-
-      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
-
-      expect(parsed[0]).to.be.eq(expectedNumber);
-      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
-
-      inputNumber = "0xffffffffffffffffff";
-      parsed = await parser.parseCuintMemory(inputNumber);
-
-      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
-
-      expect(parsed[0]).to.be.eq(expectedNumber);
-      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
-
-      inputNumber = "0xff0000000001000000";
-      parsed = await parser.parseCuintMemory(inputNumber);
-
-      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
-
-      expect(parsed[0]).to.be.eq(expectedNumber);
-      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
-
-      inputNumber = "0xff01ffbf07efffaafd";
-      parsed = await parser.parseCuintMemory(inputNumber);
-
-      [expectedNumber, expectedNumberSize] = parseCuint(inputNumber, 0);
-
-      expect(parsed[0]).to.be.eq(expectedNumber);
-      expect(parsed[1]).to.be.eq(expectedNumberSize / 2);
-    });
-  });
-
   describe("#isTransaction", () => {
     it("should return true for a valid transaction", async () => {
       for (let i = 0; i < 10; ++i) {

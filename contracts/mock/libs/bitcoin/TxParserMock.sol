@@ -29,12 +29,6 @@ contract TxParserMock {
         return data_.parseCuint();
     }
 
-    function parseCuintMemory(
-        bytes memory data_
-    ) external pure returns (uint64 value_, uint8 consumed_) {
-        return data_.parseCuintMemory();
-    }
-
     function formatCuint(uint64 value_) external pure returns (bytes memory) {
         return value_.formatCuint();
     }
