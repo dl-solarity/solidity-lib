@@ -35,12 +35,12 @@ library TxMerkleProof {
     }
 
     /**
+     * @dev Every pair of nodes is checked for being a valid transaction
+     * to mitigate insertion attack. More info at https://nvd.nist.gov/vuln/detail/CVE-2017-12842
      * @notice Returns the rebuilt hash obtained by traversing the Merkle tree
      * from `leaf_` using `proof_`. A `proof_` is valid if and only if the rebuilt
      * hash matches the given tree root. The pre-images are hashed in the order
      * calculated by the `txIndex_` position. Uses double SHA-256 hashing
-     * @dev Every pair of nodes is checked for being a valid transaction
-     * to mitigate insertion attack
      * @param proof_ The array of sibling hashes from the leaf to the root
      * @param leaf_ The leaf of the Merkle tree
      * @param txIndex_ The transaction index in the block, indicating hashing order for each pair
