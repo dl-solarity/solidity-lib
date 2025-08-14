@@ -2,12 +2,12 @@ import * as fs from "fs";
 import path from "path";
 import { expect } from "chai";
 
-import { HeaderData } from "./types";
-import { reverseBytes, reverseUint32 } from "./bytes-helpers";
+import { addHexPrefix, reverseBytes, reverseUint32 } from "../bytes-helpers";
 import { BlockHeader } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/BlockHeaderMock";
+import { HeaderData } from "./types";
 
 export function getBlocksDataFilePath(fileName: string): string {
-  return path.join(__dirname, "../libs/bitcoin/data", fileName);
+  return path.join(__dirname, "../../libs/bitcoin/data", fileName);
 }
 
 export function getBlockHeaderData(pathToDataFile: string, height: number): HeaderData {
@@ -41,10 +41,6 @@ export function checkBlockHeaderDataInLE(
   expect(actualBlockHeaderData.merkleRoot).to.be.eq(reverseBytes(expectedBlockHeaderData.parsedBlockHeader.merkleroot));
   expect(actualBlockHeaderData.nonce).to.be.eq(reverseUint32(expectedBlockHeaderData.parsedBlockHeader.nonce));
   expect(actualBlockHeaderData.time).to.be.eq(reverseUint32(expectedBlockHeaderData.parsedBlockHeader.time));
-}
-
-export function addHexPrefix(str: string): string {
-  return `0x${str}`;
 }
 
 function formatBlockHeaderData(headerData: HeaderData): HeaderData {

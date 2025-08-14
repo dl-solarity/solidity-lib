@@ -3,8 +3,14 @@ import { ethers } from "hardhat";
 
 import { Reverter } from "@/test/helpers/reverter";
 import { TxParserMock } from "@/generated-types/ethers";
-import { parseCuint, reverseBytes } from "@/test/helpers/bytes-helpers";
-import { checkTransaction, formatTx, getTxData, getTxDataFilePath } from "@/test/helpers/parse-tx-helper";
+import { reverseBytes } from "@/test/helpers/bytes-helpers";
+import {
+  checkTransaction,
+  formatTx,
+  getTxData,
+  getTxDataFilePath,
+  parseCuint,
+} from "@/test/helpers/bitcoin/parse-tx-helper";
 
 describe("Transaction Parser", () => {
   const reverter = new Reverter();

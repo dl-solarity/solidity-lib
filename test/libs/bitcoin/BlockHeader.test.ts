@@ -1,17 +1,16 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import {
-  getBlocksDataFilePath,
-  getBlockHeaderData,
-  checkBlockHeaderDataInBE,
-  checkBlockHeaderDataInLE,
-} from "@/test/helpers/block-helpers";
-
 import { Reverter } from "@/test/helpers/reverter";
 
 import { BlockHeaderMock } from "@ethers-v6";
 import { reverseBytes } from "@/test/helpers/bytes-helpers";
+import {
+  checkBlockHeaderDataInBE,
+  checkBlockHeaderDataInLE,
+  getBlockHeaderData,
+  getBlocksDataFilePath,
+} from "@/test/helpers/bitcoin/block-helpers";
 
 describe("BlockHeader", () => {
   const reverter = new Reverter();

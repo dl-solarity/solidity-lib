@@ -1,6 +1,6 @@
 import { sha256, ZeroHash } from "ethers";
-import { parseCuint, reverseByte, reverseBytes } from "./bytes-helpers";
-import { addHexPrefix } from "./block-helpers";
+import { addHexPrefix, reverseByte, reverseBytes } from "../bytes-helpers";
+import { parseCuint } from "./parse-tx-helper";
 
 export class MerkleRawProofParser {
   private txidReversed: string;
@@ -114,7 +114,7 @@ export class MerkleRawProofParser {
     sortedHashes: string[],
   ): [number, string[]] {
     if (depth == this.maxDepth && this.flagPath.at(currentFlag) == "1") {
-      //this is the tx we searched for
+      // this is the tx we searched for
       const leaf = this.hashes[currentHash];
 
       if (this.isNodeWithoutPair(depth, nodePosition)) {
@@ -131,7 +131,7 @@ export class MerkleRawProofParser {
     }
 
     if (depth == this.maxDepth) {
-      //this is neighbour of the tx we searched for
+      // this is neighbour of the tx we searched for
       sortedHashes.push(this.hashes[currentHash]);
 
       return this.processTree(depth, currentFlag + 1, txIndex + 1, currentHash + 1, nodePosition + 1, sortedHashes);

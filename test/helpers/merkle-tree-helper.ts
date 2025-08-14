@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 
 import { MerkleTree } from "merkletreejs";
-import { addHexPrefix } from "./block-helpers";
+import { addHexPrefix } from "./bytes-helpers";
 
 export function getRoot(tree: MerkleTree): string {
   const root = tree.getRoot();

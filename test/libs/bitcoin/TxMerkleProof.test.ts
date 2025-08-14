@@ -3,10 +3,9 @@ import { ethers } from "hardhat";
 
 import { Reverter } from "@/test/helpers/reverter";
 
-import { MerkleRawProofParser } from "@/test/helpers/parse-proof-helpers";
+import { MerkleRawProofParser } from "@/test/helpers/bitcoin/parse-proof-helpers";
 import { TxMerkleProofMock } from "@/generated-types/ethers";
-import { reverseBytes } from "@/test/helpers/bytes-helpers";
-import { addHexPrefix } from "@/test/helpers/block-helpers";
+import { addHexPrefix, reverseBytes } from "@/test/helpers/bytes-helpers";
 import { sha256 } from "ethers";
 
 describe("TxMerkleProof", () => {

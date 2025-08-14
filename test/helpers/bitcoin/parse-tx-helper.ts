@@ -5,10 +5,10 @@ import { expect } from "chai";
 
 import { TxParser } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/TxParserMock";
 import { ZeroHash } from "ethers";
-import { addHexPrefix } from "./block-helpers";
+import { addHexPrefix, reverseBytes } from "../bytes-helpers";
 
 export function getTxDataFilePath(fileName: string): string {
-  return path.join(__dirname, "../libs/bitcoin/data", fileName);
+  return path.join(__dirname, "../../libs/bitcoin/data", fileName);
 }
 
 export function getTxData(pathToDataFile: string, index: number): TransactionData {
@@ -62,6 +62,18 @@ export function checkTransaction(expectedTx: TxParser.TransactionStructOutput, a
     expect(expectedTx.outputs[i].value).to.be.eq(actualTx.vout[i].value * 10 ** 8);
     expect(expectedTx.outputs[i].script).to.be.eq(addHexPrefix(actualTx.vout[i].scriptPubKey.hex));
   }
+}
+
+export function parseCuint(data: string, offset: number): [bigint, number] {
+  if (data.slice(offset, offset + 2) == "0x") data = data.slice(offset + 2);
+
+  const firstByte = parseInt(data.slice(offset, offset + 2), 16);
+
+  if (firstByte < 0xfd) return [BigInt(reverseBytes(data.slice(offset, offset + 2))), 2];
+  if (firstByte == 0xfd) return [BigInt(reverseBytes(data.slice(offset + 2, offset + 6))), 6];
+  if (firstByte == 0xfe) return [BigInt(reverseBytes(data.slice(offset + 2, offset + 10))), 10];
+
+  return [BigInt(reverseBytes(data.slice(offset + 2, offset + 18))), 18];
 }
 
 export function formatTx(tx: TxParser.TransactionStructOutput) {
