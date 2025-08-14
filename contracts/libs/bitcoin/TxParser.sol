@@ -375,7 +375,6 @@ library TxParser {
 
         _checkForBufferOverflow(position_ + 32, data_.length);
 
-        // Converting to big-endian format
         input_.previousHash = (bytes32(data_.slice(position_, position_ + 32))).bytes32LEtoBE();
 
         position_ += 32;
