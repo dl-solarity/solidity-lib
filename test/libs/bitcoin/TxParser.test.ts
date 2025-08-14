@@ -45,18 +45,6 @@ describe("Transaction Parser", () => {
     });
   });
 
-  describe("#calculateWTxId", () => {
-    it("should calculate correctly", async () => {
-      let rawTx =
-        "0x0200000000010170b05de09b7b57a609b1617c8cb1bbc5f32140bafa238f3340793897c3f2a59c5100000000ffffffff016c440e00000000001976a9149c08058bf18404fe70150761e0f4f786e733b7b688ac0247304402204dca07b9de6aa7ea42dc13cfa261360fbfb807b7bcc94657781c4308a5c40ce902207b3d5e987a3b06c3c0d3d44d79751fd52969056cec0595e36140c7dbd0f4a1f60121026387d8d68fb3deafce92b5d8a0295691edfc131d6568c59c4ed56fabf5ee1a1000000000";
-
-      let expectedWTxid = reverseBytes("0x35308e2c6ccc530a1fa25ef41c8d00e60ff556d060b885ac915c052d075b728d");
-      let wtxid = await parser.calculateWTxId(rawTx);
-
-      expect(wtxid).to.be.eq(expectedWTxid);
-    });
-  });
-
   describe("#parse", () => {
     it("should parse correctly", async () => {
       for (let i = 0; i < 10; ++i) {
@@ -272,12 +260,12 @@ describe("Transaction Parser", () => {
     });
   });
 
-  describe("#isBitcoinTransaction", () => {
+  describe("#isTransaction", () => {
     it("should return true for a valid transaction", async () => {
       for (let i = 0; i < 10; ++i) {
         const actualTxData = getTxData(txData802_368, i);
 
-        expect(await parser.isBitcoinTransaction("0x" + actualTxData.hex)).to.be.true;
+        expect(await parser.isTransaction("0x" + actualTxData.hex)).to.be.true;
       }
     });
 
@@ -307,22 +295,22 @@ describe("Transaction Parser", () => {
       const tooLong =
         "0x020000000001012e0d83414d9b5ee709773a0c1ce2325cad3b650468755d244087304e99f0ae450000000000010000800190650000000000001600148c676a1c175fdc55c370b7574fad98d5be7506970140067a7b2cea28dab27de68fee4ea92580cb307d687c5ab257a46d2c13018f755e2fce754bd4c649902cd63ec0ee657c2ab3c3d98521ac58fedaa08e4bef5f355700000000ff";
 
-      expect(await parser.isBitcoinTransaction(zeroVersion)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidVersionTx)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidFlagTx)).to.be.false;
-      expect(await parser.isBitcoinTransaction(shortFlagTx)).to.be.false;
-      expect(await parser.isBitcoinTransaction(shortTx)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidVersionBytes1)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidVersionBytes2)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidVersionBytes3)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidWitnessTx)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidInputCount)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidScriptLen)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidOutputCount)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidOutputScriptLen)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidWitnessCount)).to.be.false;
-      expect(await parser.isBitcoinTransaction(invalidWScriptLen)).to.be.false;
-      expect(await parser.isBitcoinTransaction(tooLong)).to.be.false;
+      expect(await parser.isTransaction(zeroVersion)).to.be.false;
+      expect(await parser.isTransaction(invalidVersionTx)).to.be.false;
+      expect(await parser.isTransaction(invalidFlagTx)).to.be.false;
+      expect(await parser.isTransaction(shortFlagTx)).to.be.false;
+      expect(await parser.isTransaction(shortTx)).to.be.false;
+      expect(await parser.isTransaction(invalidVersionBytes1)).to.be.false;
+      expect(await parser.isTransaction(invalidVersionBytes2)).to.be.false;
+      expect(await parser.isTransaction(invalidVersionBytes3)).to.be.false;
+      expect(await parser.isTransaction(invalidWitnessTx)).to.be.false;
+      expect(await parser.isTransaction(invalidInputCount)).to.be.false;
+      expect(await parser.isTransaction(invalidScriptLen)).to.be.false;
+      expect(await parser.isTransaction(invalidOutputCount)).to.be.false;
+      expect(await parser.isTransaction(invalidOutputScriptLen)).to.be.false;
+      expect(await parser.isTransaction(invalidWitnessCount)).to.be.false;
+      expect(await parser.isTransaction(invalidWScriptLen)).to.be.false;
+      expect(await parser.isTransaction(tooLong)).to.be.false;
     });
   });
 });

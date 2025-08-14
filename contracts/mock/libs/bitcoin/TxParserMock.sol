@@ -10,10 +10,6 @@ contract TxParserMock {
         return data_.calculateTxId();
     }
 
-    function calculateWTxId(bytes calldata data_) external pure returns (bytes32) {
-        return data_.calculateWTxId();
-    }
-
     function parseBTCTransaction(
         bytes calldata txBytes_
     ) external pure returns (TxParser.Transaction memory tx_) {
@@ -23,8 +19,8 @@ contract TxParserMock {
         return tx_;
     }
 
-    function isBitcoinTransaction(bytes memory rawTx_) external pure returns (bool) {
-        return rawTx_.isBitcoinTransaction();
+    function isTransaction(bytes memory rawTx_) external pure returns (bool) {
+        return rawTx_.isTransaction();
     }
 
     function parseCuint(

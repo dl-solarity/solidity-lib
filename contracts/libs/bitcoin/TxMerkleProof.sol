@@ -38,6 +38,8 @@ library TxMerkleProof {
      * from `leaf_` using `proof_`. A `proof_` is valid if and only if the rebuilt
      * hash matches the given tree root. The pre-images are hashed in the order
      * calculated by the `txIndex_` position. Uses double SHA-256 hashing
+     * @dev Every pair of nodes is checked for being a valid transaction
+     * to mitigate insertion attack
      * @param proof_ The array of sibling hashes from the leaf to the root
      * @param leaf_ The leaf of the Merkle tree
      * @param txIndex_ The transaction index in the block, indicating hashing order for each pair
@@ -56,7 +58,7 @@ library TxMerkleProof {
                 ? abi.encodePacked(computedHash_, proof_[i])
                 : abi.encodePacked(proof_[i], computedHash_);
 
-            if (pair_.isBitcoinTransaction()) revert InvalidMerkleNode();
+            if (pair_.isTransaction()) revert InvalidMerkleNode();
 
             computedHash_ = _doubleSHA256(pair_);
             txIndex_ >>= 1;
