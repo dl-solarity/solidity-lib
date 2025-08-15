@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {SetHelper} from "../libs/arrays/SetHelper.sol";
 import {TypeCaster} from "../libs/utils/TypeCaster.sol";
 import {IMultiOwnable} from "../interfaces/access/IMultiOwnable.sol";
 
@@ -24,7 +23,6 @@ import {IMultiOwnable} from "../interfaces/access/IMultiOwnable.sol";
 abstract contract AMultiOwnable is IMultiOwnable, Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using TypeCaster for address;
-    using SetHelper for EnumerableSet.AddressSet;
 
     struct AMultiOwnableStorage {
         EnumerableSet.AddressSet owners;
@@ -113,7 +111,9 @@ abstract contract AMultiOwnable is IMultiOwnable, Initializable {
     function _addOwners(address[] memory newOwners_) private {
         AMultiOwnableStorage storage $ = _getAMultiOwnableStorage();
 
-        $.owners.add(newOwners_);
+        for (uint256 i = 0; i < newOwners_.length; ++i) {
+            $.owners.add(newOwners_[i]);
+        }
 
         if ($.owners.contains(address(0))) revert InvalidOwner();
 
@@ -132,7 +132,9 @@ abstract contract AMultiOwnable is IMultiOwnable, Initializable {
     function _removeOwners(address[] memory oldOwners_) private {
         AMultiOwnableStorage storage $ = _getAMultiOwnableStorage();
 
-        $.owners.remove(oldOwners_);
+        for (uint256 i = 0; i < oldOwners_.length; ++i) {
+            $.owners.remove(oldOwners_[i]);
+        }
 
         emit OwnersRemoved(oldOwners_);
     }

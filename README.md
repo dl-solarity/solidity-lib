@@ -44,8 +44,7 @@ contracts
 ├── libs
 │   ├── arrays
 │   │   ├── ArrayHelper — "Common functions to work with arrays"
-│   │   ├── Paginator — "Return array slices from view function"
-│   │   └── SetHelper — "Array abstraction over sets"
+│   │   └── Paginator — "Return array slices from view function"
 │   ├── bitcoin
 │   │   ├── BlockHeader — "Parse and format Bitcoin block headers"
 │   │   ├── TxMerkleProof — "Verify transaction inclusion in Bitcoin block"
@@ -77,9 +76,6 @@ contracts
 │   └── zkp
 │       ├── Groth16VerifierHelper — "Simplify integration with Groth16 proofs"
 │       └── PlonkVerifierHelper — "Simplify integration with Plonk proofs"
-├── oracles
-│   ├── AUniswapV2Oracle — "Uniswap V2 oracle with custom TWAP"
-│   └── UniswapV3Oracle — "Uniswap V3 oracle with a clean interface"
 ├── proxy
 │   └── adminable
 │       ├── AdminableProxy — "A slight modification of a transparent proxy"
