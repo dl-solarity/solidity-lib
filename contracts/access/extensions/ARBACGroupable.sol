@@ -4,7 +4,6 @@ pragma solidity ^0.8.21;
 import {IRBACGroupable} from "../../interfaces/access/extensions/IRBACGroupable.sol";
 
 import {DynamicSet} from "../../libs/data-structures/DynamicSet.sol";
-import {SetHelper} from "../../libs/arrays/SetHelper.sol";
 
 import {ARBAC} from "../ARBAC.sol";
 
@@ -24,7 +23,6 @@ import {ARBAC} from "../ARBAC.sol";
  */
 abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
     using DynamicSet for DynamicSet.StringSet;
-    using SetHelper for DynamicSet.StringSet;
 
     struct ARBACGroupableStorage {
         uint256 defaultGroupEnabled;
@@ -211,7 +209,9 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
     function _addUserToGroups(address who_, string[] memory groupsToAddTo_) internal {
         ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
 
-        $.userGroups[who_].add(groupsToAddTo_);
+        for (uint256 i = 0; i < groupsToAddTo_.length; ++i) {
+            $.userGroups[who_].add(groupsToAddTo_[i]);
+        }
 
         emit AddedToGroups(who_, groupsToAddTo_);
     }
@@ -224,7 +224,9 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
     function _removeUserFromGroups(address who_, string[] memory groupsToRemoveFrom_) internal {
         ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
 
-        $.userGroups[who_].remove(groupsToRemoveFrom_);
+        for (uint256 i = 0; i < groupsToRemoveFrom_.length; ++i) {
+            $.userGroups[who_].remove(groupsToRemoveFrom_[i]);
+        }
 
         emit RemovedFromGroups(who_, groupsToRemoveFrom_);
     }
@@ -237,7 +239,9 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
     function _grantGroupRoles(string memory groupTo_, string[] memory rolesToGrant_) internal {
         ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
 
-        $.groupRoles[groupTo_].add(rolesToGrant_);
+        for (uint256 i = 0; i < rolesToGrant_.length; ++i) {
+            $.groupRoles[groupTo_].add(rolesToGrant_[i]);
+        }
 
         emit GrantedGroupRoles(groupTo_, rolesToGrant_);
     }
@@ -250,7 +254,9 @@ abstract contract ARBACGroupable is IRBACGroupable, ARBAC {
     function _revokeGroupRoles(string memory groupFrom_, string[] memory rolesToRevoke_) internal {
         ARBACGroupableStorage storage $ = _getARBACGroupableStorage();
 
-        $.groupRoles[groupFrom_].remove(rolesToRevoke_);
+        for (uint256 i = 0; i < rolesToRevoke_.length; ++i) {
+            $.groupRoles[groupFrom_].remove(rolesToRevoke_[i]);
+        }
 
         emit RevokedGroupRoles(groupFrom_, rolesToRevoke_);
     }

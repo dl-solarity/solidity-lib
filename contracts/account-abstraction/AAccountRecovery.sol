@@ -76,14 +76,18 @@ abstract contract AAccountRecovery is IAccountRecovery {
     /**
      * @notice Should be called in the `addRecoveryProvider` function
      */
-    function _addRecoveryProvider(address provider_, bytes memory recoveryData_) internal virtual {
+    function _addRecoveryProvider(
+        address provider_,
+        bytes memory recoveryData_,
+        uint256 value_
+    ) internal virtual {
         if (provider_ == address(0)) revert ZeroAddress();
 
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
         if (!$.recoveryProviders.add(provider_)) revert ProviderAlreadyAdded(provider_);
 
-        IRecoveryProvider(provider_).subscribe(recoveryData_);
+        IRecoveryProvider(provider_).subscribe{value: value_}(recoveryData_);
 
         emit RecoveryProviderAdded(provider_);
     }
@@ -91,12 +95,12 @@ abstract contract AAccountRecovery is IAccountRecovery {
     /**
      * @notice Should be called in the `removeRecoveryProvider` function
      */
-    function _removeRecoveryProvider(address provider_) internal virtual {
+    function _removeRecoveryProvider(address provider_, uint256 value_) internal virtual {
         AAccountRecoveryStorage storage $ = _getAAccountRecoveryStorage();
 
         if (!$.recoveryProviders.remove(provider_)) revert ProviderNotRegistered(provider_);
 
-        IRecoveryProvider(provider_).unsubscribe();
+        IRecoveryProvider(provider_).unsubscribe{value: value_}();
 
         emit RecoveryProviderRemoved(provider_);
     }

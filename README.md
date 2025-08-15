@@ -45,8 +45,11 @@ contracts
 ├── libs
 │   ├── arrays
 │   │   ├── ArrayHelper — "Common functions to work with arrays"
-│   │   ├── Paginator — "Return array slices from view function"
-│   │   └── SetHelper — "Array abstraction over sets"
+│   │   └── Paginator — "Return array slices from view function"
+│   ├── bitcoin
+│   │   ├── BlockHeader — "Parse and format Bitcoin block headers"
+│   │   ├── TxMerkleProof — "Verify transaction inclusion in Bitcoin block"
+│   │   └── TxParser — "Parse and format Bitcoin transactions"
 │   ├── bn
 │   │   └── U512 — "A hyperoptimized uint512 implementation"
 │   ├── crypto
@@ -67,15 +70,13 @@ contracts
 │   │       └── Vector — "A pushable memory array"
 │   ├── utils
 │   │   ├── DecimalsConverter — "Simplify interaction with ERC-20 decimals"
+│   │   ├── EndianConverter — "Convert between little-endian and big-endian formats"
 │   │   ├── MemoryUtils — "Functions for memory manipulation"
 │   │   ├── ReturnDataProxy — "Bypass extra returndata copy when returning data"
 │   │   └── Typecaster — "Cast between various Solidity types"
 │   └── zkp
 │       ├── Groth16VerifierHelper — "Simplify integration with Groth16 proofs"
 │       └── PlonkVerifierHelper — "Simplify integration with Plonk proofs"
-├── oracles
-│   ├── AUniswapV2Oracle — "Uniswap V2 oracle with custom TWAP"
-│   └── UniswapV3Oracle — "Uniswap V3 oracle with a clean interface"
 ├── proxy
 │   └── adminable
 │       ├── AdminableProxy — "A slight modification of a transparent proxy"

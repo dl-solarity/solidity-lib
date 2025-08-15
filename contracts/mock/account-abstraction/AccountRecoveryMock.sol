@@ -8,11 +8,11 @@ contract AccountRecoveryMock is AAccountRecovery {
         address provider_,
         bytes memory recoveryData_
     ) external payable override {
-        _addRecoveryProvider(provider_, recoveryData_);
+        _addRecoveryProvider(provider_, recoveryData_, msg.value / 2);
     }
 
     function removeRecoveryProvider(address provider_) external payable override {
-        _removeRecoveryProvider(provider_);
+        _removeRecoveryProvider(provider_, msg.value / 2);
     }
 
     function validateRecovery(

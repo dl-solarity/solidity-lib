@@ -3,6 +3,7 @@ import { ethers } from "hardhat";
 
 import { AccountRecoveryMock, RecoveryProviderMock } from "@/generated-types/ethers";
 import { Reverter } from "@/test/helpers/reverter";
+import { wei } from "@/scripts/utils/utils";
 
 describe("AccountRecovery", () => {
   const reverter = new Reverter();
@@ -37,9 +38,17 @@ describe("AccountRecovery", () => {
       expect(await accountRecovery.getRecoveryProviders()).to.be.deep.equal([await provider1.getAddress()]);
     });
 
-    it("should call a `subscribe` function of a recovery provider", async () => {
+    it("should call a `subscribe` function of a recovery provider with value", async () => {
+      const valueAmount = wei(1, 18);
+      const tx = await accountRecovery.addRecoveryProvider(provider1, RECOVERY_DATA, { value: valueAmount });
+      await expect(tx)
+        .to.emit(provider1, "SubscribeCalled")
+        .withArgs(RECOVERY_DATA, valueAmount / 2n);
+    });
+
+    it("should call a `subscribe` function of a recovery provider without value", async () => {
       const tx = await accountRecovery.addRecoveryProvider(provider1, RECOVERY_DATA);
-      await expect(tx).to.emit(provider1, "SubscribeCalled").withArgs(RECOVERY_DATA);
+      await expect(tx).to.emit(provider1, "SubscribeCalled").withArgs(RECOVERY_DATA, 0n);
     });
 
     it("should revert if a provider is zero address", async () => {
@@ -70,9 +79,17 @@ describe("AccountRecovery", () => {
       expect(await accountRecovery.getRecoveryProviders()).to.be.deep.equal([]);
     });
 
-    it("should call a `unsubscribe` function of a recovery provider", async () => {
+    it("should call a `unsubscribe` function of a recovery provider with value", async () => {
+      const valueAmount = wei(1, 18);
+      const tx = await accountRecovery.removeRecoveryProvider(provider1, { value: valueAmount });
+      await expect(tx)
+        .to.emit(provider1, "UnsubscribeCalled")
+        .withArgs(valueAmount / 2n);
+    });
+
+    it("should call a `unsubscribe` function of a recovery provider without value", async () => {
       const tx = await accountRecovery.removeRecoveryProvider(provider1);
-      await expect(tx).to.emit(provider1, "UnsubscribeCalled");
+      await expect(tx).to.emit(provider1, "UnsubscribeCalled").withArgs(0n);
     });
 
     it("should revert if a provider is not added", async () => {
