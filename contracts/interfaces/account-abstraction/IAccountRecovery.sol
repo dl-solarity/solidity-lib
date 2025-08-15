@@ -9,7 +9,7 @@ pragma solidity ^0.8.21;
  * For more information please refer to [EIP-7947](https://eips.ethereum.org/EIPS/eip-7947).
  */
 interface IAccountRecovery {
-    event OwnershipRecovered(address indexed oldOwner, address indexed newOwner);
+    event AccessRecovered(bytes subject);
     event RecoveryProviderAdded(address indexed provider);
     event RecoveryProviderRemoved(address indexed provider);
 
@@ -17,30 +17,30 @@ interface IAccountRecovery {
      * @notice A function to add a new recovery provider.
      * SHOULD be access controlled.
      *
-     * @param provider the address of a recovery provider (ZKP verifier) to add.
-     * @param recoveryData custom data (commitment) for the recovery provider.
+     * @param provider_ the address of a recovery provider (ZKP verifier) to add.
+     * @param recoveryData_ custom data (commitment) for the recovery provider.
      */
-    function addRecoveryProvider(address provider, bytes memory recoveryData) external;
+    function addRecoveryProvider(address provider_, bytes memory recoveryData_) external payable;
 
     /**
      * @notice A function to remove an existing recovery provider.
      * SHOULD be access controlled.
      *
-     * @param provider the address of a previously added recovery provider to remove.
+     * @param provider_ the address of a previously added recovery provider to remove.
      */
-    function removeRecoveryProvider(address provider) external;
+    function removeRecoveryProvider(address provider_) external payable;
 
     /**
-     * @notice A non-view function to recover ownership of a smart account.
-     * @param newOwner the address of a new owner.
-     * @param provider the address of a recovery provider.
-     * @param proof an encoded proof of recovery (ZKP/ZKAI, signature, etc).
+     * @notice A non-view function to recover access of a smart account.
+     * @param subject_ the recovery subject (encoded owner address, access control role, etc).
+     * @param provider_ the address of a recovery provider.
+     * @param proof_ an encoded proof of recovery (ZKP/ZKAI, signature, etc).
      * @return `true` if recovery is successful, `false` (or revert) otherwise.
      */
-    function recoverOwnership(
-        address newOwner,
-        address provider,
-        bytes memory proof
+    function recoverAccess(
+        bytes memory subject_,
+        address provider_,
+        bytes memory proof_
     ) external returns (bool);
 
     /**
