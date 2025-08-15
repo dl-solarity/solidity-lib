@@ -1,7 +1,9 @@
 <!-- 
 Thank you for contributing to Solarity! 
 
-Please consider ticking the relevant statements.
+Before opening a pull request, please check out the contributing guidelines.
+
+Make sure that the CHANGELOG.md is up to date and consider ticking the relevant statements below.
 -->
 
 - [ ] Since this PR suggests a **bug fix**, the tests have been added and the coverage is 100%.
@@ -9,6 +11,5 @@ Please consider ticking the relevant statements.
 - [ ] This PR is just a **minor change**, like a typo fix.
 
 ---
-
 
 <!-- Add the PR description here. -->
