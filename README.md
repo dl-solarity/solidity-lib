@@ -47,7 +47,7 @@ contracts
 │   │   ├── Paginator — "Return array slices from view function"
 │   │   └── SetHelper — "Array abstraction over sets"
 │   ├── bitcoin
-│   │   ├── BlockHeader — "Parse, hash and convert Bitcoin block header data"
+│   │   ├── BlockHeader — "Parse and format Bitcoin block headers"
 │   │   ├── TxMerkleProof — "Verify transaction inclusion in Bitcoin block"
 │   │   └── TxParser — "Parse and format Bitcoin transactions"
 │   ├── bn

@@ -35,8 +35,6 @@ library TxMerkleProof {
     }
 
     /**
-     * @dev Every pair of nodes is checked for being a valid transaction
-     * to mitigate insertion attack. More info at https://nvd.nist.gov/vuln/detail/CVE-2017-12842
      * @notice Returns the rebuilt hash obtained by traversing the Merkle tree
      * from `leaf_` using `proof_`. A `proof_` is valid if and only if the rebuilt
      * hash matches the given tree root. The pre-images are hashed in the order
@@ -60,6 +58,10 @@ library TxMerkleProof {
                 ? abi.encodePacked(computedHash_, proof_[i])
                 : abi.encodePacked(proof_[i], computedHash_);
 
+            /*
+             * Check that the node is not a transaction to mitigate an insertion attack.
+             * More info at https://nvd.nist.gov/vuln/detail/CVE-2017-12842
+             */
             if (pair_.isTransaction()) revert InvalidMerkleNode();
 
             computedHash_ = _doubleSHA256(pair_);
