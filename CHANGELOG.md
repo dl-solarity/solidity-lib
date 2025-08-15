@@ -1,6 +1,6 @@
 # Changelog
 
-## [minor]
+## [3.2.0]
 
 Added several new libs to work with Bitcoin:
 
@@ -18,3 +18,4 @@ Removed rarely used, legacy libs and contracts:
 ## [none]
 
 - Improved package publishing process.
+
