@@ -2,9 +2,9 @@ import { execSync } from "node:child_process";
 
 import extractReleaseNotes from "./extract-release-notes";
 
-import { readJSON, getPkgPath } from "../helpers";
+import { readJSON, getPkgPath } from "./helpers";
 
-import type { Core } from "../helpers";
+import type { Core } from "./helpers";
 
 export default async function getReleaseState(core: Core) {
   const isReleaseCommit = /^chore\(release\):/m.test(execSync("git log -1 --pretty=%B", { encoding: "utf8" }));

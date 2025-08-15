@@ -9,12 +9,13 @@ import type { Level } from "./types";
 
 export default function computeNextVersion(): { current: string; level: Level; next: string } {
   const pkg = readJSON<{ version: string }>(getPkgPath());
-
   const changelog = fs.readFileSync(getChangelogPath(), "utf8");
   const match = changelog.match(/^##\s*\[(.+?)\]\s*$/m);
+
   if (!match) {
     throw new Error("Could not find top H2 tag in CHANGELOG.md");
   }
+
   const level = match[1].trim().toLowerCase() as Level;
 
   const { base, rc } = parseRc(pkg.version);
@@ -25,6 +26,7 @@ export default function computeNextVersion(): { current: string; level: Level; n
   }
 
   let next: string;
+
   if (!isRc) {
     switch (level) {
       case "none":

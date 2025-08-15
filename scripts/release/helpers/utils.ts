@@ -19,15 +19,24 @@ export function getPkgPath(): string {
 
 export function getChangelogPath(): string {
   const changelogPath = path.resolve(process.cwd(), "CHANGELOG.md");
-  if (!fs.existsSync(changelogPath)) throw new Error("CHANGELOG.md not found");
+
+  if (!fs.existsSync(changelogPath)) {
+    throw new Error("CHANGELOG.md not found");
+  }
+
   return changelogPath;
 }
 
 export function parseRc(version: string): { base: string; rc: number | null } {
   const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?$/);
-  if (!match) throw new Error(`Invalid semver in package.json: ${version}`);
+
+  if (!match) {
+    throw new Error(`Invalid semver in package.json: ${version}`);
+  }
+
   const base = `${match[1]}.${match[2]}.${match[3]}`;
   const rc = match[4] ? parseInt(match[4], 10) : null;
+
   return { base, rc };
 }
 
@@ -36,9 +45,11 @@ export function bumpBase(version: string, level: Extract<Level, "major" | "minor
   const major = parseInt(majorStr, 10);
   const minor = parseInt(minorStr, 10);
   const patch = parseInt(patchStr, 10);
+
   if (Number.isNaN(major) || Number.isNaN(minor) || Number.isNaN(patch)) {
     throw new Error(`Invalid semver in package.json: ${version}`);
   }
+
   switch (level) {
     case "major":
       return `${major + 1}.0.0`;
@@ -55,30 +66,38 @@ export function getTopSection(changelogContent: string): TopSection {
   const h2Regex = /^##\s*\[(.+?)\]\s*$/m;
   const allLines = changelogContent.split(/\r?\n/);
   let topIdx = -1;
+
   for (let i = 0; i < allLines.length; i += 1) {
     if (h2Regex.test(allLines[i])) {
       topIdx = i;
       break;
     }
   }
-  if (topIdx === -1) return { level: null, body: "", start: -1, end: -1 };
+
+  if (topIdx === -1) {
+    return { level: null, body: "", start: -1, end: -1 };
+  }
 
   const level = allLines[topIdx]
     .replace(/^##\s*\[/, "")
     .replace(/\]\s*$/, "")
     .trim()
     .toLowerCase();
+
   let endIdx = allLines.length;
+
   for (let i = topIdx + 1; i < allLines.length; i += 1) {
     if (/^##\s*\[.+?\]\s*$/.test(allLines[i])) {
       endIdx = i;
       break;
     }
   }
+
   const body = allLines
     .slice(topIdx + 1, endIdx)
     .join("\n")
     .trim();
+
   return { level, body, start: topIdx, end: endIdx };
 }
 
@@ -91,8 +110,12 @@ export function validateReleaseTopSection({
   body: string;
   pkgIsRc: boolean;
 }): void {
-  if (!level) throw new Error("Top H2 tag not found");
+  if (!level) {
+    throw new Error("Top H2 tag not found");
+  }
+
   const normalized = String(level).toLowerCase() as Level;
+
   if (!(pkgIsRc ? allowedWhenRc.has(normalized) : allowedWhenNotRc.has(normalized))) {
     if (pkgIsRc) {
       throw new Error("Top H2 tag must be one of rc|none|release when current version is an RC");
@@ -100,5 +123,8 @@ export function validateReleaseTopSection({
       throw new Error("Top H2 tag must be one of patch|minor|major|none|patch-rc|minor-rc|major-rc when not in RC");
     }
   }
-  if (body.trim().length === 0) throw new Error("Release notes section is empty");
+
+  if (body.trim().length === 0) {
+    throw new Error("Release notes section is empty");
+  }
 }

@@ -2,18 +2,11 @@
 
 import fs from "fs";
 
-import computeNextVersion from "../helpers/compute-next-version";
+import computeNextVersion from "./helpers/compute-next-version";
 
-import {
-  getTopSection,
-  readJSON,
-  writeJSON,
-  getPkgPath,
-  getChangelogPath,
-  validateReleaseTopSection,
-} from "../helpers";
+import { getTopSection, readJSON, writeJSON, getPkgPath, getChangelogPath, validateReleaseTopSection } from "./helpers";
 
-import type { Core } from "../helpers";
+import type { Core } from "./helpers";
 
 export default async function applyRelease(core: Core): Promise<void> {
   const pkgPath = getPkgPath();
@@ -24,6 +17,7 @@ export default async function applyRelease(core: Core): Promise<void> {
 
   const { level, body, start } = getTopSection(changelog);
   const pkgIsRc = /-rc\.\d+$/.test(pkg.version);
+
   validateReleaseTopSection({ level, body, pkgIsRc });
 
   if (level === "none") {
@@ -40,9 +34,11 @@ export default async function applyRelease(core: Core): Promise<void> {
 
   // Rewrite top section heading to the new version number
   const lines = changelog.split(/\r?\n/);
+
   if (start >= 0) {
     lines[start] = `## [${next}]`;
   }
+
   fs.writeFileSync(changelogPath, `${lines.join("\n")}\n`);
 
   core.setOutput("skip", String(false));

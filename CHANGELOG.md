@@ -2,4 +2,4 @@
 
 ## [none]
 
-* Improved package publishing process
+- Improved package publishing process

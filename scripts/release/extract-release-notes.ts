@@ -2,7 +2,7 @@
 
 import fs from "fs";
 
-import { getChangelogPath, getPkgPath, readJSON } from "../helpers";
+import { getChangelogPath, getPkgPath, readJSON } from "./helpers";
 
 export default function extractReleaseNotes({ version }: { version?: string } = {}): string {
   const changelog = fs.readFileSync(getChangelogPath(), "utf8");
@@ -13,17 +13,21 @@ export default function extractReleaseNotes({ version }: { version?: string } = 
 
   const lines = changelog.split(/\r?\n/);
   let start = -1;
+
   for (let i = 0; i < lines.length; i += 1) {
     if (header.test(lines[i])) {
       start = i;
       break;
     }
   }
+
   if (start === -1) {
     return "";
   }
+
   let end = lines.length;
   const h2 = /^##\s*\[.+?\]\s*$/;
+
   for (let i = start + 1; i < lines.length; i += 1) {
     if (h2.test(lines[i])) {
       end = i;
