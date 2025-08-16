@@ -52,7 +52,7 @@ jobs:
       - name: Commit version bump and changelog update
         if: steps.apply.outputs.skip != 'true'
         run: |
-          git remote set-url origin git@github.com:KyrylR/npm-publish-test.git
+          git remote set-url origin git@github.com:dl-solarity/solidity-lib.git
 
           eval "$(ssh-agent -s)"
           ssh-add - <<< "${{ secrets.DEPLOY_KEY }}"
