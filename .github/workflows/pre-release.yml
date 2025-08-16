@@ -55,7 +55,7 @@ jobs:
           git remote set-url origin git@github.com:dl-solarity/solidity-lib.git
 
           eval "$(ssh-agent -s)"
-          ssh-add - <<< "${{ secrets.DEPLOY_KEY }}"
+          ssh-add - <<< "${{ secrets.COMMIT_RELEASER }}"
           
           git add package.json package-lock.json CHANGELOG.md
           if ! git diff --cached --quiet; then
