@@ -46,7 +46,7 @@ jobs:
             await require('./scripts/release/apply-release.ts').default(core);
 
       - name: Update package-lock
-        uses: ./.github/actions/setup
+        run: npm install --package-lock-only
 
       - run: bash scripts/git-user-config.sh
       - name: Commit version bump and changelog update
