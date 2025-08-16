@@ -2,7 +2,7 @@
 
 ## [none]
 
-* Fixed `pre-release` GitHub CI workflow
+- Fixed `pre-release` GitHub CI workflow
 
 ## [3.2.0]
 
@@ -18,7 +18,3 @@ Removed rarely used, legacy libs and contracts:
 - `SetHelper`.
 - `UniswapV2Oracle`.
 - `UniswapV3Oracle`.
-
-## [none]
-
-- Improved package publishing process.
