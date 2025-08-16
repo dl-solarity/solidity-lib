@@ -39,7 +39,7 @@ export default async function applyRelease(core: Core): Promise<void> {
     lines[start] = `## [${next}]`;
   }
 
-  fs.writeFileSync(changelogPath, `${lines.join("\n")}\n`);
+  fs.writeFileSync(changelogPath, `${lines.join("\n")}`);
 
   core.setOutput("skip", String(false));
   core.setOutput("version", next);

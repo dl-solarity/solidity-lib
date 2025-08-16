@@ -1,5 +1,9 @@
 # Changelog
 
+## [none]
+
+- Fixed `pre-release` GitHub CI workflow
+
 ## [3.2.0]
 
 Added several new libs to work with Bitcoin:
@@ -14,8 +18,3 @@ Removed rarely used, legacy libs and contracts:
 - `SetHelper`.
 - `UniswapV2Oracle`.
 - `UniswapV3Oracle`.
-
-## [none]
-
-- Improved package publishing process.
-
