@@ -1,5 +1,9 @@
 # Changelog
 
+## [none]
+
+* Fixed `pre-release` GitHub CI workflow
+
 ## [3.2.0]
 
 Added several new libs to work with Bitcoin:
