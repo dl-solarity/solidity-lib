@@ -4,10 +4,11 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { MerkleTree } from "merkletreejs";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { buildSparseMerkleTree, getRoot } from "@/test/helpers/merkle-tree-helper";
 import { getPoseidon, poseidonHash } from "@/test/helpers/poseidon-hash";
-import { getRoot, buildSparseMerkleTree } from "@/test/helpers/merkle-tree-helper";
+import { Reverter } from "@/test/helpers/reverter";
 
+import { addHexPrefix } from "@/test/helpers/bytes-helpers";
 import { IncrementalMerkleTreeMock } from "@ethers-v6";
 
 describe("IncrementalMerkleTree", () => {
@@ -50,6 +51,17 @@ describe("IncrementalMerkleTree", () => {
 
   function getAddressElementHash(element: any, hashFn: any = ethers.keccak256) {
     return hashFn(coder.encode(["address"], [element]));
+  }
+
+  function getDirectionBits(index: number, treeHeight: number): number {
+    let mask = 0;
+    for (let i = 0; i < treeHeight; i++) {
+      // Shift in the bit from index: 0 = left, 1 = right
+      if ((index >> i) & 1) {
+        mask |= 1 << i;
+      }
+    }
+    return mask;
   }
 
   describe("Uint IMT", () => {
@@ -127,6 +139,47 @@ describe("IncrementalMerkleTree", () => {
       await expect(merkleTree.setUintPoseidonHasher())
         .to.be.revertedWithCustomError(merkleTree, "TreeIsNotEmpty")
         .withArgs();
+    });
+
+    it("should verify a proof", async () => {
+      const elements = [];
+
+      for (let i = 0; i < 16; i++) {
+        const element = i;
+
+        await merkleTree.addUint(element);
+
+        await merkleTree.setUintTreeHeight(i + 3);
+
+        const elementHash = getUintElementHash(element);
+        elements.push(elementHash);
+
+        localMerkleTree = buildSparseMerkleTree(elements, Number(await merkleTree.getUintTreeHeight()));
+
+        const siblings = localMerkleTree.getProof(elementHash).map((e) => addHexPrefix(e.data.toString("hex")));
+
+        const directionBits = getDirectionBits(i, Number(await merkleTree.getUintTreeHeight()));
+
+        expect(await merkleTree.verifyUintProof(await merkleTree.getUintRoot(), siblings, directionBits, elementHash))
+          .to.be.true;
+      }
+    });
+
+    it("should return false if proof is invalid", async () => {
+      const element = 1234;
+
+      await merkleTree.addUint(element);
+
+      const elementHash = getUintElementHash(element);
+
+      localMerkleTree = buildSparseMerkleTree([elementHash], 1);
+
+      const siblings = localMerkleTree.getProof(elementHash).map((e) => addHexPrefix(e.data.toString("hex")));
+
+      const directionBits = 1;
+
+      expect(await merkleTree.verifyUintProof(await merkleTree.getUintRoot(), siblings, directionBits, elementHash)).to
+        .be.false;
     });
 
     it("should return zeroHash if tree is empty", async () => {
@@ -248,6 +301,31 @@ describe("IncrementalMerkleTree", () => {
         .to.be.revertedWithCustomError(merkleTree, "TreeIsFull")
         .withArgs();
     });
+
+    it("should verify a proof", async () => {
+      const elements = [];
+
+      for (let i = 0; i < 16; i++) {
+        const element = ethers.encodeBytes32String(`0x${i}234`);
+
+        await merkleTree.addBytes32(element);
+
+        await merkleTree.setBytes32TreeHeight(i + 3);
+
+        const elementHash = getBytes32ElementHash(element);
+        elements.push(elementHash);
+
+        localMerkleTree = buildSparseMerkleTree(elements, Number(await merkleTree.getBytes32TreeHeight()));
+
+        const siblings = localMerkleTree.getProof(elementHash).map((e) => addHexPrefix(e.data.toString("hex")));
+
+        const directionBits = getDirectionBits(i, Number(await merkleTree.getBytes32TreeHeight()));
+
+        expect(
+          await merkleTree.verifyBytes32Proof(await merkleTree.getBytes32Root(), siblings, directionBits, elementHash),
+        ).to.be.true;
+      }
+    });
   });
 
   describe("Address IMT", () => {
@@ -349,6 +427,31 @@ describe("IncrementalMerkleTree", () => {
       await expect(merkleTree.addAddress(USER1.address))
         .to.be.revertedWithCustomError(merkleTree, "TreeIsFull")
         .withArgs();
+    });
+
+    it("should verify a proof", async () => {
+      const elements = [];
+
+      for (let i = 0; i < 5; i++) {
+        const element = (await ethers.getSigners())[i].address;
+
+        await merkleTree.addAddress(element);
+
+        await merkleTree.setAddressTreeHeight(i + 3);
+
+        const elementHash = getAddressElementHash(element);
+        elements.push(elementHash);
+
+        localMerkleTree = buildSparseMerkleTree(elements, Number(await merkleTree.getAddressTreeHeight()));
+
+        const siblings = localMerkleTree.getProof(elementHash).map((e) => addHexPrefix(e.data.toString("hex")));
+
+        const directionBits = getDirectionBits(i, Number(await merkleTree.getAddressTreeHeight()));
+
+        expect(
+          await merkleTree.verifyAddressProof(await merkleTree.getAddressRoot(), siblings, directionBits, elementHash),
+        ).to.be.true;
+      }
     });
   });
 });
