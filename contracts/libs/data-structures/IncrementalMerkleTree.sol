@@ -115,7 +115,6 @@ library IncrementalMerkleTree {
      * Complexity is O(log(n)), where n is the number of elements in the tree.
      *
      * @param tree self.
-     * @param root_ The root hash of the Merkle tree.
      * @param siblings_ The siblings of the leaf.
      * @param directionBits_ The direction bits of the leaf.
      * @param leaf_ The leaf.
@@ -123,12 +122,11 @@ library IncrementalMerkleTree {
      */
     function verifyProof(
         UintIMT storage tree,
-        bytes32 root_,
         bytes32[] memory siblings_,
         uint256 directionBits_,
         bytes32 leaf_
     ) internal view returns (bool) {
-        return _verifyProof(tree._tree, root_, siblings_, directionBits_, leaf_);
+        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_);
     }
 
     /**
@@ -216,7 +214,6 @@ library IncrementalMerkleTree {
      * Complexity is O(log(n)), where n is the number of elements in the tree.
      *
      * @param tree self.
-     * @param root_ The root hash of the Merkle tree.
      * @param siblings_ The siblings of the leaf.
      * @param directionBits_ The direction bits of the leaf.
      * @param leaf_ The leaf.
@@ -224,12 +221,11 @@ library IncrementalMerkleTree {
      */
     function verifyProof(
         Bytes32IMT storage tree,
-        bytes32 root_,
         bytes32[] memory siblings_,
         uint256 directionBits_,
         bytes32 leaf_
     ) internal view returns (bool) {
-        return _verifyProof(tree._tree, root_, siblings_, directionBits_, leaf_);
+        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_);
     }
 
     /**
@@ -313,7 +309,6 @@ library IncrementalMerkleTree {
      * Complexity is O(log(n)), where n is the number of elements in the tree.
      *
      * @param tree self.
-     * @param root_ The root hash of the Merkle tree.
      * @param siblings_ The siblings of the leaf.
      * @param directionBits_ The direction bits of the leaf.
      * @param leaf_ The leaf.
@@ -321,12 +316,11 @@ library IncrementalMerkleTree {
      */
     function verifyProof(
         AddressIMT storage tree,
-        bytes32 root_,
         bytes32[] memory siblings_,
         uint256 directionBits_,
         bytes32 leaf_
     ) internal view returns (bool) {
-        return _verifyProof(tree._tree, root_, siblings_, directionBits_, leaf_);
+        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_);
     }
 
     /**
@@ -466,7 +460,6 @@ library IncrementalMerkleTree {
 
     function _verifyProof(
         IMT storage tree,
-        bytes32 root_,
         bytes32[] memory siblings_,
         uint256 directionBits,
         bytes32 leaf_
@@ -477,7 +470,7 @@ library IncrementalMerkleTree {
 
         bytes32 computedHash_ = leaf_;
 
-        for (uint256 i = 0; i < siblings_.length; i += 1) {
+        for (uint256 i = 0; i < siblings_.length; ++i) {
             if ((directionBits >> i) & 1 != 0) {
                 computedHash_ = hash2_(siblings_[i], computedHash_);
             } else {
@@ -485,7 +478,7 @@ library IncrementalMerkleTree {
             }
         }
 
-        return computedHash_ == root_;
+        return computedHash_ == _root(tree);
     }
 
     function _height(IMT storage tree) private view returns (uint256) {

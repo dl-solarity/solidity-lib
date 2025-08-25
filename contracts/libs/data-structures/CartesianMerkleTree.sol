@@ -919,6 +919,11 @@ library CartesianMerkleTree {
     }
 
     function _verifyProof(CMT storage treaple, Proof memory proof_) private view returns (bool) {
+        // invalid exclusion proof
+        if (!proof_.existence && proof_.nonExistenceKey == ZERO_HASH) {
+            return false;
+        }
+
         bool directionBit_ = _extractDirectionBit(proof_.directionBits, 0);
 
         bytes32 leftHash_ = proof_.siblings[proof_.siblingsLength - 2];
@@ -937,50 +942,6 @@ library CartesianMerkleTree {
 
         for (uint256 i = 2; i < proof_.siblingsLength; i += 2) {
             directionBit_ = _extractDirectionBit(proof_.directionBits, i);
-
-            leftHash_ = computedHash_;
-            rightHash_ = proof_.siblings[proof_.siblingsLength - i - 1];
-
-            if (directionBit_) {
-                (leftHash_, rightHash_) = (rightHash_, leftHash_);
-            }
-
-            computedHash_ = _getNodesHash(
-                treaple,
-                proof_.siblings[proof_.siblingsLength - i - 2],
-                leftHash_,
-                rightHash_
-            );
-        }
-
-        return computedHash_ == proof_.root;
-    }
-
-    function _verifyProof2(CMT storage treaple, Proof memory proof_) private view returns (bool) {
-        bytes32 computedHash_;
-        bytes32 leftHash_;
-        bytes32 rightHash_;
-
-        for (uint256 i = 0; i < proof_.siblingsLength; i += 2) {
-            bool directionBit_ = _extractDirectionBit(proof_.directionBits, i);
-
-            if (i == 0) {
-                leftHash_ = proof_.siblings[proof_.siblingsLength - 2];
-                rightHash_ = proof_.siblings[proof_.siblingsLength - 1];
-
-                if (directionBit_) {
-                    (leftHash_, rightHash_) = (rightHash_, leftHash_);
-                }
-
-                computedHash_ = _getNodesHash(
-                    treaple,
-                    proof_.existence ? proof_.key : proof_.nonExistenceKey,
-                    leftHash_,
-                    rightHash_
-                );
-
-                continue;
-            }
 
             leftHash_ = computedHash_;
             rightHash_ = proof_.siblings[proof_.siblingsLength - i - 1];
@@ -1043,6 +1004,10 @@ library CartesianMerkleTree {
         return directionBits_;
     }
 
+    /**
+     * @dev Extracts the direction bit from the direction mask.
+     * @return True if the node is on the right side of the parent, false if it's on the left.
+     */
     function _extractDirectionBit(
         uint256 directionBits_,
         uint256 currentSiblingsIndex_

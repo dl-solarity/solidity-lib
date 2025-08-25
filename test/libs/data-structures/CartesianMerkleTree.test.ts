@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { BigNumberish, BytesLike } from "ethers";
+import { BigNumberish, BytesLike, ZeroHash } from "ethers";
 import { ethers } from "hardhat";
 
 import { CartesianMerkleTree } from "@/generated-types/ethers/contracts/mock/libs/data-structures/CartesianMerkleTreeMock.sol/CartesianMerkleTreeMock";
@@ -369,6 +369,19 @@ describe("CartesianMerkleTree", () => {
         existence: proof.existence,
         key: proof.key,
         nonExistenceKey: proof.nonExistenceKey,
+      };
+      expect(await treaple.verifyUintProof(proofObj)).to.be.false;
+    });
+
+    it("should not verify non-existent node with non-zero non-existence key", async () => {
+      const proofObj: CartesianMerkleTree.ProofStruct = {
+        root: ZeroHash,
+        siblings: [],
+        siblingsLength: 0,
+        directionBits: 0,
+        existence: false,
+        key: ethers.hexlify(ethers.randomBytes(32)),
+        nonExistenceKey: ZeroHash,
       };
       expect(await treaple.verifyUintProof(proofObj)).to.be.false;
     });

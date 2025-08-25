@@ -68,30 +68,27 @@ contract IncrementalMerkleTreeMock {
     }
 
     function verifyUintProof(
-        bytes32 root_,
         bytes32[] memory siblings_,
         uint256 directionBits_,
         bytes32 element_
     ) external view returns (bool) {
-        return _uintTree.verifyProof(root_, siblings_, directionBits_, element_);
+        return _uintTree.verifyProof(siblings_, directionBits_, element_);
     }
 
     function verifyBytes32Proof(
-        bytes32 root_,
         bytes32[] memory siblings_,
         uint256 directionBits_,
         bytes32 element_
     ) external view returns (bool) {
-        return _bytes32Tree.verifyProof(root_, siblings_, directionBits_, element_);
+        return _bytes32Tree.verifyProof(siblings_, directionBits_, element_);
     }
 
     function verifyAddressProof(
-        bytes32 root_,
         bytes32[] memory siblings_,
         uint256 directionBits_,
         bytes32 element_
     ) external view returns (bool) {
-        return _addressTree.verifyProof(root_, siblings_, directionBits_, element_);
+        return _addressTree.verifyProof(siblings_, directionBits_, element_);
     }
 
     function getUintTreeHeight() external view returns (uint256) {

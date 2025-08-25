@@ -160,9 +160,30 @@ describe("IncrementalMerkleTree", () => {
 
         const directionBits = getDirectionBits(i, Number(await merkleTree.getUintTreeHeight()));
 
-        expect(await merkleTree.verifyUintProof(await merkleTree.getUintRoot(), siblings, directionBits, elementHash))
-          .to.be.true;
+        expect(await merkleTree.verifyUintProof(siblings, directionBits, elementHash)).to.be.true;
       }
+    });
+
+    it("should verify a proof with external hasher", async () => {
+      await merkleTree.setUintPoseidonHasher();
+
+      const element = 1234;
+
+      await merkleTree.addUint(element);
+
+      const elementHash = getUintElementHash(element, poseidonHash);
+
+      localMerkleTree = buildSparseMerkleTree(
+        [elementHash],
+        Number(await merkleTree.getUintTreeHeight()),
+        poseidonHash,
+      );
+
+      const siblings = localMerkleTree.getProof(elementHash).map((e) => addHexPrefix(e.data.toString("hex")));
+
+      const directionBits = 0;
+
+      expect(await merkleTree.verifyUintProof(siblings, directionBits, elementHash)).to.be.true;
     });
 
     it("should return false if proof is invalid", async () => {
@@ -178,8 +199,7 @@ describe("IncrementalMerkleTree", () => {
 
       const directionBits = 1;
 
-      expect(await merkleTree.verifyUintProof(await merkleTree.getUintRoot(), siblings, directionBits, elementHash)).to
-        .be.false;
+      expect(await merkleTree.verifyUintProof(siblings, directionBits, elementHash)).to.be.false;
     });
 
     it("should return zeroHash if tree is empty", async () => {
@@ -321,9 +341,7 @@ describe("IncrementalMerkleTree", () => {
 
         const directionBits = getDirectionBits(i, Number(await merkleTree.getBytes32TreeHeight()));
 
-        expect(
-          await merkleTree.verifyBytes32Proof(await merkleTree.getBytes32Root(), siblings, directionBits, elementHash),
-        ).to.be.true;
+        expect(await merkleTree.verifyBytes32Proof(siblings, directionBits, elementHash)).to.be.true;
       }
     });
   });
@@ -448,9 +466,7 @@ describe("IncrementalMerkleTree", () => {
 
         const directionBits = getDirectionBits(i, Number(await merkleTree.getAddressTreeHeight()));
 
-        expect(
-          await merkleTree.verifyAddressProof(await merkleTree.getAddressRoot(), siblings, directionBits, elementHash),
-        ).to.be.true;
+        expect(await merkleTree.verifyAddressProof(siblings, directionBits, elementHash)).to.be.true;
       }
     });
   });
