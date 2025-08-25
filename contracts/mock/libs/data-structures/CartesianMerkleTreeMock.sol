@@ -96,6 +96,24 @@ contract CartesianMerkleTreeMock {
         return _addressCMT.getProof(key_, desiredProofSize_);
     }
 
+    function verifyUintProof(
+        CartesianMerkleTree.Proof memory proof_
+    ) external view returns (bool) {
+        return _uintCMT.verifyProof(proof_);
+    }
+
+    function verifyBytes32Proof(
+        CartesianMerkleTree.Proof memory proof_
+    ) external view returns (bool) {
+        return _bytes32CMT.verifyProof(proof_);
+    }
+
+    function verifyAddressProof(
+        CartesianMerkleTree.Proof memory proof_
+    ) external view returns (bool) {
+        return _addressCMT.verifyProof(proof_);
+    }
+
     function getUintRoot() external view returns (bytes32) {
         return _uintCMT.getRoot();
     }

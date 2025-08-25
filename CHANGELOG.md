@@ -2,7 +2,8 @@
 
 ## [none]
 
-- Fixed `pre-release` GitHub CI workflow
+- Fixed `pre-release` GitHub CI workflow.
+- Added `verifyProof` function to the `CartesianMerkleTree` and the `IncrementalMerkleTree` libraries.
 
 ## [3.2.0]
 
