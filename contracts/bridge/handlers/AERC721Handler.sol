@@ -15,7 +15,7 @@ abstract contract AERC721Handler is ERC721Holder {
         uint256 tokenId_,
         IBridge.ERC721BridgingType operationType_
     ) internal virtual {
-        require(token_ != address(0), "ERC721Handler: zero token");
+        if (token_ == address(0)) revert IBridge.InvalidToken();
 
         IERC721Crosschain erc721_ = IERC721Crosschain(token_);
 
@@ -33,8 +33,8 @@ abstract contract AERC721Handler is ERC721Holder {
         string calldata tokenURI_,
         IBridge.ERC721BridgingType operationType_
     ) internal virtual {
-        require(token_ != address(0), "ERC721Handler: zero token");
-        require(receiver_ != address(0), "ERC721Handler: zero receiver");
+        if (token_ == address(0)) revert IBridge.InvalidToken();
+        if (receiver_ == address(0)) revert IBridge.InvalidReceiver();
 
         IERC721Crosschain erc721_ = IERC721Crosschain(token_);
 

@@ -16,8 +16,8 @@ abstract contract AERC1155Handler is ERC1155Holder {
         uint256 amount_,
         IBridge.ERC1155BridgingType operationType_
     ) internal virtual {
-        require(token_ != address(0), "ERC1155Handler: zero token");
-        require(amount_ > 0, "ERC1155Handler: amount is zero");
+        if (token_ == address(0)) revert IBridge.InvalidToken();
+        if (amount_ == 0) revert IBridge.InvalidAmount();
 
         IERC1155Crosschain erc1155_ = IERC1155Crosschain(token_);
 
@@ -36,9 +36,9 @@ abstract contract AERC1155Handler is ERC1155Holder {
         string calldata tokenURI_,
         IBridge.ERC1155BridgingType operationType_
     ) internal virtual {
-        require(token_ != address(0), "ERC1155Handler: zero token");
-        require(receiver_ != address(0), "ERC1155Handler: zero receiver");
-        require(amount_ > 0, "ERC1155Handler: amount is zero");
+        if (token_ == address(0)) revert IBridge.InvalidToken();
+        if (amount_ == 0) revert IBridge.InvalidAmount();
+        if (receiver_ == address(0)) revert IBridge.InvalidReceiver();
 
         IERC1155Crosschain erc1155_ = IERC1155Crosschain(token_);
 

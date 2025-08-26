@@ -17,39 +17,22 @@ pragma solidity ^0.8.21;
  * All signer addresses must differ in their first (most significant) 8 bits in order to pass a bloom filtering.
  */
 interface IBridge {
-    /**
-     * @notice Enumerates the types of ERC20 token bridging options.
-     */
     enum ERC20BridgingType {
         LiquidityPool,
         Wrapped,
         USDCType
     }
 
-    /**
-     * @notice Enumerates the types of ERC721 token bridging options.
-     */
     enum ERC721BridgingType {
         LiquidityPool,
         Wrapped
     }
 
-    /**
-     * @notice Enumerates the types of ERC1155 token bridging options.
-     */
     enum ERC1155BridgingType {
         LiquidityPool,
         Wrapped
     }
 
-    /**
-     * @notice Emitted when ERC20 tokens are deposited for bridging.
-     * @param token The address of the ERC20 token being bridged.
-     * @param amount The amount of tokens deposited for bridging.
-     * @param receiver The receiver's address in the destination network.
-     * @param network The name of the destination network.
-     * @param operationType The type of bridging operation performed.
-     */
     event DepositedERC20(
         address token,
         uint256 amount,
@@ -58,14 +41,6 @@ interface IBridge {
         ERC20BridgingType operationType
     );
 
-    /**
-     * @notice Emitted when ERC721 tokens are deposited for bridging.
-     * @param token The address of the ERC721 token being bridged.
-     * @param tokenId The ID of the token deposited for bridging.
-     * @param receiver The receiver's address in the destination network.
-     * @param network The name of the destination network.
-     * @param operationType The type of bridging operation performed.
-     */
     event DepositedERC721(
         address token,
         uint256 tokenId,
@@ -74,15 +49,6 @@ interface IBridge {
         ERC721BridgingType operationType
     );
 
-    /**
-     * @dev Emitted when ERC1155 tokens are deposited for bridging.
-     * @param token The address of the ERC1155 token being bridged.
-     * @param tokenId The ID of the token deposited for bridging.
-     * @param amount The amount of tokens deposited for bridging.
-     * @param receiver The receiver's address in the destination network.
-     * @param network The name of the destination network.
-     * @param operationType The type of bridging operation performed.
-     */
     event DepositedERC1155(
         address token,
         uint256 tokenId,
@@ -92,10 +58,18 @@ interface IBridge {
         ERC1155BridgingType operationType
     );
 
-    /**
-     * @notice event emits from depositNative function
-     */
     event DepositedNative(uint256 amount, string receiver, string network);
+
+    error InvalidSigner(address signer);
+    error InvalidSigners();
+    error DuplicateSigner(address signer);
+    error ThresholdNotMet(uint256 signers);
+    error ThresholdIsZero();
+    error HashNonceUsed(bytes32 hashNonce);
+    error InvalidToken();
+    error InvalidReceiver();
+    error InvalidAmount();
+    error InvalidValue();
 
     /**
      * @notice Deposits ERC20 tokens for bridging, emitting a `DepositedERC20` event.

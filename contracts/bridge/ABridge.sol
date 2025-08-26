@@ -38,8 +38,8 @@ abstract contract ABridge is
     bytes32 private constant A_BRIDGE_STORAGE =
         0xc353df91453f9451d14bc3d78b643ca35222ee145cc2e80765c8a1e293a85ff7;
 
-    function __Bridge_init(
-        address[] calldata signers_,
+    function __ABridge_init(
+        address[] memory signers_,
         uint256 signaturesThreshold_
     ) internal onlyInitializing {
         _addSigners(signers_);
@@ -233,22 +233,26 @@ abstract contract ABridge is
     }
 
     function _setSignaturesThreshold(uint256 signaturesThreshold_) internal virtual {
-        require(signaturesThreshold_ > 0, "Signers: invalid threshold");
+        if (signaturesThreshold_ == 0) revert ThresholdIsZero();
 
         _getABridgeStorage().signaturesThreshold = signaturesThreshold_;
     }
 
     function _addSigners(address[] memory signers_) internal virtual {
+        if (signers_.length == 0) revert InvalidSigners();
+
         ABridgeStorage storage $ = _getABridgeStorage();
 
         for (uint256 i = 0; i < signers_.length; ++i) {
-            require(signers_[i] != address(0), "Signers: zero signer");
+            if (signers_[i] == address(0)) revert InvalidSigner(signers_[i]);
 
             $.signers.add(signers_[i]);
         }
     }
 
     function _removeSigners(address[] memory signers_) internal virtual {
+        if (signers_.length == 0) revert InvalidSigners();
+
         ABridgeStorage storage $ = _getABridgeStorage();
 
         for (uint256 i = 0; i < signers_.length; ++i) {
@@ -264,7 +268,7 @@ abstract contract ABridge is
 
         bytes32 nonceHash_ = keccak256(abi.encodePacked(txHash_, txNonce_));
 
-        require(!$.usedHashes[nonceHash_], "Hashes: the hash nonce is used");
+        if ($.usedHashes[nonceHash_]) revert HashNonceUsed(nonceHash_);
 
         $.usedHashes[nonceHash_] = true;
     }
@@ -275,7 +279,7 @@ abstract contract ABridge is
     ) internal view virtual {
         address[] memory signers_ = new address[](signatures_.length);
 
-        for (uint256 i = 0; i < signatures_.length; i++) {
+        for (uint256 i = 0; i < signatures_.length; ++i) {
             signers_[i] = signHash_.toEthSignedMessageHash().recover(signatures_[i]);
         }
 
@@ -287,18 +291,20 @@ abstract contract ABridge is
 
         uint256 bitMap;
 
-        for (uint256 i = 0; i < signers_.length; i++) {
-            require($.signers.contains(signers_[i]), "Signers: invalid signer");
+        for (uint256 i = 0; i < signers_.length; ++i) {
+            address signer_ = signers_[i];
+
+            if (!$.signers.contains(signer_)) revert InvalidSigner(signer_);
 
             // get the topmost byte for the bloom filtering
-            uint256 bitKey = 2 ** (uint256(uint160(signers_[i])) >> 152);
+            uint256 bitKey = 2 ** (uint256(uint160(signer_)) >> 152);
 
-            require(bitMap & bitKey == 0, "Signers: duplicate signers");
+            if (bitMap & bitKey != 0) revert DuplicateSigner(signer_);
 
             bitMap |= bitKey;
         }
 
-        require(signers_.length >= $.signaturesThreshold, "Signers: threshold is not met");
+        if (signers_.length < $.signaturesThreshold) revert ThresholdNotMet(signers_.length);
     }
 
     /**

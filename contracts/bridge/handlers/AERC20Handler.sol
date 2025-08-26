@@ -18,8 +18,8 @@ abstract contract AERC20Handler {
         uint256 amount_,
         IBridge.ERC20BridgingType operationType_
     ) internal virtual {
-        require(token_ != address(0), "ERC20Handler: zero token");
-        require(amount_ > 0, "ERC20Handler: amount is zero");
+        if (token_ == address(0)) revert IBridge.InvalidToken();
+        if (amount_ == 0) revert IBridge.InvalidAmount();
 
         IERC20Crosschain erc20_ = IERC20Crosschain(token_);
 
@@ -41,9 +41,9 @@ abstract contract AERC20Handler {
         address receiver_,
         IBridge.ERC20BridgingType operationType_
     ) internal virtual {
-        require(token_ != address(0), "ERC20Handler: zero token");
-        require(amount_ > 0, "ERC20Handler: amount is zero");
-        require(receiver_ != address(0), "ERC20Handler: zero receiver");
+        if (token_ == address(0)) revert IBridge.InvalidToken();
+        if (amount_ == 0) revert IBridge.InvalidAmount();
+        if (receiver_ == address(0)) revert IBridge.InvalidReceiver();
 
         IERC20Crosschain erc20_ = IERC20Crosschain(token_);
 
