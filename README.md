@@ -35,8 +35,6 @@ contracts
 │   └── utils
 │       └── DiamondERC165 — "ERC-165 introspection for diamond facets"
 ├── finance
-│   ├── compound—rate—keeper
-│   │   └── ACompoundRateKeeper — "Complex percentage calculator used in lending protocols"
 │   ├── staking
 │   │   ├── AStaking — "Flexible rewards staking implementation"
 │   │   └── AValueDistributor — "Efficient distribution algorithm implementation"
