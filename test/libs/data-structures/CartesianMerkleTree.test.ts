@@ -1,15 +1,14 @@
 import { expect } from "chai";
+import { BigNumberish, BytesLike, ZeroHash } from "ethers";
 import { ethers } from "hardhat";
-import { BytesLike } from "ethers";
 
+import { CartesianMerkleTree } from "@/generated-types/ethers/contracts/mock/libs/data-structures/CartesianMerkleTreeMock.sol/CartesianMerkleTreeMock";
 import { CartesianMerkleTreeMock } from "@ethers-v6";
 
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
-import { Reverter } from "@/test/helpers/reverter";
 import { getPoseidon, poseidonHash } from "@/test/helpers/poseidon-hash";
-
-import { CartesianMerkleTree } from "@ethers-v6/contracts/mock/libs/data-structures/CartesianMerkleTreeMock";
+import { Reverter } from "@/test/helpers/reverter";
 
 describe("CartesianMerkleTree", () => {
   const reverter = new Reverter();
@@ -28,15 +27,15 @@ describe("CartesianMerkleTree", () => {
     return resultArr;
   }
 
-  function parseNumberToBitsArray(num: bigint, expectedLength: bigint): number[] {
+  function parseNumberToBitsArray(num: BigNumberish, expectedLength: BigNumberish): number[] {
     const binary = num.toString(2);
     const resultArr: number[] = [];
 
-    if (expectedLength < BigInt(binary.length)) {
+    if (BigInt(expectedLength) < BigInt(binary.length)) {
       throw Error("Wrong expected length");
     }
 
-    for (let i = 0; i < expectedLength - BigInt(binary.length); i++) {
+    for (let i = 0; i < BigInt(expectedLength) - BigInt(binary.length); i++) {
       resultArr.push(0);
     }
 
@@ -104,7 +103,7 @@ describe("CartesianMerkleTree", () => {
       }
     }
 
-    const expectedDirBitsArray = parseNumberToBitsArray(proof.directionBits, proof.siblingsLength / 2n);
+    const expectedDirBitsArray = parseNumberToBitsArray(proof.directionBits, BigInt(proof.siblingsLength) / 2n);
 
     expect(expectedDirBitsArray).to.be.deep.eq(directionBits);
     expect(expectedRoot).to.be.eq(finalHash);
@@ -304,6 +303,17 @@ describe("CartesianMerkleTree", () => {
         const proof = await treaple.getUintProof(keys[randIndex], 40);
 
         await verifyCMTProof(proof, treapleRoot, keys[randIndex], true, true);
+
+        const proofObj: CartesianMerkleTree.ProofStruct = {
+          root: proof.root,
+          siblings: Array.from(proof.siblings),
+          siblingsLength: proof.siblingsLength,
+          directionBits: proof.directionBits,
+          existence: proof.existence,
+          key: proof.key,
+          nonExistenceKey: proof.nonExistenceKey,
+        };
+        expect(await treaple.verifyUintProof(proofObj)).to.be.true;
       }
     });
 
@@ -328,7 +338,52 @@ describe("CartesianMerkleTree", () => {
         expect(proof.siblings.length).to.be.eq(desiredProofSize);
 
         await verifyCMTProof(proof, treapleRoot, randKey, false, true);
+
+        const proofObj: CartesianMerkleTree.ProofStruct = {
+          root: proof.root,
+          siblings: Array.from(proof.siblings),
+          siblingsLength: proof.siblingsLength,
+          directionBits: proof.directionBits,
+          existence: proof.existence,
+          key: proof.key,
+          nonExistenceKey: proof.nonExistenceKey,
+        };
+        expect(await treaple.verifyUintProof(proofObj)).to.be.true;
       }
+    });
+
+    it("should not verify proof with incorrect root", async () => {
+      const keysCount: number = 50;
+      const keys: string[] = createRandomArray(keysCount);
+
+      for (let i = 0; i < keys.length; i++) {
+        await treaple.addUint(keys[i]);
+      }
+
+      const proof = await treaple.getUintProof(keys[0], 40);
+      const proofObj: CartesianMerkleTree.ProofStruct = {
+        root: ethers.hexlify(ethers.randomBytes(32)),
+        siblings: Array.from(proof.siblings),
+        siblingsLength: proof.siblingsLength,
+        directionBits: proof.directionBits,
+        existence: proof.existence,
+        key: proof.key,
+        nonExistenceKey: proof.nonExistenceKey,
+      };
+      expect(await treaple.verifyUintProof(proofObj)).to.be.false;
+    });
+
+    it("should not verify non-existent node with non-zero non-existence key", async () => {
+      const proofObj: CartesianMerkleTree.ProofStruct = {
+        root: ZeroHash,
+        siblings: [],
+        siblingsLength: 0,
+        directionBits: 0,
+        existence: false,
+        key: ethers.hexlify(ethers.randomBytes(32)),
+        nonExistenceKey: ZeroHash,
+      };
+      expect(await treaple.verifyUintProof(proofObj)).to.be.false;
     });
 
     it("should revert if trying to add/remove zero key", async () => {
@@ -494,6 +549,17 @@ describe("CartesianMerkleTree", () => {
         const proof = await treaple.getBytes32Proof(keys[randIndex], 40);
 
         await verifyCMTProof(proof, treapleRoot, keys[randIndex], true, true);
+
+        const proofObj: CartesianMerkleTree.ProofStruct = {
+          root: proof.root,
+          siblings: Array.from(proof.siblings),
+          siblingsLength: proof.siblingsLength,
+          directionBits: proof.directionBits,
+          existence: proof.existence,
+          key: proof.key,
+          nonExistenceKey: proof.nonExistenceKey,
+        };
+        expect(await treaple.verifyBytes32Proof(proofObj)).to.be.true;
       }
     });
   });
@@ -614,6 +680,17 @@ describe("CartesianMerkleTree", () => {
         const proof = await treaple.getAddressProof(keys[randIndex], 40);
 
         await verifyCMTProof(proof, treapleRoot, keys[randIndex], true, true);
+
+        const proofObj: CartesianMerkleTree.ProofStruct = {
+          root: proof.root,
+          siblings: Array.from(proof.siblings),
+          siblingsLength: proof.siblingsLength,
+          directionBits: proof.directionBits,
+          existence: proof.existence,
+          key: proof.key,
+          nonExistenceKey: proof.nonExistenceKey,
+        };
+        expect(await treaple.verifyAddressProof(proofObj)).to.be.true;
       }
     });
   });
