@@ -14,7 +14,20 @@ import {AERC1155Handler} from "./handlers/AERC1155Handler.sol";
 import {ANativeHandler} from "./handlers/ANativeHandler.sol";
 
 /**
- * @title Bridge Contract
+ * @notice The Bridge module
+ *
+ * The Bridge contract facilitates the permissioned transfer of assets (ERC-20, ERC-721, ERC-1155, Native)
+ * between two (or more) EVM blockchains.
+ *
+ * To utilize the Bridge effectively, instances of this contract must be deployed on both base and destination chains,
+ * accompanied by the setup of trusted backends to act as signers.
+ *
+ * The Bridge contract supports both "liquidity pool" and "mint-and-burn" methods for managing assets.
+ * The back end signatures are checked only upon token withdrawals. If "mint-and-burn" method is used,
+ * the ERC-20 tokens are required to support ERC-7802 interface.
+ *
+ * IMPORTANT:
+ * All signer addresses must differ in their first (most significant) 8 bits in order to pass bloom (uniqueness) filtering.
  */
 abstract contract ABridge is
     IBridge,
@@ -218,26 +231,41 @@ abstract contract ABridge is
         _withdrawNative(amount_, receiver_);
     }
 
+    /**
+     * @notice Returns the list of current bridge signers
+     */
     function getSigners() external view returns (address[] memory) {
         return _getABridgeStorage().signers.values();
     }
 
+    /**
+     * @notice Returns the number of signatures for the withdrawal to be accepted
+     */
     function getSignaturesThreshold() external view returns (uint256) {
         return _getABridgeStorage().signaturesThreshold;
     }
 
+    /**
+     * @notice Checks if the deposit event exists in the contract
+     */
     function containsHash(bytes32 txHash_, uint256 txNonce_) external view returns (bool) {
         bytes32 nonceHash_ = keccak256(abi.encodePacked(txHash_, txNonce_));
 
         return _getABridgeStorage().usedHashes[nonceHash_];
     }
 
+    /**
+     * @dev Should be access controlled and made public in the descendant contracts
+     */
     function _setSignaturesThreshold(uint256 signaturesThreshold_) internal virtual {
         if (signaturesThreshold_ == 0) revert ThresholdIsZero();
 
         _getABridgeStorage().signaturesThreshold = signaturesThreshold_;
     }
 
+    /**
+     * @dev Should be access controlled and made public in the descendant contracts
+     */
     function _addSigners(address[] memory signers_) internal virtual {
         if (signers_.length == 0) revert InvalidSigners();
 
@@ -250,6 +278,9 @@ abstract contract ABridge is
         }
     }
 
+    /**
+     * @dev Should be access controlled and made public in the descendant contracts
+     */
     function _removeSigners(address[] memory signers_) internal virtual {
         if (signers_.length == 0) revert InvalidSigners();
 
@@ -286,7 +317,7 @@ abstract contract ABridge is
         _checkCorrectSigners(signers_);
     }
 
-    function _checkCorrectSigners(address[] memory signers_) private view {
+    function _checkCorrectSigners(address[] memory signers_) internal view virtual {
         ABridgeStorage storage $ = _getABridgeStorage();
 
         uint256 bitMap;
@@ -296,7 +327,7 @@ abstract contract ABridge is
 
             if (!$.signers.contains(signer_)) revert InvalidSigner(signer_);
 
-            // get the topmost byte for the bloom filtering
+            // get the topmost byte for bloom filtering
             uint256 bitKey = 2 ** (uint256(uint160(signer_)) >> 152);
 
             if (bitMap & bitKey != 0) revert DuplicateSigner(signer_);

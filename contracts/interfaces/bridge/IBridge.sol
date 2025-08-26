@@ -2,19 +2,7 @@
 pragma solidity ^0.8.21;
 
 /**
- * @title The Bridge Contract
- *
- * The Bridge contract facilitates the permissioned transfer of assets
- * (ERC20, ERC721, ERC1155, Native) between two different EVM blockchains.
- *
- * To utilize the Bridge effectively, instances of the contract must be deployed on both the base and destination chains,
- * accompanied by the setup of a trusted backend to act as a `signer`.
- *
- * The Bridge contract supports both the liquidity pool method and the mint-and-burn method for transferring assets.
- * Users can either deposit or withdraw assets through the contract during a transfer operation.
- *
- * IMPORTANT:
- * All signer addresses must differ in their first (most significant) 8 bits in order to pass a bloom filtering.
+ * @notice The Bridge module
  */
 interface IBridge {
     enum ERC20BridgingType {
