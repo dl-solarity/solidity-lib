@@ -2,7 +2,7 @@
 
 import fs from "fs";
 
-import computeNextVersion from "./helpers/compute-next-version";
+import computeNextVersion from "./helpers/compute-next-version.cts";
 
 import { getTopSection, readJSON, writeJSON, getPkgPath, getChangelogPath, validateReleaseTopSection } from "./helpers";
 

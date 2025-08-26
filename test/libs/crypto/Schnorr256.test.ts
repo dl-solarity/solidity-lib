@@ -1,12 +1,15 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { Reverter } from "@/test/helpers/reverter";
+import hre from "hardhat";
+
+import { Reverter } from "@test-helpers";
 
 import { Schnorr256Mock } from "@ethers-v6";
 
-import { secp256k1 } from "@noble/curves/secp256k1";
-import { bytesToNumberBE } from "@noble/curves/abstract/utils";
 import { AffinePoint } from "@noble/curves/abstract/curve";
+import { bytesToNumberBE } from "@noble/curves/abstract/utils";
+import { secp256k1 } from "@noble/curves/secp256k1";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Schnorr256", () => {
   const schnorrKeyPair = () => {
@@ -50,7 +53,7 @@ describe("Schnorr256", () => {
     };
   };
 
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let schnorr: Schnorr256Mock;
 

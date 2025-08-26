@@ -1,14 +1,20 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { wei } from "@/scripts/utils/utils";
+import { AbiCoder } from "ethers";
+
+import { wei } from "@scripts";
+
+import { Reverter } from "@test-helpers";
 
 import { RawReturnMock, ReturnDataProxyMock } from "@ethers-v6";
 
+const { ethers, networkHelpers } = await hre.network.connect();
+
 describe("ReturnDataProxy", () => {
-  const reverter = new Reverter();
-  const coder = ethers.AbiCoder.defaultAbiCoder();
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  const coder: AbiCoder = ethers.AbiCoder.defaultAbiCoder();
 
   let rawMock: RawReturnMock;
   let proxyMock: ReturnDataProxyMock;

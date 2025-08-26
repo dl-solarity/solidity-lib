@@ -4,6 +4,7 @@
 
 - Fixed `pre-release` GitHub CI workflow.
 - Added `verifyProof` function to the `CartesianMerkleTree` and the `IncrementalMerkleTree` libraries.
+- Migrated to Hardhat 3
 
 ## [3.2.0]
 

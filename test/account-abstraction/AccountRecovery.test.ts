@@ -1,12 +1,18 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { AccountRecoveryMock, RecoveryProviderMock } from "@/generated-types/ethers";
-import { Reverter } from "@/test/helpers/reverter";
-import { wei } from "@/scripts/utils/utils";
+import { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+
+import { wei } from "@scripts";
+
+import { Reverter } from "@test-helpers";
+
+import { AccountRecoveryMock, RecoveryProviderMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("AccountRecovery", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let accountRecovery: AccountRecoveryMock;
   let provider1: RecoveryProviderMock;

@@ -29,7 +29,7 @@ jobs:
           result-encoding: string
           script: |
             require('ts-node/register/transpile-only');
-            await require('./scripts/release/get-release-state.ts').default(core);
+            await require('./scripts/release/get-release-state.cts').default(core);
     outputs:
       local_version: ${{ steps.state.outputs.local_version }}
       notes: ${{ steps.state.outputs.notes }}

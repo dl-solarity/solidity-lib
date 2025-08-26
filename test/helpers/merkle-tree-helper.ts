@@ -1,29 +1,29 @@
-import { ethers } from "hardhat";
+import { ZeroHash, keccak256 } from "ethers";
 
+import { addHexPrefix } from "./bytes-helpers.ts";
 import { MerkleTree } from "merkletreejs";
-import { addHexPrefix } from "./bytes-helpers";
 
 export function getRoot(tree: MerkleTree): string {
   const root = tree.getRoot();
 
   if (root.length == 0) {
-    return ethers.ZeroHash;
+    return ZeroHash;
   }
 
   return addHexPrefix(root.toString("hex"));
 }
 
-export function getProof(tree: MerkleTree, leaf: any, hashFn: any = ethers.keccak256): string[] {
+export function getProof(tree: MerkleTree, leaf: any, hashFn: any = keccak256): string[] {
   return tree.getProof(hashFn(leaf)).map((e) => addHexPrefix(e.data.toString("hex")));
 }
 
-export function buildTree(leaves: any, hashFn: any = ethers.keccak256): MerkleTree {
+export function buildTree(leaves: any, hashFn: any = keccak256): MerkleTree {
   return new MerkleTree(leaves, hashFn, { hashLeaves: true, sortPairs: true });
 }
 
-export function buildSparseMerkleTree(leaves: any, height: number, hashFn: any = ethers.keccak256): MerkleTree {
+export function buildSparseMerkleTree(leaves: any, height: number, hashFn: any = keccak256): MerkleTree {
   const elementsToAdd = 2 ** height - leaves.length;
-  const zeroHash = hashFn(ethers.ZeroHash);
+  const zeroHash = hashFn(ZeroHash);
   const zeroElements = Array(elementsToAdd).fill(zeroHash);
 
   return new MerkleTree([...leaves, ...zeroElements], hashFn, {
@@ -32,7 +32,7 @@ export function buildSparseMerkleTree(leaves: any, height: number, hashFn: any =
   });
 }
 
-export function addElementToTree(tree: MerkleTree, element: any, hashFn: any = ethers.keccak256) {
+export function addElementToTree(tree: MerkleTree, element: any, hashFn: any = keccak256) {
   return new MerkleTree([...tree.getLeaves(), element], hashFn, {
     hashLeaves: true,
     sortPairs: true,

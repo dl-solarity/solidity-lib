@@ -1,19 +1,15 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { TxParserMock } from "@/generated-types/ethers";
-import { reverseBytes } from "@/test/helpers/bytes-helpers";
-import {
-  checkTransaction,
-  formatTx,
-  getTxData,
-  getTxDataFilePath,
-  parseCuint,
-} from "@/test/helpers/bitcoin/parse-tx-helper";
+import { Reverter } from "@test-helpers";
+import { checkTransaction, formatTx, getTxData, getTxDataFilePath, parseCuint, reverseBytes } from "@test-helpers";
+
+import { TxParserMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Transaction Parser", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let parser: TxParserMock;
 

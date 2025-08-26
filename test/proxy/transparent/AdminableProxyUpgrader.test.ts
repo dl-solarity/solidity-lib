@@ -1,16 +1,19 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { AdminableProxyUpgrader, AdminableProxy, ERC20Mock } from "@ethers-v6";
+import { Reverter } from "@test-helpers";
+
+import { AdminableProxy, AdminableProxyUpgrader, ERC20Mock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("AdminableProxyUpgrader", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
-  let OWNER: SignerWithAddress;
-  let SECOND: SignerWithAddress;
+  let OWNER: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
 
   let adminableProxyUpgrader: AdminableProxyUpgrader;
   let token: ERC20Mock;

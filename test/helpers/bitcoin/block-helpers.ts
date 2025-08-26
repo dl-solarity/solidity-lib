@@ -1,10 +1,15 @@
-import * as fs from "fs";
-import path from "path";
 import { expect } from "chai";
 
-import { addHexPrefix, reverseBytes, reverseUint32 } from "../bytes-helpers";
-import { BlockHeader } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/BlockHeaderMock";
-import { HeaderData } from "./types";
+import type { BlockHeader } from "@/generated-types/ethers/mock/libs/bitcoin/BlockHeaderMock.ts";
+
+import { addHexPrefix, reverseBytes, reverseUint32 } from "../bytes-helpers.ts";
+import { HeaderData } from "./types.ts";
+import * as fs from "fs";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export function getBlocksDataFilePath(fileName: string): string {
   return path.join(__dirname, "../../libs/bitcoin/data", fileName);

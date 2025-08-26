@@ -1,13 +1,16 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { wei } from "@/scripts/utils/utils";
+import { wei } from "@scripts";
+
+import { Reverter } from "@test-helpers";
 
 import { DecimalsConverterMock } from "@ethers-v6";
 
+const { ethers, networkHelpers } = await hre.network.connect();
+
 describe("DecimalsConverter", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let mock: DecimalsConverterMock;
 

@@ -1,19 +1,24 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import { Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { precision, wei } from "@/scripts/utils/utils";
+import { precision, wei } from "@scripts";
 
-import { ERC20Mock, ERC20Mock__factory, AVesting, VestingMock, VestingMock__factory } from "@ethers-v6";
+import { Reverter } from "@test-helpers";
+
+import { AVesting, ERC20Mock, ERC20Mock__factory, VestingMock, VestingMock__factory } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Vesting", () => {
-  let reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
-  let OWNER: SignerWithAddress;
-  let ALICE: SignerWithAddress;
+  let time: Time;
+
+  let OWNER: HardhatEthersSigner;
+  let ALICE: HardhatEthersSigner;
 
   let vesting: VestingMock;
   let erc20: ERC20Mock;
@@ -31,6 +36,8 @@ describe("Vesting", () => {
   const exponent = 4n;
 
   before(async () => {
+    time = networkHelpers.time;
+
     [OWNER, ALICE] = await ethers.getSigners();
 
     vesting = await new VestingMock__factory(OWNER).deploy();
@@ -184,7 +191,8 @@ describe("Vesting", () => {
         Object.values(exponentialVesting),
       ]);
 
-      expect(await erc20.balanceOf(await vesting.getAddress())).changeTokenBalance(
+      await expect(await erc20.balanceOf(await vesting.getAddress())).changeTokenBalance(
+        ethers,
         erc20,
         await vesting.getAddress(),
         vestingAmount * 2n,
@@ -299,7 +307,8 @@ describe("Vesting", () => {
       expect(await vesting.getVesting(linearVestingId)).to.deep.equal(Object.values(linearVesting));
       expect(await vesting.getVesting(exponentialVestingId)).to.deep.equal(Object.values(exponentialVesting));
 
-      expect(await erc20.balanceOf(ALICE.address)).changeTokenBalance(
+      await expect(await erc20.balanceOf(ALICE.address)).changeTokenBalance(
+        ethers,
         erc20,
         ALICE.address,
         BigInt(linearVesting.vestingAmount) + BigInt(exponentialVesting.vestingAmount),
@@ -352,7 +361,8 @@ describe("Vesting", () => {
       expect(await vesting.getWithdrawableAmount(linearVestingId)).to.be.equal(0);
       expect(await vesting.getWithdrawableAmount(exponentialVestingId)).to.be.equal(0);
 
-      expect(await erc20.balanceOf(ALICE.address)).changeTokenBalance(
+      await expect(await erc20.balanceOf(ALICE.address)).changeTokenBalance(
+        ethers,
         erc20,
         ALICE.address,
         linearVestedAmount + exponentialVestedAmount,

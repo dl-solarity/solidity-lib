@@ -1,12 +1,14 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { Reverter } from "@test-helpers";
 
-import { PlonkVerifierHelperMock, PlonkVerifier2Mock, PlonkVerifier3Mock } from "@ethers-v6";
+import { PlonkVerifier2Mock, PlonkVerifier3Mock, PlonkVerifierHelperMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("PlonkVerifierHelper", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let verifierHelper: PlonkVerifierHelperMock;
   let verifier2: PlonkVerifier2Mock;

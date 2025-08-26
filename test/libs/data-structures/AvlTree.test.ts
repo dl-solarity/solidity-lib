@@ -1,20 +1,23 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { encodeBytes32String, toBeHex } from "ethers";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+
+import { Reverter } from "@test-helpers";
 
 import { AvlTreeMock } from "@ethers-v6";
 
-describe("AvlTree", () => {
-  const reverter = new Reverter();
+const { ethers, networkHelpers } = await hre.network.connect();
 
-  let USER1: SignerWithAddress;
-  let USER2: SignerWithAddress;
-  let USER3: SignerWithAddress;
-  let USER4: SignerWithAddress;
+describe("AvlTree", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let USER1: HardhatEthersSigner;
+  let USER2: HardhatEthersSigner;
+  let USER3: HardhatEthersSigner;
+  let USER4: HardhatEthersSigner;
 
   let avlTree: AvlTreeMock;
 

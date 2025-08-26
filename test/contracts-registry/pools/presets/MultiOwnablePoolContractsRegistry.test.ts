@@ -1,15 +1,18 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+
+import { Reverter } from "@test-helpers";
 
 import { MultiOwnablePoolContractsRegistryMock } from "@ethers-v6";
 
-describe("MultiOwnablePoolContractsRegistry", () => {
-  const reverter = new Reverter();
+const { ethers, networkHelpers } = await hre.network.connect();
 
-  let SECOND: SignerWithAddress;
+describe("MultiOwnablePoolContractsRegistry", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let SECOND: HardhatEthersSigner;
 
   let poolContractsRegistry: MultiOwnablePoolContractsRegistryMock;
 
@@ -52,11 +55,13 @@ describe("MultiOwnablePoolContractsRegistry", () => {
 
   describe("coverage", () => {
     it("should call these methods", async () => {
-      await expect(poolContractsRegistry.setNewImplementations([""], [await SECOND.getAddress()])).to.be.reverted;
+      await expect(poolContractsRegistry.setNewImplementations([""], [await SECOND.getAddress()])).to.be.revert(ethers);
 
-      await expect(poolContractsRegistry.injectDependenciesToExistingPools("", 0, 0)).to.be.reverted;
+      await expect(poolContractsRegistry.injectDependenciesToExistingPools("", 0, 0)).to.be.revert(ethers);
 
-      await expect(poolContractsRegistry.injectDependenciesToExistingPoolsWithData("", "0x", 0, 0)).to.be.reverted;
+      await expect(poolContractsRegistry.injectDependenciesToExistingPoolsWithData("", "0x", 0, 0)).to.be.revert(
+        ethers,
+      );
     });
   });
 });
