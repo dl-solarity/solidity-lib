@@ -61,4 +61,12 @@ contract BridgeMock is ABridge {
     function removeSigners(address[] calldata signers_) external {
         _removeSigners(signers_);
     }
+
+    function checkAndUpdateHashes(bytes32 txHash_, uint256 txNonce_) external {
+        _checkAndUpdateHashes(txHash_, txNonce_);
+    }
+
+    function checkSignatures(bytes32 signHash_, bytes[] calldata signatures_) external view {
+        _checkSignatures(signHash_, signatures_);
+    }
 }

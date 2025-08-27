@@ -31,7 +31,7 @@ enum ERC1155BridgingType {
   Wrapped,
 }
 
-describe.only("Bridge", () => {
+describe("Bridge", () => {
   const reverter = new Reverter();
 
   const baseBalance = wei("1000");
@@ -43,6 +43,7 @@ describe.only("Bridge", () => {
 
   let OWNER: SignerWithAddress;
   let SECOND: SignerWithAddress;
+  let THIRD: SignerWithAddress;
 
   let bridge: BridgeMock;
   let erc20: ERC20CrosschainMock;
@@ -51,12 +52,12 @@ describe.only("Bridge", () => {
   let erc1155: ERC1155CrosschainMock;
 
   before("setup", async () => {
-    [OWNER, SECOND] = await ethers.getSigners();
+    [OWNER, SECOND, THIRD] = await ethers.getSigners();
 
     const Bridge = await ethers.getContractFactory("BridgeMock");
     bridge = await Bridge.deploy();
 
-    await bridge.__BridgeMock_init([OWNER.address], "1");
+    await bridge.__BridgeMock_init([OWNER.address], 1);
 
     const ERC20 = await ethers.getContractFactory("ERC20CrosschainMock");
     const USDC = await ethers.getContractFactory("USDCCrosschainMock");
@@ -155,7 +156,7 @@ describe.only("Bridge", () => {
       expect(depositEvent.args.operationType).to.be.equal(ERC20BridgingType.USDCType);
     });
 
-    it("should revert when try deposit 0 tokens", async () => {
+    it("should revert when depositing 0 tokens", async () => {
       await expect(
         bridge.depositERC20(await erc20.getAddress(), wei("0"), "receiver", "sepolia", ERC20BridgingType.LiquidityPool),
       )
@@ -251,13 +252,13 @@ describe.only("Bridge", () => {
       expect(await bridge.containsHash(txHash, txNonce)).to.be.true;
     });
 
-    it("should revert when try to withdraw 0 tokens", async () => {
+    it("should revert when withdrawing 0 tokens", async () => {
       await expect(bridge.withdrawERC20Mock(await erc20.getAddress(), wei("0"), OWNER, ERC20BridgingType.LiquidityPool))
         .to.be.revertedWithCustomError(bridge, "InvalidAmount")
         .withArgs();
     });
 
-    it("should revert when try token address 0", async () => {
+    it("should revert when token address is 0", async () => {
       await expect(bridge.withdrawERC20Mock(ethers.ZeroAddress, wei("1"), OWNER, ERC20BridgingType.LiquidityPool))
         .to.be.revertedWithCustomError(bridge, "InvalidToken")
         .withArgs();
@@ -459,7 +460,7 @@ describe.only("Bridge", () => {
         .withArgs();
     });
 
-    it("should revert when try deposit 0 tokens", async () => {
+    it("should revert when depositing 0 tokens", async () => {
       await expect(
         bridge.depositERC1155(
           await erc1155.getAddress(),
@@ -621,7 +622,7 @@ describe.only("Bridge", () => {
       expect(depositEvent.args.network).to.be.equal("sepolia");
     });
 
-    it("should revert when try deposit 0 tokens", async () => {
+    it("should revert when depositing 0 tokens", async () => {
       await expect(bridge.depositNative("receiver", "sepolia", { value: 0 }))
         .to.be.revertedWithCustomError(bridge, "InvalidValue")
         .withArgs();
@@ -654,6 +655,140 @@ describe.only("Bridge", () => {
       await expect(bridge.withdrawNativeMock(baseAmount, ethers.ZeroAddress))
         .to.be.revertedWithCustomError(bridge, "InvalidReceiver")
         .withArgs();
+    });
+  });
+
+  describe("Signers", () => {
+    it("should add signers", async () => {
+      const expectedSigners = [OWNER.address, SECOND.address, THIRD.address];
+
+      await bridge.addSigners(expectedSigners);
+
+      expect(await bridge.getSigners()).to.be.deep.equal(expectedSigners);
+    });
+
+    it("should not add signers with 0 length", async () => {
+      expect(bridge.addSigners([])).to.be.revertedWithCustomError(bridge, "InvalidSigners").withArgs();
+    });
+
+    it("should revert when adding zero address signer", async () => {
+      let expectedSigners = [OWNER.address, SECOND.address, ethers.ZeroAddress];
+
+      expect(bridge.addSigners(expectedSigners)).to.be.revertedWithCustomError(bridge, "InvalidSigner").withArgs();
+    });
+
+    it("should remove signers", async () => {
+      let signersToAdd = [OWNER.address, SECOND.address, THIRD.address];
+      let signersToRemove = [OWNER.address, SECOND.address];
+
+      await bridge.addSigners(signersToAdd);
+      await bridge.removeSigners(signersToRemove);
+
+      expect(await bridge.getSigners()).to.be.deep.equal([THIRD.address]);
+    });
+
+    it("should not remove signers with 0 length", async () => {
+      expect(bridge.removeSigners([])).to.be.revertedWithCustomError(bridge, "InvalidSigners").withArgs();
+    });
+  });
+
+  describe("Signatures", () => {
+    let signersToAdd: string[];
+
+    async function getSigHash() {
+      let expectedTxHash = "0xc4f46c912cc2a1f30891552ac72871ab0f0e977886852bdd5dccd221a595647d";
+      let expectedNonce = "1794147";
+
+      return ethers.keccak256(
+        new ethers.AbiCoder().encode(
+          ["address", "uint256", "address", "bytes32", "uint256", "uint256", "bool"],
+          ["0x76e98f7d84603AEb97cd1c89A80A9e914f181679", 1, OWNER.address, expectedTxHash, expectedNonce, 98, true],
+        ),
+      );
+    }
+
+    beforeEach("setup", async () => {
+      signersToAdd = [OWNER.address, SECOND.address, THIRD.address];
+
+      await bridge.addSigners(signersToAdd);
+    });
+
+    it("should update threshold", async () => {
+      expect(await bridge.getSignaturesThreshold()).to.equal(1);
+
+      await bridge.setSignaturesThreshold(5);
+
+      expect(await bridge.getSignaturesThreshold()).to.equal(5);
+    });
+
+    it("should not update threshold with zero", async () => {
+      await expect(bridge.setSignaturesThreshold(0))
+        .to.be.revertedWithCustomError(bridge, "ThresholdIsZero")
+        .withArgs();
+    });
+
+    it("should check signatures", async () => {
+      const signHash = await getSigHash();
+
+      const signature1 = await getSignature(OWNER, signHash);
+      const signature2 = await getSignature(SECOND, signHash);
+
+      await expect(bridge.checkSignatures(signHash, [signature1, signature2])).to.be.eventually.fulfilled;
+    });
+
+    it("should revert when duplicate signers", async () => {
+      const signHash = await getSigHash();
+
+      const signature = await getSignature(OWNER, signHash);
+
+      await expect(bridge.checkSignatures(signHash, [signature, signature]))
+        .to.be.revertedWithCustomError(bridge, "DuplicateSigner")
+        .withArgs(OWNER.address);
+    });
+
+    it("should revert when signed by not signer", async () => {
+      await bridge.removeSigners([THIRD.address]);
+
+      const signHash = await getSigHash();
+
+      const signature = await getSignature(THIRD, signHash);
+
+      await expect(bridge.checkSignatures(signHash, [signature]))
+        .to.be.revertedWithCustomError(bridge, "InvalidSigner")
+        .withArgs(THIRD.address);
+    });
+
+    it("should revert when signers < threshold", async () => {
+      const signHash = await getSigHash();
+
+      await expect(bridge.checkSignatures(signHash, []))
+        .to.be.revertedWithCustomError(bridge, "ThresholdNotMet")
+        .withArgs(0);
+    });
+  });
+
+  describe("Hashes", () => {
+    it("should update the hash nonce", async () => {
+      const txHash = "0xc4f46c912cc2a1f30891552ac72871ab0f0e977886852bdd5dccd221a595647d";
+      const txNonce = "1794147";
+
+      await bridge.checkAndUpdateHashes(txHash, txNonce);
+
+      expect(await bridge.containsHash(txHash, txNonce)).to.be.true;
+      expect(await bridge.containsHash(txHash, txNonce + 1)).to.be.false;
+    });
+
+    it("should revert when hash is added twice", async () => {
+      const txHash = "0xc4f46c912cc2a1f30891552ac72871ab0f0e977886852bdd5dccd221a595647d";
+      const txNonce = "1794147";
+
+      const hash = ethers.keccak256(new ethers.AbiCoder().encode(["bytes32", "uint256"], [txHash, txNonce]));
+
+      await bridge.checkAndUpdateHashes(txHash, txNonce);
+
+      await expect(bridge.checkAndUpdateHashes(txHash, txNonce))
+        .to.be.revertedWithCustomError(bridge, "HashNonceUsed")
+        .withArgs(hash);
     });
   });
 });
