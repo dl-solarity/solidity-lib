@@ -1,11 +1,14 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { Reverter } from "@/test/helpers/reverter";
+import hre from "hardhat";
+
+import { Reverter } from "@test-helpers";
 
 import { ECDSA256Mock } from "@ethers-v6";
 
+const { ethers, networkHelpers } = await hre.network.connect();
+
 describe("ECDSA256", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let ecdsa256: ECDSA256Mock;
 

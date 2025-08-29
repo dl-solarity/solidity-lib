@@ -1,12 +1,16 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+
+import { Reverter } from "@test-helpers";
 
 import { DynamicSetMock } from "@ethers-v6";
 
+const { ethers, networkHelpers } = await hre.network.connect();
+
 describe("DynamicSet", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let mock: DynamicSetMock;
 

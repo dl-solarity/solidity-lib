@@ -1,19 +1,21 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { Reverter } from "@test-helpers";
 
 import { SBTMock } from "@ethers-v6";
 
 const name = "testName";
 const symbol = "TS";
 
-describe("SBT", () => {
-  const reverter = new Reverter();
+const { ethers, networkHelpers } = await hre.network.connect();
 
-  let FIRST: SignerWithAddress;
+describe("SBT", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let FIRST: HardhatEthersSigner;
 
   let sbt: SBTMock;
 
@@ -60,7 +62,7 @@ describe("SBT", () => {
 
       expect(await sbt.tokenURI(1337)).to.equal("");
 
-      expect(tx).to.emit(sbt, "Transfer").withArgs(ethers.ZeroAddress, FIRST.address, 1337);
+      await expect(tx).to.emit(sbt, "Transfer").withArgs(ethers.ZeroAddress, FIRST.address, 1337);
     });
 
     it("should not mint to null address", async () => {
@@ -78,9 +80,9 @@ describe("SBT", () => {
 
   describe("burn()", () => {
     it("should correctly burn", async () => {
-      const tx = await sbt.mint(FIRST.address, 1337);
+      await sbt.mint(FIRST.address, 1337);
 
-      await sbt.burn(1337);
+      const tx = await sbt.burn(1337);
 
       expect(await sbt.tokenExists(0)).to.be.false;
 
@@ -89,7 +91,7 @@ describe("SBT", () => {
 
       expect(await sbt.tokensOf(FIRST.address)).to.deep.equal([]);
 
-      expect(tx).to.emit(sbt, "Transfer").withArgs(FIRST.address, ethers.ZeroAddress, 1337);
+      await expect(tx).to.emit(sbt, "Transfer").withArgs(FIRST.address, ethers.ZeroAddress, 1337);
     });
 
     it("should not burn SBT that doesn't exist", async () => {

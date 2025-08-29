@@ -1,20 +1,24 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import { NetworkHelpers, Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { wei } from "@scripts";
 
-import { StakingMock, ERC20Mock } from "@ethers-v6";
-import { wei } from "@/scripts/utils/utils";
+import { Reverter } from "@test-helpers";
+
+import { ERC20Mock, StakingMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Staking", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
+  let time: Time;
 
-  let FIRST: SignerWithAddress;
-  let SECOND: SignerWithAddress;
-  let THIRD: SignerWithAddress;
+  let FIRST: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
+  let THIRD: HardhatEthersSigner;
 
   let sharesToken: ERC20Mock;
   let rewardsToken: ERC20Mock;
@@ -27,7 +31,7 @@ describe("Staking", () => {
 
   let staking: StakingMock;
 
-  const mintAndApproveTokens = async (user: SignerWithAddress, token: ERC20Mock, amount: bigint) => {
+  const mintAndApproveTokens = async (user: HardhatEthersSigner, token: ERC20Mock, amount: bigint) => {
     await token.mint(user, amount);
     await token.connect(user).approve(staking, amount);
   };
@@ -121,6 +125,8 @@ describe("Staking", () => {
   };
 
   before("setup", async () => {
+    time = networkHelpers.time;
+
     [FIRST, SECOND, THIRD] = await ethers.getSigners();
 
     const StakingMock = await ethers.getContractFactory("StakingMock");
@@ -179,7 +185,7 @@ describe("Staking", () => {
 
   describe("timestamps", () => {
     it("should not allow to stake, unstake, withdraw tokens or claim rewards before the start of the staking", async () => {
-      const stakingStartTime = 1638474321;
+      const stakingStartTime = 2638474321;
       await staking.setStakingStartTime(stakingStartTime);
 
       await expect(staking.stake(wei(100, sharesDecimals)))

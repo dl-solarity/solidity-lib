@@ -1,17 +1,19 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { Reverter } from "@test-helpers";
 
-import type { ERC20UpgradeableMock } from "@ethers-v6";
+import { ERC20UpgradeableMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("DeployerGuard", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
-  let FIRST: SignerWithAddress;
-  let SECOND: SignerWithAddress;
+  let FIRST: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
 
   let mock: ERC20UpgradeableMock;
 

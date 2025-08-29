@@ -1,23 +1,25 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { MerkleTree } from "merkletreejs";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { getRoot, getProof, buildTree } from "../helpers/merkle-tree-helper";
+import { Reverter, buildTree, getProof, getRoot } from "@test-helpers";
 
 import { MerkleWhitelistedMock } from "@ethers-v6";
 
-describe("MerkleWhitelisted", () => {
-  const reverter = new Reverter();
+import { MerkleTree } from "merkletreejs";
 
-  let OWNER: SignerWithAddress;
+const { ethers, networkHelpers } = await hre.network.connect();
+
+describe("MerkleWhitelisted", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let OWNER: HardhatEthersSigner;
 
   let merkle: MerkleWhitelistedMock;
   let leaves: any;
   let tree: MerkleTree;
-  let users: SignerWithAddress[];
+  let users: HardhatEthersSigner[];
 
   async function buildMerkleTree() {
     tree = buildTree(leaves);

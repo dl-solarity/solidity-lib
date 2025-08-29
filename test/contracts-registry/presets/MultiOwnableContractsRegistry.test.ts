@@ -1,16 +1,18 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { Reverter } from "@test-helpers";
 
 import { MultiOwnableContractsRegistry } from "@ethers-v6";
 
-describe("MultiOwnableContractsRegistry", () => {
-  const reverter = new Reverter();
+const { ethers, networkHelpers } = await hre.network.connect();
 
-  let SECOND: SignerWithAddress;
+describe("MultiOwnableContractsRegistry", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let SECOND: HardhatEthersSigner;
 
   let contractsRegistry: MultiOwnableContractsRegistry;
 
@@ -75,23 +77,23 @@ describe("MultiOwnableContractsRegistry", () => {
 
   describe("coverage", () => {
     it("should call these methods", async () => {
-      await expect(contractsRegistry.injectDependencies("")).to.be.reverted;
+      await expect(contractsRegistry.injectDependencies("")).to.be.revert(ethers);
 
-      await expect(contractsRegistry.injectDependenciesWithData("", "0x")).to.be.reverted;
+      await expect(contractsRegistry.injectDependenciesWithData("", "0x")).to.be.revert(ethers);
 
-      await expect(contractsRegistry.upgradeContract("", ethers.ZeroAddress)).to.be.reverted;
+      await expect(contractsRegistry.upgradeContract("", ethers.ZeroAddress)).to.be.revert(ethers);
 
-      await expect(contractsRegistry.upgradeContractAndCall("", ethers.ZeroAddress, "0x")).to.be.reverted;
+      await expect(contractsRegistry.upgradeContractAndCall("", ethers.ZeroAddress, "0x")).to.be.revert(ethers);
 
-      await expect(contractsRegistry.addContract("", ethers.ZeroAddress)).to.be.reverted;
+      await expect(contractsRegistry.addContract("", ethers.ZeroAddress)).to.be.revert(ethers);
 
-      await expect(contractsRegistry.addProxyContract("", ethers.ZeroAddress)).to.be.reverted;
+      await expect(contractsRegistry.addProxyContract("", ethers.ZeroAddress)).to.be.revert(ethers);
 
-      await expect(contractsRegistry.addProxyContractAndCall("", ethers.ZeroAddress, "0x")).to.be.reverted;
+      await expect(contractsRegistry.addProxyContractAndCall("", ethers.ZeroAddress, "0x")).to.be.revert(ethers);
 
-      await expect(contractsRegistry.justAddProxyContract("", ethers.ZeroAddress)).to.be.reverted;
+      await expect(contractsRegistry.justAddProxyContract("", ethers.ZeroAddress)).to.be.revert(ethers);
 
-      await expect(contractsRegistry.removeContract("")).to.be.reverted;
+      await expect(contractsRegistry.removeContract("")).to.be.revert(ethers);
     });
   });
 });

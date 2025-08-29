@@ -1,23 +1,25 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { Reverter } from "@test-helpers";
 
-import { Groth16VerifierHelperMock, Groth16Verifier2Mock, Groth16Verifier3Mock } from "@ethers-v6";
+import { Groth16Verifier2Mock, Groth16Verifier3Mock, Groth16VerifierHelperMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Groth16VerifierHelper", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let verifierHelper: Groth16VerifierHelperMock;
   let verifier2: Groth16Verifier2Mock;
   let verifier3: Groth16Verifier3Mock;
 
-  const a = <[number, number]>[10, 20];
-  const b = <[[number, number], [number, number]]>[
+  const a: [number, number] = [10, 20];
+  const b: [[number, number], [number, number]] = [
     [1, 2],
     [3, 4],
   ];
-  const c = <[number, number]>[30, 40];
+  const c: [number, number] = [30, 40];
 
   const proofPoints = { a, b, c };
 

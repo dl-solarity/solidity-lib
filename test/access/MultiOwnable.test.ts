@@ -1,18 +1,20 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { Reverter } from "@test-helpers";
 
 import { MultiOwnableMock } from "@ethers-v6";
 
-describe("MultiOwnable", () => {
-  const reverter = new Reverter();
+const { ethers, networkHelpers } = await hre.network.connect();
 
-  let FIRST: SignerWithAddress;
-  let SECOND: SignerWithAddress;
-  let THIRD: SignerWithAddress;
+describe("MultiOwnable", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let FIRST: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
+  let THIRD: HardhatEthersSigner;
 
   let multiOwnable: MultiOwnableMock;
 

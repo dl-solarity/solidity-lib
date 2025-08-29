@@ -1,11 +1,14 @@
-import { EndianConverterMock } from "@/generated-types/ethers";
-import { reverseBytes } from "@/test/helpers/bytes-helpers";
-import { Reverter } from "@/test/helpers/reverter";
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
+
+import { Reverter, reverseBytes } from "@test-helpers";
+
+import { EndianConverterMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("EndianConverter", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let converter: EndianConverterMock;
 

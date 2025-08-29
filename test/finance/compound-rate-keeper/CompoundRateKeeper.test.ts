@@ -1,24 +1,31 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import { Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { precision } from "@/scripts/utils/utils";
+import { precision } from "@scripts";
+
+import { Reverter } from "@test-helpers";
 
 import { CompoundRateKeeperMock } from "@ethers-v6";
 
 const maxRate = 2n ** 128n - 1n;
 
-describe("CompoundRateKeeper", () => {
-  const reverter = new Reverter();
+const { ethers, networkHelpers } = await hre.network.connect();
 
-  let SECOND: SignerWithAddress;
+describe("CompoundRateKeeper", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let time: Time;
+
+  let SECOND: HardhatEthersSigner;
 
   let keeper: CompoundRateKeeperMock;
 
   before("setup", async () => {
+    time = networkHelpers.time;
+
     [, SECOND] = await ethers.getSigners();
 
     const CompoundRateKeeperMock = await ethers.getContractFactory("CompoundRateKeeperMock");
@@ -42,7 +49,7 @@ describe("CompoundRateKeeper", () => {
 
   describe("setCapitalizationRate()", () => {
     it("should correctly set new annual percent", async () => {
-      let nextBlockTime = (await time.latest()) + 10;
+      let nextBlockTime = (await networkHelpers.time.latest()) + 10;
 
       await time.setNextBlockTimestamp(nextBlockTime);
       await keeper.setCapitalizationRate(precision(1.1));

@@ -1,22 +1,27 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import { Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { Reverter } from "@test-helpers";
 
 import { BlockGuardMock } from "@ethers-v6";
 
-describe("BlockGuard", () => {
-  const reverter = new Reverter();
+const { ethers, networkHelpers } = await hre.network.connect();
 
-  let FIRST: SignerWithAddress;
-  let SECOND: SignerWithAddress;
+describe("BlockGuard", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+  let time: Time;
+
+  let FIRST: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
 
   let mock: BlockGuardMock;
 
   before("setup", async () => {
+    time = networkHelpers.time;
+
     [FIRST, SECOND] = await ethers.getSigners();
 
     const BlockGuardMock = await ethers.getContractFactory("BlockGuardMock");

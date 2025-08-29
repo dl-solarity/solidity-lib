@@ -1,15 +1,16 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
-
-import { MerkleRawProofParser } from "@/test/helpers/bitcoin/parse-proof-helpers";
-import { TxMerkleProofMock } from "@/generated-types/ethers";
-import { addHexPrefix, reverseBytes } from "@/test/helpers/bytes-helpers";
 import { sha256 } from "ethers";
 
+import { MerkleRawProofParser, Reverter, addHexPrefix, reverseBytes } from "@test-helpers";
+
+import { TxMerkleProofMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
+
 describe("TxMerkleProof", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let txMerkleProof: TxMerkleProofMock;
 
