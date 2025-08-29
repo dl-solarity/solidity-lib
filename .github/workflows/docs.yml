@@ -16,11 +16,11 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
       - name: Setup
         uses: ./.github/actions/setup
       - name: Checkout Docs Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           repository: dl-solarity/docs
           ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
