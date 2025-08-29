@@ -78,9 +78,9 @@ describe("SBT", () => {
 
   describe("burn()", () => {
     it("should correctly burn", async () => {
-      const tx = await sbt.mint(FIRST.address, 1337);
+      await sbt.mint(FIRST.address, 1337);
 
-      await sbt.burn(1337);
+      const tx = await sbt.burn(1337);
 
       expect(await sbt.tokenExists(0)).to.be.false;
 

@@ -182,21 +182,40 @@ describe("Staking", () => {
       const stakingStartTime = 1638474321;
       await staking.setStakingStartTime(stakingStartTime);
 
+      let now = (await time.latest()) + 5;
+      await time.setNextBlockTimestamp(now);
+
       await expect(staking.stake(wei(100, sharesDecimals)))
         .to.be.revertedWithCustomError(staking, "StakingHasNotStarted")
-        .withArgs((await time.latest()) + 1, stakingStartTime);
+        .withArgs(now, stakingStartTime);
+
+      now = (await time.latest()) + 5;
+      await time.setNextBlockTimestamp(now);
+
       await expect(staking.unstake(wei(100, sharesDecimals)))
         .to.be.revertedWithCustomError(staking, "StakingHasNotStarted")
-        .withArgs((await time.latest()) + 1, stakingStartTime);
+        .withArgs(now, stakingStartTime);
+
+      now = (await time.latest()) + 5;
+      await time.setNextBlockTimestamp(now);
+
       await expect(staking.withdraw())
         .to.be.revertedWithCustomError(staking, "StakingHasNotStarted")
-        .withArgs((await time.latest()) + 1, stakingStartTime);
+        .withArgs(now, stakingStartTime);
+
+      now = (await time.latest()) + 5;
+      await time.setNextBlockTimestamp(now);
+
       await expect(staking.claim(wei(100, sharesDecimals)))
         .to.be.revertedWithCustomError(staking, "StakingHasNotStarted")
-        .withArgs((await time.latest()) + 1, stakingStartTime);
+        .withArgs(now, stakingStartTime);
+
+      now = (await time.latest()) + 5;
+      await time.setNextBlockTimestamp(now);
+
       await expect(staking.claimAll())
         .to.be.revertedWithCustomError(staking, "StakingHasNotStarted")
-        .withArgs((await time.latest()) + 1, stakingStartTime);
+        .withArgs(now, stakingStartTime);
     });
 
     it("should work as expected if the staking start time is set to the timestamp in the past", async () => {
