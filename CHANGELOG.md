@@ -1,6 +1,6 @@
 # Changelog
 
-## [patch]
+## [3.2.1]
 
 - Added `Bridge v0.1` contracts for simple cross-chain token transfers. AMB + modules will be added in the subsequent releases.
 - Added `verifyProof` function to the `CartesianMerkleTree` and the `IncrementalMerkleTree` libraries.
