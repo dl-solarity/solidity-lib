@@ -20,11 +20,14 @@ import {ANativeHandler} from "./handlers/ANativeHandler.sol";
  * between two (or more) EVM blockchains.
  *
  * To utilize the Bridge effectively, instances of this contract must be deployed on both base and destination chains,
- * accompanied by the setup of trusted backends to act as signers.
+ * accompanied by the setup of trusted back ends to act as signers.
  *
  * The Bridge contract supports both "liquidity pool" and "mint-and-burn" methods for managing assets.
  * The back end signatures are checked only upon token withdrawals. If "mint-and-burn" method is used,
  * the ERC-20 tokens are required to support ERC-7802 interface.
+ *
+ * The Bridge is also suitable for bridged USDC tokens, utilizing their interface
+ * (https://github.com/circlefin/stablecoin-evm/blob/master/doc/bridged_USDC_standard.md).
  *
  * IMPORTANT:
  * All signer addresses must differ in their first (most significant) 8 bits in order to pass bloom (uniqueness) filtering.
@@ -320,7 +323,7 @@ abstract contract ABridge is
     function _checkCorrectSigners(address[] memory signers_) internal view virtual {
         ABridgeStorage storage $ = _getABridgeStorage();
 
-        uint256 bitMap;
+        uint256 bitMap_;
 
         for (uint256 i = 0; i < signers_.length; ++i) {
             address signer_ = signers_[i];
@@ -328,11 +331,11 @@ abstract contract ABridge is
             if (!$.signers.contains(signer_)) revert InvalidSigner(signer_);
 
             // get the topmost byte for bloom filtering
-            uint256 bitKey = 2 ** (uint256(uint160(signer_)) >> 152);
+            uint256 bitKey_ = 2 ** (uint256(uint160(signer_)) >> 152);
 
-            if (bitMap & bitKey != 0) revert DuplicateSigner(signer_);
+            if (bitMap_ & bitKey_ != 0) revert DuplicateSigner(signer_);
 
-            bitMap |= bitKey;
+            bitMap_ |= bitKey_;
         }
 
         if (signers_.length < $.signaturesThreshold) revert ThresholdNotMet(signers_.length);
