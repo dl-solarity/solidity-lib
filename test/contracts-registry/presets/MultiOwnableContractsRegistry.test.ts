@@ -3,31 +3,23 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@test-helpers";
-
 import { MultiOwnableContractsRegistry } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("MultiOwnableContractsRegistry", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let SECOND: HardhatEthersSigner;
 
   let contractsRegistry: MultiOwnableContractsRegistry;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [, SECOND] = await ethers.getSigners();
 
     const MultiOwnableContractsRegistry = await ethers.getContractFactory("MultiOwnableContractsRegistry");
     contractsRegistry = await MultiOwnableContractsRegistry.deploy();
 
     await contractsRegistry.__MultiOwnableContractsRegistry_init();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not initialize twice", async () => {

@@ -3,25 +3,17 @@ import hre from "hardhat";
 
 import { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@test-helpers";
-
 import { VectorMock } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("Vector", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let vector: VectorMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     const VectorMock = await ethers.getContractFactory("VectorMock");
     vector = await VectorMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("raw vector", () => {
     it("should test new", async () => {

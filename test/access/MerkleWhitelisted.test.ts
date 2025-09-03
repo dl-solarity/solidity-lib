@@ -3,17 +3,15 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter, buildTree, getProof, getRoot } from "@test-helpers";
+import { buildTree, getProof, getRoot } from "@test-helpers";
 
 import { MerkleWhitelistedMock } from "@ethers-v6";
 
 import { MerkleTree } from "merkletreejs";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("MerkleWhitelisted", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let OWNER: HardhatEthersSigner;
 
   let merkle: MerkleWhitelistedMock;
@@ -37,16 +35,12 @@ describe("MerkleWhitelisted", () => {
     return ethers.solidityPacked(["uint256", "address"], [amount, user]);
   }
 
-  before(async () => {
+  beforeEach("setup", async () => {
     [OWNER, ...users] = await ethers.getSigners();
 
     const MerkleWhitelistedMock = await ethers.getContractFactory("MerkleWhitelistedMock");
     merkle = await MerkleWhitelistedMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("getMerkleRoot, _setMerkleRoot", () => {
     beforeEach(async () => {

@@ -5,31 +5,23 @@ import { AbiCoder } from "ethers";
 
 import { wei } from "@scripts";
 
-import { Reverter } from "@test-helpers";
-
 import { RawReturnMock, ReturnDataProxyMock } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("ReturnDataProxy", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   const coder: AbiCoder = ethers.AbiCoder.defaultAbiCoder();
 
   let rawMock: RawReturnMock;
   let proxyMock: ReturnDataProxyMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     const RawReturnMock = await ethers.getContractFactory("RawReturnMock");
     const ReturnDataProxyMock = await ethers.getContractFactory("ReturnDataProxyMock");
 
     rawMock = await RawReturnMock.deploy();
     proxyMock = await ReturnDataProxyMock.deploy(await rawMock.getAddress());
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("call", () => {
     it("should set value properly", async () => {

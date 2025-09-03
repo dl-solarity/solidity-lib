@@ -3,34 +3,26 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@test-helpers";
-
 import { SBTMock } from "@ethers-v6";
 
 const name = "testName";
 const symbol = "TS";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("SBT", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let FIRST: HardhatEthersSigner;
 
   let sbt: SBTMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [FIRST] = await ethers.getSigners();
 
     const SBTMock = await ethers.getContractFactory("SBTMock");
     sbt = await SBTMock.deploy();
 
     await sbt.__SBTMock_init(name, symbol);
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not initialize twice", async () => {

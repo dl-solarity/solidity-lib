@@ -4,26 +4,18 @@ import hre from "hardhat";
 import { ethers as ethersLib } from "ethers";
 import { randomBytes } from "ethers";
 
-import { Reverter } from "@test-helpers";
-
 import { RSASSAPSSMock } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("RSASSAPSS", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let rsassapss: RSASSAPSSMock;
 
-  before(async () => {
+  beforeEach("setup", async () => {
     const RSASSAPSSMock = await ethers.getContractFactory("RSASSAPSSMock");
 
     rsassapss = await RSASSAPSSMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("SHA256", () => {
     const message =

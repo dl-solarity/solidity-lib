@@ -26,7 +26,7 @@
   "scripts": {
     "prepare": "husky",
     "compile": "npx hardhat compile --force",
-    "coverage": "npx hardhat coverage --solcoverjs ./.solcover.ts",
+    "coverage": "npx hardhat test --coverage",
     "test": "npx hardhat test",
     "private-network": "npx hardhat node",
     "lint-fix": "npm run lint-sol-fix && npm run lint-ts-fix && npm run lint-json-fix && npm run solhint-check",

@@ -15,12 +15,15 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v5
+
       - name: Setup
         uses: ./.github/actions/setup
+
       - name: Run coverage
         env:
           NODE_OPTIONS: "--max_old_space_size=8192"
         run: npm run coverage
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:

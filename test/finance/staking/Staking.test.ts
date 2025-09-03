@@ -2,18 +2,15 @@ import { expect } from "chai";
 import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
-import { NetworkHelpers, Time } from "@nomicfoundation/hardhat-network-helpers/types";
+import { Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
 import { wei } from "@scripts";
-
-import { Reverter } from "@test-helpers";
 
 import { ERC20Mock, StakingMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Staking", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
   let time: Time;
 
   let FIRST: HardhatEthersSigner;
@@ -124,7 +121,7 @@ describe("Staking", () => {
     expect(await staking.userOwedValue(THIRD)).to.equal(thirdExpectedReward);
   };
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     time = networkHelpers.time;
 
     [FIRST, SECOND, THIRD] = await ethers.getSigners();
@@ -145,11 +142,7 @@ describe("Staking", () => {
     rate = wei(1, rewardsDecimals);
 
     await staking.__StakingMock_init(sharesToken, rewardsToken, rate, stakingStartTime);
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("AStaking initialization", () => {
     it("should not initialize twice", async () => {

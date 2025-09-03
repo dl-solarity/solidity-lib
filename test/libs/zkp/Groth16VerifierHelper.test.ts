@@ -1,15 +1,11 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { Reverter } from "@test-helpers";
-
 import { Groth16Verifier2Mock, Groth16Verifier3Mock, Groth16VerifierHelperMock } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("Groth16VerifierHelper", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let verifierHelper: Groth16VerifierHelperMock;
   let verifier2: Groth16Verifier2Mock;
   let verifier3: Groth16Verifier3Mock;
@@ -26,7 +22,7 @@ describe("Groth16VerifierHelper", () => {
   const pubSignals2 = [2, 4];
   const pubSignals3 = [3, 6, 9];
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     const Groth16VerifierHelperMock = await ethers.getContractFactory("Groth16VerifierHelperMock");
     const Groth16Verifier2Mock = await ethers.getContractFactory("Groth16Verifier2Mock");
     const Groth16Verifier3Mock = await ethers.getContractFactory("Groth16Verifier3Mock");
@@ -35,11 +31,7 @@ describe("Groth16VerifierHelper", () => {
 
     verifier2 = await Groth16Verifier2Mock.deploy(true, pubSignals2);
     verifier3 = await Groth16Verifier3Mock.deploy(true, pubSignals3);
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("verifyProof", () => {
     it("should correctly call verifyProof function", async () => {

@@ -5,15 +5,11 @@ import { encodeBytes32String, toBeHex } from "ethers";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@test-helpers";
-
 import { AvlTreeMock } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("AvlTree", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let USER1: HardhatEthersSigner;
   let USER2: HardhatEthersSigner;
   let USER3: HardhatEthersSigner;
@@ -21,16 +17,12 @@ describe("AvlTree", () => {
 
   let avlTree: AvlTreeMock;
 
-  before(async () => {
+  beforeEach("setup", async () => {
     [USER1, USER2, USER3, USER4] = await ethers.getSigners();
     const AvlTreeMock = await ethers.getContractFactory("AvlTreeMock");
 
     avlTree = await AvlTreeMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   function uintToBytes32Array(uintArray: Array<number>) {
     let bytes32Array = [];

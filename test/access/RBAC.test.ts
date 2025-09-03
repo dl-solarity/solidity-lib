@@ -3,32 +3,24 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@test-helpers";
-
 import { RBACMock } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("RBAC", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let OWNER: HardhatEthersSigner;
   let SECOND: HardhatEthersSigner;
 
   let rbac: RBACMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
     const RBACMock = await ethers.getContractFactory("RBACMock");
     rbac = await RBACMock.deploy();
 
     await rbac.__RBACMock_init();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not initialize twice", async () => {

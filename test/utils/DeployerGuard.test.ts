@@ -3,30 +3,22 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@test-helpers";
-
 import { ERC20UpgradeableMock } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("DeployerGuard", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let FIRST: HardhatEthersSigner;
   let SECOND: HardhatEthersSigner;
 
   let mock: ERC20UpgradeableMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [FIRST, SECOND] = await ethers.getSigners();
 
     const ERC20UpgradeableMock = await ethers.getContractFactory("ERC20UpgradeableMock");
     mock = await ERC20UpgradeableMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("onlyDeployer", () => {
     it("should revert if trying to call initializer by non-deployer", async () => {

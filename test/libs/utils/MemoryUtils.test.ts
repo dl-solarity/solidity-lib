@@ -1,25 +1,17 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { Reverter } from "@test-helpers";
-
 import { MemoryUtilsMock } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("MemoryUtils", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let mock: MemoryUtilsMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     const MemoryUtilsMock = await ethers.getContractFactory("MemoryUtilsMock");
     mock = await MemoryUtilsMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("copyMemory", () => {
     it("should copy arbitrary chunks of memory (bytes)", async () => {

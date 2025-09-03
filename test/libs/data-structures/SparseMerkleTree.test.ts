@@ -3,7 +3,7 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter, getPoseidon, poseidonHash } from "@test-helpers";
+import { getPoseidon, poseidonHash } from "@test-helpers";
 
 import { SparseMerkleTree } from "@/generated-types/ethers/mock/libs/data-structures/SparseMerkleTreeMock.sol/SparseMerkleTreeMock.ts";
 import { SparseMerkleTreeMock } from "@ethers-v6";
@@ -12,11 +12,9 @@ import { SparseMerkleTreeMock } from "@ethers-v6";
 import { Hash, LocalStorageDB, Merkletree, Proof, str2Bytes, verifyProof } from "@iden3/js-merkletree";
 import "mock-local-storage";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("SparseMerkleTree", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let USER1: HardhatEthersSigner;
 
   let merkleTree: SparseMerkleTreeMock;
@@ -25,7 +23,7 @@ describe("SparseMerkleTree", () => {
 
   let localMerkleTree: Merkletree;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [USER1] = await ethers.getSigners();
 
     const SparseMerkleTreeMock = await ethers.getContractFactory("SparseMerkleTreeMock", {
@@ -36,18 +34,12 @@ describe("SparseMerkleTree", () => {
     });
     merkleTree = await SparseMerkleTreeMock.deploy();
 
-    await reverter.snapshot();
-  });
-
-  beforeEach("setup", async () => {
     storage = new LocalStorageDB(str2Bytes(""));
 
     localMerkleTree = new Merkletree(storage, true, 20);
   });
 
   afterEach("cleanup", async () => {
-    await reverter.revert();
-
     localStorage.clear();
   });
 

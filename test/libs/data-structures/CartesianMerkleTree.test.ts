@@ -5,16 +5,14 @@ import { BigNumberish, BytesLike } from "ethers";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter, getPoseidon, poseidonHash } from "@test-helpers";
+import { getPoseidon, poseidonHash } from "@test-helpers";
 
 import { CartesianMerkleTree } from "@/generated-types/ethers/mock/libs/data-structures/CartesianMerkleTreeMock.sol/CartesianMerkleTreeMock.ts";
 import { CartesianMerkleTreeMock } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("CartesianMerkleTree", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let USER1: HardhatEthersSigner;
 
   let treaple: CartesianMerkleTreeMock;
@@ -122,7 +120,7 @@ describe("CartesianMerkleTree", () => {
     }
   }
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [USER1] = await ethers.getSigners();
 
     const CartesianMerkleTreeMock = await ethers.getContractFactory("CartesianMerkleTreeMock", {
@@ -132,11 +130,7 @@ describe("CartesianMerkleTree", () => {
     });
 
     treaple = await CartesianMerkleTreeMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("Uint CMT", () => {
     beforeEach("setup", async () => {

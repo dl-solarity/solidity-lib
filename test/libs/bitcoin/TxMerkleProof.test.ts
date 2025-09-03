@@ -3,24 +3,18 @@ import hre from "hardhat";
 
 import { sha256 } from "ethers";
 
-import { MerkleRawProofParser, Reverter, addHexPrefix, reverseBytes } from "@test-helpers";
+import { MerkleRawProofParser, addHexPrefix, reverseBytes } from "@test-helpers";
 
 import { TxMerkleProofMock } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("TxMerkleProof", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let txMerkleProof: TxMerkleProofMock;
 
-  before(async () => {
+  beforeEach("setup", async () => {
     txMerkleProof = await ethers.deployContract("TxMerkleProofMock");
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("#verifyTX", () => {
     const merkleRoot1 = "0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098";

@@ -3,8 +3,6 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@test-helpers";
-
 import {
   ContractsRegistryPoolMock,
   ERC20Mock,
@@ -14,11 +12,9 @@ import {
   PoolUpgradeMock,
 } from "@ethers-v6";
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers } = await hre.network.connect();
 
 describe("PoolFactory", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
-
   let OWNER: HardhatEthersSigner;
 
   let poolFactory: PoolFactoryMock;
@@ -29,7 +25,7 @@ describe("PoolFactory", () => {
   let NAME_1: string;
   let NAME_2: string;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [OWNER] = await ethers.getSigners();
 
     const ContractsRegistryPool = await ethers.getContractFactory("ContractsRegistryPoolMock");
@@ -66,11 +62,7 @@ describe("PoolFactory", () => {
     NAME_2 = await poolContractsRegistry.POOL_2_NAME();
 
     expect(await poolFactory.getContractsRegistry()).to.equal(await contractsRegistry.getAddress());
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not set dependencies from non dependant", async () => {

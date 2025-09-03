@@ -4,14 +4,11 @@ import hre from "hardhat";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 import { Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { Reverter } from "@test-helpers";
-
 import { BlockGuardMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("BlockGuard", () => {
-  const reverter: Reverter = new Reverter(networkHelpers);
   let time: Time;
 
   let FIRST: HardhatEthersSigner;
@@ -19,18 +16,14 @@ describe("BlockGuard", () => {
 
   let mock: BlockGuardMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     time = networkHelpers.time;
 
     [FIRST, SECOND] = await ethers.getSigners();
 
     const BlockGuardMock = await ethers.getContractFactory("BlockGuardMock");
     mock = await BlockGuardMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("lockBlock", () => {
     it("should return zero if the resource key hasn't been locked", async () => {
