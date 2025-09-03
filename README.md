@@ -25,7 +25,7 @@ contracts
 │   └── AAccountRecovery — "ERC-7947 account recovery base implementation"
 ├── bridge
 │   ├── handlers — "Internal bridge logic contracts"
-│   └── ABridge — "Simply bridge with ERC20/ERC721/ERC1155 tokens support"
+│   └── ABridge — "Simple bridge with ERC20/ERC721/ERC1155 tokens support"
 ├── contracts—registry
 │   ├── AContractsRegistry — "Reference registry implementation of ERC-6224 pattern"
 │   ├── ADependant — "Reference dependant implementation of ERC-6224 pattern"

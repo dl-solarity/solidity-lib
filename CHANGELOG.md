@@ -1,5 +1,9 @@
 # Changelog
 
+## [none]
+
+- Fixed typo in readme.
+
 ## [3.2.1]
 
 - Added `Bridge v0.1` contracts for simple cross-chain token transfers. AMB + modules will be added in the subsequent releases.
