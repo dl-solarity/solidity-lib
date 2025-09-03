@@ -4,8 +4,10 @@ import hardhatMarkup from "@solarity/hardhat-markup";
 
 import type { HardhatUserConfig } from "hardhat/config";
 
+import hardhatContractSizer from "@solidstate/hardhat-contract-sizer";
+
 const config: HardhatUserConfig = {
-  plugins: [hardhatToolboxMochaEthers, hardhatMarkup],
+  plugins: [hardhatToolboxMochaEthers, hardhatMarkup, hardhatContractSizer],
   solidity: {
     version: "0.8.22",
     settings: {
@@ -19,6 +21,12 @@ const config: HardhatUserConfig = {
   typechain: {
     outDir: "generated-types/ethers",
     discriminateTypes: true,
+  },
+  contractSizer: {
+    alphaSort: false,
+    runOnCompile: true,
+    strict: false,
+    flat: true,
   },
 };
 
