@@ -8,7 +8,7 @@
   "description": "Solarity Solidity Library",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dl-solarity/solidity-lib"
+    "url": "git+https://github.com/dl-solarity/solidity-lib.git"
   },
   "keywords": [
     "solidity",
