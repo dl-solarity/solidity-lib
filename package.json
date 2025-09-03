@@ -45,7 +45,7 @@
   "devDependencies": {
     "@iden3/js-crypto": "^1.3.1",
     "@iden3/js-merkletree": "^1.5.0",
-    "@noble/curves": "^2.0.0",
+    "@noble/curves": "^1.9.7",
     "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
     "@solarity/hardhat-markup": "^2.0.0-rc.0",
     "@solidstate/hardhat-contract-sizer": "^3.0.0",
