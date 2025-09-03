@@ -47,6 +47,7 @@
     "@iden3/js-merkletree": "^1.5.0",
     "@noble/curves": "^1.9.4",
     "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
+    "@solarity/hardhat-markup": "^2.0.0-rc.0",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/chai": "^4.3.20",
     "@types/mocha": "^10.0.10",

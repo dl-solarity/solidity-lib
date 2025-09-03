@@ -1,9 +1,11 @@
 import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 
+import hardhatMarkup from "@solarity/hardhat-markup";
+
 import type { HardhatUserConfig } from "hardhat/config";
 
 const config: HardhatUserConfig = {
-  plugins: [hardhatToolboxMochaEthers],
+  plugins: [hardhatToolboxMochaEthers, hardhatMarkup],
   solidity: {
     version: "0.8.22",
     settings: {
