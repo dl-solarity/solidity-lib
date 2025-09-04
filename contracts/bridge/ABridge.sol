@@ -2,52 +2,46 @@
 pragma solidity ^0.8.21;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 import {IBridge} from "../interfaces/bridge/IBridge.sol";
+import {IHandler} from "../interfaces/bridge/IHandler.sol";
 
-import {AERC20Handler} from "./handlers/AERC20Handler.sol";
-import {AERC721Handler} from "./handlers/AERC721Handler.sol";
-import {AERC1155Handler} from "./handlers/AERC1155Handler.sol";
-import {ANativeHandler} from "./handlers/ANativeHandler.sol";
+import {IBatcher, Batcher} from "./batcher/Batcher.sol";
 
-/**
- * @notice The Bridge module
- *
- * The Bridge contract facilitates the permissioned transfer of assets (ERC-20, ERC-721, ERC-1155, Native)
- * between two (or more) EVM blockchains.
- *
- * To utilize the Bridge effectively, instances of this contract must be deployed on both base and destination chains,
- * accompanied by the setup of trusted back ends to act as signers.
- *
- * The Bridge contract supports both "liquidity pool" and "mint-and-burn" methods for managing assets.
- * The back end signatures are checked only upon token withdrawals. If "mint-and-burn" method is used,
- * the ERC-20 tokens are required to support ERC-7802 interface.
- *
- * The Bridge is also suitable for bridged USDC tokens, utilizing their interface
- * (https://github.com/circlefin/stablecoin-evm/blob/master/doc/bridged_USDC_standard.md).
- *
- * IMPORTANT:
- * All signer addresses must differ in their first (most significant) 8 bits in order to pass bloom (uniqueness) filtering.
- */
-abstract contract ABridge is
-    IBridge,
-    Initializable,
-    AERC20Handler,
-    AERC721Handler,
-    AERC1155Handler,
-    ANativeHandler
-{
-    using ECDSA for bytes32;
+abstract contract ABridge is IBridge, Initializable {
+    using Address for address;
     using MessageHashUtils for bytes32;
+    using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableMap for EnumerableMap.UintToAddressMap;
+
+    error HandlerAlreadyPresent(uint256 handlerId);
+    error HandlerDoesNotExist(uint256 handlerId);
+
+    struct DepositData {
+        uint256 assetType;
+        uint256 actionType;
+        bytes depositDetails;
+    }
+
+    struct WithdrawData {
+        uint256 assetType;
+        uint256 actionType;
+        bytes withdrawDetails;
+    }
 
     struct ABridgeStorage {
-        uint256 signaturesThreshold;
-        mapping(bytes32 => bool) usedHashes; // keccak256(txHash . txNonce) => is used
+        string network;
+        IBatcher batcher;
+        EnumerableMap.UintToAddressMap handlers;
         EnumerableSet.AddressSet signers;
+        uint256 signaturesThreshold;
+        mapping(bytes32 => bool) usedNonce;
     }
 
     // bytes32(uint256(keccak256("solarity.contract.ABridge")) - 1)
@@ -55,183 +49,89 @@ abstract contract ABridge is
         0xc353df91453f9451d14bc3d78b643ca35222ee145cc2e80765c8a1e293a85ff7;
 
     function __ABridge_init(
+        string memory network_,
+        uint256[] memory assetTypes_,
+        address[] memory handlers_,
         address[] memory signers_,
         uint256 signaturesThreshold_
     ) internal onlyInitializing {
+        ABridgeStorage storage $ = _getABridgeStorage();
+
+        _setBatcher(_batcher());
         _addSigners(signers_);
         _setSignaturesThreshold(signaturesThreshold_);
+
+        for (uint256 i = 0; i < assetTypes_.length; ++i) {
+            _addHandler(assetTypes_[i], handlers_[i]);
+        }
+
+        $.network = network_;
     }
 
-    /**
-     * @inheritdoc IBridge
-     */
-    function depositERC20(
-        address token_,
-        uint256 amount_,
-        string calldata receiver_,
-        string calldata network_,
-        ERC20BridgingType operationType_
-    ) external virtual override {
-        _depositERC20(token_, amount_, operationType_);
+    function deposit(uint256 assetType_, bytes calldata depositDetails_) external payable virtual {
+        ABridgeStorage storage $ = _getABridgeStorage();
 
-        emit DepositedERC20(token_, amount_, receiver_, network_, operationType_);
-    }
+        if (!$.handlers.contains(assetType_)) revert HandlerDoesNotExist(assetType_);
 
-    /**
-     * @inheritdoc IBridge
-     */
-    function depositERC721(
-        address token_,
-        uint256 tokenId_,
-        string calldata receiver_,
-        string calldata network_,
-        ERC721BridgingType operationType_
-    ) external virtual override {
-        _depositERC721(token_, tokenId_, operationType_);
+        address handler_ = $.handlers.get(assetType_);
 
-        emit DepositedERC721(token_, tokenId_, receiver_, network_, operationType_);
-    }
-
-    /**
-     * @inheritdoc IBridge
-     */
-    function depositERC1155(
-        address token_,
-        uint256 tokenId_,
-        uint256 amount_,
-        string calldata receiver_,
-        string calldata network_,
-        ERC1155BridgingType operationType_
-    ) external virtual override {
-        _depositERC1155(token_, tokenId_, amount_, operationType_);
-
-        emit DepositedERC1155(token_, tokenId_, amount_, receiver_, network_, operationType_);
-    }
-
-    /**
-     * @inheritdoc IBridge
-     */
-    function depositNative(
-        string calldata receiver_,
-        string calldata network_
-    ) external payable virtual override {
-        _depositNative();
-
-        emit DepositedNative(msg.value, receiver_, network_);
-    }
-
-    /**
-     * @inheritdoc IBridge
-     */
-    function withdrawERC20(
-        address token_,
-        uint256 amount_,
-        address receiver_,
-        bytes32 txHash_,
-        uint256 txNonce_,
-        ERC20BridgingType operationType_,
-        bytes[] calldata signatures_
-    ) external virtual override {
-        bytes32 signHash_ = getERC20SignHash(
-            token_,
-            amount_,
-            receiver_,
-            txHash_,
-            txNonce_,
-            block.chainid,
-            operationType_
+        handler_.functionDelegateCall(
+            abi.encodeWithSelector(IHandler.deposit.selector, depositDetails_)
         );
+    }
 
-        _checkAndUpdateHashes(txHash_, txNonce_);
-        _checkSignatures(signHash_, signatures_);
+    function withdraw(
+        uint256 assetType_,
+        bytes calldata withdrawDetails_,
+        bytes calldata proof_
+    ) external virtual {
+        ABridgeStorage storage $ = _getABridgeStorage();
 
-        _withdrawERC20(token_, amount_, receiver_, operationType_);
+        if (!$.handlers.contains(assetType_)) revert HandlerDoesNotExist(assetType_);
+
+        address handler_ = $.handlers.get(assetType_);
+
+        bytes32 operationHash_ = IHandler(handler_).getOperationHash($.network, withdrawDetails_);
+
+        _checkAndUpdateNonce(operationHash_);
+        _checkSignatures(operationHash_, abi.decode(proof_, (bytes[])));
+
+        handler_.functionDelegateCall(
+            abi.encodeWithSelector(IHandler.withdraw.selector, $.batcher, withdrawDetails_)
+        );
     }
 
     /**
-     * @inheritdoc IBridge
+     * @notice Returns the list of current bridge signers
      */
-    function withdrawERC721(
-        address token_,
-        uint256 tokenId_,
-        address receiver_,
-        bytes32 txHash_,
-        uint256 txNonce_,
-        string calldata tokenURI_,
-        ERC721BridgingType operationType_,
-        bytes[] calldata signatures_
-    ) external virtual override {
-        bytes32 signHash_ = getERC721SignHash(
-            token_,
-            tokenId_,
-            receiver_,
-            txHash_,
-            txNonce_,
-            block.chainid,
-            tokenURI_,
-            operationType_
-        );
+    function getHandlers()
+        external
+        view
+        returns (uint256[] memory assetTypes_, address[] memory handlers_)
+    {
+        ABridgeStorage storage $ = _getABridgeStorage();
 
-        _checkAndUpdateHashes(txHash_, txNonce_);
-        _checkSignatures(signHash_, signatures_);
+        assetTypes_ = $.handlers.keys();
 
-        _withdrawERC721(token_, tokenId_, receiver_, tokenURI_, operationType_);
+        handlers_ = new address[](assetTypes_.length);
+
+        for (uint256 i = 0; i < assetTypes_.length; ++i) {
+            handlers_[i] = $.handlers.get(assetTypes_[i]);
+        }
     }
 
     /**
-     * @inheritdoc IBridge
+     * @notice Returns the network name
      */
-    function withdrawERC1155(
-        address token_,
-        uint256 tokenId_,
-        uint256 amount_,
-        address receiver_,
-        bytes32 txHash_,
-        uint256 txNonce_,
-        string calldata tokenURI_,
-        ERC1155BridgingType operationType_,
-        bytes[] calldata signatures_
-    ) external virtual override {
-        bytes32 signHash_ = getERC1155SignHash(
-            token_,
-            tokenId_,
-            amount_,
-            receiver_,
-            txHash_,
-            txNonce_,
-            block.chainid,
-            tokenURI_,
-            operationType_
-        );
-
-        _checkAndUpdateHashes(txHash_, txNonce_);
-        _checkSignatures(signHash_, signatures_);
-
-        _withdrawERC1155(token_, tokenId_, amount_, receiver_, tokenURI_, operationType_);
+    function getNetwork() external view returns (string memory) {
+        return _getABridgeStorage().network;
     }
 
     /**
-     * @inheritdoc IBridge
+     * @notice Returns the address of the batcher used
      */
-    function withdrawNative(
-        uint256 amount_,
-        address receiver_,
-        bytes32 txHash_,
-        uint256 txNonce_,
-        bytes[] calldata signatures_
-    ) external virtual override {
-        bytes32 signHash_ = getNativeSignHash(
-            amount_,
-            receiver_,
-            txHash_,
-            txNonce_,
-            block.chainid
-        );
-
-        _checkAndUpdateHashes(txHash_, txNonce_);
-        _checkSignatures(signHash_, signatures_);
-
-        _withdrawNative(amount_, receiver_);
+    function getBatcher() external view returns (address) {
+        return address(_getABridgeStorage().batcher);
     }
 
     /**
@@ -251,10 +151,24 @@ abstract contract ABridge is
     /**
      * @notice Checks if the deposit event exists in the contract
      */
-    function containsHash(bytes32 txHash_, uint256 txNonce_) external view returns (bool) {
-        bytes32 nonceHash_ = keccak256(abi.encodePacked(txHash_, txNonce_));
+    function nonceUsed(bytes32 nonce_) external view returns (bool) {
+        return _getABridgeStorage().usedNonce[nonce_];
+    }
 
-        return _getABridgeStorage().usedHashes[nonceHash_];
+    /**
+     * @dev Should be access controlled and made public in the descendant contracts
+     */
+    function _addHandler(uint256 assetType_, address handler_) internal virtual {
+        if (!_getABridgeStorage().handlers.set(assetType_, handler_))
+            revert HandlerAlreadyPresent(assetType_);
+    }
+
+    /**
+     * @dev Should be access controlled and made public in the descendant contracts
+     */
+    function _removeHandler(uint256 assetType_) internal virtual {
+        if (!_getABridgeStorage().handlers.remove(assetType_))
+            revert HandlerDoesNotExist(assetType_);
     }
 
     /**
@@ -294,22 +208,28 @@ abstract contract ABridge is
         }
     }
 
+    function _setBatcher(IBatcher batcher_) internal virtual {
+        _getABridgeStorage().batcher = batcher_;
+    }
+
     /**
-     * @dev txHash_ is the transaction hash on the base chain, txNonce_ is the ordinal number of the deposit event
+     * @dev Override this function for a custom batcher deployment
      */
-    function _checkAndUpdateHashes(bytes32 txHash_, uint256 txNonce_) internal virtual {
+    function _batcher() internal virtual returns (IBatcher) {
+        return new Batcher();
+    }
+
+    function _checkAndUpdateNonce(bytes32 nonce_) internal virtual {
         ABridgeStorage storage $ = _getABridgeStorage();
 
-        bytes32 nonceHash_ = keccak256(abi.encodePacked(txHash_, txNonce_));
+        if ($.usedNonce[nonce_]) revert NonceUsed(nonce_);
 
-        if ($.usedHashes[nonceHash_]) revert HashNonceUsed(nonceHash_);
-
-        $.usedHashes[nonceHash_] = true;
+        $.usedNonce[nonce_] = true;
     }
 
     function _checkSignatures(
         bytes32 signHash_,
-        bytes[] calldata signatures_
+        bytes[] memory signatures_
     ) internal view virtual {
         address[] memory signers_ = new address[](signatures_.length);
 
