@@ -19,7 +19,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Validate structure
-        run: npx tsx scripts/release/validate-changelog.ts
+        run: npx tsx scripts/release/validate-changelog.cts
 
   pre-release:
     name: Apply version and tag
@@ -43,7 +43,7 @@ jobs:
         with:
           script: |
             require('ts-node/register/transpile-only');
-            await require('./scripts/release/apply-release.ts').default(core);
+            await require('./scripts/release/apply-release.cts').default(core);
 
       - name: Update package-lock
         run: npm install --package-lock-only

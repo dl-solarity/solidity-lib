@@ -1,23 +1,23 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { MerkleTree } from "merkletreejs";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { getRoot, getProof, buildTree } from "../helpers/merkle-tree-helper";
+import { buildTree, getProof, getRoot } from "@test-helpers";
 
 import { MerkleWhitelistedMock } from "@ethers-v6";
 
-describe("MerkleWhitelisted", () => {
-  const reverter = new Reverter();
+import { MerkleTree } from "merkletreejs";
 
-  let OWNER: SignerWithAddress;
+const { ethers } = await hre.network.connect();
+
+describe("MerkleWhitelisted", () => {
+  let OWNER: HardhatEthersSigner;
 
   let merkle: MerkleWhitelistedMock;
   let leaves: any;
   let tree: MerkleTree;
-  let users: SignerWithAddress[];
+  let users: HardhatEthersSigner[];
 
   async function buildMerkleTree() {
     tree = buildTree(leaves);
@@ -35,16 +35,12 @@ describe("MerkleWhitelisted", () => {
     return ethers.solidityPacked(["uint256", "address"], [amount, user]);
   }
 
-  before(async () => {
+  beforeEach("setup", async () => {
     [OWNER, ...users] = await ethers.getSigners();
 
     const MerkleWhitelistedMock = await ethers.getContractFactory("MerkleWhitelistedMock");
     merkle = await MerkleWhitelistedMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("getMerkleRoot, _setMerkleRoot", () => {
     beforeEach(async () => {

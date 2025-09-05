@@ -1,27 +1,23 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { Reverter } from "@/test/helpers/reverter";
+import hre from "hardhat";
 
-import { PaginatorMock } from "@ethers-v6";
 import { BigNumberish } from "ethers";
 
-describe("Paginator", () => {
-  const reverter = new Reverter();
+import { PaginatorMock } from "@ethers-v6";
 
+const { ethers } = await hre.network.connect();
+
+describe("Paginator", () => {
   let mock: PaginatorMock;
 
   function encodeBytes(values: BigNumberish[], types: string[] = ["uint256"]) {
     return ethers.AbiCoder.defaultAbiCoder().encode(types, values);
   }
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     const PaginatorMock = await ethers.getContractFactory("PaginatorMock");
     mock = await PaginatorMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("uint array, empty", async () => {
     it("should return empty array", async () => {

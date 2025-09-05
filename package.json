@@ -4,10 +4,11 @@
   "license": "MIT",
   "author": "Distributed Lab",
   "readme": "README.md",
+  "type": "module",
   "description": "Solarity Solidity Library",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dl-solarity/solidity-lib"
+    "url": "git+https://github.com/dl-solarity/solidity-lib.git"
   },
   "keywords": [
     "solidity",
@@ -25,7 +26,7 @@
   "scripts": {
     "prepare": "husky",
     "compile": "npx hardhat compile --force",
-    "coverage": "npx hardhat coverage --solcoverjs ./.solcover.ts",
+    "coverage": "npx hardhat test --coverage",
     "test": "npx hardhat test",
     "private-network": "npx hardhat node",
     "lint-fix": "npm run lint-sol-fix && npm run lint-ts-fix && npm run lint-json-fix && npm run solhint-check",
@@ -44,34 +45,29 @@
   "devDependencies": {
     "@iden3/js-crypto": "^1.3.1",
     "@iden3/js-merkletree": "^1.5.0",
-    "@noble/curves": "^1.9.4",
-    "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
-    "@nomicfoundation/hardhat-ethers": "^3.1.0",
-    "@nomicfoundation/hardhat-network-helpers": "^1.1.0",
-    "@solarity/hardhat-markup": "^1.0.10",
-    "@typechain/ethers-v6": "^0.5.1",
-    "@typechain/hardhat": "^9.1.0",
-    "@types/chai": "^4.3.20",
+    "@noble/curves": "^1.9.7",
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
+    "@solarity/hardhat-markup": "^2.0.0-rc.0",
+    "@solidstate/hardhat-contract-sizer": "^3.0.0",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+    "@types/chai": "^5.2.2",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.13.5",
-    "chai": "^4.5.0",
+    "@types/node": "^24.3.0",
+    "chai": "^5.3.3",
     "circomlibjs": "^0.1.7",
-    "dotenv": "^17.2.0",
+    "dotenv": "^17.2.2",
     "ethers": "^6.15.0",
-    "hardhat": "^2.26.0",
-    "hardhat-contract-sizer": "^2.10.0",
-    "hardhat-gas-reporter": "^2.3.0",
+    "hardhat": "^3.0.4",
     "husky": "^9.1.7",
     "merkletreejs": "^0.5.2",
     "mock-local-storage": "^1.1.24",
     "prettier": "^3.6.2",
     "prettier-plugin-solidity": "^1.4.3",
-    "solhint": "^6.0.0",
+    "solhint": "^6.0.1",
     "solhint-plugin-prettier": "^0.1.0",
-    "solidity-coverage": "^0.8.16",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typechain": "^8.3.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }

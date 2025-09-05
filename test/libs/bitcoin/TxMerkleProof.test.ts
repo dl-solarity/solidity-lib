@@ -1,25 +1,20 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
-
-import { MerkleRawProofParser } from "@/test/helpers/bitcoin/parse-proof-helpers";
-import { TxMerkleProofMock } from "@/generated-types/ethers";
-import { addHexPrefix, reverseBytes } from "@/test/helpers/bytes-helpers";
 import { sha256 } from "ethers";
 
-describe("TxMerkleProof", () => {
-  const reverter = new Reverter();
+import { MerkleRawProofParser, addHexPrefix, reverseBytes } from "@test-helpers";
 
+import { TxMerkleProofMock } from "@ethers-v6";
+
+const { ethers } = await hre.network.connect();
+
+describe("TxMerkleProof", () => {
   let txMerkleProof: TxMerkleProofMock;
 
-  before(async () => {
+  beforeEach("setup", async () => {
     txMerkleProof = await ethers.deployContract("TxMerkleProofMock");
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("#verifyTX", () => {
     const merkleRoot1 = "0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098";

@@ -1,11 +1,17 @@
-import * as fs from "fs";
-import path from "path";
-import { TransactionData } from "./types";
 import { expect } from "chai";
 
-import { TxParser } from "@/generated-types/ethers/contracts/mock/libs/bitcoin/TxParserMock";
 import { ZeroHash } from "ethers";
-import { addHexPrefix, reverseBytes } from "../bytes-helpers";
+
+import { TxParser } from "@/generated-types/ethers/mock/libs/bitcoin/TxParserMock.ts";
+
+import { addHexPrefix, reverseBytes } from "../bytes-helpers.ts";
+import { TransactionData } from "./types.ts";
+import * as fs from "fs";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export function getTxDataFilePath(fileName: string): string {
   return path.join(__dirname, "../../libs/bitcoin/data", fileName);

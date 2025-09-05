@@ -1,24 +1,19 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { wei } from "@/scripts/utils/utils";
+import { wei } from "@scripts";
 
 import { DecimalsConverterMock } from "@ethers-v6";
 
-describe("DecimalsConverter", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
+describe("DecimalsConverter", () => {
   let mock: DecimalsConverterMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     const DecimalsConverterMock = await ethers.getContractFactory("DecimalsConverterMock");
     mock = await DecimalsConverterMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("decimals", () => {
     it("should return correct decimals", async () => {

@@ -3,10 +3,6 @@ pragma solidity ^0.8.21;
 
 import {ECDSA384} from "../../../libs/crypto/ECDSA384.sol";
 
-// Separate imports due to IntelliJ Solidity plugin issues
-import {uint512} from "../../../libs/bn/U512.sol";
-import {U512} from "../../../libs/bn/U512.sol";
-
 contract ECDSA384Mock {
     using ECDSA384 for *;
 
@@ -72,22 +68,5 @@ contract ECDSA384Mock {
         bytes calldata pubKey_
     ) external view returns (bool) {
         return _secp384r1CurveParams.verify(abi.encodePacked(hashedMessage_), signature_, pubKey_);
-    }
-
-    function cmpMock() external pure returns (int256 cmp_) {
-        uint512 a_;
-        uint512 b_;
-
-        assembly {
-            a_ := mload(0x40)
-            b_ := add(a_, 0x40)
-
-            mstore(add(a_, 0x20), 0x1234)
-            mstore(add(b_, 0x20), 0x5678)
-
-            mstore(0x40, add(b_, 0x40))
-        }
-
-        return U512.cmp(a_, b_);
     }
 }

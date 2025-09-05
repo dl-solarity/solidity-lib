@@ -1,28 +1,13 @@
-import "@nomicfoundation/hardhat-ethers";
-import "@nomicfoundation/hardhat-chai-matchers";
-import "@nomicfoundation/hardhat-network-helpers";
-import "@solarity/hardhat-markup";
-import "@typechain/hardhat";
-import "hardhat-contract-sizer";
-import "hardhat-gas-reporter";
-import "solidity-coverage";
-import "tsconfig-paths/register";
+import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 
-import { HardhatUserConfig } from "hardhat/config";
+import hardhatMarkup from "@solarity/hardhat-markup";
 
-import * as dotenv from "dotenv";
-dotenv.config({ quiet: true });
+import type { HardhatUserConfig } from "hardhat/config";
+
+import hardhatContractSizer from "@solidstate/hardhat-contract-sizer";
 
 const config: HardhatUserConfig = {
-  networks: {
-    hardhat: {
-      initialDate: "1970-01-01T00:00:00Z",
-    },
-    localhost: {
-      url: "http://127.0.0.1:8545",
-      gasMultiplier: 1.2,
-    },
-  },
+  plugins: [hardhatToolboxMochaEthers, hardhatMarkup, hardhatContractSizer],
   solidity: {
     version: "0.8.22",
     settings: {
@@ -33,30 +18,15 @@ const config: HardhatUserConfig = {
       evmVersion: "paris",
     },
   },
-  markup: {
-    onlyFiles: ["./contracts/"],
-  },
-  mocha: {
-    timeout: 1000000,
+  typechain: {
+    outDir: "generated-types/ethers",
+    discriminateTypes: true,
   },
   contractSizer: {
     alphaSort: false,
-    disambiguatePaths: false,
     runOnCompile: true,
     strict: false,
-  },
-  gasReporter: {
-    currency: "USD",
-    gasPrice: 50,
-    enabled: false,
-    reportPureAndViewMethods: true,
-    coinmarketcap: `${process.env.COINMARKETCAP_KEY}`,
-  },
-  typechain: {
-    outDir: "generated-types/ethers",
-    target: "ethers-v6",
-    alwaysGenerateOverloads: true,
-    discriminateTypes: true,
+    flat: true,
   },
 };
 

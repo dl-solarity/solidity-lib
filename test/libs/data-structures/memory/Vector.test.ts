@@ -1,23 +1,19 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
 import { VectorMock } from "@ethers-v6";
 
-describe("Vector", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
+describe("Vector", () => {
   let vector: VectorMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     const VectorMock = await ethers.getContractFactory("VectorMock");
     vector = await VectorMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("raw vector", () => {
     it("should test new", async () => {

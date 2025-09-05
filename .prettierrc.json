@@ -14,8 +14,32 @@
     {
       "files": "*.ts",
       "options": {
+        "plugins": ["@trivago/prettier-plugin-sort-imports"],
         "printWidth": 120,
-        "tabWidth": 2
+        "tabWidth": 2,
+        "singleQuote": false,
+        "importOrder": [
+          "(^chai$)|(hardhat$)",
+          "ethers$",
+          "^@nomicfoundation/(.*)$",
+          "^@solarity/(.*)$",
+          "^@typechain/hardhat$",
+          "^hardhat-[a-zA-Z0-9_\\-]+$",
+          "^tsconfig-paths/register$",
+          "^solidity-[a-zA-Z0-9_\\-]+$",
+          "^hardhat/config$",
+          "^dotenv$",
+          "@scripts",
+          "@test-helpers",
+          "@(?:/generated-types|ethers-v6)",
+          "",
+          "^[a-zA-Z0-9_\\-]+$",
+          "^\\u0000",
+          "^\\.\\./",
+          "^\\./"
+        ],
+        "importOrderSeparation": true,
+        "importOrderSortSpecifiers": true
       }
     }
   ]

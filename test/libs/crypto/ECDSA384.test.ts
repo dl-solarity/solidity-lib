@@ -1,8 +1,9 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { Reverter } from "@/test/helpers/reverter";
+import hre from "hardhat";
 
 import { ECDSA384Mock } from "@ethers-v6";
+
+const { ethers } = await hre.network.connect();
 
 function modifyLeft(value: string, modifier: string): string {
   let newSignature = "0x";
@@ -31,19 +32,13 @@ function modifyRight(value: string, modifier: string): string {
 }
 
 describe("ECDSA384", () => {
-  const reverter = new Reverter();
-
   let ecdsa384: ECDSA384Mock;
 
-  before(async () => {
+  beforeEach("setup", async () => {
     const ECDSA384Mock = await ethers.getContractFactory("ECDSA384Mock");
 
     ecdsa384 = await ECDSA384Mock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("SECP384r1", () => {
     const signature =
@@ -108,12 +103,12 @@ describe("ECDSA384", () => {
         const wrongSig =
           "0x3066023100a2fcd465ab5b507fc55941c1c6cd8286de04b83c94c6be25b5bdf58e27d86c3759d5f94ffcbd009618b6371bc51994f0023100d708d5045caa4a61cad42622c14bfb3343a5a9dc8fdbd19ce46b9e24c2aff84ba5114bb543fc4b0099f369079302b721";
 
-        await expect(ecdsa384.verifySECP384r1(message, wrongSig, pubKey)).to.be.reverted;
+        await expect(ecdsa384.verifySECP384r1(message, wrongSig, pubKey)).to.be.revert(ethers);
 
         const wrongPubKey =
           "0x3076301006072a8648ce3d020106052b81040022036200041d77728fada41a8a7a23fe922e4e2dc8881a94b72a0612077ad80eeef13ff3bbea92aeef36a0f65885417aea104b86b76aedc226e260f7d0eeea8405b9269f354d929e5a98cab64fe192db94ed9335b7395e38e99b8bfaf32effa163a92889f9";
 
-        await expect(ecdsa384.verifySECP384r1(message, signature, wrongPubKey)).to.be.reverted;
+        await expect(ecdsa384.verifySECP384r1(message, signature, wrongPubKey)).to.be.revert(ethers);
       });
 
       it("should not revert when message is hashed using SHA-384", async () => {
@@ -172,12 +167,6 @@ describe("ECDSA384", () => {
 
     it("should verify the signature", async () => {
       expect(await ecdsa384.verifyBrainpoolP384r1(message, signature, pubKey)).to.be.true;
-    });
-  });
-
-  describe("U384", () => {
-    it("should compare correctly if aWord < bWord", async () => {
-      expect(await ecdsa384.cmpMock()).to.be.equal(-1);
     });
   });
 });

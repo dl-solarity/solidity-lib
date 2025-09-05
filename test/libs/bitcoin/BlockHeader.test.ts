@@ -1,33 +1,28 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
-
-import { BlockHeaderMock } from "@ethers-v6";
-import { reverseBytes } from "@/test/helpers/bytes-helpers";
 import {
   checkBlockHeaderDataInBE,
   checkBlockHeaderDataInLE,
   getBlockHeaderData,
   getBlocksDataFilePath,
-} from "@/test/helpers/bitcoin/block-helpers";
+  reverseBytes,
+} from "@test-helpers";
+
+import { BlockHeaderMock } from "@ethers-v6";
+
+const { ethers } = await hre.network.connect();
 
 describe("BlockHeader", () => {
-  const reverter = new Reverter();
-
   let blockHeaderLib: BlockHeaderMock;
 
   let blocksDataFilePath: string;
 
-  before(async () => {
+  beforeEach("setup", async () => {
     blockHeaderLib = await ethers.deployContract("BlockHeaderMock");
 
     blocksDataFilePath = getBlocksDataFilePath("headers_814991_815000.json");
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("#parseBlockHeader", () => {
     it("should correctly parse block header data to big-endian format", async () => {

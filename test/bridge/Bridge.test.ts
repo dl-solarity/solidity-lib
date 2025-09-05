@@ -1,19 +1,21 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { wei } from "@/scripts/utils/utils";
-import { Reverter } from "@/test/helpers/reverter";
-import { getSignature } from "@/test/helpers/signature";
+import { wei } from "@scripts";
+
+import { getSignature } from "@test-helpers";
 
 import {
   BridgeMock,
   ERC20CrosschainMock,
-  USDCCrosschainMock,
   ERC721CrosschainMock,
   ERC1155CrosschainMock,
+  USDCCrosschainMock,
 } from "@ethers-v6";
+
+const { ethers } = await hre.network.connect();
 
 enum ERC20BridgingType {
   LiquidityPool,
@@ -32,8 +34,6 @@ enum ERC1155BridgingType {
 }
 
 describe("Bridge", () => {
-  const reverter = new Reverter();
-
   const baseBalance = wei("1000");
   const baseAmount = "10";
   const baseId = "5000";
@@ -41,9 +41,9 @@ describe("Bridge", () => {
   const txHash = "0xc4f46c912cc2a1f30891552ac72871ab0f0e977886852bdd5dccd221a595647d";
   const txNonce = "1794147";
 
-  let OWNER: SignerWithAddress;
-  let SECOND: SignerWithAddress;
-  let THIRD: SignerWithAddress;
+  let OWNER: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
+  let THIRD: HardhatEthersSigner;
 
   let bridge: BridgeMock;
   let erc20: ERC20CrosschainMock;
@@ -51,7 +51,7 @@ describe("Bridge", () => {
   let erc721: ERC721CrosschainMock;
   let erc1155: ERC1155CrosschainMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [OWNER, SECOND, THIRD] = await ethers.getSigners();
 
     const Bridge = await ethers.getContractFactory("BridgeMock");
@@ -79,11 +79,7 @@ describe("Bridge", () => {
     erc1155 = await ERC1155.deploy("Mock", "MK", "URI");
     await erc1155.crosschainMint(OWNER.address, baseId, baseAmount, tokenURI);
     await erc1155.setApprovalForAll(await bridge.getAddress(), true);
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should initialize correctly", async () => {
@@ -233,7 +229,7 @@ describe("Bridge", () => {
         (await ethers.provider.getNetwork()).chainId,
         expectedOperationType,
       );
-      const signature = await getSignature(OWNER, signHash);
+      const signature = await getSignature(ethers, OWNER, signHash);
 
       await bridge.depositERC20(await erc20.getAddress(), expectedAmount, "receiver", "sepolia", expectedOperationType);
       await bridge.withdrawERC20(
@@ -333,7 +329,7 @@ describe("Bridge", () => {
         tokenURI,
         expectedOperationType,
       );
-      const signature = await getSignature(OWNER, signHash);
+      const signature = await getSignature(ethers, OWNER, signHash);
 
       await bridge.depositERC721(await erc721.getAddress(), baseId, "receiver", "sepolia", expectedOperationType);
       await bridge.withdrawERC721(
@@ -489,7 +485,7 @@ describe("Bridge", () => {
         tokenURI,
         expectedOperationType,
       );
-      const signature = await getSignature(OWNER, signHash);
+      const signature = await getSignature(ethers, OWNER, signHash);
 
       await bridge.depositERC1155(
         await erc1155.getAddress(),
@@ -636,7 +632,7 @@ describe("Bridge", () => {
         txNonce,
         (await ethers.provider.getNetwork()).chainId,
       );
-      const signature = await getSignature(OWNER, signHash);
+      const signature = await getSignature(ethers, OWNER, signHash);
 
       await bridge.depositNative("receiver", "sepolia", { value: baseBalance });
       await bridge.withdrawNative(baseBalance, OWNER, txHash, txNonce, [signature]);
@@ -668,13 +664,15 @@ describe("Bridge", () => {
     });
 
     it("should not add signers with 0 length", async () => {
-      expect(bridge.addSigners([])).to.be.revertedWithCustomError(bridge, "InvalidSigners").withArgs();
+      await expect(bridge.addSigners([])).to.be.revertedWithCustomError(bridge, "InvalidSigners").withArgs();
     });
 
     it("should revert when adding zero address signer", async () => {
       let expectedSigners = [OWNER.address, SECOND.address, ethers.ZeroAddress];
 
-      expect(bridge.addSigners(expectedSigners)).to.be.revertedWithCustomError(bridge, "InvalidSigner").withArgs();
+      await expect(bridge.addSigners(expectedSigners))
+        .to.be.revertedWithCustomError(bridge, "InvalidSigner")
+        .withArgs(ethers.ZeroAddress);
     });
 
     it("should remove signers", async () => {
@@ -688,7 +686,7 @@ describe("Bridge", () => {
     });
 
     it("should not remove signers with 0 length", async () => {
-      expect(bridge.removeSigners([])).to.be.revertedWithCustomError(bridge, "InvalidSigners").withArgs();
+      await expect(bridge.removeSigners([])).to.be.revertedWithCustomError(bridge, "InvalidSigners").withArgs();
     });
   });
 
@@ -730,8 +728,8 @@ describe("Bridge", () => {
     it("should check signatures", async () => {
       const signHash = await getSigHash();
 
-      const signature1 = await getSignature(OWNER, signHash);
-      const signature2 = await getSignature(SECOND, signHash);
+      const signature1 = await getSignature(ethers, OWNER, signHash);
+      const signature2 = await getSignature(ethers, SECOND, signHash);
 
       await expect(bridge.checkSignatures(signHash, [signature1, signature2])).to.be.eventually.fulfilled;
     });
@@ -739,7 +737,7 @@ describe("Bridge", () => {
     it("should revert when duplicate signers", async () => {
       const signHash = await getSigHash();
 
-      const signature = await getSignature(OWNER, signHash);
+      const signature = await getSignature(ethers, OWNER, signHash);
 
       await expect(bridge.checkSignatures(signHash, [signature, signature]))
         .to.be.revertedWithCustomError(bridge, "DuplicateSigner")
@@ -751,7 +749,7 @@ describe("Bridge", () => {
 
       const signHash = await getSigHash();
 
-      const signature = await getSignature(THIRD, signHash);
+      const signature = await getSignature(ethers, THIRD, signHash);
 
       await expect(bridge.checkSignatures(signHash, [signature]))
         .to.be.revertedWithCustomError(bridge, "InvalidSigner")

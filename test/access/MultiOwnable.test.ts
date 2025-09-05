@@ -1,33 +1,27 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { MultiOwnableMock } from "@ethers-v6";
 
-describe("MultiOwnable", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
-  let FIRST: SignerWithAddress;
-  let SECOND: SignerWithAddress;
-  let THIRD: SignerWithAddress;
+describe("MultiOwnable", () => {
+  let FIRST: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
+  let THIRD: HardhatEthersSigner;
 
   let multiOwnable: MultiOwnableMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [FIRST, SECOND, THIRD] = await ethers.getSigners();
 
     const MultiOwnableMock = await ethers.getContractFactory("MultiOwnableMock");
     multiOwnable = await MultiOwnableMock.deploy();
 
     await multiOwnable.__MultiOwnableMock_init();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should initialize", async () => {

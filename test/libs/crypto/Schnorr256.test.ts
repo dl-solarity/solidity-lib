@@ -1,12 +1,13 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { Reverter } from "@/test/helpers/reverter";
+import hre from "hardhat";
 
 import { Schnorr256Mock } from "@ethers-v6";
 
-import { secp256k1 } from "@noble/curves/secp256k1";
-import { bytesToNumberBE } from "@noble/curves/abstract/utils";
 import { AffinePoint } from "@noble/curves/abstract/curve";
+import { bytesToNumberBE } from "@noble/curves/abstract/utils";
+import { secp256k1 } from "@noble/curves/secp256k1";
+
+const { ethers } = await hre.network.connect();
 
 describe("Schnorr256", () => {
   const schnorrKeyPair = () => {
@@ -50,19 +51,13 @@ describe("Schnorr256", () => {
     };
   };
 
-  const reverter = new Reverter();
-
   let schnorr: Schnorr256Mock;
 
-  before(async () => {
+  beforeEach("setup", async () => {
     const Schnorr256 = await ethers.getContractFactory("Schnorr256Mock");
 
     schnorr = await Schnorr256.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("verify", () => {
     it("should verify the signature", async () => {

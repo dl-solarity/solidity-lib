@@ -1,19 +1,18 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { MultiOwnablePoolContractsRegistryMock } from "@ethers-v6";
 
-describe("MultiOwnablePoolContractsRegistry", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
-  let SECOND: SignerWithAddress;
+describe("MultiOwnablePoolContractsRegistry", () => {
+  let SECOND: HardhatEthersSigner;
 
   let poolContractsRegistry: MultiOwnablePoolContractsRegistryMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [, SECOND] = await ethers.getSigners();
 
     const MultiOwnablePoolContractsRegistryMock = await ethers.getContractFactory(
@@ -22,11 +21,7 @@ describe("MultiOwnablePoolContractsRegistry", () => {
     poolContractsRegistry = await MultiOwnablePoolContractsRegistryMock.deploy();
 
     await poolContractsRegistry.__AMultiOwnablePoolContractsRegistry_init();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not initialize twice", async () => {
@@ -52,11 +47,13 @@ describe("MultiOwnablePoolContractsRegistry", () => {
 
   describe("coverage", () => {
     it("should call these methods", async () => {
-      await expect(poolContractsRegistry.setNewImplementations([""], [await SECOND.getAddress()])).to.be.reverted;
+      await expect(poolContractsRegistry.setNewImplementations([""], [await SECOND.getAddress()])).to.be.revert(ethers);
 
-      await expect(poolContractsRegistry.injectDependenciesToExistingPools("", 0, 0)).to.be.reverted;
+      await expect(poolContractsRegistry.injectDependenciesToExistingPools("", 0, 0)).to.be.revert(ethers);
 
-      await expect(poolContractsRegistry.injectDependenciesToExistingPoolsWithData("", "0x", 0, 0)).to.be.reverted;
+      await expect(poolContractsRegistry.injectDependenciesToExistingPoolsWithData("", "0x", 0, 0)).to.be.revert(
+        ethers,
+      );
     });
   });
 });

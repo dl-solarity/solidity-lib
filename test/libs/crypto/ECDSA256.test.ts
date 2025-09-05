@@ -1,23 +1,18 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { Reverter } from "@/test/helpers/reverter";
+import hre from "hardhat";
 
 import { ECDSA256Mock } from "@ethers-v6";
 
-describe("ECDSA256", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
+describe("ECDSA256", () => {
   let ecdsa256: ECDSA256Mock;
 
-  before(async () => {
+  beforeEach("setup", async () => {
     const ECDSA256Mock = await ethers.getContractFactory("ECDSA256Mock");
 
     ecdsa256 = await ECDSA256Mock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("SECP256r1", () => {
     const signature =

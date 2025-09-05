@@ -1,29 +1,27 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { ContractsRegistryPoolMock, ERC20Mock, PoolContractsRegistryMock, PoolMock, PoolUpgradeMock } from "@ethers-v6";
 
-import { PoolContractsRegistryMock, ContractsRegistryPoolMock, PoolMock, PoolUpgradeMock, ERC20Mock } from "@ethers-v6";
+const { ethers } = await hre.network.connect();
 
 describe("PoolContractsRegistry", () => {
-  const reverter = new Reverter();
-
-  let OWNER: SignerWithAddress;
-  let SECOND: SignerWithAddress;
+  let OWNER: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
 
   let poolContractsRegistry: PoolContractsRegistryMock;
   let contractsRegistry: ContractsRegistryPoolMock;
   let token: ERC20Mock;
 
-  let POOL_1: SignerWithAddress;
-  let POOL_2: SignerWithAddress;
+  let POOL_1: HardhatEthersSigner;
+  let POOL_2: HardhatEthersSigner;
 
   let NAME_1: string;
   let NAME_2: string;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [OWNER, SECOND, , POOL_1, POOL_2] = await ethers.getSigners();
 
     const ContractsRegistryPool = await ethers.getContractFactory("ContractsRegistryPoolMock");
@@ -43,9 +41,7 @@ describe("PoolContractsRegistry", () => {
     await contractsRegistry.addContract(await contractsRegistry.TOKEN_NAME(), await token.getAddress());
     await contractsRegistry.addContract(await contractsRegistry.POOL_FACTORY_NAME(), OWNER);
 
-    poolContractsRegistry = <PoolContractsRegistryMock>(
-      PoolContractsRegistry.attach(await contractsRegistry.getPoolContractsRegistryContract())
-    );
+    poolContractsRegistry = PoolContractsRegistry.attach(await contractsRegistry.getPoolContractsRegistryContract());
 
     await poolContractsRegistry.__AOwnablePoolContractsRegistry_init();
 
@@ -55,11 +51,7 @@ describe("PoolContractsRegistry", () => {
 
     NAME_1 = await poolContractsRegistry.POOL_1_NAME();
     NAME_2 = await poolContractsRegistry.POOL_2_NAME();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not initialize twice", async () => {

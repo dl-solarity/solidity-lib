@@ -1,30 +1,26 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { ETHER_ADDR } from "@/scripts/utils/constants";
+import { ETHER_ADDR } from "@scripts";
 
 import { TypeCasterMock } from "@ethers-v6";
 
+const { ethers } = await hre.network.connect();
+
 describe("TypeCaster", () => {
-  const reverter = new Reverter();
   const coder = ethers.AbiCoder.defaultAbiCoder();
 
   let mock: TypeCasterMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     const TypeCasterMock = await ethers.getContractFactory("TypeCasterMock");
     mock = await TypeCasterMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("array cast", () => {
     const addressArrays = [[], [ethers.ZeroAddress, ETHER_ADDR]];
     const bytes32Arrays = [[], addressArrays[1].flatMap((e) => coder.encode(["address"], [e]))];
-    const uint256Arrays = [[], <bigint[]>(<unknown>bytes32Arrays[1].flatMap((e) => coder.decode(["uint256"], e)))];
+    const uint256Arrays = [[], bytes32Arrays[1].flatMap((e) => coder.decode(["uint256"], e))];
 
     describe("asUint256Array", () => {
       it("should convert bytes32 array to uint256 array properly", async () => {

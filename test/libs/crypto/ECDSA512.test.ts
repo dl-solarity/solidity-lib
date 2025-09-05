@@ -1,23 +1,18 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { Reverter } from "@/test/helpers/reverter";
+import hre from "hardhat";
 
 import { ECDSA512Mock } from "@ethers-v6";
 
-describe("ECDSA512", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
+describe("ECDSA512", () => {
   let ecdsa512: ECDSA512Mock;
 
-  before(async () => {
+  beforeEach("setup", async () => {
     const ECDSA512Mock = await ethers.getContractFactory("ECDSA512Mock");
 
     ecdsa512 = await ECDSA512Mock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("brainpoolP512r1", () => {
     const signature =
@@ -28,7 +23,9 @@ describe("ECDSA512", () => {
       "0x43f800fbeaf9238c58af795bcdad04bc49cd850c394d3382953356b023210281757b30e19218a37cbd612086fbc158caa8b4e1acb2ec00837e5d941f342fb3cc";
 
     it("should verify the signature", async () => {
-      expect(await ecdsa512.verifyBrainpoolP512r1WithoutHashing(message, signature, pubKey)).to.be.true;
+      // Added very big gasLimit for the coverage to pass
+      expect(await ecdsa512.verifyBrainpoolP512r1WithoutHashing(message, signature, pubKey, { gasLimit: 300000000 })).to
+        .be.true;
     });
   });
 });

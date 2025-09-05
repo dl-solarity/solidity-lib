@@ -1,20 +1,13 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { TxParserMock } from "@/generated-types/ethers";
-import { reverseBytes } from "@/test/helpers/bytes-helpers";
-import {
-  checkTransaction,
-  formatTx,
-  getTxData,
-  getTxDataFilePath,
-  parseCuint,
-} from "@/test/helpers/bitcoin/parse-tx-helper";
+import { checkTransaction, formatTx, getTxData, getTxDataFilePath, parseCuint, reverseBytes } from "@test-helpers";
+
+import { TxParserMock } from "@ethers-v6";
+
+const { ethers } = await hre.network.connect();
 
 describe("Transaction Parser", () => {
-  const reverter = new Reverter();
-
   let parser: TxParserMock;
 
   let txData802_368: string;
@@ -27,17 +20,13 @@ describe("Transaction Parser", () => {
   const shortFlagTx = "0x0200000000";
   const shortTx = "0x01000000";
 
-  before(async () => {
+  beforeEach("setup", async () => {
     const TxParserMock = await ethers.getContractFactory("TxParserMock");
     parser = await TxParserMock.deploy();
 
     txData802_368 = getTxDataFilePath("txs_0_10_block_802_368.json");
     txData568 = getTxDataFilePath("tx_0_block_568.json");
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("#calculateTxId", () => {
     it("should calculate correctly", async () => {

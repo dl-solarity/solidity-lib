@@ -1,15 +1,22 @@
 {
   "compilerOptions": {
     "target": "es2022",
-    "module": "commonjs",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "baseUrl": "./",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "paths": {
       "@/*": ["./*"],
-      "@ethers-v6": ["./generated-types/ethers"]
+      "@ethers-v6": ["./generated-types/ethers/index.ts"],
+      "@scripts": ["./scripts/utils/index.ts"],
+      "@test-helpers": ["./test/helpers/index.ts"]
     }
-  }
+  },
+  "exclude": ["scripts/release/*"]
 }

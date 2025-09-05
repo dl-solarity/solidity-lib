@@ -1,23 +1,17 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-
-import { Reverter } from "@/test/helpers/reverter";
+import hre from "hardhat";
 
 import { PriorityQueueMock } from "@ethers-v6";
 
-describe("PriorityQueue", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
+describe("PriorityQueue", () => {
   let mock: PriorityQueueMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     const PriorityQueueMock = await ethers.getContractFactory("PriorityQueueMock");
     mock = await PriorityQueueMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("add()", () => {
     describe("uint", () => {
