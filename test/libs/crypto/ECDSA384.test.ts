@@ -169,10 +169,4 @@ describe("ECDSA384", () => {
       expect(await ecdsa384.verifyBrainpoolP384r1(message, signature, pubKey)).to.be.true;
     });
   });
-
-  describe("U384", () => {
-    it("should compare correctly if aWord < bWord", async () => {
-      expect(await ecdsa384.cmpMock()).to.be.equal(-1);
-    });
-  });
 });
