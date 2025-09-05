@@ -22,7 +22,8 @@ contracts
 │   └── extensions
 │       └── ARBACGroupable — "Groupable extension of ARBAC"
 ├── account—abstraction
-│   └── AAccountRecovery — "ERC-7947 account recovery base implementation"
+│   ├── AAccountRecovery — "ERC-7947 account recovery base implementation"
+│   └── Base7702RecoverableAccount — "EIP-7702 with batching, gas sponsorship and recoverable trusted executors"
 ├── contracts—registry
 │   ├── AContractsRegistry — "Reference registry implementation of ERC-6224 pattern"
 │   ├── ADependant — "Reference dependant implementation of ERC-6224 pattern"

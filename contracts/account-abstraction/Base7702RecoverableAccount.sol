@@ -1,21 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import {NoncesUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/NoncesUpgradeable.sol";
 
 import {AAccountRecovery} from "./AAccountRecovery.sol";
 import {IAccountRecovery} from "../interfaces/account-abstraction/IAccountRecovery.sol";
 import {IBatchExecutor} from "../interfaces/account-abstraction/erc-7821/IBatchExecutor.sol";
 import {IBase7702RecoverableAccount} from "../interfaces/account-abstraction/IBase7702RecoverableAccount.sol";
 
+/**
+ * @notice The EIP-7702 Recoverable Account module
+ *
+ * A basic EIP-7702 account implementation with batching execution, sponsored transactions,
+ * and recoverable trusted executors.
+ */
 contract Base7702RecoverableAccount is
     IBase7702RecoverableAccount,
     AAccountRecovery,
-    EIP712,
-    Nonces
+    EIP712Upgradeable,
+    NoncesUpgradeable
 {
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -30,21 +36,30 @@ contract Base7702RecoverableAccount is
         EnumerableSet.AddressSet trustedExecutors;
     }
 
-    constructor() EIP712("Base7702RecoverableAccount", "v1.0.0") {}
-
     modifier onlySelfCalled() {
         _onlySelfCalled();
         _;
     }
 
     /**
+     * @notice Initializes the contract setting the initial EIP-712 values.
+     */
+    function __Base7702RecoverableAccount_init() public initializer {
+        __EIP712_init("Base7702RecoverableAccount", "v1.0.0");
+    }
+
+    /**
      * @inheritdoc IBase7702RecoverableAccount
      */
-    function updateTrustedExecutor(
-        address trustedExecutor_,
-        bool isAdding_
-    ) external virtual onlySelfCalled {
-        _updateTrustedExecutor(trustedExecutor_, isAdding_);
+    function addTrustedExecutor(address newTrustedExecutor_) external virtual onlySelfCalled {
+        _addTrustedExecutor(newTrustedExecutor_);
+    }
+
+    /**
+     * @inheritdoc IBase7702RecoverableAccount
+     */
+    function removeTrustedExecutor(address trustedExecutor_) external virtual onlySelfCalled {
+        _removeTrustedExecutor(trustedExecutor_);
     }
 
     /**
@@ -76,9 +91,7 @@ contract Base7702RecoverableAccount is
     ) external virtual override(IAccountRecovery, AAccountRecovery) returns (bool) {
         _validateRecovery(subject_, provider_, proof_);
 
-        (address trustedExecutor_, bool isAdding_) = abi.decode(subject_, (address, bool));
-
-        _updateTrustedExecutor(trustedExecutor_, isAdding_);
+        _recoverAccess(subject_);
 
         emit AccessRecovered(subject_);
 
@@ -146,37 +159,40 @@ contract Base7702RecoverableAccount is
         return _getBase7702RecoverableAccountStorage().trustedExecutors.values();
     }
 
+    /**
+     * @inheritdoc IBase7702RecoverableAccount
+     */
+    function isTrustedExecutor(address account_) public view virtual returns (bool) {
+        return _getBase7702RecoverableAccountStorage().trustedExecutors.contains(account_);
+    }
+
+    function _recoverAccess(bytes memory subject_) internal virtual {
+        address newTrustedExecutor_ = abi.decode(subject_, (address));
+
+        _addTrustedExecutor(newTrustedExecutor_);
+    }
+
     function _execute(Call[] memory calls_, bytes memory opData_) internal {
         _beforeBatchCall(calls_, opData_);
 
-        if (opData_.length == 0) {
-            _onlySelfOrTrustedExecutor(msg.sender);
-        } else {
-            bytes memory signature_ = abi.decode(opData_, (bytes));
+        _validateExecution(calls_, opData_);
 
-            bytes32 hash_ = hashBatchExecute(calls_, _useNonce(address(this)));
-
-            address recovered_ = ECDSA.recover(hash_, signature_);
-
-            _onlySelfOrTrustedExecutor(recovered_);
-        }
-
-        _execute(calls_);
+        _executeCalls(calls_);
 
         _afterBatchCall(calls_, opData_);
     }
 
-    function _execute(Call[] memory calls_) internal {
+    function _executeCalls(Call[] memory calls_) internal {
         for (uint256 i = 0; i < calls_.length; ++i) {
             Call memory call_ = calls_[i];
 
             address to_ = call_.to == address(0) ? address(this) : call_.to;
 
-            _execute(to_, call_.value, call_.data);
+            _executeCall(to_, call_.value, call_.data);
         }
     }
 
-    function _execute(address to_, uint256 value_, bytes memory data_) internal {
+    function _executeCall(address to_, uint256 value_, bytes memory data_) internal {
         _beforeCall(to_, value_, data_);
 
         (bool success_, bytes memory result_) = to_.call{value: value_}(data_);
@@ -190,15 +206,21 @@ contract Base7702RecoverableAccount is
         _afterCall(to_, value_, data_);
     }
 
-    function _updateTrustedExecutor(address trustedExecutor_, bool isAdding_) internal {
-        if (isAdding_) {
-            _addTrustedExecutor(trustedExecutor_);
+    function _validateExecution(Call[] memory calls_, bytes memory opData_) internal virtual {
+        if (opData_.length == 0) {
+            _onlySelfOrTrustedExecutor(msg.sender);
         } else {
-            _removeTrustedExecutor(trustedExecutor_);
+            bytes memory signature_ = abi.decode(opData_, (bytes));
+
+            bytes32 hash_ = hashBatchExecute(calls_, _useNonce(address(this)));
+
+            address recovered_ = ECDSA.recover(hash_, signature_);
+
+            _onlySelfOrTrustedExecutor(recovered_);
         }
     }
 
-    function _addTrustedExecutor(address newTrustedExecutor_) internal {
+    function _addTrustedExecutor(address newTrustedExecutor_) internal virtual {
         if (!_getBase7702RecoverableAccountStorage().trustedExecutors.add(newTrustedExecutor_)) {
             revert TrustedExecutorAlreadyAdded(newTrustedExecutor_);
         }
@@ -206,7 +228,7 @@ contract Base7702RecoverableAccount is
         emit TrustedExecutorAdded(newTrustedExecutor_);
     }
 
-    function _removeTrustedExecutor(address trustedExecutor_) internal {
+    function _removeTrustedExecutor(address trustedExecutor_) internal virtual {
         if (!_getBase7702RecoverableAccountStorage().trustedExecutors.remove(trustedExecutor_)) {
             revert TrustedExecutorNotRegistered(trustedExecutor_);
         }
@@ -223,17 +245,16 @@ contract Base7702RecoverableAccount is
     function _afterCall(address to_, uint256 value_, bytes memory data_) internal virtual {}
 
     function _onlySelfOrTrustedExecutor(address sender_) internal view {
-        if (
-            sender_ != address(this) &&
-            !_getBase7702RecoverableAccountStorage().trustedExecutors.contains(sender_)
-        ) revert NotSelfOrTrustedExecutor(sender_);
+        if (sender_ != address(this) && !isTrustedExecutor(sender_)) {
+            revert NotSelfOrTrustedExecutor(sender_);
+        }
     }
 
     function _onlySelfCalled() internal view {
         if (tx.origin != address(this) || tx.origin != msg.sender) revert NotSelfCalled();
     }
 
-    function _executionModeId(bytes32 mode_) internal pure returns (uint256 id_) {
+    function _executionModeId(bytes32 mode_) internal pure virtual returns (uint256 id_) {
         // Bytes Layout:
         // - [0]      ( 1 byte )  `0x01` for batch call.
         // - [1]      ( 1 byte )  `0x00` for revert on any failure.

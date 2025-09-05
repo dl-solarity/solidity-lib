@@ -34,7 +34,7 @@ contract Base7702RecoverableAccountMockWithHooks is Base7702RecoverableAccount {
 }
 
 contract Caller {
-    function callUpdate(address account_, address newTrustedExecutor_) external {
-        IBase7702RecoverableAccount(account_).updateTrustedExecutor(newTrustedExecutor_, true);
+    function callAddTrustedExecutor(address account_, address newTrustedExecutor_) external {
+        IBase7702RecoverableAccount(account_).addTrustedExecutor(newTrustedExecutor_);
     }
 }

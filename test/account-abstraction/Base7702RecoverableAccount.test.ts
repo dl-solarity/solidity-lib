@@ -36,6 +36,8 @@ describe("Base7702RecoverableAccount", () => {
     const Account = await ethers.getContractFactory("Base7702RecoverableAccountMock");
     account = await Account.deploy();
 
+    await account.__Base7702RecoverableAccount_init();
+
     await FIRST.sendTransaction({
       to: await account.getAddress(),
       value: ethers.parseEther("1.0"),
@@ -59,62 +61,56 @@ describe("Base7702RecoverableAccount", () => {
 
   afterEach(reverter.revert);
 
-  describe("updateTrustedExecutor", () => {
+  describe("initialize", () => {
+    it("should revert if try to initialize the contract twice", async () => {
+      await expect(account.__Base7702RecoverableAccount_init()).to.be.revertedWithCustomError(
+        account,
+        "InvalidInitialization",
+      );
+    });
+  });
+
+  describe("addTrustedExecutor", () => {
     it("should add trusted executors correctly", async () => {
       expect(await account.getTrustedExecutors()).to.be.deep.eq([]);
 
-      let tx = await account.connect(DELEGATED).updateTrustedExecutor(FIRST, true);
+      let tx = await account.connect(DELEGATED).addTrustedExecutor(FIRST);
 
       await expect(tx).to.emit(account, "TrustedExecutorAdded").withArgs(FIRST.address);
 
-      tx = await account.connect(DELEGATED).updateTrustedExecutor(SECOND, true);
+      tx = await account.connect(DELEGATED).addTrustedExecutor(SECOND);
 
       await expect(tx).to.emit(account, "TrustedExecutorAdded").withArgs(SECOND.address);
 
       expect(await account.getTrustedExecutors()).to.be.deep.eq([FIRST.address, SECOND.address]);
-    });
-
-    it("should remove trusted executors correctly", async () => {
-      await account.connect(DELEGATED).updateTrustedExecutor(FIRST, true);
-      await account.connect(DELEGATED).updateTrustedExecutor(SECOND, true);
-
-      const tx = await account.connect(DELEGATED).updateTrustedExecutor(SECOND, false);
-
-      await expect(tx).to.emit(account, "TrustedExecutorRemoved").withArgs(SECOND.address);
-
-      expect(await account.getTrustedExecutors()).to.be.deep.eq([FIRST.address]);
+      expect(await account.isTrustedExecutor(FIRST)).to.be.true;
+      expect(await account.isTrustedExecutor(SECOND)).to.be.true;
     });
 
     it("should revert if trying to add already existing executor", async () => {
-      await account.connect(DELEGATED).updateTrustedExecutor(FIRST, true);
+      await account.connect(DELEGATED).addTrustedExecutor(FIRST);
 
-      await expect(account.connect(DELEGATED).updateTrustedExecutor(FIRST, true))
+      await expect(account.connect(DELEGATED).addTrustedExecutor(FIRST))
         .to.be.revertedWithCustomError(account, "TrustedExecutorAlreadyAdded")
         .withArgs(FIRST.address);
     });
 
-    it("should revert if trying to remove an executor that doesn't exist", async () => {
-      await expect(account.connect(DELEGATED).updateTrustedExecutor(FIRST, false))
-        .to.be.revertedWithCustomError(account, "TrustedExecutorNotRegistered")
-        .withArgs(FIRST.address);
-    });
-
     it("should revert if the function is not self called", async () => {
-      await account.connect(DELEGATED).updateTrustedExecutor(FIRST, true);
+      await account.connect(DELEGATED).addTrustedExecutor(FIRST);
 
-      await expect(account.connect(FIRST).updateTrustedExecutor(FIRST, false)).to.be.revertedWithCustomError(
+      await expect(account.connect(FIRST).addTrustedExecutor(SECOND)).to.be.revertedWithCustomError(
         account,
         "NotSelfCalled",
       );
 
-      await expect(account.connect(SECOND).updateTrustedExecutor(FIRST, false)).to.be.revertedWithCustomError(
+      await expect(account.connect(SECOND).addTrustedExecutor(SECOND)).to.be.revertedWithCustomError(
         account,
         "NotSelfCalled",
       );
 
-      const updateData = account.interface.encodeFunctionData("updateTrustedExecutor", [FIRST.address, false]);
+      const addTrustedExecutorData = account.interface.encodeFunctionData("addTrustedExecutor", [SECOND.address]);
 
-      const calls = [[await account.getAddress(), 0, updateData]];
+      const calls = [[await account.getAddress(), 0, addTrustedExecutorData]];
 
       const executionData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256,bytes)[]"], [calls]);
 
@@ -125,7 +121,52 @@ describe("Base7702RecoverableAccount", () => {
 
       const callerContract = await ethers.deployContract("Caller");
 
-      await expect(callerContract.connect(DELEGATED).callUpdate(account, SECOND)).to.be.revertedWithCustomError(
+      await expect(
+        callerContract.connect(DELEGATED).callAddTrustedExecutor(account, SECOND),
+      ).to.be.revertedWithCustomError(account, "NotSelfCalled");
+    });
+  });
+
+  describe("removeTrustedExecutor", () => {
+    it("should remove trusted executors correctly", async () => {
+      await account.connect(DELEGATED).addTrustedExecutor(FIRST);
+      await account.connect(DELEGATED).addTrustedExecutor(SECOND);
+
+      const tx = await account.connect(DELEGATED).removeTrustedExecutor(SECOND);
+
+      await expect(tx).to.emit(account, "TrustedExecutorRemoved").withArgs(SECOND.address);
+
+      expect(await account.getTrustedExecutors()).to.be.deep.eq([FIRST.address]);
+      expect(await account.isTrustedExecutor(FIRST)).to.be.true;
+      expect(await account.isTrustedExecutor(SECOND)).to.be.false;
+    });
+
+    it("should revert if trying to remove an executor that doesn't exist", async () => {
+      await expect(account.connect(DELEGATED).removeTrustedExecutor(FIRST))
+        .to.be.revertedWithCustomError(account, "TrustedExecutorNotRegistered")
+        .withArgs(FIRST.address);
+    });
+
+    it("should revert if the function is not self called", async () => {
+      await account.connect(DELEGATED).addTrustedExecutor(FIRST);
+
+      await expect(account.connect(FIRST).removeTrustedExecutor(FIRST)).to.be.revertedWithCustomError(
+        account,
+        "NotSelfCalled",
+      );
+
+      await expect(account.connect(SECOND).removeTrustedExecutor(FIRST)).to.be.revertedWithCustomError(
+        account,
+        "NotSelfCalled",
+      );
+
+      const removeTrustedExecutorData = account.interface.encodeFunctionData("removeTrustedExecutor", [FIRST.address]);
+
+      const calls = [[await account.getAddress(), 0, removeTrustedExecutorData]];
+
+      const executionData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256,bytes)[]"], [calls]);
+
+      await expect(account.connect(FIRST).execute(SINGLE_BATCH_MODE, executionData)).to.be.revertedWithCustomError(
         account,
         "NotSelfCalled",
       );
@@ -198,7 +239,7 @@ describe("Base7702RecoverableAccount", () => {
 
     it("should revert if recover access request is invalid", async () => {
       await account.connect(DELEGATED).addRecoveryProvider(provider1, RECOVERY_DATA);
-      await account.connect(DELEGATED).updateTrustedExecutor(SECOND, true);
+      await account.connect(DELEGATED).addTrustedExecutor(SECOND);
 
       expect(await account.getTrustedExecutors()).to.be.deep.eq([SECOND.address]);
 
@@ -214,9 +255,9 @@ describe("Base7702RecoverableAccount", () => {
     it("should execute calls in single batch mode correctly", async () => {
       await account.connect(DELEGATED).addRecoveryProvider(provider1, RECOVERY_DATA);
 
-      const updateData = account.interface.encodeFunctionData("updateTrustedExecutor", [SECOND.address, true]);
+      const addTrustedExecutorData = account.interface.encodeFunctionData("addTrustedExecutor", [SECOND.address]);
 
-      let calls = [[await account.getAddress(), 0, updateData]];
+      let calls = [[await account.getAddress(), 0, addTrustedExecutorData]];
 
       let executionData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256,bytes)[]"], [calls]);
 
@@ -242,9 +283,9 @@ describe("Base7702RecoverableAccount", () => {
     it("should replace the call to address to address(this) if zero address is provided", async () => {
       await account.connect(DELEGATED).addRecoveryProvider(provider2, RECOVERY_DATA);
 
-      const updateData = account.interface.encodeFunctionData("updateTrustedExecutor", [FIRST.address, true]);
+      const addTrustedExecutorData = account.interface.encodeFunctionData("addTrustedExecutor", [FIRST.address]);
 
-      let calls = [[ethers.ZeroAddress, 0, updateData]];
+      let calls = [[ethers.ZeroAddress, 0, addTrustedExecutorData]];
 
       let executionData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256,bytes)[]"], [calls]);
 
@@ -258,7 +299,7 @@ describe("Base7702RecoverableAccount", () => {
     it("should execute calls with gas sponsorship correctly", async () => {
       await account.connect(DELEGATED).addRecoveryProvider(provider2, RECOVERY_DATA);
 
-      await account.connect(DELEGATED).updateTrustedExecutor(FIRST, true);
+      await account.connect(DELEGATED).addTrustedExecutor(FIRST);
 
       await token.connect(FIRST).transfer(account, wei(10));
 
@@ -290,8 +331,8 @@ describe("Base7702RecoverableAccount", () => {
     it("should execute calls in batch of batches mode correctly", async () => {
       await account.connect(DELEGATED).addRecoveryProvider(provider2, RECOVERY_DATA);
 
-      await account.connect(DELEGATED).updateTrustedExecutor(FIRST, true);
-      await account.connect(DELEGATED).updateTrustedExecutor(SECOND, true);
+      await account.connect(DELEGATED).addTrustedExecutor(FIRST);
+      await account.connect(DELEGATED).addTrustedExecutor(SECOND);
 
       await token.connect(FIRST).transfer(account, wei(10));
 
@@ -345,6 +386,8 @@ describe("Base7702RecoverableAccount", () => {
       const Account = await ethers.getContractFactory("Base7702RecoverableAccountMockWithHooks");
       const account = await Account.deploy();
 
+      await account.__Base7702RecoverableAccount_init();
+
       await FIRST.sendTransaction({
         to: await account.getAddress(),
         value: ethers.parseEther("1.0"),
@@ -359,7 +402,7 @@ describe("Base7702RecoverableAccount", () => {
 
       await account.connect(DELEGATED).addRecoveryProvider(provider1, RECOVERY_DATA);
 
-      await account.connect(DELEGATED).updateTrustedExecutor(SECOND, true);
+      await account.connect(DELEGATED).addTrustedExecutor(SECOND);
 
       await token.connect(FIRST).transfer(account, wei(10));
 
@@ -413,7 +456,7 @@ describe("Base7702RecoverableAccount", () => {
     it("should revert if unsupported execution data format is provided", async () => {
       await account.connect(DELEGATED).addRecoveryProvider(provider2, RECOVERY_DATA);
 
-      await account.connect(DELEGATED).updateTrustedExecutor(FIRST, true);
+      await account.connect(DELEGATED).addTrustedExecutor(FIRST);
 
       await token.connect(FIRST).transfer(account, wei(5));
 
@@ -491,7 +534,7 @@ describe("Base7702RecoverableAccount", () => {
     it("should bubble up an error from the call", async () => {
       await account.connect(DELEGATED).addRecoveryProvider(provider2, RECOVERY_DATA);
 
-      await account.connect(DELEGATED).updateTrustedExecutor(SECOND, true);
+      await account.connect(DELEGATED).addTrustedExecutor(SECOND);
 
       await token.connect(FIRST).transfer(account, wei(10));
 
