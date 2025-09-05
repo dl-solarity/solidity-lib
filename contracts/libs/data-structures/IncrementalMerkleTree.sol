@@ -228,6 +228,15 @@ library IncrementalMerkleTree {
         return _verifyProof(tree._tree, siblings_, directionBits_, leaf_);
     }
 
+    function processProof(
+        function(bytes32, bytes32) view returns (bytes32) hash2_,
+        bytes32[] memory siblings_,
+        uint256 directionBits_,
+        bytes32 leaf_
+    ) internal view returns (bytes32) {
+        return _processProof(hash2_, siblings_, directionBits_, leaf_);
+    }
+
     /**
      * @notice The function to return the height of the bytes32 tree. Complexity is O(1).
      */
@@ -464,10 +473,28 @@ library IncrementalMerkleTree {
         uint256 directionBits,
         bytes32 leaf_
     ) private view returns (bool) {
+        return _processProof(tree, siblings_, directionBits, leaf_) == _root(tree);
+    }
+
+    function _processProof(
+        IMT storage tree,
+        bytes32[] memory siblings_,
+        uint256 directionBits,
+        bytes32 leaf_
+    ) private view returns (bytes32) {
         function(bytes32, bytes32) view returns (bytes32) hash2_ = tree.isCustomHasherSet
             ? tree.hash2
             : _hash2;
 
+        return _processProof(hash2_, siblings_, directionBits, leaf_);
+    }
+
+    function _processProof(
+        function(bytes32, bytes32) view returns (bytes32) hash2_,
+        bytes32[] memory siblings_,
+        uint256 directionBits,
+        bytes32 leaf_
+    ) private view returns (bytes32) {
         bytes32 computedHash_ = leaf_;
 
         for (uint256 i = 0; i < siblings_.length; ++i) {
@@ -478,7 +505,7 @@ library IncrementalMerkleTree {
             }
         }
 
-        return computedHash_ == _root(tree);
+        return computedHash_;
     }
 
     function _height(IMT storage tree) private view returns (uint256) {
