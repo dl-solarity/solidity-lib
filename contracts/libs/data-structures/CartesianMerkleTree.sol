@@ -338,6 +338,13 @@ library CartesianMerkleTree {
         return _verifyProof(treaple._treaple, proof_);
     }
 
+    function processProof(
+        function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_,
+        Proof memory proof_
+    ) private view returns (bytes32) {
+        return _processProof(hash3_, proof_);
+    }
+
     /**
      * @notice The function to get the root of the Cartesian Merkle Tree.
      * Complexity is O(1).
@@ -924,6 +931,25 @@ library CartesianMerkleTree {
             return false;
         }
 
+        return _processProof(treaple, proof_) == proof_.root;
+    }
+
+    function _processProof(
+        CMT storage treaple,
+        Proof memory proof_
+    ) private view returns (bytes32) {
+        function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_ = treaple
+            .isCustomHasherSet
+            ? treaple.hash3
+            : _hash3;
+
+        return _processProof(hash3_, proof_);
+    }
+
+    function _processProof(
+        function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_,
+        Proof memory proof_
+    ) private view returns (bytes32) {
         bool directionBit_ = _extractDirectionBit(proof_.directionBits, 0);
 
         bytes32 leftHash_ = proof_.siblings[proof_.siblingsLength - 2];
@@ -933,8 +959,7 @@ library CartesianMerkleTree {
             (leftHash_, rightHash_) = (rightHash_, leftHash_);
         }
 
-        bytes32 computedHash_ = _getNodesHash(
-            treaple,
+        bytes32 computedHash_ = hash3_(
             proof_.existence ? proof_.key : proof_.nonExistenceKey,
             leftHash_,
             rightHash_
@@ -950,15 +975,14 @@ library CartesianMerkleTree {
                 (leftHash_, rightHash_) = (rightHash_, leftHash_);
             }
 
-            computedHash_ = _getNodesHash(
-                treaple,
+            computedHash_ = hash3_(
                 proof_.siblings[proof_.siblingsLength - i - 2],
                 leftHash_,
                 rightHash_
             );
         }
 
-        return computedHash_ == proof_.root;
+        return computedHash_;
     }
 
     function _newNode(CMT storage treaple, bytes32 key_) private returns (uint256) {
