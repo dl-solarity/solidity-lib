@@ -31,7 +31,7 @@ function modifyRight(value: string, modifier: string): string {
   return newSignature;
 }
 
-describe.skip("ECDSA384", () => {
+describe("ECDSA384", () => {
   let ecdsa384: ECDSA384Mock;
 
   beforeEach("setup", async () => {

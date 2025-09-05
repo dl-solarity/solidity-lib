@@ -21,7 +21,7 @@ jobs:
 
       - name: Run coverage
         env:
-          NODE_OPTIONS: "--max_old_space_size=8192"
+          NODE_OPTIONS: "--max_old_space_size=16384"
         run: node --stack_size=8192 ./node_modules/.bin/hardhat test --coverage
 
       - name: Upload coverage to Codecov

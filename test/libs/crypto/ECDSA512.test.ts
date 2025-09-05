@@ -5,7 +5,7 @@ import { ECDSA512Mock } from "@ethers-v6";
 
 const { ethers } = await hre.network.connect();
 
-describe.skip("ECDSA512", () => {
+describe("ECDSA512", () => {
   let ecdsa512: ECDSA512Mock;
 
   beforeEach("setup", async () => {
