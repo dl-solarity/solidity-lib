@@ -4,9 +4,9 @@ import fs from "fs";
 
 import computeNextVersion from "./helpers/compute-next-version.cts";
 
-import { getTopSection, readJSON, writeJSON, getPkgPath, getChangelogPath, validateReleaseTopSection } from "./helpers";
+import { getTopSection, readJSON, writeJSON, getPkgPath, getChangelogPath, validateReleaseTopSection } from "./helpers/index.cts";
 
-import type { Core } from "./helpers";
+import type { Core } from "./helpers/index.cts";
 
 export default async function applyRelease(core: Core): Promise<void> {
   const pkgPath = getPkgPath();

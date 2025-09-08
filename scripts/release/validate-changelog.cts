@@ -2,9 +2,9 @@
 
 import fs from "fs";
 
-import { getChangelogPath, getPkgPath, readJSON, allowedWhenNotRc, allowedWhenRc } from "./helpers";
+import { getChangelogPath, getPkgPath, readJSON, allowedWhenNotRc, allowedWhenRc } from "./helpers/index.cts";
 
-import type { Level } from "./helpers";
+import type { Level } from "./helpers/index.cts";
 
 function fail(message: string): never {
   throw new Error(`CHANGELOG validation failed: ${message}`);
