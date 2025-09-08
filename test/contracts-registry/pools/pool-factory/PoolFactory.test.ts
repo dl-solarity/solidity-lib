@@ -1,23 +1,21 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import {
-  PoolFactoryMock,
-  PoolContractsRegistryMock,
   ContractsRegistryPoolMock,
+  ERC20Mock,
+  PoolContractsRegistryMock,
+  PoolFactoryMock,
   PoolMock,
   PoolUpgradeMock,
-  ERC20Mock,
 } from "@ethers-v6";
 
-describe("PoolFactory", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
-  let OWNER: SignerWithAddress;
+describe("PoolFactory", () => {
+  let OWNER: HardhatEthersSigner;
 
   let poolFactory: PoolFactoryMock;
   let poolContractsRegistry: PoolContractsRegistryMock;
@@ -27,7 +25,7 @@ describe("PoolFactory", () => {
   let NAME_1: string;
   let NAME_2: string;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [OWNER] = await ethers.getSigners();
 
     const ContractsRegistryPool = await ethers.getContractFactory("ContractsRegistryPoolMock");
@@ -52,10 +50,8 @@ describe("PoolFactory", () => {
     );
     await contractsRegistry.addContract(await contractsRegistry.TOKEN_NAME(), await token.getAddress());
 
-    poolContractsRegistry = <PoolContractsRegistryMock>(
-      PoolContractsRegistry.attach(await contractsRegistry.getPoolContractsRegistryContract())
-    );
-    poolFactory = <PoolFactoryMock>PoolFactory.attach(await contractsRegistry.getPoolFactoryContract());
+    poolContractsRegistry = PoolContractsRegistry.attach(await contractsRegistry.getPoolContractsRegistryContract());
+    poolFactory = PoolFactory.attach(await contractsRegistry.getPoolFactoryContract());
 
     await poolContractsRegistry.__AOwnablePoolContractsRegistry_init();
 
@@ -66,11 +62,7 @@ describe("PoolFactory", () => {
     NAME_2 = await poolContractsRegistry.POOL_2_NAME();
 
     expect(await poolFactory.getContractsRegistry()).to.equal(await contractsRegistry.getAddress());
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not set dependencies from non dependant", async () => {
@@ -99,7 +91,7 @@ describe("PoolFactory", () => {
 
         const PoolMock = await ethers.getContractFactory("PoolMock");
 
-        const pool = <PoolMock>PoolMock.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
+        const pool = PoolMock.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
 
         expect(await pool.token()).not.to.equal(ethers.ZeroAddress);
       });
@@ -125,7 +117,7 @@ describe("PoolFactory", () => {
         await poolFactory.deployPool();
 
         const PoolMock = await ethers.getContractFactory("PoolMock");
-        const pool = <PoolMock>PoolMock.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
+        const pool = PoolMock.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
 
         await expect(poolContractsRegistry.addProxyPool(NAME_1, await poolFactory.getAddress()))
           .to.be.revertedWithCustomError(poolContractsRegistry, "CallerNotAFactory")
@@ -140,9 +132,9 @@ describe("PoolFactory", () => {
         await poolFactory.deployPool();
 
         const PoolUpgradeMock = await ethers.getContractFactory("PoolUpgradeMock");
-        const pool1 = <PoolUpgradeMock>PoolUpgradeMock.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
+        const pool1 = PoolUpgradeMock.attach((await poolContractsRegistry.listPools(NAME_1, 0, 1))[0]);
 
-        await expect(pool1.addedFunction()).to.be.reverted;
+        await expect(pool1.addedFunction()).to.be.revert(ethers);
 
         const poolUpgrade = await PoolUpgradeMock.deploy();
         await poolContractsRegistry.setNewImplementations([NAME_1], [await poolUpgrade.getAddress()]);
@@ -151,7 +143,7 @@ describe("PoolFactory", () => {
 
         await poolFactory.deployPool();
 
-        const pool2 = <PoolUpgradeMock>PoolUpgradeMock.attach((await poolContractsRegistry.listPools(NAME_1, 1, 1))[0]);
+        const pool2 = PoolUpgradeMock.attach((await poolContractsRegistry.listPools(NAME_1, 1, 1))[0]);
         expect(await pool2.addedFunction()).to.equal(42n);
       });
     });
@@ -176,7 +168,7 @@ describe("PoolFactory", () => {
 
         const PoolMock = await ethers.getContractFactory("PoolMock");
 
-        const poolProxies = await Promise.all(pools.map(async (pool: string) => <PoolMock>PoolMock.attach(pool)));
+        const poolProxies = await Promise.all(pools.map(async (pool: string) => PoolMock.attach(pool)));
 
         const tokens = await Promise.all(poolProxies.map(async (poolProxy: PoolMock) => await poolProxy.token()));
 
@@ -186,7 +178,7 @@ describe("PoolFactory", () => {
       it("should revert when deploying the pool with the same salt", async () => {
         await poolFactory.deploy2Pool(SALT1);
 
-        await expect(poolFactory.deploy2Pool(SALT1)).to.be.reverted;
+        await expect(poolFactory.deploy2Pool(SALT1)).to.be.revert(ethers);
       });
     });
   });

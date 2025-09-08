@@ -1,8 +1,8 @@
 # Changelog
 
-## [none]
+## [3.2.2]
 
-- Fixed typo in readme.
+- Migrated to Hardhat 3.
 
 ## [3.2.1]
 

@@ -1,19 +1,19 @@
 import { expect } from "chai";
-import { BigNumberish, BytesLike, ZeroHash } from "ethers";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { CartesianMerkleTree } from "@/generated-types/ethers/contracts/mock/libs/data-structures/CartesianMerkleTreeMock.sol/CartesianMerkleTreeMock";
+import { BigNumberish, BytesLike } from "ethers";
+
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+
+import { getPoseidon, poseidonHash } from "@test-helpers";
+
+import { CartesianMerkleTree } from "@/generated-types/ethers/mock/libs/data-structures/CartesianMerkleTreeMock.sol/CartesianMerkleTreeMock.ts";
 import { CartesianMerkleTreeMock } from "@ethers-v6";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-
-import { getPoseidon, poseidonHash } from "@/test/helpers/poseidon-hash";
-import { Reverter } from "@/test/helpers/reverter";
+const { ethers } = await hre.network.connect();
 
 describe("CartesianMerkleTree", () => {
-  const reverter = new Reverter();
-
-  let USER1: SignerWithAddress;
+  let USER1: HardhatEthersSigner;
 
   let treaple: CartesianMerkleTreeMock;
 
@@ -120,22 +120,16 @@ describe("CartesianMerkleTree", () => {
     }
   }
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [USER1] = await ethers.getSigners();
 
     const CartesianMerkleTreeMock = await ethers.getContractFactory("CartesianMerkleTreeMock", {
       libraries: {
-        PoseidonUnit3L: await (await getPoseidon(3)).getAddress(),
+        PoseidonUnit3L: await (await getPoseidon(ethers, 3)).getAddress(),
       },
     });
 
     treaple = await CartesianMerkleTreeMock.deploy();
-
-    await reverter.snapshot();
-  });
-
-  afterEach("cleanup", async () => {
-    await reverter.revert();
   });
 
   describe("Uint CMT", () => {
@@ -165,7 +159,7 @@ describe("CartesianMerkleTree", () => {
     it("should revert if trying to call add/remove functions on non-initialized treaple", async () => {
       const CartesianMerkleTreeMock = await ethers.getContractFactory("CartesianMerkleTreeMock", {
         libraries: {
-          PoseidonUnit3L: await (await getPoseidon(3)).getAddress(),
+          PoseidonUnit3L: await (await getPoseidon(ethers, 3)).getAddress(),
         },
       });
       const newTreap = await CartesianMerkleTreeMock.deploy();
@@ -202,7 +196,7 @@ describe("CartesianMerkleTree", () => {
 
       const CartesianMerkleTreeMock = await ethers.getContractFactory("CartesianMerkleTreeMock", {
         libraries: {
-          PoseidonUnit3L: await (await getPoseidon(3)).getAddress(),
+          PoseidonUnit3L: await (await getPoseidon(ethers, 3)).getAddress(),
         },
       });
 
@@ -377,13 +371,13 @@ describe("CartesianMerkleTree", () => {
 
     it("should not verify non-existent node with non-zero non-existence key", async () => {
       const proofObj: CartesianMerkleTree.ProofStruct = {
-        root: ZeroHash,
+        root: ethers.ZeroHash,
         siblings: [],
         siblingsLength: 0,
         directionBits: 0,
         existence: false,
         key: ethers.hexlify(ethers.randomBytes(32)),
-        nonExistenceKey: ZeroHash,
+        nonExistenceKey: ethers.ZeroHash,
       };
       expect(await treaple.verifyUintProof(proofObj)).to.be.false;
     });
@@ -474,7 +468,7 @@ describe("CartesianMerkleTree", () => {
 
       const CartesianMerkleTreeMock = await ethers.getContractFactory("CartesianMerkleTreeMock", {
         libraries: {
-          PoseidonUnit3L: await (await getPoseidon(3)).getAddress(),
+          PoseidonUnit3L: await (await getPoseidon(ethers, 3)).getAddress(),
         },
       });
 
@@ -607,7 +601,7 @@ describe("CartesianMerkleTree", () => {
 
       const CartesianMerkleTreeMock = await ethers.getContractFactory("CartesianMerkleTreeMock", {
         libraries: {
-          PoseidonUnit3L: await (await getPoseidon(3)).getAddress(),
+          PoseidonUnit3L: await (await getPoseidon(ethers, 3)).getAddress(),
         },
       });
 
