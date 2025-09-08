@@ -1,6 +1,6 @@
 # Changelog
 
-## [patch]
+## [3.2.2]
 
 - Migrated to Hardhat 3.
 
