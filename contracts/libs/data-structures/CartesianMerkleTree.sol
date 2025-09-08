@@ -338,10 +338,18 @@ library CartesianMerkleTree {
         return _verifyProof(treaple._treaple, proof_);
     }
 
+    /**
+     * @notice The function to process the proof for inclusion or exclusion of a node in the CMT.
+     * Complexity is O(log(n)), where n is the max depth of the treaple.
+     *
+     * @param hash3_ The hash function that accepts three arguments.
+     * @param proof_ The CMT proof struct.
+     * @return The calculated root hash from the proof.
+     */
     function processProof(
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_,
         Proof memory proof_
-    ) private view returns (bytes32) {
+    ) internal view returns (bytes32) {
         return _processProof(hash3_, proof_);
     }
 
@@ -931,19 +939,12 @@ library CartesianMerkleTree {
             return false;
         }
 
-        return _processProof(treaple, proof_) == proof_.root;
-    }
-
-    function _processProof(
-        CMT storage treaple,
-        Proof memory proof_
-    ) private view returns (bytes32) {
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_ = treaple
             .isCustomHasherSet
             ? treaple.hash3
             : _hash3;
 
-        return _processProof(hash3_, proof_);
+        return _processProof(hash3_, proof_) == proof_.root;
     }
 
     function _processProof(

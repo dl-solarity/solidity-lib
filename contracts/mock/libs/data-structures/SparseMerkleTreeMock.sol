@@ -119,6 +119,10 @@ contract SparseMerkleTreeMock {
         return _addressTree.verifyProof(proof_);
     }
 
+    function processProof(SparseMerkleTree.Proof memory proof_) external view returns (bytes32) {
+        return SparseMerkleTree.processProof(_hash2, _hash3, proof_);
+    }
+
     function getUintRoot() external view returns (bytes32) {
         return _uintTree.getRoot();
     }

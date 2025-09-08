@@ -228,6 +228,16 @@ library IncrementalMerkleTree {
         return _verifyProof(tree._tree, siblings_, directionBits_, leaf_);
     }
 
+    /**
+     * @notice The function to process the proof for inclusion or exclusion of a leaf in the tree.
+     * Complexity is O(log(n)), where n is the number of elements in the tree.
+     *
+     * @param hash2_ The hash function that accepts two arguments.
+     * @param siblings_ The siblings of the leaf.
+     * @param directionBits_ The direction bits of the leaf.
+     * @param leaf_ The leaf.
+     * @return The calculated root hash from the proof.
+     */
     function processProof(
         function(bytes32, bytes32) view returns (bytes32) hash2_,
         bytes32[] memory siblings_,
@@ -473,20 +483,11 @@ library IncrementalMerkleTree {
         uint256 directionBits,
         bytes32 leaf_
     ) private view returns (bool) {
-        return _processProof(tree, siblings_, directionBits, leaf_) == _root(tree);
-    }
-
-    function _processProof(
-        IMT storage tree,
-        bytes32[] memory siblings_,
-        uint256 directionBits,
-        bytes32 leaf_
-    ) private view returns (bytes32) {
         function(bytes32, bytes32) view returns (bytes32) hash2_ = tree.isCustomHasherSet
             ? tree.hash2
             : _hash2;
 
-        return _processProof(hash2_, siblings_, directionBits, leaf_);
+        return _processProof(hash2_, siblings_, directionBits, leaf_) == _root(tree);
     }
 
     function _processProof(

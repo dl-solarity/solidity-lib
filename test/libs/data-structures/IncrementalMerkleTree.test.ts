@@ -161,6 +161,9 @@ describe("IncrementalMerkleTree", () => {
         const directionBits = getDirectionBits(i, Number(await merkleTree.getUintTreeHeight()));
 
         expect(await merkleTree.verifyUintProof(siblings, directionBits, elementHash)).to.be.true;
+        expect(await merkleTree.processIMTProof(siblings, directionBits, elementHash)).to.be.eq(
+          await merkleTree.getUintRoot(),
+        );
       }
     });
 
@@ -342,6 +345,9 @@ describe("IncrementalMerkleTree", () => {
         const directionBits = getDirectionBits(i, Number(await merkleTree.getBytes32TreeHeight()));
 
         expect(await merkleTree.verifyBytes32Proof(siblings, directionBits, elementHash)).to.be.true;
+        expect(await merkleTree.processIMTProof(siblings, directionBits, elementHash)).to.be.eq(
+          await merkleTree.getBytes32Root(),
+        );
       }
     });
   });
@@ -467,6 +473,9 @@ describe("IncrementalMerkleTree", () => {
         const directionBits = getDirectionBits(i, Number(await merkleTree.getAddressTreeHeight()));
 
         expect(await merkleTree.verifyAddressProof(siblings, directionBits, elementHash)).to.be.true;
+        expect(await merkleTree.processIMTProof(siblings, directionBits, elementHash)).to.be.eq(
+          await merkleTree.getAddressRoot(),
+        );
       }
     });
   });

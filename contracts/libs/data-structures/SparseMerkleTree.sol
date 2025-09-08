@@ -376,6 +376,15 @@ library SparseMerkleTree {
         return _verifyProof(tree._tree, proof_);
     }
 
+    /**
+     * @notice The function to process the proof for inclusion or exclusion of a node in the SMT.
+     * Complexity is O(log(n)), where n is the max depth of the tree.
+     *
+     * @param hash2_ The hash function that accepts two arguments.
+     * @param hash3_ The hash function that accepts three arguments.
+     * @param proof_ The SMT proof struct.
+     * @return The calculated root hash from the proof.
+     */
     function processProof(
         function(bytes32, bytes32) view returns (bytes32) hash2_,
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_,
@@ -1115,16 +1124,12 @@ library SparseMerkleTree {
             return false;
         }
 
-        return _processProof(tree, proof_) == proof_.root;
-    }
-
-    function _processProof(SMT storage tree, Proof memory proof_) private view returns (bytes32) {
         (
             function(bytes32, bytes32) view returns (bytes32) hash2_,
             function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_
         ) = _getHashFunctions(tree);
 
-        return _processProof(hash2_, hash3_, proof_);
+        return _processProof(hash2_, hash3_, proof_) == proof_.root;
     }
 
     function _processProof(
