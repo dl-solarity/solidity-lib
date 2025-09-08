@@ -126,7 +126,7 @@ library IncrementalMerkleTree {
         uint256 directionBits_,
         bytes32 leaf_
     ) internal view returns (bool) {
-        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_);
+        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_, _root(tree));
     }
 
     /**
@@ -225,7 +225,7 @@ library IncrementalMerkleTree {
         uint256 directionBits_,
         bytes32 leaf_
     ) internal view returns (bool) {
-        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_);
+        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_, _root(tree));
     }
 
     /**
@@ -339,7 +339,7 @@ library IncrementalMerkleTree {
         uint256 directionBits_,
         bytes32 leaf_
     ) internal view returns (bool) {
-        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_);
+        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_, _root(tree));
     }
 
     /**
@@ -481,13 +481,14 @@ library IncrementalMerkleTree {
         IMT storage tree,
         bytes32[] memory siblings_,
         uint256 directionBits,
-        bytes32 leaf_
+        bytes32 leaf_,
+        bytes32 root_
     ) private view returns (bool) {
         function(bytes32, bytes32) view returns (bytes32) hash2_ = tree.isCustomHasherSet
             ? tree.hash2
             : _hash2;
 
-        return _processProof(hash2_, siblings_, directionBits, leaf_) == _root(tree);
+        return _processProof(hash2_, siblings_, directionBits, leaf_) == root_;
     }
 
     function _processProof(
