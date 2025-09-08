@@ -1,4 +1,4 @@
-import type { Level } from "./types";
+import type { Level } from "./types.cjs";
 
 export const allowedWhenNotRc: Set<Level> = new Set([
   "patch",

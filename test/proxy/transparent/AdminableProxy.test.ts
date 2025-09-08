@@ -1,23 +1,20 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { impersonateAccount, setBalance } from "@nomicfoundation/hardhat-network-helpers";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { AdminableProxy, AdminableProxyUpgrader, ERC20Mock } from "@ethers-v6";
 
-import { AdminableProxyUpgrader, AdminableProxy, ERC20Mock } from "@ethers-v6";
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("AdminableProxy", () => {
-  const reverter = new Reverter();
-
-  let OWNER: SignerWithAddress;
-  let PROXY_UPGRADER: SignerWithAddress;
+  let OWNER: HardhatEthersSigner;
+  let PROXY_UPGRADER: HardhatEthersSigner;
 
   let proxy: AdminableProxy;
   let tokenProxy: ERC20Mock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [OWNER] = await ethers.getSigners();
 
     const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
@@ -29,16 +26,12 @@ describe("AdminableProxy", () => {
     const adminableProxyUpgrader: AdminableProxyUpgrader = await AdminableProxyUpgrader.deploy(OWNER);
     proxy = await AdminableProxy.deploy(await token.getAddress(), await adminableProxyUpgrader.getAddress(), "0x");
 
-    tokenProxy = <ERC20Mock>token.attach(await proxy.getAddress());
+    tokenProxy = await ethers.getContractAt("ERC20Mock", await proxy.getAddress());
 
-    await impersonateAccount(await adminableProxyUpgrader.getAddress());
+    await networkHelpers.impersonateAccount(await adminableProxyUpgrader.getAddress());
     PROXY_UPGRADER = await ethers.provider.getSigner(await adminableProxyUpgrader.getAddress());
-    await setBalance(await PROXY_UPGRADER.getAddress(), ethers.parseEther("1"));
-
-    await reverter.snapshot();
+    await networkHelpers.setBalance(await PROXY_UPGRADER.getAddress(), ethers.parseEther("1"));
   });
-
-  afterEach(reverter.revert);
 
   describe("delegated functions", () => {
     const AMOUNT = 10;

@@ -1,45 +1,40 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { MerkleTree } from "merkletreejs";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { buildSparseMerkleTree, getRoot } from "@/test/helpers/merkle-tree-helper";
-import { getPoseidon, poseidonHash } from "@/test/helpers/poseidon-hash";
-import { Reverter } from "@/test/helpers/reverter";
+import { addHexPrefix, buildSparseMerkleTree, getPoseidon, getRoot, poseidonHash } from "@test-helpers";
 
-import { addHexPrefix } from "@/test/helpers/bytes-helpers";
 import { IncrementalMerkleTreeMock } from "@ethers-v6";
 
-describe("IncrementalMerkleTree", () => {
-  const reverter = new Reverter();
-  const coder = ethers.AbiCoder.defaultAbiCoder();
+import { MerkleTree } from "merkletreejs";
 
-  let USER1: SignerWithAddress;
+const { ethers } = await hre.network.connect();
+
+describe("IncrementalMerkleTree", () => {
+  let coder: typeof ethers.AbiCoder.prototype;
+
+  let USER1: HardhatEthersSigner;
 
   let merkleTree: IncrementalMerkleTreeMock;
 
   let localMerkleTree: MerkleTree;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
+    coder = ethers.AbiCoder.defaultAbiCoder();
+
     [USER1] = await ethers.getSigners();
 
     const IncrementalMerkleTreeMock = await ethers.getContractFactory("IncrementalMerkleTreeMock", {
       libraries: {
-        PoseidonUnit1L: await (await getPoseidon(1)).getAddress(),
-        PoseidonUnit2L: await (await getPoseidon(2)).getAddress(),
+        PoseidonUnit1L: await (await getPoseidon(ethers, 1)).getAddress(),
+        PoseidonUnit2L: await (await getPoseidon(ethers, 2)).getAddress(),
       },
     });
     merkleTree = await IncrementalMerkleTreeMock.deploy();
 
-    await reverter.snapshot();
-  });
-
-  beforeEach("setup", async () => {
     localMerkleTree = buildSparseMerkleTree([], 0);
   });
-
-  afterEach(reverter.revert);
 
   function getBytes32ElementHash(element: any, hashFn: any = ethers.keccak256) {
     return hashFn(coder.encode(["bytes32"], [element]));

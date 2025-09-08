@@ -1,30 +1,24 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { ERC20UpgradeableMock } from "@ethers-v6";
 
-import type { ERC20UpgradeableMock } from "@ethers-v6";
+const { ethers } = await hre.network.connect();
 
 describe("DeployerGuard", () => {
-  const reverter = new Reverter();
-
-  let FIRST: SignerWithAddress;
-  let SECOND: SignerWithAddress;
+  let FIRST: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
 
   let mock: ERC20UpgradeableMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [FIRST, SECOND] = await ethers.getSigners();
 
     const ERC20UpgradeableMock = await ethers.getContractFactory("ERC20UpgradeableMock");
     mock = await ERC20UpgradeableMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("onlyDeployer", () => {
     it("should revert if trying to call initializer by non-deployer", async () => {

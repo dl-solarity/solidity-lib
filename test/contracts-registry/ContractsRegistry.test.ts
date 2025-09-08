@@ -1,32 +1,26 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { ContractsRegistryMock, DependantMock, DependantUpgradeMock, ERC20Mock } from "@ethers-v6";
 
-describe("ContractsRegistry", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
-  let OWNER: SignerWithAddress;
-  let SECOND: SignerWithAddress;
+describe("ContractsRegistry", () => {
+  let OWNER: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
 
   let contractsRegistry: ContractsRegistryMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
     const ContractsRegistry = await ethers.getContractFactory("ContractsRegistryMock");
     contractsRegistry = await ContractsRegistry.deploy();
 
     await contractsRegistry.__OwnableContractsRegistry_init();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not initialize twice", async () => {
@@ -182,7 +176,7 @@ describe("ContractsRegistry", () => {
 
       await contractsRegistry.addProxyContract(await contractsRegistry.DEPENDANT_NAME(), await _dependant.getAddress());
 
-      dependant = <DependantUpgradeMock>DependantUpgradeMock.attach(await contractsRegistry.getDependantContract());
+      dependant = DependantUpgradeMock.attach(await contractsRegistry.getDependantContract());
     });
 
     it("should not upgrade non-proxy contract", async () => {
@@ -206,7 +200,7 @@ describe("ContractsRegistry", () => {
     });
 
     it("should upgrade the contract", async () => {
-      await expect(dependant.addedFunction()).to.be.reverted;
+      await expect(dependant.addedFunction()).to.be.revert(ethers);
 
       expect(await contractsRegistry.getImplementation(await contractsRegistry.DEPENDANT_NAME())).to.equal(
         await _dependant.getAddress(),
@@ -231,7 +225,7 @@ describe("ContractsRegistry", () => {
     });
 
     it("should upgrade and call the contract", async () => {
-      await expect(dependant.addedFunction()).to.be.reverted;
+      await expect(dependant.addedFunction()).to.be.revert(ethers);
 
       let data = _dependantUpgrade.interface.encodeFunctionData("doUpgrade", [42]);
 
@@ -261,7 +255,7 @@ describe("ContractsRegistry", () => {
 
       await contractsRegistry.addContract(await contractsRegistry.TOKEN_NAME(), await token.getAddress());
 
-      dependant = <DependantUpgradeMock>DependantUpgradeMock.attach(await contractsRegistry.getDependantContract());
+      dependant = DependantUpgradeMock.attach(await contractsRegistry.getDependantContract());
     });
 
     it("should inject dependencies", async () => {
