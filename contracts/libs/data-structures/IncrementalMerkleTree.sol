@@ -118,15 +118,17 @@ library IncrementalMerkleTree {
      * @param siblings_ The siblings of the leaf.
      * @param directionBits_ The direction bits of the leaf.
      * @param leaf_ The leaf.
+     * @param root_ The root hash of the tree to verify against.
      * @return True if the proof is valid, false otherwise.
      */
     function verifyProof(
         UintIMT storage tree,
         bytes32[] memory siblings_,
         uint256 directionBits_,
-        bytes32 leaf_
+        bytes32 leaf_,
+        bytes32 root_
     ) internal view returns (bool) {
-        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_, _root(tree));
+        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_, root_);
     }
 
     /**
@@ -217,15 +219,17 @@ library IncrementalMerkleTree {
      * @param siblings_ The siblings of the leaf.
      * @param directionBits_ The direction bits of the leaf.
      * @param leaf_ The leaf.
+     * @param root_ The root hash of the tree to verify against.
      * @return True if the proof is valid, false otherwise.
      */
     function verifyProof(
         Bytes32IMT storage tree,
         bytes32[] memory siblings_,
         uint256 directionBits_,
-        bytes32 leaf_
+        bytes32 leaf_,
+        bytes32 root_
     ) internal view returns (bool) {
-        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_, _root(tree));
+        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_, root_);
     }
 
     /**
@@ -331,15 +335,17 @@ library IncrementalMerkleTree {
      * @param siblings_ The siblings of the leaf.
      * @param directionBits_ The direction bits of the leaf.
      * @param leaf_ The leaf.
+     * @param root_ The root hash of the tree to verify against.
      * @return True if the proof is valid, false otherwise.
      */
     function verifyProof(
         AddressIMT storage tree,
         bytes32[] memory siblings_,
         uint256 directionBits_,
-        bytes32 leaf_
+        bytes32 leaf_,
+        bytes32 root_
     ) internal view returns (bool) {
-        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_, _root(tree));
+        return _verifyProof(tree._tree, siblings_, directionBits_, leaf_, root_);
     }
 
     /**
