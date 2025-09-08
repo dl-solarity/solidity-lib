@@ -18,20 +18,3 @@ jobs:
 
       - name: Validate structure
         run: npx tsx scripts/release/validate-changelog.cts
-
-      - id: state
-        name: Compute release state
-        uses: actions/github-script@v7
-        with:
-          result-encoding: string
-          script: |
-            require('ts-node/register/transpile-only');
-            await require('./scripts/release/get-release-state.cts').default(core);
-
-      - id: apply
-        name: Compute and apply next version
-        uses: actions/github-script@v7
-        with:
-          script: |
-            require('ts-node/register/transpile-only');
-            await require('./scripts/release/apply-release.cts').default(core);
