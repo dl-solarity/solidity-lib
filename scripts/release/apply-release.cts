@@ -9,6 +9,7 @@ import { getTopSection, readJSON, writeJSON, getPkgPath, getChangelogPath, valid
 import type { Core } from "./helpers/index.cts";
 
 export default async function applyRelease(core: Core): Promise<void> {
+  process.exit(0)
   const pkgPath = getPkgPath();
   const changelogPath = getChangelogPath();
 
