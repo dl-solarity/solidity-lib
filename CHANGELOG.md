@@ -1,6 +1,6 @@
 # Changelog
 
-## [3.2.3]
+## [patch]
 
 - Slightly extended Merkle Trees functionality. Added `processProof` function.
 
