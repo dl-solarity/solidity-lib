@@ -1,34 +1,27 @@
-import { defineConfig } from "eslint/config";
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
 import globals from "globals";
 
+import js from "@eslint/js";
+
+import { defineConfig } from "eslint/config";
+
+import tseslint from "typescript-eslint";
+
 export default defineConfig(
-  // Global ignores (could also use globalIgnores from eslint/config)
   {
     ignores: ["dist/**", "node_modules/**", "generated-types/**", "artifacts/**"],
   },
-
-  // Base JS recommendations
   js.configs.recommended,
-
-  // TypeScript configs (typed + untyped bundles are available)
-  // Using the combined recommended config set from typescript-eslint v8
   ...tseslint.configs.recommended,
-
-  // Project-specific settings for TS files
   {
-    files: ["**/*.ts", "**/*.tsx"],
+    files: ["**/*.ts"],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        // Point to your tsconfig if you want type-aware rules
         project: "./tsconfig.json",
         tsconfigRootDir: process.cwd(),
       },
       globals: {
         ...globals.node,
-        ...globals.browser,
       },
     },
     plugins: {
