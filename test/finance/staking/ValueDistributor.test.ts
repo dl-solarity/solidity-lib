@@ -1,21 +1,22 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import { Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { wei } from "@/scripts/utils/utils";
+import { wei } from "@scripts";
 
 import { ValueDistributorMock } from "@ethers-v6";
 
-describe("ValueDistributor", () => {
-  const reverter = new Reverter();
+const { ethers, networkHelpers } = await hre.network.connect();
 
-  let FIRST: SignerWithAddress;
-  let SECOND: SignerWithAddress;
-  let THIRD: SignerWithAddress;
-  let FOURTH: SignerWithAddress;
+describe("ValueDistributor", () => {
+  let time: Time;
+
+  let FIRST: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
+  let THIRD: HardhatEthersSigner;
+  let FOURTH: HardhatEthersSigner;
 
   let valueDistributor: ValueDistributorMock;
 
@@ -64,16 +65,14 @@ describe("ValueDistributor", () => {
     await valueDistributor.removeShares(THIRD, 200);
   };
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
+    time = networkHelpers.time;
+
     [FIRST, SECOND, THIRD, FOURTH] = await ethers.getSigners();
 
     const valueDistributorMock = await ethers.getContractFactory("ValueDistributorMock");
     valueDistributor = await valueDistributorMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("addShares()", () => {
     it("should add shares correctly", async () => {

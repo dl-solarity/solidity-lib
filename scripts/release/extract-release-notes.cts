@@ -2,7 +2,7 @@
 
 import fs from "fs";
 
-import { getChangelogPath, getPkgPath, readJSON } from "./helpers";
+import { getChangelogPath, getPkgPath, readJSON } from "./helpers/index.cts";
 
 export default function extractReleaseNotes({ version }: { version?: string } = {}): string {
   const changelog = fs.readFileSync(getChangelogPath(), "utf8");

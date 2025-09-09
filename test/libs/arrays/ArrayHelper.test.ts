@@ -1,30 +1,25 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { ArrayHelperMock } from "@ethers-v6";
 
-describe("ArrayHelper", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
-  let FIRST: SignerWithAddress;
-  let SECOND: SignerWithAddress;
-  let THIRD: SignerWithAddress;
+describe("ArrayHelper", () => {
+  let FIRST: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
+  let THIRD: HardhatEthersSigner;
 
   let mock: ArrayHelperMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [FIRST, SECOND, THIRD] = await ethers.getSigners();
 
     const ArrayHelperMock = await ethers.getContractFactory("ArrayHelperMock");
     mock = await ArrayHelperMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("prefix sum array", () => {
     function getArraySum(arr: number[]) {
@@ -141,11 +136,11 @@ describe("ArrayHelper", () => {
       });
 
       it("should revert if one of the indexes is out of range", async () => {
-        await expect(mock.getRangeSum(0, 0)).to.be.reverted;
+        await expect(mock.getRangeSum(0, 0)).to.be.revert(ethers);
 
         await mock.setArray((await mock.countPrefixes(array)).map((e) => Number(e)));
 
-        await expect(mock.getRangeSum(0, array.length)).to.be.reverted;
+        await expect(mock.getRangeSum(0, array.length)).to.be.revert(ethers);
       });
     });
 
@@ -311,9 +306,9 @@ describe("ArrayHelper", () => {
     });
 
     it("should revert in case of out of bound insertion", async () => {
-      await expect(mock.insertUint([1], 1, [2])).to.be.reverted;
-      await expect(mock.insertAddress([], 0, [FIRST.address])).to.be.reverted;
-      await expect(mock.insertString(["1", "2"], 2, ["1"])).to.be.reverted;
+      await expect(mock.insertUint([1], 1, [2])).to.be.revert(ethers);
+      await expect(mock.insertAddress([], 0, [FIRST.address])).to.be.revert(ethers);
+      await expect(mock.insertString(["1", "2"], 2, ["1"])).to.be.revert(ethers);
     });
   });
 

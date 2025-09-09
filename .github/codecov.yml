@@ -1,0 +1,19 @@
+codecov:
+  require_ci_to_pass: true
+
+ignore:
+  - "contracts/interfaces/**"
+  - "contracts/mock/**"
+  - "contracts/libs/crypto/ECDSA512.sol"
+  - "contracts/libs/crypto/ECDSA384.sol"
+
+coverage:
+  status:
+    project:
+      default:
+        target: 99%
+        threshold: 1%
+    patch:
+      default:
+        target: 99%
+        threshold: 1%

@@ -1,22 +1,21 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { AdminableProxyUpgrader, AdminableProxy, ERC20Mock } from "@ethers-v6";
+import { AdminableProxy, AdminableProxyUpgrader, ERC20Mock } from "@ethers-v6";
+
+const { ethers } = await hre.network.connect();
 
 describe("AdminableProxyUpgrader", () => {
-  const reverter = new Reverter();
-
-  let OWNER: SignerWithAddress;
-  let SECOND: SignerWithAddress;
+  let OWNER: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
 
   let adminableProxyUpgrader: AdminableProxyUpgrader;
   let token: ERC20Mock;
   let proxy: AdminableProxy;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
     const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
@@ -27,11 +26,7 @@ describe("AdminableProxyUpgrader", () => {
 
     adminableProxyUpgrader = await AdminableProxyUpgrader.deploy(OWNER);
     proxy = await AdminableProxy.deploy(await token.getAddress(), await adminableProxyUpgrader.getAddress(), "0x");
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("upgrade", () => {
     it("only owner should upgrade", async () => {

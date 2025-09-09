@@ -24,6 +24,9 @@ contracts
 ├── account—abstraction
 │   ├── AAccountRecovery — "ERC-7947 account recovery base implementation"
 │   └── Base7702RecoverableAccount — "EIP-7702 with batching, gas sponsorship and recoverable trusted executors"
+├── bridge
+│   ├── handlers — "Internal bridge logic contracts"
+│   └── ABridge — "Simple bridge with ERC20/ERC721/ERC1155 tokens support"
 ├── contracts—registry
 │   ├── AContractsRegistry — "Reference registry implementation of ERC-6224 pattern"
 │   ├── ADependant — "Reference dependant implementation of ERC-6224 pattern"
@@ -36,8 +39,6 @@ contracts
 │   └── utils
 │       └── DiamondERC165 — "ERC-165 introspection for diamond facets"
 ├── finance
-│   ├── compound—rate—keeper
-│   │   └── ACompoundRateKeeper — "Complex percentage calculator used in lending protocols"
 │   ├── staking
 │   │   ├── AStaking — "Flexible rewards staking implementation"
 │   │   └── AValueDistributor — "Efficient distribution algorithm implementation"

@@ -1,33 +1,28 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { encodeBytes32String, toBeHex } from "ethers";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { AvlTreeMock } from "@ethers-v6";
 
-describe("AvlTree", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
-  let USER1: SignerWithAddress;
-  let USER2: SignerWithAddress;
-  let USER3: SignerWithAddress;
-  let USER4: SignerWithAddress;
+describe("AvlTree", () => {
+  let USER1: HardhatEthersSigner;
+  let USER2: HardhatEthersSigner;
+  let USER3: HardhatEthersSigner;
+  let USER4: HardhatEthersSigner;
 
   let avlTree: AvlTreeMock;
 
-  before(async () => {
+  beforeEach("setup", async () => {
     [USER1, USER2, USER3, USER4] = await ethers.getSigners();
     const AvlTreeMock = await ethers.getContractFactory("AvlTreeMock");
 
     avlTree = await AvlTreeMock.deploy();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   function uintToBytes32Array(uintArray: Array<number>) {
     let bytes32Array = [];

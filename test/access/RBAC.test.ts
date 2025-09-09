@@ -1,31 +1,26 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { RBACMock } from "@ethers-v6";
 
-describe("RBAC", () => {
-  const reverter = new Reverter();
+const { ethers } = await hre.network.connect();
 
-  let OWNER: SignerWithAddress;
-  let SECOND: SignerWithAddress;
+describe("RBAC", () => {
+  let OWNER: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
 
   let rbac: RBACMock;
 
-  before("setup", async () => {
+  beforeEach("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
     const RBACMock = await ethers.getContractFactory("RBACMock");
     rbac = await RBACMock.deploy();
 
     await rbac.__RBACMock_init();
-
-    await reverter.snapshot();
   });
-
-  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not initialize twice", async () => {
