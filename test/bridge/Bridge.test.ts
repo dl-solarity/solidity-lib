@@ -5,7 +5,7 @@ import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { wei } from "@scripts";
 
-import { getSignature } from "@test-helpers";
+import { Reverter, getSignature } from "@test-helpers";
 
 import {
   BridgeMock,
@@ -15,7 +15,7 @@ import {
   USDCCrosschainMock,
 } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 enum ERC20BridgingType {
   LiquidityPool,
@@ -34,6 +34,8 @@ enum ERC1155BridgingType {
 }
 
 describe("Bridge", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   const baseBalance = wei("1000");
   const baseAmount = "10";
   const baseId = "5000";
@@ -51,7 +53,7 @@ describe("Bridge", () => {
   let erc721: ERC721CrosschainMock;
   let erc1155: ERC1155CrosschainMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [OWNER, SECOND, THIRD] = await ethers.getSigners();
 
     const Bridge = await ethers.getContractFactory("BridgeMock");
@@ -79,7 +81,11 @@ describe("Bridge", () => {
     erc1155 = await ERC1155.deploy("Mock", "MK", "URI");
     await erc1155.crosschainMint(OWNER.address, baseId, baseAmount, tokenURI);
     await erc1155.setApprovalForAll(await bridge.getAddress(), true);
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should initialize correctly", async () => {

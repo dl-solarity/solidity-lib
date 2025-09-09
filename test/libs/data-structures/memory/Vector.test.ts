@@ -1,17 +1,25 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
+import { Reverter } from "@test-helpers";
+
 import { VectorMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Vector", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let vector: VectorMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     const VectorMock = await ethers.getContractFactory("VectorMock");
     vector = await VectorMock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("raw vector", () => {
     it("should test new", async () => {

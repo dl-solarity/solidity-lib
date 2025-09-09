@@ -1,11 +1,15 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
+import { Reverter } from "@test-helpers";
+
 import { U512Mock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("U512", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   const prime = 76884956397045344220809746629001649092737531784414529538755519063063536359079n;
 
   let u512: U512Mock;
@@ -147,11 +151,15 @@ describe("U512", () => {
     return toBytes(ethers.toBigInt(a) >> BigInt(b));
   }
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     const U512Mock = await ethers.getContractFactory("U512Mock");
 
     u512 = await U512Mock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   it("copy test", async () => {
     const [pointerOriginal, pointerCopy, valueOriginal, valueCopy] = await u512.copy(prime);

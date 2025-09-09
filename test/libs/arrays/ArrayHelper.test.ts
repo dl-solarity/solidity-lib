@@ -3,23 +3,31 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import { Reverter } from "@test-helpers";
+
 import { ArrayHelperMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("ArrayHelper", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let FIRST: HardhatEthersSigner;
   let SECOND: HardhatEthersSigner;
   let THIRD: HardhatEthersSigner;
 
   let mock: ArrayHelperMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [FIRST, SECOND, THIRD] = await ethers.getSigners();
 
     const ArrayHelperMock = await ethers.getContractFactory("ArrayHelperMock");
     mock = await ArrayHelperMock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("prefix sum array", () => {
     function getArraySum(arr: number[]) {

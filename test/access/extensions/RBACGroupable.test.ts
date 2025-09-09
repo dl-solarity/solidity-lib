@@ -3,24 +3,32 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import { Reverter } from "@test-helpers";
+
 import { RBACGroupableMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("RBACGroupable", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let OWNER: HardhatEthersSigner;
   let SECOND: HardhatEthersSigner;
 
   let rbac: RBACGroupableMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
     const RBACGroupableMock = await ethers.getContractFactory("RBACGroupableMock");
     rbac = await RBACGroupableMock.deploy();
 
     await rbac.__RBACGroupableMock_init();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("__ARBACGroupable_init", () => {
     it("should not initialize twice", async () => {

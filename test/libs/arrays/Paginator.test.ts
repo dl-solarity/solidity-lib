@@ -3,21 +3,29 @@ import hre from "hardhat";
 
 import { BigNumberish } from "ethers";
 
+import { Reverter } from "@test-helpers";
+
 import { PaginatorMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Paginator", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let mock: PaginatorMock;
 
   function encodeBytes(values: BigNumberish[], types: string[] = ["uint256"]) {
     return ethers.AbiCoder.defaultAbiCoder().encode(types, values);
   }
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     const PaginatorMock = await ethers.getContractFactory("PaginatorMock");
     mock = await PaginatorMock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("uint array, empty", () => {
     it("should return empty array", async () => {

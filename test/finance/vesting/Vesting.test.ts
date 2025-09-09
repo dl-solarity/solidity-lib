@@ -6,11 +6,15 @@ import { Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
 import { precision, wei } from "@scripts";
 
+import { Reverter } from "@test-helpers";
+
 import { AVesting, ERC20Mock, ERC20Mock__factory, VestingMock, VestingMock__factory } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Vesting", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let time: Time;
 
   let OWNER: HardhatEthersSigner;
@@ -31,7 +35,7 @@ describe("Vesting", () => {
   const vestingAmount = wei(100_000);
   const exponent = 4n;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     time = networkHelpers.time;
 
     [OWNER, ALICE] = await ethers.getSigners();
@@ -43,7 +47,11 @@ describe("Vesting", () => {
 
     await erc20.mint(OWNER.address, wei(1_000_000));
     await erc20.approve(await vesting.getAddress(), ethers.MaxUint256);
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   async function calculateVestedAmount(vestingStartTime: bigint, vestingAmount: bigint, exponent: bigint) {
     const elapsedPeriods = (BigInt(await time.latest()) - vestingStartTime) / secondsInPeriod;
