@@ -307,7 +307,9 @@ describe("CartesianMerkleTree", () => {
           key: proof.key,
           nonExistenceKey: proof.nonExistenceKey,
         };
+
         expect(await treaple.verifyUintProof(proofObj)).to.be.true;
+        expect(await treaple.processCMTProof(proofObj)).to.be.eq(proof.root);
       }
     });
 
@@ -553,7 +555,9 @@ describe("CartesianMerkleTree", () => {
           key: proof.key,
           nonExistenceKey: proof.nonExistenceKey,
         };
+
         expect(await treaple.verifyBytes32Proof(proofObj)).to.be.true;
+        expect(await treaple.processCMTProof(proofObj)).to.be.eq(proof.root);
       }
     });
   });
@@ -684,7 +688,9 @@ describe("CartesianMerkleTree", () => {
           key: proof.key,
           nonExistenceKey: proof.nonExistenceKey,
         };
+
         expect(await treaple.verifyAddressProof(proofObj)).to.be.true;
+        expect(await treaple.processCMTProof(proofObj)).to.be.eq(proof.root);
       }
     });
   });

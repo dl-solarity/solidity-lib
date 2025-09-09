@@ -425,6 +425,7 @@ describe("SparseMerkleTree", () => {
       const inclusionProof = JSON.parse(JSON.stringify(await merkleTree.getUintProof(randomKey)));
 
       expect(await merkleTree.verifyUintProof(inclusionProof)).to.be.true;
+      expect(await merkleTree.processProof(inclusionProof)).to.be.eq(inclusionProof[0]);
 
       inclusionProof[0] = inclusionProof[3];
       expect(await merkleTree.verifyUintProof(inclusionProof)).to.be.false;
@@ -596,6 +597,7 @@ describe("SparseMerkleTree", () => {
       const inclusionProof = JSON.parse(JSON.stringify(await merkleTree.getBytes32Proof(randomKey)));
 
       expect(await merkleTree.verifyBytes32Proof(inclusionProof)).to.be.true;
+      expect(await merkleTree.processProof(inclusionProof)).to.be.eq(inclusionProof[0]);
 
       inclusionProof[0] = inclusionProof[3];
       expect(await merkleTree.verifyBytes32Proof(inclusionProof)).to.be.false;
@@ -744,6 +746,7 @@ describe("SparseMerkleTree", () => {
       const inclusionProof = JSON.parse(JSON.stringify(await merkleTree.getAddressProof(randomKey)));
 
       expect(await merkleTree.verifyAddressProof(inclusionProof)).to.be.true;
+      expect(await merkleTree.processProof(inclusionProof)).to.be.eq(inclusionProof[0]);
 
       inclusionProof[0] = inclusionProof[3];
       expect(await merkleTree.verifyAddressProof(inclusionProof)).to.be.false;

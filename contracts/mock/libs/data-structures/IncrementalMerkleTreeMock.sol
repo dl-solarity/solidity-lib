@@ -70,25 +70,36 @@ contract IncrementalMerkleTreeMock {
     function verifyUintProof(
         bytes32[] memory siblings_,
         uint256 directionBits_,
-        bytes32 element_
+        bytes32 element_,
+        bytes32 root_
     ) external view returns (bool) {
-        return _uintTree.verifyProof(siblings_, directionBits_, element_);
+        return _uintTree.verifyProof(siblings_, directionBits_, element_, root_);
     }
 
     function verifyBytes32Proof(
         bytes32[] memory siblings_,
         uint256 directionBits_,
-        bytes32 element_
+        bytes32 element_,
+        bytes32 root_
     ) external view returns (bool) {
-        return _bytes32Tree.verifyProof(siblings_, directionBits_, element_);
+        return _bytes32Tree.verifyProof(siblings_, directionBits_, element_, root_);
     }
 
     function verifyAddressProof(
         bytes32[] memory siblings_,
         uint256 directionBits_,
-        bytes32 element_
+        bytes32 element_,
+        bytes32 root_
     ) external view returns (bool) {
-        return _addressTree.verifyProof(siblings_, directionBits_, element_);
+        return _addressTree.verifyProof(siblings_, directionBits_, element_, root_);
+    }
+
+    function processIMTProof(
+        bytes32[] memory siblings_,
+        uint256 directionBits_,
+        bytes32 leaf_
+    ) external view returns (bytes32) {
+        return IncrementalMerkleTree.processProof(_keccak256, siblings_, directionBits_, leaf_);
     }
 
     function getUintTreeHeight() external view returns (uint256) {
@@ -133,5 +144,17 @@ contract IncrementalMerkleTreeMock {
 
     function _hash2(bytes32 element1_, bytes32 element2_) internal pure returns (bytes32) {
         return bytes32(PoseidonUnit2L.poseidon([uint256(element1_), uint256(element2_)]));
+    }
+
+    function _keccak256(
+        bytes32 element1_,
+        bytes32 element2_
+    ) internal pure returns (bytes32 result_) {
+        assembly {
+            mstore(0, element1_)
+            mstore(32, element2_)
+
+            result_ := keccak256(0, 64)
+        }
     }
 }
