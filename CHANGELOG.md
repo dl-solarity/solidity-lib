@@ -2,7 +2,7 @@
 
 ## [none]
 
-- Added eslint
+- Added eslint.
 
 ## [3.2.3]
 
