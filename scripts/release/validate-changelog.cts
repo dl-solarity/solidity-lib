@@ -80,7 +80,7 @@ if (require.main === module) {
   try {
     validateChangelog();
     console.log("CHANGELOG.md validation passed.");
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err?.message ?? String(err));
     process.exit(1);
   }

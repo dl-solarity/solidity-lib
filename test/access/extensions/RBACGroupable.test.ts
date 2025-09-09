@@ -168,9 +168,7 @@ describe("RBACGroupable", () => {
         it("should add the user to the default group automatically", async () => {
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([]);
 
-          expect(await rbac.toggleDefaultGroup())
-            .to.emit(rbac, "ToggledDefaultGroup")
-            .withArgs(true);
+          await expect(rbac.toggleDefaultGroup()).to.emit(rbac, "ToggledDefaultGroup").withArgs(true);
 
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([""]);
 
@@ -178,9 +176,7 @@ describe("RBACGroupable", () => {
 
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([GROUP_ROLES01, GROUP_ROLES12, ""]);
 
-          expect(await rbac.toggleDefaultGroup())
-            .to.emit(rbac, "ToggledDefaultGroup")
-            .withArgs(false);
+          await expect(rbac.toggleDefaultGroup()).to.emit(rbac, "ToggledDefaultGroup").withArgs(false);
 
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([GROUP_ROLES01, GROUP_ROLES12]);
         });

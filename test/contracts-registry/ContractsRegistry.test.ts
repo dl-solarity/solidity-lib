@@ -76,7 +76,7 @@ describe("ContractsRegistry", () => {
     });
   });
 
-  describe("contract management", async () => {
+  describe("contract management", () => {
     it("should fail adding ethers.ZeroAddress address", async () => {
       await expect(contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), ethers.ZeroAddress))
         .to.be.revertedWithCustomError(contractsRegistry, "ZeroAddressProvided")
@@ -227,7 +227,7 @@ describe("ContractsRegistry", () => {
     it("should upgrade and call the contract", async () => {
       await expect(dependant.addedFunction()).to.be.revert(ethers);
 
-      let data = _dependantUpgrade.interface.encodeFunctionData("doUpgrade", [42]);
+      const data = _dependantUpgrade.interface.encodeFunctionData("doUpgrade", [42]);
 
       await contractsRegistry.upgradeContractAndCall(
         await contractsRegistry.DEPENDANT_NAME(),

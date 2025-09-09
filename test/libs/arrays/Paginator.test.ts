@@ -19,7 +19,7 @@ describe("Paginator", () => {
     mock = await PaginatorMock.deploy();
   });
 
-  describe("uint array, empty", async () => {
+  describe("uint array, empty", () => {
     it("should return empty array", async () => {
       const arr = await mock.partUintArr(0, 1);
 
@@ -27,7 +27,7 @@ describe("Paginator", () => {
     });
   });
 
-  describe("uint array", async () => {
+  describe("uint array", () => {
     beforeEach(async () => {
       await mock.pushUint(5);
     });
@@ -93,7 +93,7 @@ describe("Paginator", () => {
     });
   });
 
-  describe("uint set", async () => {
+  describe("uint set", () => {
     beforeEach(async () => {
       await mock.pushUint(5);
     });
@@ -159,7 +159,7 @@ describe("Paginator", () => {
     });
   });
 
-  describe("address array, empty", async () => {
+  describe("address array, empty", () => {
     it("should return empty array", async () => {
       const arr = await mock.partAddressArr(0, 1);
 
@@ -167,7 +167,7 @@ describe("Paginator", () => {
     });
   });
 
-  describe("address array", async () => {
+  describe("address array", () => {
     beforeEach(async () => {
       await mock.pushAddress(5);
     });
@@ -233,7 +233,7 @@ describe("Paginator", () => {
     });
   });
 
-  describe("bytes32, empty", async () => {
+  describe("bytes32, empty", () => {
     it("should return empty array", async () => {
       const arr = await mock.partBytes32Arr(0, 1);
 
@@ -247,7 +247,7 @@ describe("Paginator", () => {
     });
   });
 
-  describe("bytes32 array", async () => {
+  describe("bytes32 array", () => {
     beforeEach(async () => {
       await mock.pushBytes32(5);
     });
@@ -307,7 +307,7 @@ describe("Paginator", () => {
     });
   });
 
-  describe("bytes32 set", async () => {
+  describe("bytes32 set", () => {
     beforeEach(async () => {
       await mock.pushBytes32(5);
     });

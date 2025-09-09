@@ -1,8 +1,6 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
-
 import { DynamicSetMock } from "@ethers-v6";
 
 const { ethers } = await hre.network.connect();

@@ -61,7 +61,7 @@ describe("CartesianMerkleTree", () => {
 
     let currentSiblingsIndex: number = Number(proof.siblingsLength);
     let finalHash: string = "";
-    let directionBits = Array(currentSiblingsIndex / 2).fill(0);
+    const directionBits = Array(currentSiblingsIndex / 2).fill(0);
 
     while (true) {
       let valuesToHash: string[] = [];
@@ -113,7 +113,7 @@ describe("CartesianMerkleTree", () => {
     let currentIndex = array.length;
 
     while (currentIndex != 0) {
-      let randomIndex = Math.floor(Math.random() * currentIndex);
+      const randomIndex = Math.floor(Math.random() * currentIndex);
       currentIndex--;
 
       [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
@@ -246,7 +246,7 @@ describe("CartesianMerkleTree", () => {
           }
         }
 
-        let currentNode = await treaple.getUintNode(randIndex);
+        const currentNode = await treaple.getUintNode(randIndex);
 
         await treaple.removeUint(currentNode.key);
 
@@ -261,7 +261,7 @@ describe("CartesianMerkleTree", () => {
     it("should not remove non-existent leaves", async () => {
       const keys = [7n, 1n, 5n];
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
 
         await treaple.addUint(hexKey);
@@ -518,7 +518,7 @@ describe("CartesianMerkleTree", () => {
           }
         }
 
-        let currentNode = await treaple.getBytes32Node(randIndex);
+        const currentNode = await treaple.getBytes32Node(randIndex);
 
         await treaple.removeBytes32(currentNode.key);
 
@@ -650,7 +650,7 @@ describe("CartesianMerkleTree", () => {
             break;
           }
         }
-        let currentNode = await treaple.getAddressNode(randIndex);
+        const currentNode = await treaple.getAddressNode(randIndex);
         const currentNodeKey = `0x${currentNode.key.slice(26)}`;
 
         await treaple.removeAddress(currentNodeKey);

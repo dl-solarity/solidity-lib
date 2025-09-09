@@ -104,7 +104,7 @@ describe("MerkleWhitelisted", () => {
 
     it("should not revert if all conditions are met", async () => {
       for (let i = 0; i < 5; i++) {
-        expect(await merkle.connect(users[i]).onlyWhitelistedMethod(amounts[i], getProof(tree, leaves[i]))).to.emit(
+        await expect(merkle.connect(users[i]).onlyWhitelistedMethod(amounts[i], getProof(tree, leaves[i]))).to.emit(
           merkle,
           "WhitelistedData",
         );
@@ -133,7 +133,7 @@ describe("MerkleWhitelisted", () => {
 
     it("should not revert if all conditions are met", async () => {
       for (let i = 0; i < 5; i++) {
-        expect(await merkle.connect(users[i]).onlyWhitelistedUserMethod(getProof(tree, leaves[i]))).to.emit(
+        await expect(merkle.connect(users[i]).onlyWhitelistedUserMethod(getProof(tree, leaves[i]))).to.emit(
           merkle,
           "WhitelistedUser",
         );

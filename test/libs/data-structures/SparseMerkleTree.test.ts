@@ -230,7 +230,7 @@ describe("SparseMerkleTree", () => {
         keys.push(key);
       }
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
         const value = (await merkleTree.getUintNodeByKey(hexKey)).value;
 
@@ -247,7 +247,7 @@ describe("SparseMerkleTree", () => {
       const expectedRoot = "0x2f9bbaa7ab83da6e8d1d8dd05bac16e65fa40b4f6455c1d2ee77e968dfc382dc";
       const keys = [7n, 1n, 5n];
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
 
         await merkleTree.addUint(hexKey, key);
@@ -258,7 +258,7 @@ describe("SparseMerkleTree", () => {
       expect(oldRoot).to.equal(expectedRoot);
       expect(await merkleTree.getUintNodesCount()).to.equal(6);
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
 
         await merkleTree.removeUint(hexKey);
@@ -272,7 +272,7 @@ describe("SparseMerkleTree", () => {
     it("should not remove non-existent leaves", async () => {
       const keys = [7n, 1n, 5n];
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
 
         await merkleTree.addUint(hexKey, key);
@@ -319,7 +319,7 @@ describe("SparseMerkleTree", () => {
     it("should not update non-existent leaves", async () => {
       const keys = [7n, 1n, 5n];
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
 
         await merkleTree.addUint(hexKey, key);

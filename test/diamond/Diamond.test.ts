@@ -407,7 +407,7 @@ describe("Diamond", () => {
         facets[0].functionSelectors = ["0x00000000"];
         await diamond.diamondCutShort(facets);
 
-        let tx = {
+        const tx = {
           to: await diamond.getAddress(),
           value: wei("1"),
         };
@@ -425,7 +425,7 @@ describe("Diamond", () => {
       });
 
       it("should not receive ether if receive is not added", async () => {
-        let tx = {
+        const tx = {
           to: await diamond.getAddress(),
           value: wei("1"),
         };

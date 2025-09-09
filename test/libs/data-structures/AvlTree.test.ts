@@ -25,7 +25,7 @@ describe("AvlTree", () => {
   });
 
   function uintToBytes32Array(uintArray: Array<number>) {
-    let bytes32Array = [];
+    const bytes32Array = [];
 
     for (let i = 0; i < uintArray.length; i++) {
       bytes32Array.push(encodeBytes32String(uintArray[i].toString()));
@@ -341,11 +341,11 @@ describe("AvlTree", () => {
         await avlTree.insertUint(6, 13);
         await avlTree.insertUint(7, 14);
 
-        let fullTraversal = await avlTree.traverseUint();
+        const fullTraversal = await avlTree.traverseUint();
         expect(fullTraversal[0]).to.deep.equal([1, 2, 4, 6, 7]);
         expect(fullTraversal[1]).to.deep.equal([12, 10, 11, 13, 14]);
 
-        let backwardsTraversal = await avlTree.backwardsTraversalUint();
+        const backwardsTraversal = await avlTree.backwardsTraversalUint();
         expect(backwardsTraversal[0]).to.deep.equal([7, 6, 4, 2, 1]);
         expect(backwardsTraversal[1]).to.deep.equal([14, 13, 11, 10, 12]);
 
@@ -395,11 +395,11 @@ describe("AvlTree", () => {
 
       expect(await avlTree.sizeBytes32()).to.equal(6);
 
-      let fullTraversal = await avlTree.traverseBytes32();
+      const fullTraversal = await avlTree.traverseBytes32();
       expect(fullTraversal[0]).to.deep.equal([6, 5, 4, 3, 2, 1]);
       expect(fullTraversal[1]).to.deep.equal(uintToBytes32Array([2, 2, 22, 112, 20, 12]));
 
-      let backwardsTraversal = await avlTree.backwardsTraversalBytes32();
+      const backwardsTraversal = await avlTree.backwardsTraversalBytes32();
       expect(backwardsTraversal[0]).to.deep.equal([1, 2, 3, 4, 5, 6]);
       expect(backwardsTraversal[1]).to.deep.equal(uintToBytes32Array([12, 20, 112, 22, 2, 2]));
     });

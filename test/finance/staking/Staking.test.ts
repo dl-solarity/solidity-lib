@@ -164,7 +164,7 @@ describe("Staking", () => {
 
     it("should not allow to set 0 as a Shares Token or Rewards Token", async () => {
       const StakingMock = await ethers.getContractFactory("StakingMock");
-      let staking = await StakingMock.deploy();
+      const staking = await StakingMock.deploy();
 
       await expect(staking.__StakingMock_init(ethers.ZeroAddress, rewardsToken, rate, stakingStartTime))
         .to.be.revertedWithCustomError(staking, "SharesTokenIsZeroAddress")
@@ -721,8 +721,8 @@ describe("Staking", () => {
 
       await staking.connect(SECOND).unstake(wei(50, sharesDecimals));
 
-      let firstOwedValue = await staking.getOwedValue(FIRST);
-      let secondOwedValue = await staking.getOwedValue(SECOND);
+      const firstOwedValue = await staking.getOwedValue(FIRST);
+      const secondOwedValue = await staking.getOwedValue(SECOND);
 
       await performStakingManipulations();
 
@@ -747,8 +747,8 @@ describe("Staking", () => {
 
       const prevCumulativeSum = await staking.cumulativeSum();
 
-      let firstOwedValue = await staking.getOwedValue(FIRST);
-      let secondOwedValue = await staking.getOwedValue(SECOND);
+      const firstOwedValue = await staking.getOwedValue(FIRST);
+      const secondOwedValue = await staking.getOwedValue(SECOND);
 
       await staking.setRate(wei(2, rewardsDecimals));
 

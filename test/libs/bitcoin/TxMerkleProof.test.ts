@@ -223,7 +223,7 @@ describe("TxMerkleProof", () => {
       const rawProof =
         "0100000038babc9586a5fcd60713573494f4377e7c401c33aa24729a4f6cff46000000004d5969c0d10dcce60868fee4d4de80ba5ef38abaeed8a75daa63e48c963d7b1950476f49ffff001d2d979137030000000343bcd0e95471f68ed30cdadf0ce654fb44f859bf3e364dc9b08014cdba2457d4f28bf060807aea4015e225945c0566f045008b5a386515ff455d7362ebdb6e4df0c5d029ea79cc893cb8f2fb990a1a3e9a4b9188fd837c66821bd0acc11c85ca010b";
 
-      let parser = new MerkleRawProofParser(txid, rawProof);
+      const parser = new MerkleRawProofParser(txid, rawProof);
       const wrongTxId = "0x0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098";
 
       expect(

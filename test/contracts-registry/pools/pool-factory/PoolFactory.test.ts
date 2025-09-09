@@ -3,14 +3,7 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import {
-  ContractsRegistryPoolMock,
-  ERC20Mock,
-  PoolContractsRegistryMock,
-  PoolFactoryMock,
-  PoolMock,
-  PoolUpgradeMock,
-} from "@ethers-v6";
+import { ContractsRegistryPoolMock, ERC20Mock, PoolContractsRegistryMock, PoolFactoryMock, PoolMock } from "@ethers-v6";
 
 const { ethers } = await hre.network.connect();
 

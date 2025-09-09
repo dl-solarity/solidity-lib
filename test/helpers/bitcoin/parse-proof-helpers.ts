@@ -72,7 +72,7 @@ export class MerkleRawProofParser {
   }
 
   private getNodeCountPerLevel(txCount: number, depth: number): number[] {
-    let result: number[] = [];
+    const result: number[] = [];
     let levelSize = txCount;
 
     for (let i = depth; i >= 0; i--) {
