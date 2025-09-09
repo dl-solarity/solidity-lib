@@ -3,16 +3,20 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import { Reverter } from "@test-helpers";
+
 import { MultiOwnablePoolContractsRegistryMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("MultiOwnablePoolContractsRegistry", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let SECOND: HardhatEthersSigner;
 
   let poolContractsRegistry: MultiOwnablePoolContractsRegistryMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [, SECOND] = await ethers.getSigners();
 
     const MultiOwnablePoolContractsRegistryMock = await ethers.getContractFactory(
@@ -21,7 +25,11 @@ describe("MultiOwnablePoolContractsRegistry", () => {
     poolContractsRegistry = await MultiOwnablePoolContractsRegistryMock.deploy();
 
     await poolContractsRegistry.__AMultiOwnablePoolContractsRegistry_init();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not initialize twice", async () => {

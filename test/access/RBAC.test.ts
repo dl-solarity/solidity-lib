@@ -3,24 +3,32 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import { Reverter } from "@test-helpers";
+
 import { RBACMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("RBAC", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let OWNER: HardhatEthersSigner;
   let SECOND: HardhatEthersSigner;
 
   let rbac: RBACMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
     const RBACMock = await ethers.getContractFactory("RBACMock");
     rbac = await RBACMock.deploy();
 
     await rbac.__RBACMock_init();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not initialize twice", async () => {
@@ -69,7 +77,7 @@ describe("RBAC", () => {
       );
       await rbac.removePermissionsFromRole("ROLE", [{ resource: "resource", permissions: ["permission1"] }], true);
 
-      let allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
+      const allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
 
       expect(allowedPerms).to.deep.equal([["resource", ["permission2"]]]);
     });
@@ -82,7 +90,7 @@ describe("RBAC", () => {
       );
       await rbac.removePermissionsFromRole("ROLE", [{ resource: "resource", permissions: ["permission2"] }], false);
 
-      let disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
+      const disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
 
       expect(disallowedPerms).to.deep.equal([["resource", ["permission1"]]]);
     });
@@ -110,8 +118,8 @@ describe("RBAC", () => {
         false,
       );
 
-      let allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
-      let disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
+      const allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
+      const disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
 
       expect(allowedPerms).to.deep.equal([]);
       expect(disallowedPerms).to.deep.equal([]);
@@ -222,7 +230,7 @@ describe("RBAC", () => {
       });
     });
 
-    describe("disallowed permissions", async () => {
+    describe("disallowed permissions", () => {
       it("should grant roles with disallowed permissions (1)", async () => {
         await rbac.addPermissionsToRole(
           "ROLE",

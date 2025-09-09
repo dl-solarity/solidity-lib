@@ -1,13 +1,15 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { reverseBytes } from "@test-helpers";
+import { Reverter, reverseBytes } from "@test-helpers";
 
 import { EndianConverterMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("EndianConverter", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let converter: EndianConverterMock;
 
   const bytes2 = "0x13d4";
@@ -16,10 +18,14 @@ describe("EndianConverter", () => {
   const bytes16 = "0x00100513fde409ababcdef1234567890";
   const bytes32 = "0x123456789abcdef000112233445566778899aabbccddeefffa000513fdd409ab";
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     const EndianConverterMock = await ethers.getContractFactory("EndianConverterMock");
     converter = await EndianConverterMock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   it("should correctly convert bytes", async () => {
     let expected = reverseBytes(bytes2);

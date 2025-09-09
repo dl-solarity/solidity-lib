@@ -6,11 +6,15 @@ import { Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
 import { wei } from "@scripts";
 
+import { Reverter } from "@test-helpers";
+
 import { ERC20Mock, StakingMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Staking", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let time: Time;
 
   let FIRST: HardhatEthersSigner;
@@ -121,7 +125,7 @@ describe("Staking", () => {
     expect(await staking.userOwedValue(THIRD)).to.equal(thirdExpectedReward);
   };
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     time = networkHelpers.time;
 
     [FIRST, SECOND, THIRD] = await ethers.getSigners();
@@ -142,7 +146,11 @@ describe("Staking", () => {
     rate = wei(1, rewardsDecimals);
 
     await staking.__StakingMock_init(sharesToken, rewardsToken, rate, stakingStartTime);
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("AStaking initialization", () => {
     it("should not initialize twice", async () => {
@@ -164,7 +172,7 @@ describe("Staking", () => {
 
     it("should not allow to set 0 as a Shares Token or Rewards Token", async () => {
       const StakingMock = await ethers.getContractFactory("StakingMock");
-      let staking = await StakingMock.deploy();
+      const staking = await StakingMock.deploy();
 
       await expect(staking.__StakingMock_init(ethers.ZeroAddress, rewardsToken, rate, stakingStartTime))
         .to.be.revertedWithCustomError(staking, "SharesTokenIsZeroAddress")
@@ -721,8 +729,8 @@ describe("Staking", () => {
 
       await staking.connect(SECOND).unstake(wei(50, sharesDecimals));
 
-      let firstOwedValue = await staking.getOwedValue(FIRST);
-      let secondOwedValue = await staking.getOwedValue(SECOND);
+      const firstOwedValue = await staking.getOwedValue(FIRST);
+      const secondOwedValue = await staking.getOwedValue(SECOND);
 
       await performStakingManipulations();
 
@@ -747,8 +755,8 @@ describe("Staking", () => {
 
       const prevCumulativeSum = await staking.cumulativeSum();
 
-      let firstOwedValue = await staking.getOwedValue(FIRST);
-      let secondOwedValue = await staking.getOwedValue(SECOND);
+      const firstOwedValue = await staking.getOwedValue(FIRST);
+      const secondOwedValue = await staking.getOwedValue(SECOND);
 
       await staking.setRate(wei(2, rewardsDecimals));
 

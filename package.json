@@ -29,11 +29,12 @@
     "coverage": "npx hardhat test --coverage",
     "test": "npx hardhat test",
     "private-network": "npx hardhat node",
-    "lint-fix": "npm run lint-sol-fix && npm run lint-ts-fix && npm run lint-json-fix && npm run solhint-check",
+    "lint-fix": "npm run lint-sol-fix && npm run lint-ts-fix && npm run lint-json-fix && npm run solhint-check && npm run eslint-check",
     "lint-json-fix": "prettier --write \"./**/*.json\"",
     "lint-ts-fix": "prettier --write \"./**/*.ts\"",
     "lint-sol-fix": "prettier --write \"contracts/**/*.sol\"",
     "solhint-check": "solhint --noPoster \"./contracts/**/*.sol\"",
+    "eslint-check": "eslint . --ext .ts",
     "generate-docs": "npx hardhat markup",
     "publish-to-npm": "npm run lint-fix && bash ./scripts/publish.sh --public"
   },
@@ -53,12 +54,17 @@
     "@types/chai": "^5.2.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
     "chai": "^5.3.3",
     "circomlibjs": "^0.1.7",
     "dotenv": "^17.2.2",
+    "eslint": "^9.35.0",
+    "eslint-plugin-promise": "^7.2.1",
     "ethers": "^6.15.0",
     "hardhat": "^3.0.4",
     "husky": "^9.1.7",
+    "jiti": "^2.5.1",
     "merkletreejs": "^0.5.2",
     "mock-local-storage": "^1.1.24",
     "prettier": "^3.6.2",
@@ -68,6 +74,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typechain": "^8.3.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.43.0"
   }
 }

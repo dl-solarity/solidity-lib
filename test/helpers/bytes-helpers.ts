@@ -17,7 +17,7 @@ export function reverseByte(byte: string): string {
   return padded.split("").reverse().join("");
 }
 
-export function reverseUint32(decimalNumber: BigNumberish): BigInt {
+export function reverseUint32(decimalNumber: BigNumberish): bigint {
   const hex = decimalNumber.toString(16);
   const bytes4 = hex.padStart(8, "0");
 

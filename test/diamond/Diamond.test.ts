@@ -5,26 +5,32 @@ import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { wei } from "@scripts";
 
-import { FacetAction, getSelectors } from "@test-helpers";
+import { FacetAction, Reverter, getSelectors } from "@test-helpers";
 
 import { Diamond, DummyFacetMock, DummyInitMock, OwnableDiamondMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Diamond", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let OWNER: HardhatEthersSigner;
   let SECOND: HardhatEthersSigner;
 
   let diamond: OwnableDiamondMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
     const OwnableDiamond = await ethers.getContractFactory("OwnableDiamondMock");
     diamond = await OwnableDiamond.deploy();
 
     await diamond.__OwnableDiamondMock_init();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should initialize only once", async () => {
@@ -407,7 +413,7 @@ describe("Diamond", () => {
         facets[0].functionSelectors = ["0x00000000"];
         await diamond.diamondCutShort(facets);
 
-        let tx = {
+        const tx = {
           to: await diamond.getAddress(),
           value: wei("1"),
         };
@@ -425,7 +431,7 @@ describe("Diamond", () => {
       });
 
       it("should not receive ether if receive is not added", async () => {
-        let tx = {
+        const tx = {
           to: await diamond.getAddress(),
           value: wei("1"),
         };

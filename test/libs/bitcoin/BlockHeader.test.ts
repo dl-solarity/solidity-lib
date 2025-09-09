@@ -2,6 +2,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 
 import {
+  Reverter,
   checkBlockHeaderDataInBE,
   checkBlockHeaderDataInLE,
   getBlockHeaderData,
@@ -11,18 +12,24 @@ import {
 
 import { BlockHeaderMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("BlockHeader", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let blockHeaderLib: BlockHeaderMock;
 
   let blocksDataFilePath: string;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     blockHeaderLib = await ethers.deployContract("BlockHeaderMock");
 
     blocksDataFilePath = getBlocksDataFilePath("headers_814991_815000.json");
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("#parseBlockHeader", () => {
     it("should correctly parse block header data to big-endian format", async () => {

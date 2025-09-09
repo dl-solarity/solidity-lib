@@ -3,24 +3,32 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import { Reverter } from "@test-helpers";
+
 import { RBACGroupableMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("RBACGroupable", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let OWNER: HardhatEthersSigner;
   let SECOND: HardhatEthersSigner;
 
   let rbac: RBACGroupableMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
     const RBACGroupableMock = await ethers.getContractFactory("RBACGroupableMock");
     rbac = await RBACGroupableMock.deploy();
 
     await rbac.__RBACGroupableMock_init();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("__ARBACGroupable_init", () => {
     it("should not initialize twice", async () => {
@@ -168,9 +176,7 @@ describe("RBACGroupable", () => {
         it("should add the user to the default group automatically", async () => {
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([]);
 
-          expect(await rbac.toggleDefaultGroup())
-            .to.emit(rbac, "ToggledDefaultGroup")
-            .withArgs(true);
+          await expect(rbac.toggleDefaultGroup()).to.emit(rbac, "ToggledDefaultGroup").withArgs(true);
 
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([""]);
 
@@ -178,9 +184,7 @@ describe("RBACGroupable", () => {
 
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([GROUP_ROLES01, GROUP_ROLES12, ""]);
 
-          expect(await rbac.toggleDefaultGroup())
-            .to.emit(rbac, "ToggledDefaultGroup")
-            .withArgs(false);
+          await expect(rbac.toggleDefaultGroup()).to.emit(rbac, "ToggledDefaultGroup").withArgs(false);
 
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([GROUP_ROLES01, GROUP_ROLES12]);
         });

@@ -3,25 +3,33 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import { Reverter } from "@test-helpers";
+
 import { MultiOwnableMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("MultiOwnable", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let FIRST: HardhatEthersSigner;
   let SECOND: HardhatEthersSigner;
   let THIRD: HardhatEthersSigner;
 
   let multiOwnable: MultiOwnableMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [FIRST, SECOND, THIRD] = await ethers.getSigners();
 
     const MultiOwnableMock = await ethers.getContractFactory("MultiOwnableMock");
     multiOwnable = await MultiOwnableMock.deploy();
 
     await multiOwnable.__MultiOwnableMock_init();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should initialize", async () => {

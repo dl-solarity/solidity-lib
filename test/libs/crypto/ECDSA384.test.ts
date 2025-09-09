@@ -1,9 +1,11 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
+import { Reverter } from "@test-helpers";
+
 import { ECDSA384Mock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 function modifyLeft(value: string, modifier: string): string {
   let newSignature = "0x";
@@ -32,13 +34,19 @@ function modifyRight(value: string, modifier: string): string {
 }
 
 describe("ECDSA384", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let ecdsa384: ECDSA384Mock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     const ECDSA384Mock = await ethers.getContractFactory("ECDSA384Mock");
 
     ecdsa384 = await ECDSA384Mock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("SECP384r1", () => {
     const signature =
