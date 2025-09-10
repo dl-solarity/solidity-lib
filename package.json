@@ -63,7 +63,7 @@
     "eslint": "^9.35.0",
     "eslint-plugin-promise": "^7.2.1",
     "ethers": "^6.15.0",
-    "hardhat": "^3.0.4",
+    "hardhat": "^3.0.5",
     "husky": "^9.1.7",
     "jiti": "^2.5.1",
     "merkletreejs": "^0.5.2",
