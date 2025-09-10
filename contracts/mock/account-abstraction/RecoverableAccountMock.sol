@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import {RecoverableAccount} from "../../account-abstraction/RecoverableAccount.sol";
+import {ARecoverableAccount} from "../../account-abstraction/ARecoverableAccount.sol";
 
-contract RecoverableAccountMock is RecoverableAccount {
+contract RecoverableAccountMock is ARecoverableAccount {
     function initialize(address entryPoint_, address trustedExecutor_) external initializer {
-        __RecoverableAccount_init(entryPoint_, trustedExecutor_);
+        __ARecoverableAccount_init(entryPoint_, trustedExecutor_);
     }
 
     function callInitialize(address entryPoint_, address trustedExecutor_) external {
-        __RecoverableAccount_init(entryPoint_, trustedExecutor_);
+        __ARecoverableAccount_init(entryPoint_, trustedExecutor_);
     }
 
     function updateTrustedExecutor(address newTrustedExecutor_) external {
@@ -36,6 +36,6 @@ contract Caller {
         address provider_,
         bytes memory recoveryData_
     ) external {
-        RecoverableAccount(account_).addRecoveryProvider(provider_, recoveryData_);
+        ARecoverableAccount(account_).addRecoveryProvider(provider_, recoveryData_);
     }
 }

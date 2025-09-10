@@ -11,12 +11,12 @@ import {AAccountRecovery} from "./AAccountRecovery.sol";
 import {IAccount} from "../interfaces/account-abstraction/erc-4337/IAccount.sol";
 
 /**
- * @notice The EIP-7702 Recoverable Account module
+ * @notice EIP-7702/ERC-4337 Recoverable Account module
  *
- * A basic EIP-7702 account implementation with ERC-7821 batching execution,
+ * A basic EIP-7702/ERC-4337 account implementation with ERC-7821 batching execution,
  * ERC-4337 sponsored transactions, and ERC-7947 recoverable trusted executor.
  */
-contract RecoverableAccount is IAccount, Initializable, AAccountRecovery, ERC7821 {
+abstract contract ARecoverableAccount is IAccount, Initializable, AAccountRecovery, ERC7821 {
     using Address for *;
 
     uint256 public constant SIG_VALIDATION_FAILED = 1;
@@ -44,7 +44,7 @@ contract RecoverableAccount is IAccount, Initializable, AAccountRecovery, ERC782
         _;
     }
 
-    function __RecoverableAccount_init(
+    function __ARecoverableAccount_init(
         address entryPoint_,
         address trustedExecutor_
     ) internal onlyInitializing {
@@ -127,6 +127,9 @@ contract RecoverableAccount is IAccount, Initializable, AAccountRecovery, ERC782
         _updateTrustedExecutor(newTrustedExecutor_);
     }
 
+    /**
+     * @dev allow execution from address(this), trusted executor, and entrypoint
+     */
     function _execute(
         bytes32,
         bytes calldata,
@@ -169,6 +172,9 @@ contract RecoverableAccount is IAccount, Initializable, AAccountRecovery, ERC782
         emit TrustedExecutorUpdated(oldTrustedExecutor_, newTrustedExecutor_);
     }
 
+    /**
+     * @dev override this for a custom paymaster logic
+     */
     function _payPrefund(uint256 missingAccountFunds_) internal virtual {
         if (missingAccountFunds_ != 0) {
             payable(msg.sender).sendValue(missingAccountFunds_);
