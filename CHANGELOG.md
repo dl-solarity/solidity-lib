@@ -1,6 +1,6 @@
 # Changelog
 
-## [patch]
+## [3.2.4]
 
 - Added `ARecoverableAccount` contract, an all-in-one EIP-7702/ERC-4337 account with ERC-7821 batching, ERC-4337 gas sponsorship, and ERC-7947 recovery.
 - Added eslint.
