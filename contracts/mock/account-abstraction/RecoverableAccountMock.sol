@@ -8,6 +8,10 @@ contract RecoverableAccountMock is RecoverableAccount {
         __RecoverableAccount_init(entryPoint_, trustedExecutor_);
     }
 
+    function callInitialize(address entryPoint_, address trustedExecutor_) external {
+        __RecoverableAccount_init(entryPoint_, trustedExecutor_);
+    }
+
     function updateTrustedExecutor(address newTrustedExecutor_) external {
         _updateTrustedExecutor(newTrustedExecutor_);
     }

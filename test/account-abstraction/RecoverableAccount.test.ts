@@ -125,6 +125,8 @@ describe("RecoverableAccount", () => {
         account,
         "InvalidInitialization",
       );
+
+      await expect(account.callInitialize(entryPoint, FIRST)).to.be.revertedWithCustomError(account, "NotInitializing");
     });
   });
 
