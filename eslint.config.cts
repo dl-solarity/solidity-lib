@@ -8,7 +8,13 @@ import tseslint from "typescript-eslint";
 
 export default defineConfig(
   {
-    ignores: ["dist/**", "node_modules/**", "generated-types/**", "artifacts/**"],
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "generated-types/**",
+      "artifacts/**",
+      "coverage/**",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -34,8 +40,8 @@ export default defineConfig(
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": [
         "error",
-        { checksVoidReturn: { attributes: false } }
+        { checksVoidReturn: { attributes: false } },
       ],
     },
-  }
+  },
 );
