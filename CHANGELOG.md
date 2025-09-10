@@ -1,5 +1,9 @@
 # Changelog
 
+## [patch]
+
+- Separated txid and wtxid calculations in `TxParser` library.
+
 ## [none]
 
 - Added eslint.
