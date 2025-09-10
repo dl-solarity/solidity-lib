@@ -16,7 +16,7 @@ import {IAccount} from "../interfaces/account-abstraction/erc-4337/IAccount.sol"
  * A basic EIP-7702 account implementation with ERC-7821 batching execution,
  * ERC-4337 sponsored transactions, and ERC-7947 recoverable trusted executor.
  */
-contract RecoverableAccount is ERC7821, AAccountRecovery, IAccount, Initializable {
+contract RecoverableAccount is IAccount, Initializable, AAccountRecovery, ERC7821 {
     using Address for *;
 
     uint256 public constant SIG_VALIDATION_FAILED = 1;
@@ -33,7 +33,6 @@ contract RecoverableAccount is ERC7821, AAccountRecovery, IAccount, Initializabl
 
     error NotSelfCalled();
     error InvalidExecutor(address executor);
-    error TrustedExecutorAlreadySet(address trustedExecutor);
 
     event TrustedExecutorUpdated(
         address indexed oldTrustedExecutor,
@@ -48,7 +47,7 @@ contract RecoverableAccount is ERC7821, AAccountRecovery, IAccount, Initializabl
     function __RecoverableAccount_init(
         address entryPoint_,
         address trustedExecutor_
-    ) public initializer {
+    ) internal onlyInitializing {
         _getRecoverableAccountStorage().entryPoint = entryPoint_;
 
         _updateTrustedExecutor(trustedExecutor_);
@@ -111,7 +110,7 @@ contract RecoverableAccount is ERC7821, AAccountRecovery, IAccount, Initializabl
      * @notice A function to retrieve the current trusted executor.
      * @return The address of the current trusted executor.
      */
-    function getTrustedExecutor() public view virtual returns (address) {
+    function trustedExecutor() public view virtual returns (address) {
         return _getRecoverableAccountStorage().trustedExecutor;
     }
 
@@ -136,7 +135,7 @@ contract RecoverableAccount is ERC7821, AAccountRecovery, IAccount, Initializabl
     ) internal virtual override {
         if (
             msg.sender != address(this) &&
-            msg.sender != getTrustedExecutor() &&
+            msg.sender != trustedExecutor() &&
             msg.sender != entryPoint()
         ) {
             revert InvalidExecutor(msg.sender);
@@ -163,11 +162,7 @@ contract RecoverableAccount is ERC7821, AAccountRecovery, IAccount, Initializabl
     }
 
     function _updateTrustedExecutor(address newTrustedExecutor_) internal virtual {
-        address oldTrustedExecutor_ = getTrustedExecutor();
-
-        if (oldTrustedExecutor_ == newTrustedExecutor_) {
-            revert TrustedExecutorAlreadySet(newTrustedExecutor_);
-        }
+        address oldTrustedExecutor_ = trustedExecutor();
 
         _getRecoverableAccountStorage().trustedExecutor = newTrustedExecutor_;
 
@@ -186,7 +181,7 @@ contract RecoverableAccount is ERC7821, AAccountRecovery, IAccount, Initializabl
     ) internal virtual returns (uint256 validationData_) {
         address recovered_ = ECDSA.recover(userOpHash_, userOp_.signature);
 
-        if (recovered_ == address(this) || recovered_ == getTrustedExecutor()) {
+        if (recovered_ == address(this) || recovered_ == trustedExecutor()) {
             return SIG_VALIDATION_SUCCESS;
         }
 

@@ -4,6 +4,10 @@ pragma solidity ^0.8.21;
 import {RecoverableAccount} from "../../account-abstraction/RecoverableAccount.sol";
 
 contract RecoverableAccountMock is RecoverableAccount {
+    function initialize(address entryPoint_, address trustedExecutor_) external initializer {
+        __RecoverableAccount_init(entryPoint_, trustedExecutor_);
+    }
+
     function updateTrustedExecutor(address newTrustedExecutor_) external {
         _updateTrustedExecutor(newTrustedExecutor_);
     }

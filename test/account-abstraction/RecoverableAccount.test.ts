@@ -41,7 +41,6 @@ describe("RecoverableAccount", () => {
   const RECOVERY_DATA = "0x1234";
 
   const SINGLE_BATCH_MODE = "0x0100000000000000000000000000000000000000000000000000000000000000";
-  const SINGLE_BATCH_OP_DATA_MODE = "0x0100000000007821000100000000000000000000000000000000000000000000";
   const BATCH_OF_BATCHES_MODE = "0x0100000000007821000200000000000000000000000000000000000000000000";
 
   async function getSignature(userOp: IAccount.PackedUserOperationStruct) {
@@ -98,7 +97,7 @@ describe("RecoverableAccount", () => {
 
     account = await ethers.deployContract("RecoverableAccountMock");
 
-    await account.__RecoverableAccount_init(entryPoint, SECOND);
+    await account.initialize(entryPoint, SECOND);
 
     await FIRST.sendTransaction({
       to: await account.getAddress(),
@@ -122,7 +121,7 @@ describe("RecoverableAccount", () => {
 
   describe("initialize", () => {
     it("should not initialize twice", async () => {
-      await expect(account.__RecoverableAccount_init(entryPoint, FIRST)).to.be.revertedWithCustomError(
+      await expect(account.initialize(entryPoint, FIRST)).to.be.revertedWithCustomError(
         account,
         "InvalidInitialization",
       );
@@ -154,7 +153,7 @@ describe("RecoverableAccount", () => {
 
       await account.connect(SECOND).recoverAccess(subject, provider1, "0x");
 
-      expect(await account.getTrustedExecutor()).to.be.eq(FIRST.address);
+      expect(await account.trustedExecutor()).to.be.eq(FIRST.address);
 
       await expect(account.connect(FIRST).addRecoveryProvider(provider2, RECOVERY_DATA)).to.be.revertedWithCustomError(
         account,
@@ -215,7 +214,7 @@ describe("RecoverableAccount", () => {
     it("should recover access correctly", async () => {
       await account.connect(DELEGATED).addRecoveryProvider(provider1, RECOVERY_DATA);
 
-      expect(await account.getTrustedExecutor()).to.be.eq(SECOND.address);
+      expect(await account.trustedExecutor()).to.be.eq(SECOND.address);
 
       let subject = ethers.AbiCoder.defaultAbiCoder().encode(["address"], [FIRST.address]);
 
@@ -224,7 +223,7 @@ describe("RecoverableAccount", () => {
       await expect(tx).to.emit(account, "AccessRecovered").withArgs(subject);
       await expect(tx).to.emit(account, "TrustedExecutorUpdated").withArgs(SECOND.address, FIRST.address);
 
-      expect(await account.getTrustedExecutor()).to.be.eq(FIRST.address);
+      expect(await account.trustedExecutor()).to.be.eq(FIRST.address);
 
       subject = ethers.AbiCoder.defaultAbiCoder().encode(["address"], [SECOND.address]);
 
@@ -233,27 +232,21 @@ describe("RecoverableAccount", () => {
       await expect(tx).to.emit(account, "AccessRecovered").withArgs(subject);
       await expect(tx).to.emit(account, "TrustedExecutorUpdated").withArgs(FIRST.address, SECOND.address);
 
-      expect(await account.getTrustedExecutor()).to.be.eq(SECOND.address);
+      expect(await account.trustedExecutor()).to.be.eq(SECOND.address);
     });
 
     it("should revert if recover access request is invalid", async () => {
       await account.connect(DELEGATED).addRecoveryProvider(provider1, RECOVERY_DATA);
 
-      expect(await account.getTrustedExecutor()).to.be.eq(SECOND.address);
+      expect(await account.trustedExecutor()).to.be.eq(SECOND.address);
 
-      let subject = ethers.AbiCoder.defaultAbiCoder().encode(["address"], [FIRST.address]);
+      const subject = ethers.AbiCoder.defaultAbiCoder().encode(["address"], [FIRST.address]);
 
       await expect(account.connect(FIRST).recoverAccess(subject, provider2, "0x"))
         .to.be.revertedWithCustomError(account, "ProviderNotRegistered")
         .withArgs(await provider2.getAddress());
 
-      expect(await account.getTrustedExecutor()).to.be.eq(SECOND.address);
-
-      subject = ethers.AbiCoder.defaultAbiCoder().encode(["address"], [SECOND.address]);
-
-      await expect(account.connect(FIRST).recoverAccess(subject, provider1, "0x"))
-        .to.be.revertedWithCustomError(account, "TrustedExecutorAlreadySet")
-        .withArgs(SECOND.address);
+      expect(await account.trustedExecutor()).to.be.eq(SECOND.address);
     });
   });
 
@@ -286,26 +279,10 @@ describe("RecoverableAccount", () => {
       await expect(tx).to.changeTokenBalances(ethers, token, [account, FIRST], [-transferAmount, transferAmount]);
     });
 
-    it("should replace the call to address to address(this) if zero address is provided", async () => {
-      await account.connect(DELEGATED).addRecoveryProvider(provider2, RECOVERY_DATA);
-
-      const updateTrustedExecutorData = account.interface.encodeFunctionData("updateTrustedExecutor", [FIRST.address]);
-
-      const calls = [[ZeroAddress, 0, updateTrustedExecutorData]];
-
-      const executionData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256,bytes)[]"], [calls]);
-
-      const tx = await account.connect(DELEGATED).execute(SINGLE_BATCH_MODE, executionData);
-
-      await expect(tx).to.emit(account, "TrustedExecutorUpdated").withArgs(SECOND.address, FIRST.address);
-
-      expect(await account.getTrustedExecutor()).to.be.eq(FIRST.address);
-    });
-
     it("should execute calls with gas sponsorship correctly", async () => {
       const account = await ethers.deployContract("RecoverableAccountMockWithHooks");
 
-      await account.__RecoverableAccount_init(entryPoint, signer);
+      await account.initialize(entryPoint, signer);
 
       await FIRST.sendTransaction({
         to: await account.getAddress(),
@@ -389,7 +366,7 @@ describe("RecoverableAccount", () => {
     it("should call hooks correctly", async () => {
       const account = await ethers.deployContract("RecoverableAccountMockWithHooks");
 
-      await account.__RecoverableAccount_init(entryPoint, SECOND);
+      await account.initialize(entryPoint, SECOND);
 
       await FIRST.sendTransaction({
         to: await account.getAddress(),
@@ -414,7 +391,7 @@ describe("RecoverableAccount", () => {
 
       const executionData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256,bytes)[]"], [calls]);
 
-      const tx = await account.connect(SECOND).execute(SINGLE_BATCH_OP_DATA_MODE, executionData);
+      const tx = await account.connect(SECOND).execute(SINGLE_BATCH_MODE, executionData);
 
       await expect(tx)
         .to.emit(account, "BeforeCall")
@@ -433,7 +410,7 @@ describe("RecoverableAccount", () => {
     it("should revert if the account cannot prefund the execute", async () => {
       const account = await ethers.deployContract("RecoverableAccountMockWithHooks");
 
-      await account.__RecoverableAccount_init(entryPoint, signer);
+      await account.initialize(entryPoint, signer);
 
       await FIRST.sendTransaction({
         to: await account.getAddress(),
@@ -473,50 +450,6 @@ describe("RecoverableAccount", () => {
         .withArgs(0, "AA23 reverted", encodedError);
     });
 
-    it("should revert if an unsupported mode is provided", async () => {
-      const invalidMode = "0x0100000000007821000300000000000000000000000000000000000000000000";
-
-      await expect(account.execute(invalidMode, "0x")).to.be.revertedWithCustomError(
-        account,
-        "UnsupportedExecutionMode",
-      );
-    });
-
-    it("should revert if unsupported execution data format is provided", async () => {
-      await account.connect(DELEGATED).addRecoveryProvider(provider2, RECOVERY_DATA);
-
-      await account.connect(DELEGATED).updateTrustedExecutor(FIRST);
-
-      await token.connect(FIRST).transfer(account, wei(5));
-
-      const transferData1 = token.interface.encodeFunctionData("transfer", [FIRST.address, wei(5)]);
-
-      const calls1 = [[await token.getAddress(), 0n, transferData1]];
-
-      const executionData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256,bytes)[]"], [calls1]);
-
-      const executionDataWithOpData = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["tuple(address,uint256,bytes)[]", "bytes"],
-        [calls1, "0x"],
-      );
-
-      const executionDataBatch = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["bytes[]"],
-        [[executionData, executionData]],
-      );
-
-      await expect(account.connect(FIRST).execute(SINGLE_BATCH_OP_DATA_MODE, executionDataBatch)).to.be.revert(ethers);
-
-      await expect(account.connect(FIRST).execute(BATCH_OF_BATCHES_MODE, executionData)).to.be.revert(ethers);
-      await expect(account.connect(FIRST).execute(BATCH_OF_BATCHES_MODE, executionDataWithOpData)).to.be.revert(ethers);
-
-      await expect(account.connect(FIRST).execute(SINGLE_BATCH_MODE, executionDataBatch)).to.be.revert(ethers);
-
-      const tx = await account.connect(FIRST).execute(SINGLE_BATCH_MODE, executionDataWithOpData);
-
-      await expect(tx).to.changeTokenBalances(ethers, token, [account, FIRST], [-wei(5), wei(5)]);
-    });
-
     it("should revert if the function is not self called or not called by a trusted executor or entry point", async () => {
       await account.connect(DELEGATED).addRecoveryProvider(provider1, RECOVERY_DATA);
 
@@ -534,7 +467,7 @@ describe("RecoverableAccount", () => {
     it("should revert if invalid signature is provided with the sponsored transaction", async () => {
       const account = await ethers.deployContract("RecoverableAccountMockWithHooks");
 
-      await account.__RecoverableAccount_init(entryPoint, SECOND);
+      await account.initialize(entryPoint, SECOND);
 
       await FIRST.sendTransaction({
         to: await account.getAddress(),
@@ -557,7 +490,7 @@ describe("RecoverableAccount", () => {
 
       const executionData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256,bytes)[]"], [calls]);
 
-      const callData = account.interface.encodeFunctionData("execute", [SINGLE_BATCH_OP_DATA_MODE, executionData]);
+      const callData = account.interface.encodeFunctionData("execute", [SINGLE_BATCH_MODE, executionData]);
 
       const userOp = await getUserOp(callData, await account.getAddress());
 
@@ -586,17 +519,6 @@ describe("RecoverableAccount", () => {
       await expect(account.connect(SECOND).execute(SINGLE_BATCH_MODE, executionData))
         .to.be.revertedWithCustomError(token, "ERC20InsufficientBalance")
         .withArgs(await account.getAddress(), wei(10), wei(20));
-    });
-  });
-
-  describe("supportsExecutionMode", () => {
-    it("should correctly identify supported and unsupported modes", async () => {
-      expect(await account.supportsExecutionMode(SINGLE_BATCH_MODE)).to.be.true;
-      expect(await account.supportsExecutionMode(SINGLE_BATCH_OP_DATA_MODE)).to.be.true;
-      expect(await account.supportsExecutionMode(BATCH_OF_BATCHES_MODE)).to.be.true;
-
-      const invalidMode = "0x0100000000007821000300000000000000000000000000000000000000000000";
-      expect(await account.supportsExecutionMode(invalidMode)).to.be.false;
     });
   });
 
