@@ -9,14 +9,28 @@ import hardhatContractSizer from "@solidstate/hardhat-contract-sizer";
 const config: HardhatUserConfig = {
   plugins: [hardhatToolboxMochaEthers, hardhatMarkup, hardhatContractSizer],
   solidity: {
-    version: "0.8.22",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
+    compilers: [
+      {
+        version: "0.8.22",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+          evmVersion: "paris",
+        },
       },
-      evmVersion: "paris",
-    },
+      {
+        version: "0.8.28",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+          evmVersion: "cancun",
+        },
+      },
+    ],
   },
   typechain: {
     outDir: "generated-types/ethers",
