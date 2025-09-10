@@ -3,17 +3,25 @@ import hre from "hardhat";
 
 import { wei } from "@scripts";
 
+import { Reverter } from "@test-helpers";
+
 import { DecimalsConverterMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("DecimalsConverter", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let mock: DecimalsConverterMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     const DecimalsConverterMock = await ethers.getContractFactory("DecimalsConverterMock");
     mock = await DecimalsConverterMock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("decimals", () => {
     it("should return correct decimals", async () => {

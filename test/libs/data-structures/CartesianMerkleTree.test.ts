@@ -5,14 +5,16 @@ import { BigNumberish, BytesLike } from "ethers";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { getPoseidon, poseidonHash } from "@test-helpers";
+import { Reverter, getPoseidon, poseidonHash } from "@test-helpers";
 
 import { CartesianMerkleTree } from "@/generated-types/ethers/mock/libs/data-structures/CartesianMerkleTreeMock.sol/CartesianMerkleTreeMock.ts";
 import { CartesianMerkleTreeMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("CartesianMerkleTree", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let USER1: HardhatEthersSigner;
 
   let treaple: CartesianMerkleTreeMock;
@@ -61,7 +63,7 @@ describe("CartesianMerkleTree", () => {
 
     let currentSiblingsIndex: number = Number(proof.siblingsLength);
     let finalHash: string = "";
-    let directionBits = Array(currentSiblingsIndex / 2).fill(0);
+    const directionBits = Array(currentSiblingsIndex / 2).fill(0);
 
     while (true) {
       let valuesToHash: string[] = [];
@@ -113,14 +115,14 @@ describe("CartesianMerkleTree", () => {
     let currentIndex = array.length;
 
     while (currentIndex != 0) {
-      let randomIndex = Math.floor(Math.random() * currentIndex);
+      const randomIndex = Math.floor(Math.random() * currentIndex);
       currentIndex--;
 
       [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
     }
   }
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [USER1] = await ethers.getSigners();
 
     const CartesianMerkleTreeMock = await ethers.getContractFactory("CartesianMerkleTreeMock", {
@@ -130,7 +132,11 @@ describe("CartesianMerkleTree", () => {
     });
 
     treaple = await CartesianMerkleTreeMock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("Uint CMT", () => {
     beforeEach("setup", async () => {
@@ -246,7 +252,7 @@ describe("CartesianMerkleTree", () => {
           }
         }
 
-        let currentNode = await treaple.getUintNode(randIndex);
+        const currentNode = await treaple.getUintNode(randIndex);
 
         await treaple.removeUint(currentNode.key);
 
@@ -261,7 +267,7 @@ describe("CartesianMerkleTree", () => {
     it("should not remove non-existent leaves", async () => {
       const keys = [7n, 1n, 5n];
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
 
         await treaple.addUint(hexKey);
@@ -307,7 +313,9 @@ describe("CartesianMerkleTree", () => {
           key: proof.key,
           nonExistenceKey: proof.nonExistenceKey,
         };
+
         expect(await treaple.verifyUintProof(proofObj)).to.be.true;
+        expect(await treaple.processCMTProof(proofObj)).to.be.eq(proof.root);
       }
     });
 
@@ -516,7 +524,7 @@ describe("CartesianMerkleTree", () => {
           }
         }
 
-        let currentNode = await treaple.getBytes32Node(randIndex);
+        const currentNode = await treaple.getBytes32Node(randIndex);
 
         await treaple.removeBytes32(currentNode.key);
 
@@ -553,7 +561,9 @@ describe("CartesianMerkleTree", () => {
           key: proof.key,
           nonExistenceKey: proof.nonExistenceKey,
         };
+
         expect(await treaple.verifyBytes32Proof(proofObj)).to.be.true;
+        expect(await treaple.processCMTProof(proofObj)).to.be.eq(proof.root);
       }
     });
   });
@@ -646,7 +656,7 @@ describe("CartesianMerkleTree", () => {
             break;
           }
         }
-        let currentNode = await treaple.getAddressNode(randIndex);
+        const currentNode = await treaple.getAddressNode(randIndex);
         const currentNodeKey = `0x${currentNode.key.slice(26)}`;
 
         await treaple.removeAddress(currentNodeKey);
@@ -684,7 +694,9 @@ describe("CartesianMerkleTree", () => {
           key: proof.key,
           nonExistenceKey: proof.nonExistenceKey,
         };
+
         expect(await treaple.verifyAddressProof(proofObj)).to.be.true;
+        expect(await treaple.processCMTProof(proofObj)).to.be.eq(proof.root);
       }
     });
   });

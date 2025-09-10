@@ -1,5 +1,13 @@
 # Changelog
 
+## [none]
+
+- Added eslint.
+
+## [3.2.3]
+
+- Slightly extended Merkle Trees functionality. Added `processProof` function.
+
 ## [3.2.2]
 
 - Migrated to Hardhat 3.

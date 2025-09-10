@@ -1,19 +1,25 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import { Reverter } from "@test-helpers";
 
 import { DynamicSetMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("DynamicSet", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let mock: DynamicSetMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     const DynamicSetMockFactory = await ethers.getContractFactory("DynamicSetMock");
     mock = await DynamicSetMockFactory.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("StringSet", () => {
     describe("add()", () => {

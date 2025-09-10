@@ -5,7 +5,7 @@ import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { wei } from "@scripts";
 
-import { getSignature } from "@test-helpers";
+import { Reverter, getSignature } from "@test-helpers";
 
 import {
   BridgeMock,
@@ -15,7 +15,7 @@ import {
   USDCCrosschainMock,
 } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 enum ERC20BridgingType {
   LiquidityPool,
@@ -34,6 +34,8 @@ enum ERC1155BridgingType {
 }
 
 describe("Bridge", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   const baseBalance = wei("1000");
   const baseAmount = "10";
   const baseId = "5000";
@@ -51,7 +53,7 @@ describe("Bridge", () => {
   let erc721: ERC721CrosschainMock;
   let erc1155: ERC1155CrosschainMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [OWNER, SECOND, THIRD] = await ethers.getSigners();
 
     const Bridge = await ethers.getContractFactory("BridgeMock");
@@ -79,7 +81,11 @@ describe("Bridge", () => {
     erc1155 = await ERC1155.deploy("Mock", "MK", "URI");
     await erc1155.crosschainMint(OWNER.address, baseId, baseAmount, tokenURI);
     await erc1155.setApprovalForAll(await bridge.getAddress(), true);
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should initialize correctly", async () => {
@@ -117,7 +123,7 @@ describe("Bridge", () => {
     });
 
     it("should deposit 52 tokens, operationType = LiquidityPool", async () => {
-      let expectedAmount = wei("52");
+      const expectedAmount = wei("52");
 
       await bridge.depositERC20(
         await erc20.getAddress(),
@@ -135,7 +141,7 @@ describe("Bridge", () => {
     });
 
     it("should deposit 50 tokens, operationType = USDCType", async () => {
-      let expectedAmount = wei("50", 6);
+      const expectedAmount = wei("50", 6);
 
       await bridge.depositERC20(
         await usdc.getAddress(),
@@ -169,7 +175,7 @@ describe("Bridge", () => {
     });
 
     it("should withdraw 100 tokens, operationType = Wrapped", async () => {
-      let expectedAmount = wei("100");
+      const expectedAmount = wei("100");
 
       await bridge.depositERC20(
         await erc20.getAddress(),
@@ -185,7 +191,7 @@ describe("Bridge", () => {
     });
 
     it("should withdraw 52 tokens, operationType = LiquidityPool", async () => {
-      let expectedAmount = wei("52");
+      const expectedAmount = wei("52");
 
       await bridge.depositERC20(
         await erc20.getAddress(),
@@ -201,7 +207,7 @@ describe("Bridge", () => {
     });
 
     it("should withdraw 50 tokens, operationType = USDCType", async () => {
-      let expectedAmount = wei("50", 6);
+      const expectedAmount = wei("50", 6);
 
       await bridge.depositERC20(
         await usdc.getAddress(),
@@ -668,7 +674,7 @@ describe("Bridge", () => {
     });
 
     it("should revert when adding zero address signer", async () => {
-      let expectedSigners = [OWNER.address, SECOND.address, ethers.ZeroAddress];
+      const expectedSigners = [OWNER.address, SECOND.address, ethers.ZeroAddress];
 
       await expect(bridge.addSigners(expectedSigners))
         .to.be.revertedWithCustomError(bridge, "InvalidSigner")
@@ -676,8 +682,8 @@ describe("Bridge", () => {
     });
 
     it("should remove signers", async () => {
-      let signersToAdd = [OWNER.address, SECOND.address, THIRD.address];
-      let signersToRemove = [OWNER.address, SECOND.address];
+      const signersToAdd = [OWNER.address, SECOND.address, THIRD.address];
+      const signersToRemove = [OWNER.address, SECOND.address];
 
       await bridge.addSigners(signersToAdd);
       await bridge.removeSigners(signersToRemove);
@@ -694,8 +700,8 @@ describe("Bridge", () => {
     let signersToAdd: string[];
 
     async function getSigHash() {
-      let expectedTxHash = "0xc4f46c912cc2a1f30891552ac72871ab0f0e977886852bdd5dccd221a595647d";
-      let expectedNonce = "1794147";
+      const expectedTxHash = "0xc4f46c912cc2a1f30891552ac72871ab0f0e977886852bdd5dccd221a595647d";
+      const expectedNonce = "1794147";
 
       return ethers.keccak256(
         new ethers.AbiCoder().encode(

@@ -17,12 +17,11 @@ interface IAccount {
         bytes signature;
     }
 
-    error CallerIsNotAnEntryPoint(address caller);
-    error PrefundFailed();
+    error NotAnEntryPoint(address caller);
 
     /**
      * @notice A function to validate a `PackedUserOperation` for the account.
-     * @dev This function is called from the `EntryPoint` while executing the user operation.this
+     * @dev This function is called from the `EntryPoint` while executing the user operation.
      *      Must be implemented by accounts to verify signatures and pay required funds.
      * @param userOp_ The user operation being validated.
      * @param userOpHash_ The user operation hash used for signature validation.

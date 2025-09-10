@@ -3,7 +3,7 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { getPoseidon, poseidonHash } from "@test-helpers";
+import { Reverter, getPoseidon, poseidonHash } from "@test-helpers";
 
 import { SparseMerkleTree } from "@/generated-types/ethers/mock/libs/data-structures/SparseMerkleTreeMock.sol/SparseMerkleTreeMock.ts";
 import { SparseMerkleTreeMock } from "@ethers-v6";
@@ -12,9 +12,11 @@ import { SparseMerkleTreeMock } from "@ethers-v6";
 import { Hash, LocalStorageDB, Merkletree, Proof, str2Bytes, verifyProof } from "@iden3/js-merkletree";
 import "mock-local-storage";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("SparseMerkleTree", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let USER1: HardhatEthersSigner;
 
   let merkleTree: SparseMerkleTreeMock;
@@ -23,7 +25,7 @@ describe("SparseMerkleTree", () => {
 
   let localMerkleTree: Merkletree;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [USER1] = await ethers.getSigners();
 
     const SparseMerkleTreeMock = await ethers.getContractFactory("SparseMerkleTreeMock", {
@@ -34,12 +36,18 @@ describe("SparseMerkleTree", () => {
     });
     merkleTree = await SparseMerkleTreeMock.deploy();
 
+    await reverter.snapshot();
+  });
+
+  beforeEach("setup", async () => {
     storage = new LocalStorageDB(str2Bytes(""));
 
     localMerkleTree = new Merkletree(storage, true, 20);
   });
 
   afterEach("cleanup", async () => {
+    await reverter.revert();
+
     localStorage.clear();
   });
 
@@ -230,7 +238,7 @@ describe("SparseMerkleTree", () => {
         keys.push(key);
       }
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
         const value = (await merkleTree.getUintNodeByKey(hexKey)).value;
 
@@ -247,7 +255,7 @@ describe("SparseMerkleTree", () => {
       const expectedRoot = "0x2f9bbaa7ab83da6e8d1d8dd05bac16e65fa40b4f6455c1d2ee77e968dfc382dc";
       const keys = [7n, 1n, 5n];
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
 
         await merkleTree.addUint(hexKey, key);
@@ -258,7 +266,7 @@ describe("SparseMerkleTree", () => {
       expect(oldRoot).to.equal(expectedRoot);
       expect(await merkleTree.getUintNodesCount()).to.equal(6);
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
 
         await merkleTree.removeUint(hexKey);
@@ -272,7 +280,7 @@ describe("SparseMerkleTree", () => {
     it("should not remove non-existent leaves", async () => {
       const keys = [7n, 1n, 5n];
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
 
         await merkleTree.addUint(hexKey, key);
@@ -319,7 +327,7 @@ describe("SparseMerkleTree", () => {
     it("should not update non-existent leaves", async () => {
       const keys = [7n, 1n, 5n];
 
-      for (let key of keys) {
+      for (const key of keys) {
         const hexKey = ethers.toBeHex(key, 32);
 
         await merkleTree.addUint(hexKey, key);
@@ -425,6 +433,7 @@ describe("SparseMerkleTree", () => {
       const inclusionProof = JSON.parse(JSON.stringify(await merkleTree.getUintProof(randomKey)));
 
       expect(await merkleTree.verifyUintProof(inclusionProof)).to.be.true;
+      expect(await merkleTree.processProof(inclusionProof)).to.be.eq(inclusionProof[0]);
 
       inclusionProof[0] = inclusionProof[3];
       expect(await merkleTree.verifyUintProof(inclusionProof)).to.be.false;
@@ -596,6 +605,7 @@ describe("SparseMerkleTree", () => {
       const inclusionProof = JSON.parse(JSON.stringify(await merkleTree.getBytes32Proof(randomKey)));
 
       expect(await merkleTree.verifyBytes32Proof(inclusionProof)).to.be.true;
+      expect(await merkleTree.processProof(inclusionProof)).to.be.eq(inclusionProof[0]);
 
       inclusionProof[0] = inclusionProof[3];
       expect(await merkleTree.verifyBytes32Proof(inclusionProof)).to.be.false;
@@ -744,6 +754,7 @@ describe("SparseMerkleTree", () => {
       const inclusionProof = JSON.parse(JSON.stringify(await merkleTree.getAddressProof(randomKey)));
 
       expect(await merkleTree.verifyAddressProof(inclusionProof)).to.be.true;
+      expect(await merkleTree.processProof(inclusionProof)).to.be.eq(inclusionProof[0]);
 
       inclusionProof[0] = inclusionProof[3];
       expect(await merkleTree.verifyAddressProof(inclusionProof)).to.be.false;

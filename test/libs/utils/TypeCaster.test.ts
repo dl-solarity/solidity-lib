@@ -3,19 +3,26 @@ import hre from "hardhat";
 
 import { ETHER_ADDR } from "@scripts";
 
+import { Reverter } from "@test-helpers";
+
 import { TypeCasterMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("TypeCaster", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
   const coder = ethers.AbiCoder.defaultAbiCoder();
 
   let mock: TypeCasterMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     const TypeCasterMock = await ethers.getContractFactory("TypeCasterMock");
     mock = await TypeCasterMock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("array cast", () => {
     const addressArrays = [[], [ethers.ZeroAddress, ETHER_ADDR]];

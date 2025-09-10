@@ -3,24 +3,32 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import { Reverter } from "@test-helpers";
+
 import { ContractsRegistryMock, DependantMock, DependantUpgradeMock, ERC20Mock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("ContractsRegistry", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let OWNER: HardhatEthersSigner;
   let SECOND: HardhatEthersSigner;
 
   let contractsRegistry: ContractsRegistryMock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
     const ContractsRegistry = await ethers.getContractFactory("ContractsRegistryMock");
     contractsRegistry = await ContractsRegistry.deploy();
 
     await contractsRegistry.__OwnableContractsRegistry_init();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("access", () => {
     it("should not initialize twice", async () => {
@@ -76,7 +84,7 @@ describe("ContractsRegistry", () => {
     });
   });
 
-  describe("contract management", async () => {
+  describe("contract management", () => {
     it("should fail adding ethers.ZeroAddress address", async () => {
       await expect(contractsRegistry.addContract(await contractsRegistry.DEPENDANT_NAME(), ethers.ZeroAddress))
         .to.be.revertedWithCustomError(contractsRegistry, "ZeroAddressProvided")
@@ -227,7 +235,7 @@ describe("ContractsRegistry", () => {
     it("should upgrade and call the contract", async () => {
       await expect(dependant.addedFunction()).to.be.revert(ethers);
 
-      let data = _dependantUpgrade.interface.encodeFunctionData("doUpgrade", [42]);
+      const data = _dependantUpgrade.interface.encodeFunctionData("doUpgrade", [42]);
 
       await contractsRegistry.upgradeContractAndCall(
         await contractsRegistry.DEPENDANT_NAME(),

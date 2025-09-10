@@ -1,13 +1,23 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { checkTransaction, formatTx, getTxData, getTxDataFilePath, parseCuint, reverseBytes } from "@test-helpers";
+import {
+  Reverter,
+  checkTransaction,
+  formatTx,
+  getTxData,
+  getTxDataFilePath,
+  parseCuint,
+  reverseBytes,
+} from "@test-helpers";
 
 import { TxParserMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Transaction Parser", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let parser: TxParserMock;
 
   let txData802_368: string;
@@ -20,21 +30,25 @@ describe("Transaction Parser", () => {
   const shortFlagTx = "0x0200000000";
   const shortTx = "0x01000000";
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     const TxParserMock = await ethers.getContractFactory("TxParserMock");
     parser = await TxParserMock.deploy();
 
     txData802_368 = getTxDataFilePath("txs_0_10_block_802_368.json");
     txData568 = getTxDataFilePath("tx_0_block_568.json");
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("#calculateTxId", () => {
     it("should calculate correctly", async () => {
-      let rawTx =
+      const rawTx =
         "0x01000000013652ebc8c4efec4015c4c2e6f7f693bf5307bcc68f59510957e302b89208eb0c060000006a47304402202955e3df921fa6893b898db5117ec92441757d90b485ed3015d427a1aa7631a6022063859ae9fb657b3ceb28c1771076da62e967b3872db6599a08ac982f62ef67810121037a35df3a9314039a2361bd37df3ee846c7a259a7c83f522704517bb7e8748f1effffffff0138ed000000000000160014b9edb07641abc03085f3971e48c6cafbdc854baf00000000";
 
-      let expectedTxid = reverseBytes("0x16a7875987d0be57af2283de4c38f0f4b1ad9c65b936cbc36e101665d8dff891");
-      let txid = await parser.calculateTxId(rawTx);
+      const expectedTxid = reverseBytes("0x16a7875987d0be57af2283de4c38f0f4b1ad9c65b936cbc36e101665d8dff891");
+      const txid = await parser.calculateTxId(rawTx);
 
       expect(txid).to.be.eq(expectedTxid);
     });

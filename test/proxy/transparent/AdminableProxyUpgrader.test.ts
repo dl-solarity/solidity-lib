@@ -3,11 +3,15 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import { Reverter } from "@test-helpers";
+
 import { AdminableProxy, AdminableProxyUpgrader, ERC20Mock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("AdminableProxyUpgrader", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let OWNER: HardhatEthersSigner;
   let SECOND: HardhatEthersSigner;
 
@@ -15,7 +19,7 @@ describe("AdminableProxyUpgrader", () => {
   let token: ERC20Mock;
   let proxy: AdminableProxy;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [OWNER, SECOND] = await ethers.getSigners();
 
     const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
@@ -26,7 +30,11 @@ describe("AdminableProxyUpgrader", () => {
 
     adminableProxyUpgrader = await AdminableProxyUpgrader.deploy(OWNER);
     proxy = await AdminableProxy.deploy(await token.getAddress(), await adminableProxyUpgrader.getAddress(), "0x");
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("upgrade", () => {
     it("only owner should upgrade", async () => {

@@ -1,11 +1,15 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
+import { Reverter } from "@test-helpers";
+
 import { PlonkVerifier2Mock, PlonkVerifier3Mock, PlonkVerifierHelperMock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("PlonkVerifierHelper", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let verifierHelper: PlonkVerifierHelperMock;
   let verifier2: PlonkVerifier2Mock;
   let verifier3: PlonkVerifier3Mock;
@@ -16,7 +20,7 @@ describe("PlonkVerifierHelper", () => {
   const pubSignals2 = [2, 4];
   const pubSignals3 = [3, 6, 9];
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     const PlonkVerifierHelperMock = await ethers.getContractFactory("PlonkVerifierHelperMock");
     const PlonkVerifier2Mock = await ethers.getContractFactory("PlonkVerifier2Mock");
     const PlonkVerifier3Mock = await ethers.getContractFactory("PlonkVerifier3Mock");
@@ -25,7 +29,11 @@ describe("PlonkVerifierHelper", () => {
 
     verifier2 = await PlonkVerifier2Mock.deploy(true, pubSignals2);
     verifier3 = await PlonkVerifier3Mock.deploy(true, pubSignals3);
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("verifyProof", () => {
     it("should correctly call verifyProof function", async () => {

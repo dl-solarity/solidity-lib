@@ -23,7 +23,7 @@ contracts
 │       └── ARBACGroupable — "Groupable extension of ARBAC"
 ├── account—abstraction
 │   ├── AAccountRecovery — "ERC-7947 account recovery base implementation"
-│   └── Base7702RecoverableAccount — "EIP-7702 with batching, gas sponsorship and recoverable trusted executors"
+│   └── RecoverableAccount — "All-in-one EIP-7702 account with batching, gas sponsorship, and recovery"
 ├── bridge
 │   ├── handlers — "Internal bridge logic contracts"
 │   └── ABridge — "Simple bridge with ERC20/ERC721/ERC1155 tokens support"

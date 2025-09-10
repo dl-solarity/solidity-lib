@@ -6,11 +6,15 @@ import { Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
 import { wei } from "@scripts";
 
+import { Reverter } from "@test-helpers";
+
 import { ValueDistributorMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("ValueDistributor", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let time: Time;
 
   let FIRST: HardhatEthersSigner;
@@ -65,14 +69,18 @@ describe("ValueDistributor", () => {
     await valueDistributor.removeShares(THIRD, 200);
   };
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     time = networkHelpers.time;
 
     [FIRST, SECOND, THIRD, FOURTH] = await ethers.getSigners();
 
     const valueDistributorMock = await ethers.getContractFactory("ValueDistributorMock");
     valueDistributor = await valueDistributorMock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("addShares()", () => {
     it("should add shares correctly", async () => {

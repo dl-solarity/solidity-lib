@@ -1,18 +1,26 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
+import { Reverter } from "@test-helpers";
+
 import { ECDSA512Mock } from "@ethers-v6";
 
-const { ethers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("ECDSA512", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let ecdsa512: ECDSA512Mock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     const ECDSA512Mock = await ethers.getContractFactory("ECDSA512Mock");
 
     ecdsa512 = await ECDSA512Mock.deploy();
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("brainpoolP512r1", () => {
     const signature =

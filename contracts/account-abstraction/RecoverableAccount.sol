@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import {ERC7821} from "solady/src/accounts/ERC7821.sol";
 
@@ -12,17 +14,20 @@ import {IAccount} from "../interfaces/account-abstraction/erc-4337/IAccount.sol"
  * @notice The EIP-7702 Recoverable Account module
  *
  * A basic EIP-7702 account implementation with ERC-7821 batching execution,
- * ERC-4337 sponsored transactions, and recoverable trusted executor.
+ * ERC-4337 sponsored transactions, and ERC-7947 recoverable trusted executor.
  */
-contract Base7702RecoverableAccount is ERC7821, AAccountRecovery, IAccount {
+contract RecoverableAccount is ERC7821, AAccountRecovery, IAccount, Initializable {
+    using Address for *;
+
     uint256 public constant SIG_VALIDATION_FAILED = 1;
     uint256 public constant SIG_VALIDATION_SUCCESS = 0;
 
-    // bytes32(uint256(keccak256("solarity.contract.Base7702RecoverableAccount")) - 1)
-    bytes32 private constant BASE_7702_RECOVERABLE_ACCOUNT_STORAGE_SLOT =
-        0xfa0b84e7e8a5ec43e0f9187808211f7ec3edc3033e85aef75ee576effbc39b12;
+    // bytes32(uint256(keccak256("solarity.contract.RecoverableAccount")) - 1)
+    bytes32 private constant RECOVERABLE_ACCOUNT_STORAGE_SLOT =
+        0x1de247bdf9b17d80bfda717f00d18263d357388b5e6386f32d078d21c211e49c;
 
-    struct Base7702RecoverableAccountStorage {
+    struct RecoverableAccountStorage {
+        address entryPoint;
         address trustedExecutor;
     }
 
@@ -40,10 +45,13 @@ contract Base7702RecoverableAccount is ERC7821, AAccountRecovery, IAccount {
         _;
     }
 
-    address internal _entryPoint;
+    function __RecoverableAccount_init(
+        address entryPoint_,
+        address trustedExecutor_
+    ) public initializer {
+        _getRecoverableAccountStorage().entryPoint = entryPoint_;
 
-    constructor(address entryPoint_) {
-        _entryPoint = entryPoint_;
+        _updateTrustedExecutor(trustedExecutor_);
     }
 
     /**
@@ -90,7 +98,7 @@ contract Base7702RecoverableAccount is ERC7821, AAccountRecovery, IAccount {
         bytes32 userOpHash_,
         uint256 missingAccountFunds_
     ) external virtual returns (uint256 validationData_) {
-        _requireFromEntryPoint();
+        _onlyEntryPoint();
 
         validationData_ = _validateSignature(userOp_, userOpHash_);
 
@@ -104,14 +112,14 @@ contract Base7702RecoverableAccount is ERC7821, AAccountRecovery, IAccount {
      * @return The address of the current trusted executor.
      */
     function getTrustedExecutor() public view virtual returns (address) {
-        return _getBase7702RecoverableAccountStorage().trustedExecutor;
+        return _getRecoverableAccountStorage().trustedExecutor;
     }
 
     /**
      * @inheritdoc IAccount
      */
     function entryPoint() public view virtual returns (address) {
-        return _entryPoint;
+        return _getRecoverableAccountStorage().entryPoint;
     }
 
     function _recoverAccess(bytes memory subject_) internal virtual {
@@ -124,15 +132,17 @@ contract Base7702RecoverableAccount is ERC7821, AAccountRecovery, IAccount {
         bytes32,
         bytes calldata,
         Call[] calldata calls_,
-        bytes calldata opData_
+        bytes calldata
     ) internal virtual override {
-        _beforeBatchCall(calls_, opData_);
-
-        _validateExecution(calls_, opData_);
+        if (
+            msg.sender != address(this) &&
+            msg.sender != getTrustedExecutor() &&
+            msg.sender != entryPoint()
+        ) {
+            revert InvalidExecutor(msg.sender);
+        }
 
         _execute(calls_, bytes32(0));
-
-        _afterBatchCall(calls_, opData_);
     }
 
     function _execute(
@@ -143,25 +153,13 @@ contract Base7702RecoverableAccount is ERC7821, AAccountRecovery, IAccount {
     ) internal virtual override {
         _beforeCall(to_, value_, data_);
 
-        (bool success_, bytes memory result_) = to_.call{value: value_}(data_);
-
-        if (!success_) {
-            assembly {
-                revert(add(result_, 0x20), mload(result_))
-            }
+        if (data_.length > 0) {
+            to_.functionCallWithValue(data_, value_);
+        } else {
+            payable(to_).sendValue(value_);
         }
 
         _afterCall(to_, value_, data_);
-    }
-
-    function _validateExecution(Call[] memory, bytes memory) internal virtual {
-        if (
-            msg.sender != address(this) &&
-            msg.sender != getTrustedExecutor() &&
-            msg.sender != entryPoint()
-        ) {
-            revert InvalidExecutor(msg.sender);
-        }
     }
 
     function _updateTrustedExecutor(address newTrustedExecutor_) internal virtual {
@@ -171,19 +169,14 @@ contract Base7702RecoverableAccount is ERC7821, AAccountRecovery, IAccount {
             revert TrustedExecutorAlreadySet(newTrustedExecutor_);
         }
 
-        _getBase7702RecoverableAccountStorage().trustedExecutor = newTrustedExecutor_;
+        _getRecoverableAccountStorage().trustedExecutor = newTrustedExecutor_;
 
         emit TrustedExecutorUpdated(oldTrustedExecutor_, newTrustedExecutor_);
     }
 
-    function _payPrefund(uint256 missingAccountFunds_) internal {
+    function _payPrefund(uint256 missingAccountFunds_) internal virtual {
         if (missingAccountFunds_ != 0) {
-            (bool success_, ) = payable(msg.sender).call{
-                value: missingAccountFunds_,
-                gas: type(uint256).max
-            }("");
-
-            if (!success_) revert PrefundFailed();
+            payable(msg.sender).sendValue(missingAccountFunds_);
         }
     }
 
@@ -191,72 +184,38 @@ contract Base7702RecoverableAccount is ERC7821, AAccountRecovery, IAccount {
         PackedUserOperation calldata userOp_,
         bytes32 userOpHash_
     ) internal virtual returns (uint256 validationData_) {
-        return
-            _checkSignature(userOpHash_, userOp_.signature)
-                ? SIG_VALIDATION_SUCCESS
-                : SIG_VALIDATION_FAILED;
-    }
+        address recovered_ = ECDSA.recover(userOpHash_, userOp_.signature);
 
-    function _checkSignature(
-        bytes32 hash_,
-        bytes memory signature_
-    ) internal view virtual returns (bool) {
-        address recovered_ = ECDSA.recover(hash_, signature_);
+        if (recovered_ == address(this) || recovered_ == getTrustedExecutor()) {
+            return SIG_VALIDATION_SUCCESS;
+        }
 
-        return recovered_ == address(this) || recovered_ == getTrustedExecutor();
+        return SIG_VALIDATION_FAILED;
     }
 
     function _validateNonce(uint256 nonce_) internal view virtual {}
-
-    function _beforeBatchCall(Call[] memory calls_, bytes memory opData_) internal virtual {}
-
-    function _afterBatchCall(Call[] memory calls_, bytes memory opData_) internal virtual {}
 
     function _beforeCall(address to_, uint256 value_, bytes memory data_) internal virtual {}
 
     function _afterCall(address to_, uint256 value_, bytes memory data_) internal virtual {}
 
-    function _requireFromEntryPoint() internal view {
-        if (msg.sender != entryPoint()) revert CallerIsNotAnEntryPoint(msg.sender);
+    function _onlyEntryPoint() internal view {
+        if (msg.sender != entryPoint()) revert NotAnEntryPoint(msg.sender);
     }
 
     function _onlySelfCalled() internal view {
         if (tx.origin != address(this) || tx.origin != msg.sender) revert NotSelfCalled();
     }
 
-    function _executionModeId(bytes32 mode_) internal pure virtual override returns (uint256 id_) {
-        // Bytes Layout:
-        // - [0]      ( 1 byte )  `0x01` for batch call.
-        // - [1]      ( 1 byte )  `0x00` for revert on any failure.
-        // - [2..5]   ( 4 bytes)  Reserved by ERC7579 for future standardization.
-        // - [6..9]   ( 4 bytes)  `0x00000000` or `0x78210001` or `0x78210002`.
-        // - [10..31] (22 bytes)  Unused. Free for use.
-        uint256 m_ = (uint256(mode_) >> (22 * 8)) & 0xffff00000000ffffffff;
-
-        if (m_ == 0x01000000000078210002) {
-            return 3;
-        }
-
-        if (m_ == 0x01000000000078210001) {
-            return 2;
-        }
-
-        if (m_ == 0x01000000000000000000) {
-            return 1;
-        }
-
-        return 0;
-    }
-
-    function _getBase7702RecoverableAccountStorage()
+    function _getRecoverableAccountStorage()
         private
         pure
-        returns (Base7702RecoverableAccountStorage storage _bras)
+        returns (RecoverableAccountStorage storage _ras)
     {
-        bytes32 slot_ = BASE_7702_RECOVERABLE_ACCOUNT_STORAGE_SLOT;
+        bytes32 slot_ = RECOVERABLE_ACCOUNT_STORAGE_SLOT;
 
         assembly {
-            _bras.slot := slot_
+            _ras.slot := slot_
         }
     }
 }

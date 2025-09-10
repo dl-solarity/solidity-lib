@@ -3,18 +3,22 @@ import hre from "hardhat";
 
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
+import { Reverter } from "@test-helpers";
+
 import { AdminableProxy, AdminableProxyUpgrader, ERC20Mock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("AdminableProxy", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
   let OWNER: HardhatEthersSigner;
   let PROXY_UPGRADER: HardhatEthersSigner;
 
   let proxy: AdminableProxy;
   let tokenProxy: ERC20Mock;
 
-  beforeEach("setup", async () => {
+  before("setup", async () => {
     [OWNER] = await ethers.getSigners();
 
     const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
@@ -31,7 +35,11 @@ describe("AdminableProxy", () => {
     await networkHelpers.impersonateAccount(await adminableProxyUpgrader.getAddress());
     PROXY_UPGRADER = await ethers.provider.getSigner(await adminableProxyUpgrader.getAddress());
     await networkHelpers.setBalance(await PROXY_UPGRADER.getAddress(), ethers.parseEther("1"));
+
+    await reverter.snapshot();
   });
+
+  afterEach(reverter.revert);
 
   describe("delegated functions", () => {
     const AMOUNT = 10;
