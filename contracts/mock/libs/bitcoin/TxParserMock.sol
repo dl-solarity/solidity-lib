@@ -10,6 +10,10 @@ contract TxParserMock {
         return data_.calculateTxId();
     }
 
+    function calculateWTxId(bytes calldata data_) external pure returns (bytes32) {
+        return data_.calculateWTxId();
+    }
+
     function parseBTCTransaction(
         bytes calldata txBytes_
     ) external pure returns (TxParser.Transaction memory tx_) {
