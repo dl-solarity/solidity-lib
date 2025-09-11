@@ -1,7 +1,11 @@
 name: "tests"
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - pre-release
+    types:
+      - completed
     branches:
       - master
   pull_request:
