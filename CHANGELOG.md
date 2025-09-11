@@ -1,5 +1,9 @@
 # Changelog
 
+## [none]
+
+- Clarified CI sequence.
+
 ## [3.2.5]
 
 - Separated txid and wtxid calculations in `TxParser` library.
