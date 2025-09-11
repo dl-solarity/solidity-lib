@@ -20,6 +20,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v5
