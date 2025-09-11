@@ -2,7 +2,7 @@
 
 ## [none]
 
-_ Clarified CI sequence.
+- Clarified CI sequence.
 
 ## [3.2.5]
 
