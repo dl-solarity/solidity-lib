@@ -9,7 +9,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 import {IBridge} from "../interfaces/bridge/IBridge.sol";
-import {IHandler} from "../interfaces/bridge/IHandler.sol";
+import {IBaseHandler, IHandler} from "../interfaces/bridge/IHandler.sol";
 
 import {IBatcher, Batcher} from "./batcher/Batcher.sol";
 
@@ -22,18 +22,6 @@ abstract contract ABridge is IBridge, Initializable {
 
     error HandlerAlreadyPresent(uint256 handlerId);
     error HandlerDoesNotExist(uint256 handlerId);
-
-    struct DepositData {
-        uint256 assetType;
-        uint256 actionType;
-        bytes depositDetails;
-    }
-
-    struct WithdrawData {
-        uint256 assetType;
-        uint256 actionType;
-        bytes withdrawDetails;
-    }
 
     struct ABridgeStorage {
         string network;
@@ -97,7 +85,7 @@ abstract contract ABridge is IBridge, Initializable {
         _checkSignatures(operationHash_, abi.decode(proof_, (bytes[])));
 
         handler_.functionDelegateCall(
-            abi.encodeWithSelector(IHandler.withdraw.selector, $.batcher, withdrawDetails_)
+            abi.encodeWithSelector(IBaseHandler.withdraw.selector, $.batcher, withdrawDetails_)
         );
     }
 

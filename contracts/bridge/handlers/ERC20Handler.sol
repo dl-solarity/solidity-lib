@@ -51,6 +51,15 @@ contract ERC20Handler is IHandler {
         ERC20DepositData memory deposit_ = abi.decode(depositDetails_, (ERC20DepositData));
 
         _deposit(deposit_);
+
+        emit DepositedERC20(
+            deposit_.token,
+            deposit_.amount,
+            deposit_.receiver,
+            deposit_.network,
+            deposit_.batch,
+            deposit_.operationType
+        );
     }
 
     function withdraw(IBatcher batcher_, bytes calldata withdrawDetails_) external virtual {
