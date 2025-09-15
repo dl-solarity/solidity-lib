@@ -1,12 +1,14 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { Reverter } from "@test-helpers";
 
 import { PriorityQueueMock } from "@ethers-v6";
 
+const { ethers, networkHelpers } = await hre.network.connect();
+
 describe("PriorityQueue", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let mock: PriorityQueueMock;
 
@@ -96,7 +98,7 @@ describe("PriorityQueue", () => {
     });
   });
 
-  describe("removeTop()", async () => {
+  describe("removeTop()", () => {
     describe("uint", () => {
       it("should add and remove the top elements", async () => {
         await mock.addUint(1, 1);

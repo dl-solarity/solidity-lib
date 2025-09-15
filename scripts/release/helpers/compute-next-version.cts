@@ -2,10 +2,10 @@
 
 import fs from "fs";
 
-import { allowedWhenNotRc, allowedWhenRc } from "./constants";
-import { bumpBase, parseRc, readJSON, getPkgPath, getChangelogPath } from "./utils";
+import { allowedWhenNotRc, allowedWhenRc } from "./constants.cts";
+import { bumpBase, parseRc, readJSON, getPkgPath, getChangelogPath } from "./utils.cts";
 
-import type { Level } from "./types";
+import type { Level } from "./types.cts";
 
 export default function computeNextVersion(): { current: string; level: Level; next: string } {
   const pkg = readJSON<{ version: string }>(getPkgPath());

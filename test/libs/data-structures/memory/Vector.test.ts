@@ -1,12 +1,14 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { Reverter } from "@test-helpers";
 
 import { VectorMock } from "@ethers-v6";
 
+const { ethers, networkHelpers } = await hre.network.connect();
+
 describe("Vector", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let vector: VectorMock;
 

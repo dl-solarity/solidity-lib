@@ -10,6 +10,9 @@ import {IERC20Crosschain} from "../../interfaces/bridge/tokens/IERC20Crosschain.
 
 /**
  * @title ERC20Handler
+ *
+ * The handler supports both "liquidity pool" and "mint-and-burn" methods for managing assets.
+ * If "mint-and-burn" method is used, the ERC-20 tokens are required to support ERC-7802 interface.
  */
 contract ERC20Handler is IHandler {
     using SafeERC20 for IERC20Crosschain;
@@ -20,7 +23,7 @@ contract ERC20Handler is IHandler {
         USDCType
     }
 
-    event DepositedERC20(
+    event DispatchedERC20(
         address token,
         uint256 amount,
         string receiver,
@@ -29,7 +32,7 @@ contract ERC20Handler is IHandler {
         ERC20BridgingType operationType
     );
 
-    struct ERC20DepositData {
+    struct ERC20DispatchData {
         address token;
         uint256 amount;
         string receiver;
@@ -38,96 +41,108 @@ contract ERC20Handler is IHandler {
         ERC20BridgingType operationType;
     }
 
-    struct ERC20WithdrawData {
+    /**
+     * @dev Nonce is computed as keccak256(abi.encodePacked(originNetworkName, originTxHash, eventNumber)).
+     */
+    struct ERC20RedeemData {
         address token;
         uint256 amount;
         address receiver;
         bytes batch;
         ERC20BridgingType operationType;
-        bytes32 nonce; // keccak256(abi.encodePacked(origin network name . origin tx hash . event number))
+        bytes32 nonce;
     }
 
-    function deposit(bytes calldata depositDetails_) external virtual {
-        ERC20DepositData memory deposit_ = abi.decode(depositDetails_, (ERC20DepositData));
+    /**
+     * @inheritdoc IHandler
+     */
+    function dispatch(bytes calldata dispatchDetails_) external payable virtual {
+        ERC20DispatchData memory dispatch_ = abi.decode(dispatchDetails_, (ERC20DispatchData));
 
-        _deposit(deposit_);
+        _dispatch(dispatch_);
 
-        emit DepositedERC20(
-            deposit_.token,
-            deposit_.amount,
-            deposit_.receiver,
-            deposit_.network,
-            deposit_.batch,
-            deposit_.operationType
+        emit DispatchedERC20(
+            dispatch_.token,
+            dispatch_.amount,
+            dispatch_.receiver,
+            dispatch_.network,
+            dispatch_.batch,
+            dispatch_.operationType
         );
     }
 
-    function withdraw(IBatcher batcher_, bytes calldata withdrawDetails_) external virtual {
-        ERC20WithdrawData memory withdraw_ = abi.decode(withdrawDetails_, (ERC20WithdrawData));
+    /**
+     * @inheritdoc IHandler
+     */
+    function redeem(IBatcher batcher_, bytes calldata redeemDetails_) external virtual {
+        ERC20RedeemData memory redeem_ = abi.decode(redeemDetails_, (ERC20RedeemData));
 
-        if (withdraw_.batch.length == 0) {
-            _withdraw(withdraw_);
+        if (redeem_.batch.length == 0) {
+            _redeem(redeem_);
             return;
         }
 
-        withdraw_.receiver = address(batcher_);
+        redeem_.receiver = address(batcher_);
 
-        _withdraw(withdraw_);
-        batcher_.execute(withdraw_.batch);
+        _redeem(redeem_);
+        batcher_.execute(redeem_.batch);
     }
 
+    /**
+     * @inheritdoc IHandler
+     */
     function getOperationHash(
         string calldata network_,
-        bytes calldata withdrawDetails_
+        bytes calldata redeemDetails_
     ) external view virtual returns (bytes32) {
-        ERC20WithdrawData memory withdraw_ = abi.decode(withdrawDetails_, (ERC20WithdrawData));
+        ERC20RedeemData memory redeem_ = abi.decode(redeemDetails_, (ERC20RedeemData));
 
         return
             keccak256(
                 abi.encodePacked(
-                    withdraw_.token,
-                    withdraw_.amount,
-                    withdraw_.receiver,
-                    withdraw_.batch,
-                    withdraw_.operationType,
-                    withdraw_.nonce,
+                    redeem_.token,
+                    redeem_.amount,
+                    redeem_.receiver,
+                    redeem_.batch,
+                    redeem_.operationType,
+                    redeem_.nonce,
                     network_,
                     address(this)
                 )
             );
     }
 
-    function _deposit(ERC20DepositData memory deposit_) internal virtual {
-        if (deposit_.token == address(0)) revert ZeroToken();
-        if (deposit_.amount == 0) revert ZeroAmount();
+    function _dispatch(ERC20DispatchData memory dispatch_) internal virtual {
+        if (dispatch_.token == address(0)) revert ZeroToken();
+        if (dispatch_.amount == 0) revert ZeroAmount();
 
-        IERC20Crosschain erc20_ = IERC20Crosschain(deposit_.token);
+        IERC20Crosschain erc20_ = IERC20Crosschain(dispatch_.token);
 
-        if (deposit_.operationType == ERC20BridgingType.Wrapped) {
-            erc20_.crosschainBurn(msg.sender, deposit_.amount);
+        if (dispatch_.operationType == ERC20BridgingType.Wrapped) {
+            erc20_.crosschainBurn(msg.sender, dispatch_.amount);
         } else {
-            erc20_.safeTransferFrom(msg.sender, address(this), deposit_.amount);
+            erc20_.safeTransferFrom(msg.sender, address(this), dispatch_.amount);
         }
 
         // USDC-specific logic: first transferFrom, then burn
-        if (deposit_.operationType == ERC20BridgingType.USDCType) {
-            IUSDCCrosschain(deposit_.token).burn(deposit_.amount);
+        if (dispatch_.operationType == ERC20BridgingType.USDCType) {
+            IUSDCCrosschain(dispatch_.token).burn(dispatch_.amount);
         }
     }
 
-    function _withdraw(ERC20WithdrawData memory withdraw_) internal virtual {
-        if (withdraw_.token == address(0)) revert ZeroToken();
-        if (withdraw_.amount == 0) revert ZeroAmount();
-        if (withdraw_.receiver == address(0)) revert ZeroReceiver();
+    function _redeem(ERC20RedeemData memory redeem_) internal virtual {
+        if (redeem_.token == address(0)) revert ZeroToken();
+        if (redeem_.amount == 0) revert ZeroAmount();
+        if (redeem_.receiver == address(0)) revert ZeroReceiver();
 
-        IERC20Crosschain erc20_ = IERC20Crosschain(withdraw_.token);
+        IERC20Crosschain erc20_ = IERC20Crosschain(redeem_.token);
 
-        if (withdraw_.operationType == ERC20BridgingType.Wrapped) {
-            erc20_.crosschainMint(withdraw_.receiver, withdraw_.amount);
-        } else if (withdraw_.operationType == ERC20BridgingType.USDCType) {
-            IUSDCCrosschain(withdraw_.token).mint(withdraw_.receiver, withdraw_.amount);
+        if (redeem_.operationType == ERC20BridgingType.Wrapped) {
+            erc20_.crosschainMint(redeem_.receiver, redeem_.amount);
+        } else if (redeem_.operationType == ERC20BridgingType.USDCType) {
+            IUSDCCrosschain(redeem_.token).mint(redeem_.receiver, redeem_.amount);
         } else {
-            erc20_.safeTransfer(withdraw_.receiver, withdraw_.amount);
+            erc20_.safeTransfer(redeem_.receiver, redeem_.amount);
         }
     }
 }

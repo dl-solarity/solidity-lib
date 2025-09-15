@@ -1,23 +1,25 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { MerkleTree } from "merkletreejs";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { getRoot, getProof, buildTree } from "../helpers/merkle-tree-helper";
+import { Reverter, buildTree, getProof, getRoot } from "@test-helpers";
 
 import { MerkleWhitelistedMock } from "@ethers-v6";
 
-describe("MerkleWhitelisted", () => {
-  const reverter = new Reverter();
+import { MerkleTree } from "merkletreejs";
 
-  let OWNER: SignerWithAddress;
+const { ethers, networkHelpers } = await hre.network.connect();
+
+describe("MerkleWhitelisted", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let OWNER: HardhatEthersSigner;
 
   let merkle: MerkleWhitelistedMock;
   let leaves: any;
   let tree: MerkleTree;
-  let users: SignerWithAddress[];
+  let users: HardhatEthersSigner[];
 
   async function buildMerkleTree() {
     tree = buildTree(leaves);
@@ -35,7 +37,7 @@ describe("MerkleWhitelisted", () => {
     return ethers.solidityPacked(["uint256", "address"], [amount, user]);
   }
 
-  before(async () => {
+  before("setup", async () => {
     [OWNER, ...users] = await ethers.getSigners();
 
     const MerkleWhitelistedMock = await ethers.getContractFactory("MerkleWhitelistedMock");
@@ -108,7 +110,7 @@ describe("MerkleWhitelisted", () => {
 
     it("should not revert if all conditions are met", async () => {
       for (let i = 0; i < 5; i++) {
-        expect(await merkle.connect(users[i]).onlyWhitelistedMethod(amounts[i], getProof(tree, leaves[i]))).to.emit(
+        await expect(merkle.connect(users[i]).onlyWhitelistedMethod(amounts[i], getProof(tree, leaves[i]))).to.emit(
           merkle,
           "WhitelistedData",
         );
@@ -137,7 +139,7 @@ describe("MerkleWhitelisted", () => {
 
     it("should not revert if all conditions are met", async () => {
       for (let i = 0; i < 5; i++) {
-        expect(await merkle.connect(users[i]).onlyWhitelistedUserMethod(getProof(tree, leaves[i]))).to.emit(
+        await expect(merkle.connect(users[i]).onlyWhitelistedUserMethod(getProof(tree, leaves[i]))).to.emit(
           merkle,
           "WhitelistedUser",
         );

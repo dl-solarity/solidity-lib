@@ -9,10 +9,29 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 import {IBridge} from "../interfaces/bridge/IBridge.sol";
-import {IBaseHandler, IHandler} from "../interfaces/bridge/IHandler.sol";
+import {IHandler} from "../interfaces/bridge/IHandler.sol";
 
 import {IBatcher, Batcher} from "./batcher/Batcher.sol";
 
+/**
+ * @notice The Bridge module
+ *
+ * The Bridge contract facilitates the permissioned transfer of assets and/or arbitrary messages
+ * between two (or more) EVM blockchains.
+ *
+ * To utilize the Bridge effectively, instances of this contract must be deployed on both base
+ * and destination chains, accompanied by the setup of trusted back ends to act as signers.
+ * The back end signatures are checked only upon redemption.
+ *
+ * Each asset type is mapped to a handler (ERC-20, Native, Message) contract.
+ * Handlers implement the specific dispatch/redeem logic.
+ *
+ * During redeem, handlers may forward execution to the `IBatcher` contract for multi-step operations.
+ *
+ * IMPORTANT:
+ * All signer addresses must differ in their first (most significant) 8 bits
+ * in order to pass bloom (uniqueness) filtering.
+ */
 abstract contract ABridge is IBridge, Initializable {
     using Address for address;
     using MessageHashUtils for bytes32;
@@ -36,6 +55,14 @@ abstract contract ABridge is IBridge, Initializable {
     bytes32 private constant A_BRIDGE_STORAGE =
         0xc353df91453f9451d14bc3d78b643ca35222ee145cc2e80765c8a1e293a85ff7;
 
+    /**
+     * @notice The initialization function.
+     * @param network_ the network name.
+     * @param assetTypes_ list of asset type identifiers to link handlers to.
+     * @param handlers_ list of handler contract addresses corresponding to `assetTypes_`.
+     * @param signers_ list of authorized signer addresses.
+     * @param signaturesThreshold_ minimum number of signer approvals required for redemption.
+     */
     function __ABridge_init(
         string memory network_,
         uint256[] memory assetTypes_,
@@ -56,7 +83,13 @@ abstract contract ABridge is IBridge, Initializable {
         $.network = network_;
     }
 
-    function deposit(uint256 assetType_, bytes calldata depositDetails_) external payable virtual {
+    /**
+     * @inheritdoc IBridge
+     */
+    function dispatch(
+        uint256 assetType_,
+        bytes calldata dispatchDetails_
+    ) external payable virtual {
         ABridgeStorage storage $ = _getABridgeStorage();
 
         if (!$.handlers.contains(assetType_)) revert HandlerDoesNotExist(assetType_);
@@ -64,13 +97,16 @@ abstract contract ABridge is IBridge, Initializable {
         address handler_ = $.handlers.get(assetType_);
 
         handler_.functionDelegateCall(
-            abi.encodeWithSelector(IHandler.deposit.selector, depositDetails_)
+            abi.encodeWithSelector(IHandler.dispatch.selector, dispatchDetails_)
         );
     }
 
-    function withdraw(
+    /**
+     * @inheritdoc IBridge
+     */
+    function redeem(
         uint256 assetType_,
-        bytes calldata withdrawDetails_,
+        bytes calldata redeemDetails_,
         bytes calldata proof_
     ) external virtual {
         ABridgeStorage storage $ = _getABridgeStorage();
@@ -79,13 +115,13 @@ abstract contract ABridge is IBridge, Initializable {
 
         address handler_ = $.handlers.get(assetType_);
 
-        bytes32 operationHash_ = IHandler(handler_).getOperationHash($.network, withdrawDetails_);
+        bytes32 operationHash_ = IHandler(handler_).getOperationHash($.network, redeemDetails_);
 
         _checkAndUpdateNonce(operationHash_);
         _checkSignatures(operationHash_, abi.decode(proof_, (bytes[])));
 
         handler_.functionDelegateCall(
-            abi.encodeWithSelector(IBaseHandler.withdraw.selector, $.batcher, withdrawDetails_)
+            abi.encodeWithSelector(IHandler.redeem.selector, $.batcher, redeemDetails_)
         );
     }
 
@@ -130,14 +166,14 @@ abstract contract ABridge is IBridge, Initializable {
     }
 
     /**
-     * @notice Returns the number of signatures for the withdrawal to be accepted
+     * @notice Returns the number of signatures for the redemption to be accepted
      */
     function getSignaturesThreshold() external view returns (uint256) {
         return _getABridgeStorage().signaturesThreshold;
     }
 
     /**
-     * @notice Checks if the deposit event exists in the contract
+     * @notice Checks if the dispatch event exists in the contract
      */
     function nonceUsed(bytes32 nonce_) external view returns (bool) {
         return _getABridgeStorage().usedNonce[nonce_];

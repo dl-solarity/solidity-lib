@@ -1,62 +1,46 @@
-import "@nomicfoundation/hardhat-ethers";
-import "@nomicfoundation/hardhat-chai-matchers";
-import "@nomicfoundation/hardhat-network-helpers";
-import "@solarity/hardhat-markup";
-import "@typechain/hardhat";
-import "hardhat-contract-sizer";
-import "hardhat-gas-reporter";
-import "solidity-coverage";
-import "tsconfig-paths/register";
+import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 
-import { HardhatUserConfig } from "hardhat/config";
+import hardhatMarkup from "@solarity/hardhat-markup";
 
-import * as dotenv from "dotenv";
-dotenv.config({ quiet: true });
+import type { HardhatUserConfig } from "hardhat/config";
+
+import hardhatContractSizer from "@solidstate/hardhat-contract-sizer";
 
 const config: HardhatUserConfig = {
-  networks: {
-    hardhat: {
-      initialDate: "1970-01-01T00:00:00Z",
-    },
-    localhost: {
-      url: "http://127.0.0.1:8545",
-      gasMultiplier: 1.2,
-    },
-  },
+  plugins: [hardhatToolboxMochaEthers, hardhatMarkup, hardhatContractSizer],
   solidity: {
-    version: "0.8.22",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
+    compilers: [
+      {
+        version: "0.8.22",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+          evmVersion: "paris",
+        },
       },
-      evmVersion: "paris",
-    },
-  },
-  markup: {
-    onlyFiles: ["./contracts/"],
-  },
-  mocha: {
-    timeout: 1000000,
-  },
-  contractSizer: {
-    alphaSort: false,
-    disambiguatePaths: false,
-    runOnCompile: true,
-    strict: false,
-  },
-  gasReporter: {
-    currency: "USD",
-    gasPrice: 50,
-    enabled: false,
-    reportPureAndViewMethods: true,
-    coinmarketcap: `${process.env.COINMARKETCAP_KEY}`,
+      {
+        version: "0.8.28",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+          evmVersion: "cancun",
+        },
+      },
+    ],
   },
   typechain: {
     outDir: "generated-types/ethers",
-    target: "ethers-v6",
-    alwaysGenerateOverloads: true,
     discriminateTypes: true,
+  },
+  contractSizer: {
+    alphaSort: false,
+    runOnCompile: true,
+    strict: false,
+    flat: true,
   },
 };
 

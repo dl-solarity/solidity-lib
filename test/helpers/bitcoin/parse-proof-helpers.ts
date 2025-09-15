@@ -1,6 +1,7 @@
-import { sha256, ZeroHash } from "ethers";
-import { addHexPrefix, reverseByte, reverseBytes } from "../bytes-helpers";
-import { parseCuint } from "./parse-tx-helper";
+import { ZeroHash, sha256 } from "ethers";
+
+import { addHexPrefix, reverseByte, reverseBytes } from "../bytes-helpers.ts";
+import { parseCuint } from "./parse-tx-helper.ts";
 
 export class MerkleRawProofParser {
   private txidReversed: string;
@@ -71,7 +72,7 @@ export class MerkleRawProofParser {
   }
 
   private getNodeCountPerLevel(txCount: number, depth: number): number[] {
-    let result: number[] = [];
+    const result: number[] = [];
     let levelSize = txCount;
 
     for (let i = depth; i >= 0; i--) {

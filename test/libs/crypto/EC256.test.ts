@@ -1,15 +1,18 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { Reverter } from "@/test/helpers/reverter";
+import hre from "hardhat";
+
+import { Reverter } from "@test-helpers";
 
 import { EC256Mock } from "@ethers-v6";
 
+const { ethers, networkHelpers } = await hre.network.connect();
+
 describe("EC256", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let ec256: EC256Mock;
 
-  before(async () => {
+  before("setup", async () => {
     const EC256Mock = await ethers.getContractFactory("EC256Mock");
 
     ec256 = await EC256Mock.deploy();

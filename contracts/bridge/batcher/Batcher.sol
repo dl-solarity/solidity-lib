@@ -8,9 +8,15 @@ import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155
 
 import {IBatcher} from "../../interfaces/bridge/IBatcher.sol";
 
+/**
+ * @notice The Batcher module
+ */
 contract Batcher is IBatcher, ERC721Holder, ERC1155Holder, ReentrancyGuard {
     using Address for *;
 
+    /**
+     * @inheritdoc IBatcher
+     */
     function execute(bytes calldata batch_) external payable nonReentrant {
         (address[] memory targets_, uint256[] memory values_, bytes[] memory data_) = abi.decode(
             batch_,

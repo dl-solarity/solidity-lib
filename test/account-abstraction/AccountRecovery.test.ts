@@ -1,12 +1,16 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { AccountRecoveryMock, RecoveryProviderMock } from "@/generated-types/ethers";
-import { Reverter } from "@/test/helpers/reverter";
-import { wei } from "@/scripts/utils/utils";
+import { wei } from "@scripts";
+
+import { Reverter } from "@test-helpers";
+
+import { AccountRecoveryMock, RecoveryProviderMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("AccountRecovery", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let accountRecovery: AccountRecoveryMock;
   let provider1: RecoveryProviderMock;
@@ -15,7 +19,7 @@ describe("AccountRecovery", () => {
   const OBJECT_DATA = "0x5678";
   const RECOVERY_DATA = "0x1234";
 
-  before(async () => {
+  before("setup", async () => {
     const AccountRecoveryMock = await ethers.getContractFactory("AccountRecoveryMock");
     accountRecovery = await AccountRecoveryMock.deploy();
 

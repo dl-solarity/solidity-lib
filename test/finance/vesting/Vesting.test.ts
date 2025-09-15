@@ -1,19 +1,24 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import { Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { precision, wei } from "@/scripts/utils/utils";
+import { precision, wei } from "@scripts";
 
-import { ERC20Mock, ERC20Mock__factory, AVesting, VestingMock, VestingMock__factory } from "@ethers-v6";
+import { Reverter } from "@test-helpers";
+
+import { AVesting, ERC20Mock, ERC20Mock__factory, VestingMock, VestingMock__factory } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Vesting", () => {
-  let reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
-  let OWNER: SignerWithAddress;
-  let ALICE: SignerWithAddress;
+  let time: Time;
+
+  let OWNER: HardhatEthersSigner;
+  let ALICE: HardhatEthersSigner;
 
   let vesting: VestingMock;
   let erc20: ERC20Mock;
@@ -30,7 +35,9 @@ describe("Vesting", () => {
   const vestingAmount = wei(100_000);
   const exponent = 4n;
 
-  before(async () => {
+  before("setup", async () => {
+    time = networkHelpers.time;
+
     [OWNER, ALICE] = await ethers.getSigners();
 
     vesting = await new VestingMock__factory(OWNER).deploy();
@@ -47,9 +54,9 @@ describe("Vesting", () => {
   afterEach(reverter.revert);
 
   async function calculateVestedAmount(vestingStartTime: bigint, vestingAmount: bigint, exponent: bigint) {
-    let elapsedPeriods = (BigInt(await time.latest()) - vestingStartTime) / secondsInPeriod;
-    let elapsedPeriodsPercentage = (elapsedPeriods * precision(1)) / durationInPeriods;
-    let vestedAmount = (elapsedPeriodsPercentage ** exponent * vestingAmount) / precision(1) ** exponent;
+    const elapsedPeriods = (BigInt(await time.latest()) - vestingStartTime) / secondsInPeriod;
+    const elapsedPeriodsPercentage = (elapsedPeriods * precision(1)) / durationInPeriods;
+    const vestedAmount = (elapsedPeriodsPercentage ** exponent * vestingAmount) / precision(1) ** exponent;
 
     return vestedAmount;
   }
@@ -65,7 +72,7 @@ describe("Vesting", () => {
 
   describe("create schedule", () => {
     it("should correctly create linear schedule", async () => {
-      let baseSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
+      const baseSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
 
       const tx = vesting.createBaseSchedule(baseSchedule);
 
@@ -76,8 +83,8 @@ describe("Vesting", () => {
     });
 
     it("should correctly create exponential schedule", async () => {
-      let baseSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
-      let schedule = { scheduleData: baseSchedule, exponent: exponent } as Schedule;
+      const baseSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
+      const schedule = { scheduleData: baseSchedule, exponent: exponent } as Schedule;
 
       const tx = vesting.createSchedule(schedule);
 
@@ -88,7 +95,7 @@ describe("Vesting", () => {
     });
 
     it("should revert if duration periods is 0", async () => {
-      let baseSchedule = { secondsInPeriod, durationInPeriods: 0, cliffInPeriods } as BaseSchedule;
+      const baseSchedule = { secondsInPeriod, durationInPeriods: 0, cliffInPeriods } as BaseSchedule;
 
       await expect(vesting.createBaseSchedule(baseSchedule))
         .to.be.revertedWithCustomError(vesting, "ScheduleInvalidPeriodParameter")
@@ -96,7 +103,7 @@ describe("Vesting", () => {
     });
 
     it("should revert if seconds in period is 0", async () => {
-      let baseSchedule = { secondsInPeriod: 0, durationInPeriods, cliffInPeriods } as BaseSchedule;
+      const baseSchedule = { secondsInPeriod: 0, durationInPeriods, cliffInPeriods } as BaseSchedule;
 
       await expect(vesting.createBaseSchedule(baseSchedule))
         .to.be.revertedWithCustomError(vesting, "ScheduleInvalidPeriodParameter")
@@ -105,7 +112,7 @@ describe("Vesting", () => {
 
     it("should revert if cliff is greater than duration", async () => {
       const wrongCliff = durationInPeriods + 1n;
-      let baseSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods: wrongCliff } as BaseSchedule;
+      const baseSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods: wrongCliff } as BaseSchedule;
 
       await expect(vesting.createBaseSchedule(baseSchedule))
         .to.be.revertedWithCustomError(vesting, "ScheduleCliffGreaterThanDuration")
@@ -113,8 +120,8 @@ describe("Vesting", () => {
     });
 
     it("should revert if exponent is 0", async () => {
-      let baseSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
-      let schedule = { scheduleData: baseSchedule, exponent: 0 } as Schedule;
+      const baseSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
+      const schedule = { scheduleData: baseSchedule, exponent: 0 } as Schedule;
 
       await expect(vesting.createSchedule(schedule))
         .to.be.revertedWithCustomError(vesting, "ExponentIsZero")
@@ -151,7 +158,7 @@ describe("Vesting", () => {
     });
 
     it("should correctly create vesting", async () => {
-      let linearVesting = {
+      const linearVesting = {
         vestingStartTime: await time.latest(),
         beneficiary: ALICE.address,
         vestingToken: await erc20.getAddress(),
@@ -160,7 +167,7 @@ describe("Vesting", () => {
         scheduleId: linearScheduleId,
       } as Vesting;
 
-      let exponentialVesting = {
+      const exponentialVesting = {
         ...linearVesting,
         scheduleId: exponentialScheduleId,
         vestingAmount: vestingAmount * 2n,
@@ -184,11 +191,7 @@ describe("Vesting", () => {
         Object.values(exponentialVesting),
       ]);
 
-      expect(await erc20.balanceOf(await vesting.getAddress())).changeTokenBalance(
-        erc20,
-        await vesting.getAddress(),
-        vestingAmount * 2n,
-      );
+      expect(await erc20.balanceOf(await vesting.getAddress())).to.equal(vestingAmount * 3n);
     });
 
     it("should revert if vesting start time is zero", async () => {
@@ -237,14 +240,14 @@ describe("Vesting", () => {
     let exponentialVesting: Vesting;
 
     beforeEach(async () => {
-      let linearSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
-      let exponentialSchedule = { scheduleData: linearSchedule, exponent: exponent } as Schedule;
+      const linearSchedule = { secondsInPeriod, durationInPeriods, cliffInPeriods } as BaseSchedule;
+      const exponentialSchedule = { scheduleData: linearSchedule, exponent: exponent } as Schedule;
 
       let tx = await vesting.createBaseSchedule(linearSchedule);
-      let linearScheduleId = ethers.toBigInt((await tx.wait())?.logs[0].topics[1] as string);
+      const linearScheduleId = ethers.toBigInt((await tx.wait())?.logs[0].topics[1] as string);
 
       tx = await vesting.createSchedule(exponentialSchedule);
-      let exponentialScheduleId = ethers.toBigInt((await tx.wait())?.logs[0].topics[1] as string);
+      const exponentialScheduleId = ethers.toBigInt((await tx.wait())?.logs[0].topics[1] as string);
 
       linearVesting = {
         vestingStartTime: await time.latest(),
@@ -264,10 +267,10 @@ describe("Vesting", () => {
 
     it("should correctly withdraw from vesting after full duration", async () => {
       let createTx = await vesting.createVesting(linearVesting);
-      let linearVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
+      const linearVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
 
       createTx = await vesting.createVesting(exponentialVesting);
-      let exponentialVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
+      const exponentialVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
 
       expect(await vesting.getVestedAmount(linearVestingId)).to.be.equal(0);
       expect(await vesting.getWithdrawableAmount(linearVestingId)).to.be.equal(0);
@@ -299,19 +302,17 @@ describe("Vesting", () => {
       expect(await vesting.getVesting(linearVestingId)).to.deep.equal(Object.values(linearVesting));
       expect(await vesting.getVesting(exponentialVestingId)).to.deep.equal(Object.values(exponentialVesting));
 
-      expect(await erc20.balanceOf(ALICE.address)).changeTokenBalance(
-        erc20,
-        ALICE.address,
+      expect(await erc20.balanceOf(ALICE.address)).to.equal(
         BigInt(linearVesting.vestingAmount) + BigInt(exponentialVesting.vestingAmount),
       );
     });
 
     it("should correctly withdraw from vesting after half duration", async () => {
       let createTx = await vesting.createVesting(linearVesting);
-      let linearVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
+      const linearVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
 
       createTx = await vesting.createVesting(exponentialVesting);
-      let exponentialVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
+      const exponentialVestingId = ethers.toBigInt((await createTx.wait())?.logs[0].topics[1] as string);
 
       expect(await vesting.getVestedAmount(linearVestingId)).to.be.equal(0);
       expect(await vesting.getWithdrawableAmount(linearVestingId)).to.be.equal(0);
@@ -322,13 +323,13 @@ describe("Vesting", () => {
       // 15 days out of 30
       await time.increase((secondsInPeriod * durationInPeriods) / 2n);
 
-      let linearVestedAmount = await calculateVestedAmount(
+      const linearVestedAmount = await calculateVestedAmount(
         BigInt(linearVesting.vestingStartTime),
         BigInt(linearVesting.vestingAmount),
         LINEAR_EXPONENT,
       );
 
-      let exponentialVestedAmount = await calculateVestedAmount(
+      const exponentialVestedAmount = await calculateVestedAmount(
         BigInt(exponentialVesting.vestingStartTime),
         BigInt(exponentialVesting.vestingAmount),
         exponent,
@@ -352,11 +353,7 @@ describe("Vesting", () => {
       expect(await vesting.getWithdrawableAmount(linearVestingId)).to.be.equal(0);
       expect(await vesting.getWithdrawableAmount(exponentialVestingId)).to.be.equal(0);
 
-      expect(await erc20.balanceOf(ALICE.address)).changeTokenBalance(
-        erc20,
-        ALICE.address,
-        linearVestedAmount + exponentialVestedAmount,
-      );
+      expect(await erc20.balanceOf(ALICE.address)).to.equal(linearVestedAmount + exponentialVestedAmount);
     });
 
     it("should revert if non beneficiary tries to withdraw from vesting", async () => {
@@ -382,7 +379,7 @@ describe("Vesting", () => {
 
   describe("check calculations", () => {
     let defaultSchedule: Schedule;
-    let scheduleId = 1;
+    const scheduleId = 1;
 
     beforeEach(async () => {
       defaultSchedule = {
@@ -396,8 +393,8 @@ describe("Vesting", () => {
     });
 
     it("should return 0 if vesting has not started", async () => {
-      let vestingStartTime = BigInt(await time.latest());
-      let timestampUpTo = 0n;
+      const vestingStartTime = BigInt(await time.latest());
+      const timestampUpTo = 0n;
 
       expect(await vesting.vestingCalculation(scheduleId, vestingAmount, vestingStartTime, timestampUpTo)).to.be.equal(
         0,
@@ -405,8 +402,8 @@ describe("Vesting", () => {
     });
 
     it("should return 0 if start time the same as timestamp up to", async () => {
-      let vestingStartTime = BigInt(await time.latest());
-      let timestampUpTo = vestingStartTime;
+      const vestingStartTime = BigInt(await time.latest());
+      const timestampUpTo = vestingStartTime;
 
       await vesting.createSchedule(defaultSchedule);
 
@@ -416,8 +413,8 @@ describe("Vesting", () => {
     });
 
     it("should return 0 if cliff is active", async () => {
-      let vestingStartTime = BigInt(await time.latest());
-      let timestampUpTo = vestingStartTime + secondsInPeriod * 2n;
+      const vestingStartTime = BigInt(await time.latest());
+      const timestampUpTo = vestingStartTime + secondsInPeriod * 2n;
 
       defaultSchedule.scheduleData.cliffInPeriods = 3n;
 
@@ -429,8 +426,8 @@ describe("Vesting", () => {
     });
 
     it("should return correct tokens amount right after cliff period is over", async () => {
-      let vestingStartTime = BigInt(await time.latest());
-      let timestampUpTo = vestingStartTime + secondsInPeriod * 3n + 1n;
+      const vestingStartTime = BigInt(await time.latest());
+      const timestampUpTo = vestingStartTime + secondsInPeriod * 3n + 1n;
 
       const newCliffInPeriods = 3n;
       const someVestingAmount = wei(120_000);

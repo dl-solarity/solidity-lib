@@ -1,16 +1,19 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+
+import { Reverter } from "@test-helpers";
 
 import { RBACMock } from "@ethers-v6";
 
-describe("RBAC", () => {
-  const reverter = new Reverter();
+const { ethers, networkHelpers } = await hre.network.connect();
 
-  let OWNER: SignerWithAddress;
-  let SECOND: SignerWithAddress;
+describe("RBAC", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let OWNER: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
 
   let rbac: RBACMock;
 
@@ -74,7 +77,7 @@ describe("RBAC", () => {
       );
       await rbac.removePermissionsFromRole("ROLE", [{ resource: "resource", permissions: ["permission1"] }], true);
 
-      let allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
+      const allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
 
       expect(allowedPerms).to.deep.equal([["resource", ["permission2"]]]);
     });
@@ -87,7 +90,7 @@ describe("RBAC", () => {
       );
       await rbac.removePermissionsFromRole("ROLE", [{ resource: "resource", permissions: ["permission2"] }], false);
 
-      let disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
+      const disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
 
       expect(disallowedPerms).to.deep.equal([["resource", ["permission1"]]]);
     });
@@ -115,8 +118,8 @@ describe("RBAC", () => {
         false,
       );
 
-      let allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
-      let disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
+      const allowedPerms = (await rbac.getRolePermissions("ROLE"))[0];
+      const disallowedPerms = (await rbac.getRolePermissions("ROLE"))[1];
 
       expect(allowedPerms).to.deep.equal([]);
       expect(disallowedPerms).to.deep.equal([]);
@@ -227,7 +230,7 @@ describe("RBAC", () => {
       });
     });
 
-    describe("disallowed permissions", async () => {
+    describe("disallowed permissions", () => {
       it("should grant roles with disallowed permissions (1)", async () => {
         await rbac.addPermissionsToRole(
           "ROLE",

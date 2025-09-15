@@ -1,7 +1,7 @@
 import { Interface } from "ethers";
 
 export function getSelectors(contract: Interface): string[] {
-  let selectors: string[] = [];
+  const selectors: string[] = [];
 
   contract.forEachFunction((func) => selectors.push(func.selector));
 

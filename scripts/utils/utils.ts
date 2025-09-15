@@ -1,5 +1,6 @@
-import { ethers } from "hardhat";
-import { PRECISION } from "./constants";
+import { ethers } from "ethers";
+
+import { PRECISION } from "./constants.ts";
 
 export function wei(value: string | number | bigint, decimal: number = 18): bigint {
   if (typeof value == "number" || typeof value == "bigint") {

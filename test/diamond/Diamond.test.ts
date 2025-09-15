@@ -1,19 +1,21 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
-import { wei } from "@/scripts/utils/utils";
+import { wei } from "@scripts";
 
-import { OwnableDiamondMock, DummyFacetMock, DummyInitMock, Diamond } from "@ethers-v6";
+import { FacetAction, Reverter, getSelectors } from "@test-helpers";
+
+import { Diamond, DummyFacetMock, DummyInitMock, OwnableDiamondMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Diamond", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
-  let OWNER: SignerWithAddress;
-  let SECOND: SignerWithAddress;
+  let OWNER: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
 
   let diamond: OwnableDiamondMock;
 
@@ -124,10 +126,10 @@ describe("Diamond", () => {
 
         await expect(tx).to.emit(diamond, "DiamondCut").withArgs(facets.map(Object.values), addr, init);
 
-        const dimondInitMock = <DummyInitMock>dummyInit.attach(await diamond.getAddress());
+        const dimondInitMock = dummyInit.attach(await diamond.getAddress());
         await expect(tx).to.emit(dimondInitMock, "Initialized");
 
-        dummyFacet = <DummyFacetMock>dummyFacet.attach(await diamond.getAddress());
+        dummyFacet = await ethers.getContractAt("DummyFacetMock", await diamond.getAddress());
         expect(await dummyFacet.getDummyString()).to.be.equal("dummy facet initialized");
       });
 
@@ -399,7 +401,7 @@ describe("Diamond", () => {
         await diamond.diamondCutShort(facets);
 
         const DummyFacetMock = await ethers.getContractFactory("DummyFacetMock");
-        const facet = <DummyFacetMock>DummyFacetMock.attach(await diamond.getAddress());
+        const facet = DummyFacetMock.attach(await diamond.getAddress());
 
         await facet.setDummyString("hello, diamond");
 
@@ -411,7 +413,7 @@ describe("Diamond", () => {
         facets[0].functionSelectors = ["0x00000000"];
         await diamond.diamondCutShort(facets);
 
-        let tx = {
+        const tx = {
           to: await diamond.getAddress(),
           value: wei("1"),
         };
@@ -421,7 +423,7 @@ describe("Diamond", () => {
 
       it("should not call facet if selector is not added", async () => {
         const DummyFacetMock = await ethers.getContractFactory("DummyFacetMock");
-        const facet = <DummyFacetMock>DummyFacetMock.attach(await diamond.getAddress());
+        const facet = DummyFacetMock.attach(await diamond.getAddress());
 
         await expect(facet.getDummyString())
           .to.be.revertedWithCustomError(diamond, "SelectorNotRegistered")
@@ -429,7 +431,7 @@ describe("Diamond", () => {
       });
 
       it("should not receive ether if receive is not added", async () => {
-        let tx = {
+        const tx = {
           to: await diamond.getAddress(),
           value: wei("1"),
         };

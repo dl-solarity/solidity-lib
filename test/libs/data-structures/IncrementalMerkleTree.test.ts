@@ -1,45 +1,50 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { MerkleTree } from "merkletreejs";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
-import { buildSparseMerkleTree, getRoot } from "@/test/helpers/merkle-tree-helper";
-import { getPoseidon, poseidonHash } from "@/test/helpers/poseidon-hash";
-import { Reverter } from "@/test/helpers/reverter";
+import { Reverter, addHexPrefix, buildSparseMerkleTree, getPoseidon, getRoot, poseidonHash } from "@test-helpers";
 
-import { addHexPrefix } from "@/test/helpers/bytes-helpers";
 import { IncrementalMerkleTreeMock } from "@ethers-v6";
 
-describe("IncrementalMerkleTree", () => {
-  const reverter = new Reverter();
-  const coder = ethers.AbiCoder.defaultAbiCoder();
+import { MerkleTree } from "merkletreejs";
 
-  let USER1: SignerWithAddress;
+const { ethers, networkHelpers } = await hre.network.connect();
+
+describe("IncrementalMerkleTree", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let coder: typeof ethers.AbiCoder.prototype;
+
+  let USER1: HardhatEthersSigner;
 
   let merkleTree: IncrementalMerkleTreeMock;
 
   let localMerkleTree: MerkleTree;
 
   before("setup", async () => {
+    coder = ethers.AbiCoder.defaultAbiCoder();
+
     [USER1] = await ethers.getSigners();
 
     const IncrementalMerkleTreeMock = await ethers.getContractFactory("IncrementalMerkleTreeMock", {
       libraries: {
-        PoseidonUnit1L: await (await getPoseidon(1)).getAddress(),
-        PoseidonUnit2L: await (await getPoseidon(2)).getAddress(),
+        PoseidonUnit1L: await (await getPoseidon(ethers, 1)).getAddress(),
+        PoseidonUnit2L: await (await getPoseidon(ethers, 2)).getAddress(),
       },
     });
     merkleTree = await IncrementalMerkleTreeMock.deploy();
 
+    localMerkleTree = buildSparseMerkleTree([], 0);
+
     await reverter.snapshot();
   });
 
-  beforeEach("setup", async () => {
+  afterEach(async () => {
+    await reverter.revert();
+
     localMerkleTree = buildSparseMerkleTree([], 0);
   });
-
-  afterEach(reverter.revert);
 
   function getBytes32ElementHash(element: any, hashFn: any = ethers.keccak256) {
     return hashFn(coder.encode(["bytes32"], [element]));
@@ -160,7 +165,11 @@ describe("IncrementalMerkleTree", () => {
 
         const directionBits = getDirectionBits(i, Number(await merkleTree.getUintTreeHeight()));
 
-        expect(await merkleTree.verifyUintProof(siblings, directionBits, elementHash)).to.be.true;
+        expect(await merkleTree.verifyUintProof(siblings, directionBits, elementHash, await merkleTree.getUintRoot()))
+          .to.be.true;
+        expect(await merkleTree.processIMTProof(siblings, directionBits, elementHash)).to.be.eq(
+          await merkleTree.getUintRoot(),
+        );
       }
     });
 
@@ -183,7 +192,8 @@ describe("IncrementalMerkleTree", () => {
 
       const directionBits = 0;
 
-      expect(await merkleTree.verifyUintProof(siblings, directionBits, elementHash)).to.be.true;
+      expect(await merkleTree.verifyUintProof(siblings, directionBits, elementHash, await merkleTree.getUintRoot())).to
+        .be.true;
     });
 
     it("should return false if proof is invalid", async () => {
@@ -199,7 +209,8 @@ describe("IncrementalMerkleTree", () => {
 
       const directionBits = 1;
 
-      expect(await merkleTree.verifyUintProof(siblings, directionBits, elementHash)).to.be.false;
+      expect(await merkleTree.verifyUintProof(siblings, directionBits, elementHash, await merkleTree.getUintRoot())).to
+        .be.false;
     });
 
     it("should return zeroHash if tree is empty", async () => {
@@ -341,7 +352,12 @@ describe("IncrementalMerkleTree", () => {
 
         const directionBits = getDirectionBits(i, Number(await merkleTree.getBytes32TreeHeight()));
 
-        expect(await merkleTree.verifyBytes32Proof(siblings, directionBits, elementHash)).to.be.true;
+        expect(
+          await merkleTree.verifyBytes32Proof(siblings, directionBits, elementHash, await merkleTree.getBytes32Root()),
+        ).to.be.true;
+        expect(await merkleTree.processIMTProof(siblings, directionBits, elementHash)).to.be.eq(
+          await merkleTree.getBytes32Root(),
+        );
       }
     });
   });
@@ -466,7 +482,12 @@ describe("IncrementalMerkleTree", () => {
 
         const directionBits = getDirectionBits(i, Number(await merkleTree.getAddressTreeHeight()));
 
-        expect(await merkleTree.verifyAddressProof(siblings, directionBits, elementHash)).to.be.true;
+        expect(
+          await merkleTree.verifyAddressProof(siblings, directionBits, elementHash, await merkleTree.getAddressRoot()),
+        ).to.be.true;
+        expect(await merkleTree.processIMTProof(siblings, directionBits, elementHash)).to.be.eq(
+          await merkleTree.getAddressRoot(),
+        );
       }
     });
   });

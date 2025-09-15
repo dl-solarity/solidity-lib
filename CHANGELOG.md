@@ -1,8 +1,26 @@
 # Changelog
 
-## [none]
+## [patch]
 
-- Fixed typo in readme.
+- Enhanced the `ABridge` contract architecture by adding modular `IHandler` contracts for assets and messages management, and `IBatcher` contract for batched execution during redemption.
+- Clarified CI sequence.
+
+## [3.2.5]
+
+- Separated txid and wtxid calculations in `TxParser` library.
+
+## [3.2.4]
+
+- Added `ARecoverableAccount` contract, an all-in-one EIP-7702/ERC-4337 account with ERC-7821 batching, ERC-4337 gas sponsorship, and ERC-7947 recovery.
+- Added eslint.
+
+## [3.2.3]
+
+- Slightly extended Merkle Trees functionality. Added `processProof` function.
+
+## [3.2.2]
+
+- Migrated to Hardhat 3.
 
 ## [3.2.1]
 

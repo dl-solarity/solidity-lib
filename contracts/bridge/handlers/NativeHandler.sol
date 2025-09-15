@@ -4,80 +4,90 @@ pragma solidity ^0.8.21;
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 import {IBatcher} from "../../interfaces/bridge/IBatcher.sol";
-import {INativeHandler} from "../../interfaces/bridge/IHandler.sol";
+import {IHandler} from "../../interfaces/bridge/IHandler.sol";
 
 /**
  * @title NativeHandler
  */
-contract NativeHandler is INativeHandler {
+contract NativeHandler is IHandler {
     using Address for address payable;
 
-    receive() external payable {}
+    event DispatchedNative(uint256 amount, string receiver, string network, bytes batch);
 
-    event DepositedNative(uint256 amount, string receiver, string network, bytes batch);
-
-    struct NativeDepositData {
+    struct NativeDispatchData {
         string receiver;
         string network;
         bytes batch;
     }
 
-    struct NativeWithdrawData {
+    /**
+     * @dev Nonce is computed as keccak256(abi.encodePacked(originNetworkName, originTxHash, eventNumber)).
+     */
+    struct NativeRedeemData {
         uint256 amount;
         address receiver;
         bytes batch;
-        bytes32 nonce; // keccak256(abi.encodePacked(origin network name . origin tx hash . event number))
+        bytes32 nonce;
     }
 
-    function deposit(bytes calldata depositDetails_) external payable virtual {
-        NativeDepositData memory deposit_ = abi.decode(depositDetails_, (NativeDepositData));
+    /**
+     * @inheritdoc IHandler
+     */
+    function dispatch(bytes calldata dispatchDetails_) external payable virtual {
+        NativeDispatchData memory dispatch_ = abi.decode(dispatchDetails_, (NativeDispatchData));
 
-        _deposit(deposit_);
+        _dispatch(dispatch_);
 
-        emit DepositedNative(msg.value, deposit_.receiver, deposit_.network, deposit_.batch);
+        emit DispatchedNative(msg.value, dispatch_.receiver, dispatch_.network, dispatch_.batch);
     }
 
-    function withdraw(IBatcher batcher_, bytes calldata withdrawDetails_) external virtual {
-        NativeWithdrawData memory withdraw_ = abi.decode(withdrawDetails_, (NativeWithdrawData));
+    /**
+     * @inheritdoc IHandler
+     */
+    function redeem(IBatcher batcher_, bytes calldata redeemDetails_) external virtual {
+        NativeRedeemData memory redeem_ = abi.decode(redeemDetails_, (NativeRedeemData));
 
-        if (withdraw_.batch.length == 0) {
-            _withdraw(withdraw_);
+        if (redeem_.batch.length == 0) {
+            _redeem(redeem_);
             return;
         }
 
-        withdraw_.receiver = address(batcher_);
+        redeem_.receiver = address(batcher_);
 
-        _withdraw(withdraw_);
-        batcher_.execute(withdraw_.batch);
+        _redeem(redeem_);
+        batcher_.execute(redeem_.batch);
     }
 
+    /**
+     * @inheritdoc IHandler
+     */
     function getOperationHash(
         string calldata network_,
-        bytes calldata withdrawDetails_
+        bytes calldata redeemDetails_
     ) external view virtual returns (bytes32) {
-        NativeWithdrawData memory withdraw_ = abi.decode(withdrawDetails_, (NativeWithdrawData));
+        NativeRedeemData memory redeem_ = abi.decode(redeemDetails_, (NativeRedeemData));
 
         return
             keccak256(
                 abi.encodePacked(
-                    withdraw_.amount,
-                    withdraw_.receiver,
-                    withdraw_.batch,
-                    withdraw_.nonce,
+                    redeem_.amount,
+                    redeem_.receiver,
+                    redeem_.batch,
+                    redeem_.nonce,
                     network_,
                     address(this)
                 )
             );
     }
 
-    function _deposit(NativeDepositData memory) internal virtual {
+    function _dispatch(NativeDispatchData memory) internal virtual {
         if (msg.value == 0) revert ZeroAmount();
     }
 
-    function _withdraw(NativeWithdrawData memory withdraw_) internal virtual {
-        if (withdraw_.amount == 0) revert ZeroAmount();
-        if (withdraw_.receiver == address(0)) revert ZeroReceiver();
+    function _redeem(NativeRedeemData memory redeem_) internal virtual {
+        if (redeem_.amount == 0) revert ZeroAmount();
+        if (redeem_.receiver == address(0)) revert ZeroReceiver();
 
-        payable(withdraw_.receiver).sendValue(withdraw_.amount);
+        payable(redeem_.receiver).sendValue(redeem_.amount);
     }
 }

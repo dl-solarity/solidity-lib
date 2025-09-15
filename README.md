@@ -22,10 +22,11 @@ contracts
 │   └── extensions
 │       └── ARBACGroupable — "Groupable extension of ARBAC"
 ├── account—abstraction
-│   └── AAccountRecovery — "ERC-7947 account recovery base implementation"
+│   ├── AAccountRecovery — "ERC-7947 account recovery base implementation"
+│   └── ARecoverableAccount — "All-in-one account with batching, gas sponsorship, and recovery"
 ├── bridge
 │   ├── handlers — "Internal bridge logic contracts"
-│   └── ABridge — "Simple bridge with ERC20/ERC721/ERC1155 tokens support"
+│   └── ABridge — "Simple bridge with messages, ERC-20 and native tokens support"
 ├── contracts—registry
 │   ├── AContractsRegistry — "Reference registry implementation of ERC-6224 pattern"
 │   ├── ADependant — "Reference dependant implementation of ERC-6224 pattern"

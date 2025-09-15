@@ -1,11 +1,11 @@
 import fs from "fs";
 import path from "path";
 
-import { allowedWhenNotRc, allowedWhenRc } from "./constants";
+import { allowedWhenNotRc, allowedWhenRc } from "./constants.cts";
 
-import type { Level, TopSection } from "./types";
+import type { Level, TopSection } from "./types.cts";
 
-export function readJSON<T = any>(filePath: string): T {
+export function readJSON<T = unknown>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 }
 

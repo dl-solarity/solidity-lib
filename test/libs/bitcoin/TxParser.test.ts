@@ -1,19 +1,22 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { TxParserMock } from "@/generated-types/ethers";
-import { reverseBytes } from "@/test/helpers/bytes-helpers";
 import {
+  Reverter,
   checkTransaction,
   formatTx,
   getTxData,
   getTxDataFilePath,
   parseCuint,
-} from "@/test/helpers/bitcoin/parse-tx-helper";
+  reverseBytes,
+} from "@test-helpers";
+
+import { TxParserMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("Transaction Parser", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let parser: TxParserMock;
 
@@ -27,7 +30,7 @@ describe("Transaction Parser", () => {
   const shortFlagTx = "0x0200000000";
   const shortTx = "0x01000000";
 
-  before(async () => {
+  before("setup", async () => {
     const TxParserMock = await ethers.getContractFactory("TxParserMock");
     parser = await TxParserMock.deploy();
 
@@ -41,13 +44,27 @@ describe("Transaction Parser", () => {
 
   describe("#calculateTxId", () => {
     it("should calculate correctly", async () => {
-      let rawTx =
+      const rawTxWithoutWitness =
         "0x01000000013652ebc8c4efec4015c4c2e6f7f693bf5307bcc68f59510957e302b89208eb0c060000006a47304402202955e3df921fa6893b898db5117ec92441757d90b485ed3015d427a1aa7631a6022063859ae9fb657b3ceb28c1771076da62e967b3872db6599a08ac982f62ef67810121037a35df3a9314039a2361bd37df3ee846c7a259a7c83f522704517bb7e8748f1effffffff0138ed000000000000160014b9edb07641abc03085f3971e48c6cafbdc854baf00000000";
 
       let expectedTxid = reverseBytes("0x16a7875987d0be57af2283de4c38f0f4b1ad9c65b936cbc36e101665d8dff891");
-      let txid = await parser.calculateTxId(rawTx);
+      let txid = await parser.calculateTxId(rawTxWithoutWitness);
+      let wtxid = await parser.calculateWTxId(rawTxWithoutWitness);
 
       expect(txid).to.be.eq(expectedTxid);
+      expect(wtxid).to.be.eq(expectedTxid);
+
+      const rawTxWithWitness =
+        "0x02000000000101bb9bf2f5ad81afc67adacddcdb8c23aa357a7f471a6e3902a48d16b7fb69681b0000000000ffffffff02a896010000000000160014d9f6bfe50ad0a73647031d933e05fab69b3752b9dfec1c0000000000160014b9ab9ccd954d138c3f3aae3ec91070f4c9dd966f040047304402203e6e965c7bbced9bcd286c7ce37a27de012d3d9dc691ad4c77fff48191ae4bbe022077a0c132f28c4d2d691654acd28a3035fa8e7a737007ebcd67056e50727a1c0801473044022058daa76ae784f860aae0433fe9926831643284840fb6774f43ad72ee11c6aadb0220331c74132820b15fac6ff2a88789a3325cee83d68ccdec9b38dea2a8b5462eaf01475221024c48ca1fb71fac84400643b0e921ece39abdeea5026d9e01d8281bad9cddfaf92103674b3be7da8a4fdb363fd471a6bf507c38f39962322370ce7338c0719d06df7252ae00000000";
+
+      expectedTxid = reverseBytes("a3b23982331300ef8d23bd90b64e939758835515642a65ba64234bf2cae2ac7a");
+      const expectedWTxid = reverseBytes("72d691c88f88df22874bd380d2b46040ff632ab076c4db14441e5f7c1b82c542");
+
+      txid = await parser.calculateTxId(rawTxWithWitness);
+      wtxid = await parser.calculateWTxId(rawTxWithWitness);
+
+      expect(txid).to.be.eq(expectedTxid);
+      expect(wtxid).to.be.eq(expectedWTxid);
     });
   });
 

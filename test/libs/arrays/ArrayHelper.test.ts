@@ -1,17 +1,20 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+
+import { Reverter } from "@test-helpers";
 
 import { ArrayHelperMock } from "@ethers-v6";
 
-describe("ArrayHelper", () => {
-  const reverter = new Reverter();
+const { ethers, networkHelpers } = await hre.network.connect();
 
-  let FIRST: SignerWithAddress;
-  let SECOND: SignerWithAddress;
-  let THIRD: SignerWithAddress;
+describe("ArrayHelper", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let FIRST: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
+  let THIRD: HardhatEthersSigner;
 
   let mock: ArrayHelperMock;
 
@@ -141,11 +144,11 @@ describe("ArrayHelper", () => {
       });
 
       it("should revert if one of the indexes is out of range", async () => {
-        await expect(mock.getRangeSum(0, 0)).to.be.reverted;
+        await expect(mock.getRangeSum(0, 0)).to.be.revert(ethers);
 
         await mock.setArray((await mock.countPrefixes(array)).map((e) => Number(e)));
 
-        await expect(mock.getRangeSum(0, array.length)).to.be.reverted;
+        await expect(mock.getRangeSum(0, array.length)).to.be.revert(ethers);
       });
     });
 
@@ -181,7 +184,7 @@ describe("ArrayHelper", () => {
     });
   });
 
-  describe("reverse", async () => {
+  describe("reverse", () => {
     it("should reverse uint array", async () => {
       const arr = await mock.reverseUint([1, 2, 3]);
 
@@ -234,16 +237,16 @@ describe("ArrayHelper", () => {
     });
 
     it("should reverse empty array", async () => {
-      let arrUint = await mock.reverseUint([]);
+      const arrUint = await mock.reverseUint([]);
       expect(arrUint.length).to.equal(0);
 
-      let arrAddress = await mock.reverseAddress([]);
+      const arrAddress = await mock.reverseAddress([]);
       expect(arrAddress.length).to.equal(0);
 
-      let arrString = await mock.reverseString([]);
+      const arrString = await mock.reverseString([]);
       expect(arrString.length).to.equal(0);
 
-      let arrBytes32 = await mock.reverseBytes32([]);
+      const arrBytes32 = await mock.reverseBytes32([]);
       expect(arrBytes32.length).to.equal(0);
     });
   });
@@ -311,69 +314,69 @@ describe("ArrayHelper", () => {
     });
 
     it("should revert in case of out of bound insertion", async () => {
-      await expect(mock.insertUint([1], 1, [2])).to.be.reverted;
-      await expect(mock.insertAddress([], 0, [FIRST.address])).to.be.reverted;
-      await expect(mock.insertString(["1", "2"], 2, ["1"])).to.be.reverted;
+      await expect(mock.insertUint([1], 1, [2])).to.be.revert(ethers);
+      await expect(mock.insertAddress([], 0, [FIRST.address])).to.be.revert(ethers);
+      await expect(mock.insertString(["1", "2"], 2, ["1"])).to.be.revert(ethers);
     });
   });
 
   describe("crop", () => {
     it("should crop uint256 array properly", async () => {
-      let arr = await mock.cropUint([1, 2, 3, 0], 3);
+      const arr = await mock.cropUint([1, 2, 3, 0], 3);
 
       expect(arr.length).to.equal(3);
     });
 
     it("should crop address array properly", async () => {
-      let arr = await mock.cropAddress([FIRST.address, SECOND.address, THIRD.address], 2);
+      const arr = await mock.cropAddress([FIRST.address, SECOND.address, THIRD.address], 2);
 
       expect(arr).to.deep.equal([FIRST.address, SECOND.address]);
     });
 
     it("should crop bool array properly", async () => {
-      let arr = await mock.cropBool([true, false, true], 2);
+      const arr = await mock.cropBool([true, false, true], 2);
 
       expect(arr).to.deep.equal([true, false]);
     });
 
     it("should crop string array properly", async () => {
-      let arr = await mock.cropString(["a", "b", "c"], 2);
+      const arr = await mock.cropString(["a", "b", "c"], 2);
 
       expect(arr).to.deep.equal(["a", "b"]);
     });
 
     it("should crop bytes32 array properly", async () => {
-      let arr = await mock.cropBytes([ethers.ZeroHash, ethers.ZeroHash], 1);
+      const arr = await mock.cropBytes([ethers.ZeroHash, ethers.ZeroHash], 1);
 
       expect(arr).to.deep.equal([ethers.ZeroHash]);
     });
 
     it("should not crop uint256 array if new length more than initial length", async () => {
-      let arr = await mock.cropUint([1, 2, 3, 0], 5);
+      const arr = await mock.cropUint([1, 2, 3, 0], 5);
 
       expect(arr.length).to.equal(4);
     });
 
     it("should not crop address array if new length more than initial length", async () => {
-      let arr = await mock.cropAddress([FIRST.address, SECOND.address, THIRD.address], 5);
+      const arr = await mock.cropAddress([FIRST.address, SECOND.address, THIRD.address], 5);
 
       expect(arr.length).to.equal(3);
     });
 
     it("should not crop bool if new length more than initial length", async () => {
-      let arr = await mock.cropBool([true, false], 2);
+      const arr = await mock.cropBool([true, false], 2);
 
       expect(arr.length).to.equal(2);
     });
 
     it("should not crop string array if new length more than initial length", async () => {
-      let arr = await mock.cropString(["a", "b", "c"], 6);
+      const arr = await mock.cropString(["a", "b", "c"], 6);
 
       expect(arr.length).to.equal(3);
     });
 
     it("should not crop bytes32 array if new length more than initial length", async () => {
-      let arr = await mock.cropBytes([ethers.ZeroHash, ethers.ZeroHash], 2);
+      const arr = await mock.cropBytes([ethers.ZeroHash, ethers.ZeroHash], 2);
 
       expect(arr.length).to.equal(2);
     });

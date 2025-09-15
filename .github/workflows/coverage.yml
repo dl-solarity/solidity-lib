@@ -1,7 +1,11 @@
 name: "coverage"
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - pre-release
+    types:
+      - completed
     branches:
       - master
   pull_request:
@@ -9,18 +13,26 @@ on:
       - master
       - dev
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   coverage:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v5
+
       - name: Setup
         uses: ./.github/actions/setup
+
       - name: Run coverage
         env:
-          NODE_OPTIONS: "--max_old_space_size=8192"
+          NODE_OPTIONS: "--max_old_space_size=16384"
         run: npm run coverage
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:

@@ -1,14 +1,19 @@
-import { network } from "hardhat";
+import { NetworkHelpers, SnapshotRestorer } from "@nomicfoundation/hardhat-network-helpers/types";
 
 export class Reverter {
-  private snapshotId: any;
+  private snapshotInstance: SnapshotRestorer | undefined;
+
+  constructor(private networkHelpers: NetworkHelpers) {}
 
   revert = async () => {
-    await network.provider.send("evm_revert", [this.snapshotId]);
-    await this.snapshot();
+    if (this.snapshotInstance === undefined) {
+      throw new Error("this.snapshotInstance is undefined");
+    }
+
+    await this.snapshotInstance.restore();
   };
 
   snapshot = async () => {
-    this.snapshotId = await network.provider.send("evm_snapshot", []);
+    this.snapshotInstance = await this.networkHelpers.takeSnapshot();
   };
 }

@@ -1,22 +1,19 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
-import { getSelectors, FacetAction } from "@/test/helpers/diamond-helper";
+import { FacetAction, Reverter, getSelectors } from "@test-helpers";
 
-import { OwnableDiamondMock, DiamondERC165, Diamond } from "@ethers-v6";
+import { Diamond, DiamondERC165, OwnableDiamondMock } from "@ethers-v6";
+
+const { ethers, networkHelpers } = await hre.network.connect();
 
 describe("DiamondERC165", () => {
-  const reverter = new Reverter();
+  const reverter: Reverter = new Reverter(networkHelpers);
 
   let erc165: DiamondERC165;
   let diamond: OwnableDiamondMock;
 
   before("setup", async () => {
-    await reverter.snapshot();
-  });
-
-  beforeEach("setup", async () => {
     const OwnableDiamond = await ethers.getContractFactory("OwnableDiamondMock");
     const DiamondERC165 = await ethers.getContractFactory("DiamondERC165");
 
@@ -34,7 +31,9 @@ describe("DiamondERC165", () => {
     await diamond.__OwnableDiamondMock_init();
     await diamond.diamondCutShort(facets);
 
-    erc165 = <DiamondERC165>DiamondERC165.attach(await diamond.getAddress());
+    erc165 = DiamondERC165.attach(await diamond.getAddress());
+
+    await reverter.snapshot();
   });
 
   afterEach(reverter.revert);

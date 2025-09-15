@@ -1,16 +1,19 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import hre from "hardhat";
 
-import { Reverter } from "@/test/helpers/reverter";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+
+import { Reverter } from "@test-helpers";
 
 import { RBACGroupableMock } from "@ethers-v6";
 
-describe("RBACGroupable", () => {
-  const reverter = new Reverter();
+const { ethers, networkHelpers } = await hre.network.connect();
 
-  let OWNER: SignerWithAddress;
-  let SECOND: SignerWithAddress;
+describe("RBACGroupable", () => {
+  const reverter: Reverter = new Reverter(networkHelpers);
+
+  let OWNER: HardhatEthersSigner;
+  let SECOND: HardhatEthersSigner;
 
   let rbac: RBACGroupableMock;
 
@@ -105,7 +108,7 @@ describe("RBACGroupable", () => {
       it("should grant group roles if all conditions are met", async () => {
         const tx = await rbac.grantGroupRoles(GROUP_ALL_ROLES, ALL_ROLES);
 
-        expect(tx).to.emit(rbac, "GrantedGroupRoles");
+        await expect(tx).to.emit(rbac, "GrantedGroupRoles");
 
         expect(await rbac.getGroupRoles(GROUP_ALL_ROLES)).to.deep.equal(ALL_ROLES);
       });
@@ -135,7 +138,7 @@ describe("RBACGroupable", () => {
         it("should revoke group roles if all conditions are met", async () => {
           const tx = await rbac.revokeGroupRoles(GROUP_ALL_ROLES, ROLES_01);
 
-          expect(tx).to.emit(rbac, "RevokedGroupRoles");
+          await expect(tx).to.emit(rbac, "RevokedGroupRoles");
 
           expect(await rbac.getGroupRoles(GROUP_ALL_ROLES)).to.deep.equal([roles[2].name]);
         });
@@ -157,7 +160,7 @@ describe("RBACGroupable", () => {
         it("should add the user to groups if all conditions are met", async () => {
           const tx = await rbac.addUserToGroups(SECOND.address, [GROUP_ROLES01, GROUP_ROLES12]);
 
-          expect(tx).to.emit(rbac, "AddedToGroups");
+          await expect(tx).to.emit(rbac, "AddedToGroups");
 
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([GROUP_ROLES01, GROUP_ROLES12]);
         });
@@ -173,9 +176,7 @@ describe("RBACGroupable", () => {
         it("should add the user to the default group automatically", async () => {
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([]);
 
-          expect(await rbac.toggleDefaultGroup())
-            .to.emit(rbac, "ToggledDefaultGroup")
-            .withArgs(true);
+          await expect(rbac.toggleDefaultGroup()).to.emit(rbac, "ToggledDefaultGroup").withArgs(true);
 
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([""]);
 
@@ -183,9 +184,7 @@ describe("RBACGroupable", () => {
 
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([GROUP_ROLES01, GROUP_ROLES12, ""]);
 
-          expect(await rbac.toggleDefaultGroup())
-            .to.emit(rbac, "ToggledDefaultGroup")
-            .withArgs(false);
+          await expect(rbac.toggleDefaultGroup()).to.emit(rbac, "ToggledDefaultGroup").withArgs(false);
 
           expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([GROUP_ROLES01, GROUP_ROLES12]);
         });
@@ -212,7 +211,7 @@ describe("RBACGroupable", () => {
           it("should remove the user from groups if all conditions are met", async () => {
             const tx = await rbac.removeUserFromGroups(SECOND.address, [GROUP_ROLES01]);
 
-            expect(tx).to.emit(rbac, "RemovedFromGroups");
+            await expect(tx).to.emit(rbac, "RemovedFromGroups");
 
             expect(await rbac.getUserGroups(SECOND.address)).to.deep.equal([GROUP_ROLES12]);
           });

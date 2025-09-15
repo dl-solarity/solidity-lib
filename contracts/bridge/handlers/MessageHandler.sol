@@ -8,37 +8,48 @@ import {IHandler} from "../../interfaces/bridge/IHandler.sol";
  * @title MessageHandler
  */
 contract MessageHandler is IHandler {
-    event MessageSent(string network, bytes batch);
+    event DispatchedMessage(string network, bytes batch);
 
-    struct MessageDepositData {
+    struct MessageDispatchData {
         string network;
         bytes batch;
     }
 
-    struct MessageWithdrawData {
+    /**
+     * @dev Nonce is computed as keccak256(abi.encodePacked(originNetworkName, originTxHash, eventNumber)).
+     */
+    struct MessageRedeemData {
         bytes batch;
-        bytes32 nonce; // keccak256(abi.encodePacked(origin network name . origin tx hash . event number))
+        bytes32 nonce;
     }
 
-    function deposit(bytes calldata depositDetails_) external virtual {
-        MessageDepositData memory deposit_ = abi.decode(depositDetails_, (MessageDepositData));
+    /**
+     * @inheritdoc IHandler
+     */
+    function dispatch(bytes calldata dispatchDetails_) external payable virtual {
+        MessageDispatchData memory dispatch_ = abi.decode(dispatchDetails_, (MessageDispatchData));
 
-        emit MessageSent(deposit_.network, deposit_.batch);
+        emit DispatchedMessage(dispatch_.network, dispatch_.batch);
     }
 
-    function withdraw(IBatcher batcher_, bytes calldata withdrawDetails_) external virtual {
-        MessageWithdrawData memory withdraw_ = abi.decode(withdrawDetails_, (MessageWithdrawData));
+    /**
+     * @inheritdoc IHandler
+     */
+    function redeem(IBatcher batcher_, bytes calldata redeemDetails_) external virtual {
+        MessageRedeemData memory redeem_ = abi.decode(redeemDetails_, (MessageRedeemData));
 
-        batcher_.execute(withdraw_.batch);
+        batcher_.execute(redeem_.batch);
     }
 
+    /**
+     * @inheritdoc IHandler
+     */
     function getOperationHash(
         string calldata network_,
-        bytes calldata withdrawDetails_
+        bytes calldata redeemDetails_
     ) external view virtual returns (bytes32) {
-        MessageWithdrawData memory withdraw_ = abi.decode(withdrawDetails_, (MessageWithdrawData));
+        MessageRedeemData memory redeem_ = abi.decode(redeemDetails_, (MessageRedeemData));
 
-        return
-            keccak256(abi.encodePacked(withdraw_.batch, withdraw_.nonce, network_, address(this)));
+        return keccak256(abi.encodePacked(redeem_.batch, redeem_.nonce, network_, address(this)));
     }
 }

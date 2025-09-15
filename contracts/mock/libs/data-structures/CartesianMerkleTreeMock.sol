@@ -114,6 +114,12 @@ contract CartesianMerkleTreeMock {
         return _addressCMT.verifyProof(proof_);
     }
 
+    function processCMTProof(
+        CartesianMerkleTree.Proof memory proof_
+    ) external view returns (bytes32) {
+        return CartesianMerkleTree.processProof(_hash3, proof_);
+    }
+
     function getUintRoot() external view returns (bytes32) {
         return _uintCMT.getRoot();
     }

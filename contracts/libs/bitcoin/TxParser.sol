@@ -44,6 +44,15 @@ library TxParser {
      * @return The transaction ID
      */
     function calculateTxId(bytes calldata data_) internal pure returns (bytes32) {
+        return _doubleSHA256(_removeWitness(data_));
+    }
+
+    /**
+     * @notice Calculate witness transaction ID (hash with witness data)
+     * @param data_ The raw transaction data
+     * @return The witness transaction ID
+     */
+    function calculateWTxId(bytes calldata data_) internal pure returns (bytes32) {
         return _doubleSHA256(data_);
     }
 
@@ -157,7 +166,7 @@ library TxParser {
      * @return The formatted transaction bytes
      */
     function formatTransaction(
-        Transaction calldata tx_,
+        Transaction memory tx_,
         bool withWitness_
     ) internal pure returns (bytes memory) {
         bool includeWitness_ = withWitness_ && tx_.hasWitness;
@@ -439,7 +448,7 @@ library TxParser {
      * @notice Format a transaction input into raw bytes
      */
     function _formatTransactionInput(
-        TransactionInput calldata input_
+        TransactionInput memory input_
     ) private pure returns (bytes memory) {
         bytes memory prevHash_ = abi.encodePacked((input_.previousHash).bytes32BEtoLE());
         bytes memory previousIndex_ = abi.encodePacked(input_.previousIndex.uint32BEtoLE());
@@ -459,7 +468,7 @@ library TxParser {
      * @notice Format a transaction output into raw bytes
      */
     function _formatTransactionOutput(
-        TransactionOutput calldata output_
+        TransactionOutput memory output_
     ) private pure returns (bytes memory) {
         bytes memory value_ = abi.encodePacked(output_.value.uint64BEtoLE());
 
@@ -467,6 +476,22 @@ library TxParser {
             abi.encodePacked(value_, formatCuint(uint64(output_.script.length)), output_.script);
     }
 
+    /**
+     * @notice Remove witness from a raw transaction
+     */
+    function _removeWitness(bytes calldata data_) private pure returns (bytes memory) {
+        (TxParser.Transaction memory tx_, ) = parseTransaction(data_);
+
+        if (tx_.hasWitness) {
+            return formatTransaction(tx_, false);
+        }
+
+        return data_;
+    }
+
+    /**
+     * @notice Parse a compact unsigned integer (Bitcoin's variable length encoding)
+     */
     function _parseCuint(
         bytes memory data_,
         uint256 offset_
