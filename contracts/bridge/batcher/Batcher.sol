@@ -17,25 +17,20 @@ import {IBatcher} from "../../interfaces/bridge/IBatcher.sol";
 contract Batcher is IBatcher, ERC721Holder, ERC1155Holder, ReentrancyGuard {
     using Address for *;
 
-    struct ExecutionData {
-        address target;
-        uint256 value;
-        bytes data;
-    }
-
     /**
      * @inheritdoc IBatcher
      */
     function execute(bytes calldata batch_) external payable nonReentrant {
-        ExecutionData[] memory calls_ = abi.decode(batch_, (ExecutionData[]));
+        (address[] memory targets_, uint256[] memory values_, bytes[] memory data_) = abi.decode(
+            batch_,
+            (address[], uint256[], bytes[])
+        );
 
-        for (uint256 i = 0; i < calls_.length; ++i) {
-            ExecutionData memory call_ = calls_[i];
-
-            if (call_.data.length > 0) {
-                call_.target.functionCallWithValue(call_.data, call_.value);
+        for (uint256 i = 0; i < targets_.length; ++i) {
+            if (data_[i].length > 0) {
+                targets_[i].functionCallWithValue(data_[i], values_[i]);
             } else {
-                payable(call_.target).sendValue(call_.value);
+                payable(targets_[i]).sendValue(values_[i]);
             }
         }
     }

@@ -320,12 +320,11 @@ describe("Bridge", () => {
       const transferData2 = erc20.interface.encodeFunctionData("transfer", [THIRD.address, wei("15")]);
 
       const batch = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["tuple(address,uint256,bytes)[]"],
+        ["address[]", "uint256[]", "bytes[]"],
         [
-          [
-            [await erc20.getAddress(), 0, transferData1],
-            [await erc20.getAddress(), 0, transferData2],
-          ],
+          [await erc20.getAddress(), await erc20.getAddress()],
+          [0, 0],
+          [transferData1, transferData2],
         ],
       );
 
@@ -515,12 +514,11 @@ describe("Bridge", () => {
       });
 
       const batch = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["tuple(address,uint256,bytes)[]"],
+        ["address[]", "uint256[]", "bytes[]"],
         [
-          [
-            [SECOND.address, 7n, "0x"],
-            [THIRD.address, 2n, "0x"],
-          ],
+          [SECOND.address, THIRD.address],
+          [7n, 2n],
+          ["0x", "0x"],
         ],
       );
 
@@ -572,12 +570,11 @@ describe("Bridge", () => {
       const batchEventData2 = bridge.interface.encodeFunctionData("emitBatchEvent", [2]);
 
       const batch = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["tuple(address,uint256,bytes)[]"],
+        ["address[]", "uint256[]", "bytes[]"],
         [
-          [
-            [await bridge.getAddress(), 0, batchEventData1],
-            [await bridge.getAddress(), 0, batchEventData2],
-          ],
+          [await bridge.getAddress(), await bridge.getAddress()],
+          [0, 0],
+          [batchEventData1, batchEventData2],
         ],
       );
 
