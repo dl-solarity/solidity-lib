@@ -11,6 +11,8 @@ interface IBridge {
     error ThresholdNotMet(uint256 signers);
     error ThresholdIsZero();
     error NonceUsed(bytes32 nonce);
+    error HandlerAlreadyPresent(uint256 handlerId);
+    error HandlerDoesNotExist(uint256 handlerId);
 
     /**
      * @notice A function to dispatch assets or messages to another chain.

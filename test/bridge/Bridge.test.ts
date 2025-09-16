@@ -123,6 +123,9 @@ describe("Bridge", () => {
       expect(await bridge.getSigners()).to.be.deep.equal([OWNER.address]);
       expect(await bridge.getBatcher()).not.to.be.equal(ethers.ZeroAddress);
       expect(await bridge.getSignaturesThreshold()).to.be.equal(1);
+      expect(await bridge.assetTypeSupported(1)).to.be.true;
+      expect(await bridge.assetTypeSupported(2)).to.be.true;
+      expect(await bridge.assetTypeSupported(3)).to.be.true;
 
       await expect(bridge.mockInit()).to.be.revertedWithCustomError(bridge, "NotInitializing").withArgs();
 
@@ -317,11 +320,12 @@ describe("Bridge", () => {
       const transferData2 = erc20.interface.encodeFunctionData("transfer", [THIRD.address, wei("15")]);
 
       const batch = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["address[]", "uint256[]", "bytes[]"],
+        ["tuple(address,uint256,bytes)[]"],
         [
-          [await erc20.getAddress(), await erc20.getAddress()],
-          [0, 0],
-          [transferData1, transferData2],
+          [
+            [await erc20.getAddress(), 0, transferData1],
+            [await erc20.getAddress(), 0, transferData2],
+          ],
         ],
       );
 
@@ -511,11 +515,12 @@ describe("Bridge", () => {
       });
 
       const batch = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["address[]", "uint256[]", "bytes[]"],
+        ["tuple(address,uint256,bytes)[]"],
         [
-          [SECOND.address, THIRD.address],
-          [7n, 2n],
-          ["0x", "0x"],
+          [
+            [SECOND.address, 7n, "0x"],
+            [THIRD.address, 2n, "0x"],
+          ],
         ],
       );
 
@@ -567,11 +572,12 @@ describe("Bridge", () => {
       const batchEventData2 = bridge.interface.encodeFunctionData("emitBatchEvent", [2]);
 
       const batch = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["address[]", "uint256[]", "bytes[]"],
+        ["tuple(address,uint256,bytes)[]"],
         [
-          [await bridge.getAddress(), await bridge.getAddress()],
-          [0, 0],
-          [batchEventData1, batchEventData2],
+          [
+            [await bridge.getAddress(), 0, batchEventData1],
+            [await bridge.getAddress(), 0, batchEventData2],
+          ],
         ],
       );
 
@@ -655,6 +661,8 @@ describe("Bridge", () => {
           await erc20Handler.getAddress(),
         ],
       ]);
+
+      expect(await bridge.assetTypeSupported(7)).to.be.true;
     });
 
     it("should revert when adding handler for the asset type that is already added", async () => {
@@ -670,6 +678,10 @@ describe("Bridge", () => {
         [1n, 3n],
         [await erc20Handler.getAddress(), await messageHandler.getAddress()],
       ]);
+
+      expect(await bridge.assetTypeSupported(1)).to.be.true;
+      expect(await bridge.assetTypeSupported(2)).to.be.false;
+      expect(await bridge.assetTypeSupported(3)).to.be.true;
     });
 
     it("should revert when removing handler that doesn't exist", async () => {

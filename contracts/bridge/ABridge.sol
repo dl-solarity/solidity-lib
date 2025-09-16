@@ -42,9 +42,6 @@ abstract contract ABridge is IBridge, Initializable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableMap for EnumerableMap.UintToAddressMap;
 
-    error HandlerAlreadyPresent(uint256 handlerId);
-    error HandlerDoesNotExist(uint256 handlerId);
-
     struct ABridgeStorage {
         string network;
         IBatcher batcher;
@@ -95,7 +92,7 @@ abstract contract ABridge is IBridge, Initializable {
     ) external payable virtual {
         ABridgeStorage storage $ = _getABridgeStorage();
 
-        if (!$.handlers.contains(assetType_)) revert HandlerDoesNotExist(assetType_);
+        if (!assetTypeSupported(assetType_)) revert HandlerDoesNotExist(assetType_);
 
         address handler_ = $.handlers.get(assetType_);
 
@@ -114,7 +111,7 @@ abstract contract ABridge is IBridge, Initializable {
     ) external virtual {
         ABridgeStorage storage $ = _getABridgeStorage();
 
-        if (!$.handlers.contains(assetType_)) revert HandlerDoesNotExist(assetType_);
+        if (!assetTypeSupported(assetType_)) revert HandlerDoesNotExist(assetType_);
 
         address handler_ = $.handlers.get(assetType_);
 
@@ -180,6 +177,13 @@ abstract contract ABridge is IBridge, Initializable {
      */
     function nonceUsed(bytes32 nonce_) external view returns (bool) {
         return _getABridgeStorage().usedNonce[nonce_];
+    }
+
+    /**
+     * @notice Checks if the asset type is linked to the handler
+     */
+    function assetTypeSupported(uint256 assetType_) public view returns (bool) {
+        return _getABridgeStorage().handlers.contains(assetType_);
     }
 
     /**

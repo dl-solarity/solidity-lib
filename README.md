@@ -25,6 +25,8 @@ contracts
 │   ├── AAccountRecovery — "ERC-7947 account recovery base implementation"
 │   └── ARecoverableAccount — "All-in-one account with batching, gas sponsorship, and recovery"
 ├── bridge
+│   ├── batcher
+│   │   └── Batcher — "Batch calls execution during bridge redemption"
 │   ├── handlers
 │   │   ├── ERC20Handler — "Handles ERC-20 bridging (liquidity pool, mint-and-burn, or USDC-specific)"
 │   │   ├── MessageHandler — "Handles arbitrary cross-chain message dispatch and redemption"
