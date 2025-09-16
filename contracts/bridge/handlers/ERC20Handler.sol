@@ -13,6 +13,9 @@ import {IERC20Crosschain} from "../../interfaces/bridge/tokens/IERC20Crosschain.
  *
  * The handler supports both "liquidity pool" and "mint-and-burn" methods for managing assets.
  * If "mint-and-burn" method is used, the ERC-20 tokens are required to support ERC-7802 interface.
+ *
+ * The handler is also suitable for bridged USDC tokens, utilizing their interface
+ * (https://github.com/circlefin/stablecoin-evm/blob/master/doc/bridged_USDC_standard.md).
  */
 contract ERC20Handler is IHandler {
     using SafeERC20 for IERC20Crosschain;

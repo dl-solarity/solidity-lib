@@ -27,6 +27,9 @@ import {IBatcher, Batcher} from "./batcher/Batcher.sol";
  * Handlers implement the specific dispatch/redeem logic.
  *
  * During redeem, handlers may forward execution to the `IBatcher` contract for multi-step operations.
+ * The bridge never executes batches directly and does this via a designated `batcher` contract
+ * that can be overridden. Users are advised to construct tx batches in a way that
+ * they are not front-runnable. E.g., USDT approve should be reset first.
  *
  * IMPORTANT:
  * All signer addresses must differ in their first (most significant) 8 bits

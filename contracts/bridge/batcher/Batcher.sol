@@ -10,6 +10,9 @@ import {IBatcher} from "../../interfaces/bridge/IBatcher.sol";
 
 /**
  * @notice The Batcher module
+ *
+ * IMPORTANT:
+ * This contract is not meant to hold funds. Any remaining funds will eventually be swept after execution.
  */
 contract Batcher is IBatcher, ERC721Holder, ERC1155Holder, ReentrancyGuard {
     using Address for *;
