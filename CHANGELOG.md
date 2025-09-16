@@ -2,7 +2,7 @@
 
 ## [patch]
 
-- Fixed encoding for locktime in `TxParser` library.
+- Fixed encoding of locktime in `TxParser` library.
 
 ## [none]
 
