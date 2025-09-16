@@ -41,6 +41,29 @@ describe("Schnorr256", () => {
     return ethers.solidityPacked(["uint256", "uint256", "uint256"], [R.x, R.y, e]);
   };
 
+  const schnorrAdaptorSign = function (hashedMessage: string, privKey: bigint, t: bigint) {
+    const randomness = schnorrKeyPair();
+    const k = randomness.privKey;
+    const R = randomness.pubKey;
+
+    const T = secp256k1.ProjectivePoint.BASE.multiply(t).toAffine();
+
+    const RT = secp256k1.ProjectivePoint.fromAffine(R).add(secp256k1.ProjectivePoint.fromAffine(T)).toAffine();
+
+    const c = BigInt(
+      ethers.solidityPackedKeccak256(
+        ["uint256", "uint256", "uint256", "uint256", "bytes32"],
+        [secp256k1.CURVE.Gx, secp256k1.CURVE.Gy, RT.x, RT.y, hashedMessage],
+      ),
+    );
+
+    const e = (k + c * privKey + t) % secp256k1.CURVE.n;
+
+    const signature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [R.x, R.y, e]);
+
+    return { signature, T };
+  };
+
   const prepareParameters = function (message: string) {
     const { privKey, pubKey } = schnorrKeyPair();
 
@@ -106,6 +129,50 @@ describe("Schnorr256", () => {
 
       const wrongPubKey = "0x" + ethers.toBeHex(0, 0x40).slice(2);
       expect(await schnorr.verifySECP256k1(hashedMessage, signature, wrongPubKey)).to.be.false;
+    });
+  });
+
+  describe("verifyAdaptor", () => {
+    it("should verify the adaptor signature", async () => {
+      const { privKey, pubKey } = schnorrKeyPair();
+
+      const hashedMessage = ethers.keccak256("0x1337");
+
+      const t = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
+
+      const { signature, T } = schnorrAdaptorSign(hashedMessage, privKey, t);
+
+      expect(await schnorr.verifyAdaptorSECP256k1(hashedMessage, signature, serializePoint(pubKey), T)).to.be.true;
+    });
+
+    it("should not verify if adaptor signature, public key or T is invalid", async () => {
+      const { privKey, pubKey } = schnorrKeyPair();
+
+      const hashedMessage = ethers.keccak256("0x1337");
+
+      const t = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
+
+      const { signature, T } = schnorrAdaptorSign(hashedMessage, privKey, t);
+
+      const r = signature.slice(2, 130);
+      const e = signature.slice(130);
+
+      const wrongSig1 = "0x" + ethers.toBeHex(0, 0x40).slice(2) + e;
+      expect(await schnorr.verifyAdaptorSECP256k1(hashedMessage, wrongSig1, serializePoint(pubKey), T)).to.be.false;
+
+      const wrongSig2 = "0x" + r + ethers.toBeHex((1n << 256n) - 1n, 0x20).slice(2);
+      expect(await schnorr.verifyAdaptorSECP256k1(hashedMessage, wrongSig2, serializePoint(pubKey), T)).to.be.false;
+
+      const wrongPubKey = "0x" + ethers.toBeHex(0, 0x40).slice(2);
+      expect(await schnorr.verifyAdaptorSECP256k1(hashedMessage, signature, wrongPubKey, T)).to.be.false;
+
+      let invalidT = { x: 0n, y: 0n };
+      expect(await schnorr.verifyAdaptorSECP256k1(hashedMessage, signature, serializePoint(pubKey), invalidT)).to.be
+        .false;
+
+      invalidT = { x: 1n << 255n, y: 1n << 255n };
+      expect(await schnorr.verifyAdaptorSECP256k1(hashedMessage, signature, serializePoint(pubKey), invalidT)).to.be
+        .false;
     });
   });
 });

@@ -7,7 +7,7 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
 /**
  * @notice Cryptography module
  *
- * This library provides functionality for Schnorr signature verification over any 256-bit curve.
+ * This library provides functionality for standard and adaptor Schnorr signature verification over any 256-bit curve.
  */
 library Schnorr256 {
     using MemoryUtils for *;
@@ -22,6 +22,7 @@ library Schnorr256 {
      * @param hashedMessage_ the already hashed message to be verified.
      * @param signature_ the Schnorr signature. Equals to `bytes(R) + bytes(e)`.
      * @param pubKey_ the full public key of a signer. Equals to `bytes(x) + bytes(y)`.
+     * @return True if the signature is valid, false otherwise.
      */
     function verify(
         EC256.Curve memory ec,
@@ -29,21 +30,59 @@ library Schnorr256 {
         bytes memory signature_,
         bytes memory pubKey_
     ) internal view returns (bool) {
+        return _verify(ec, hashedMessage_, signature_, pubKey_, EC256.APoint(0, 0));
+    }
+
+    /**
+     * @notice The function to verify the Schnorr adaptor signature
+     * @param ec the 256-bit curve parameters.
+     * @param hashedMessage_ the already hashed message to be verified.
+     * @param signature_ the Schnorr adaptor signature. Equals to `bytes(R) + bytes(e)`.
+     * @param pubKey_ the full public key of a signer. Equals to `bytes(x) + bytes(y)`.
+     * @param T_ the adaptor point used in the signature.
+     * @return True if the adaptor signature is valid, false otherwise.
+     */
+    function verifyAdaptor(
+        EC256.Curve memory ec,
+        bytes32 hashedMessage_,
+        bytes memory signature_,
+        bytes memory pubKey_,
+        EC256.APoint memory T_
+    ) internal view returns (bool) {
+        return _verify(ec, hashedMessage_, signature_, pubKey_, T_);
+    }
+
+    function _verify(
+        EC256.Curve memory ec,
+        bytes32 hashedMessage_,
+        bytes memory signature_,
+        bytes memory pubKey_,
+        EC256.APoint memory T_
+    ) private view returns (bool) {
         (EC256.APoint memory r_, uint256 e_) = _parseSignature(signature_);
         EC256.APoint memory p_ = _parsePubKey(pubKey_);
 
-        if (!ec.isOnCurve(r_) || !ec.isOnCurve(p_) || !ec.isValidScalar(e_)) {
+        if (
+            !ec.isOnCurve(r_) ||
+            !ec.isOnCurve(p_) ||
+            !ec.isValidScalar(e_) ||
+            (T_.x != 0 && T_.y != 0 && !ec.isOnCurve(T_))
+        ) {
             return false;
         }
 
         EC256.JPoint memory lhs_ = ec.jMultShamir(ec.jbasepoint(), e_);
 
+        EC256.APoint memory rt_ = (T_.x != 0 && T_.y != 0)
+            ? ec.toAffine(ec.jAddPoint(r_.toJacobian(), T_.toJacobian()))
+            : r_;
+
         uint256 c_ = ec.toScalar(
-            uint256(keccak256(abi.encodePacked(ec.gx, ec.gy, r_.x, r_.y, hashedMessage_)))
+            uint256(keccak256(abi.encodePacked(ec.gx, ec.gy, rt_.x, rt_.y, hashedMessage_)))
         );
 
         EC256.JPoint memory rhs_ = ec.jMultShamir(p_.toJacobian(), c_);
-        rhs_ = ec.jAddPoint(rhs_, r_.toJacobian());
+        rhs_ = ec.jAddPoint(rhs_, rt_.toJacobian());
 
         return ec.jEqual(lhs_, rhs_);
     }
