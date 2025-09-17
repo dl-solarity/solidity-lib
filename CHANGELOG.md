@@ -1,7 +1,12 @@
 # Changelog
 
-## [none]
+## [patch]
 
+- Enhanced the `ABridge` contract architecture.
+  - Adding modular handler contracts for assets and messages management.
+  - Added `Batcher` contract for batched execution during redemption.
+  - Added arbitrary messages handler.
+  - Removed ERC721 and ERC1155 handlers.
 - Fixed encoding of locktime in `TxParser` library.
 - Clarified CI sequence.
 

@@ -25,8 +25,13 @@ contracts
 │   ├── AAccountRecovery — "ERC-7947 account recovery base implementation"
 │   └── ARecoverableAccount — "All-in-one account with batching, gas sponsorship, and recovery"
 ├── bridge
-│   ├── handlers — "Internal bridge logic contracts"
-│   └── ABridge — "Simple bridge with ERC20/ERC721/ERC1155 tokens support"
+│   ├── batcher
+│   │   └── Batcher — "Batch calls execution during bridge redemption"
+│   ├── handlers
+│   │   ├── ERC20Handler — "ERC-20 bridging (liquidity pool, mint-and-burn, or USDC-specific)"
+│   │   ├── MessageHandler — "Arbitrary cross-chain message dispatch and redemption"
+│   │   └── NativeHandler — "Native asset bridging"
+│   └── ABridge — "Simple and modular arbitrary message bridge with batching logic"
 ├── contracts—registry
 │   ├── AContractsRegistry — "Reference registry implementation of ERC-6224 pattern"
 │   ├── ADependant — "Reference dependant implementation of ERC-6224 pattern"

@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
+import { AddressLike } from "ethers";
+
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { wei } from "@scripts";
@@ -10,8 +12,9 @@ import { Reverter, getSignature } from "@test-helpers";
 import {
   BridgeMock,
   ERC20CrosschainMock,
-  ERC721CrosschainMock,
-  ERC1155CrosschainMock,
+  ERC20Handler,
+  MessageHandler,
+  NativeHandler,
   USDCCrosschainMock,
 } from "@ethers-v6";
 
@@ -23,48 +26,79 @@ enum ERC20BridgingType {
   USDCType,
 }
 
-enum ERC721BridgingType {
-  LiquidityPool,
-  Wrapped,
-}
-
-enum ERC1155BridgingType {
-  LiquidityPool,
-  Wrapped,
-}
-
 describe("Bridge", () => {
   const reverter: Reverter = new Reverter(networkHelpers);
 
   const baseBalance = wei("1000");
   const baseAmount = "10";
-  const baseId = "5000";
-  const tokenURI = "https://some.link";
-  const txHash = "0xc4f46c912cc2a1f30891552ac72871ab0f0e977886852bdd5dccd221a595647d";
-  const txNonce = "1794147";
 
   let OWNER: HardhatEthersSigner;
   let SECOND: HardhatEthersSigner;
   let THIRD: HardhatEthersSigner;
 
   let bridge: BridgeMock;
+  let erc20Handler: ERC20Handler;
+  let nativeHandler: NativeHandler;
+  let messageHandler: MessageHandler;
   let erc20: ERC20CrosschainMock;
   let usdc: USDCCrosschainMock;
-  let erc721: ERC721CrosschainMock;
-  let erc1155: ERC1155CrosschainMock;
+
+  function getTokenDispatchData(token: AddressLike, amount: bigint, type: ERC20BridgingType, batch: string = "0x") {
+    return ethers.AbiCoder.defaultAbiCoder().encode(
+      ["tuple(address, uint256, string, string, bytes, uint8)"],
+      [[token, amount, "receiver", "sepolia", batch, type]],
+    );
+  }
+
+  function getNativeDispatchData(batch: string = "0x") {
+    return ethers.AbiCoder.defaultAbiCoder().encode(["tuple(string, string, bytes)"], [["receiver", "sepolia", batch]]);
+  }
+
+  function getTokenRedeemData(
+    txHash: string,
+    token: AddressLike,
+    amount: bigint,
+    receiver: AddressLike,
+    type: ERC20BridgingType,
+    batch: string = "0x",
+  ) {
+    const nonce = ethers.keccak256(ethers.concat([ethers.toUtf8Bytes("sepolia"), txHash, ethers.toUtf8Bytes("1")]));
+
+    return ethers.AbiCoder.defaultAbiCoder().encode(
+      ["tuple(address, uint256, address, bytes, uint8, bytes32)"],
+      [[token, amount, receiver, batch, type, nonce]],
+    );
+  }
+
+  function getNativeRedeemData(txHash: string, amount: bigint, receiver: AddressLike, batch: string = "0x") {
+    const nonce = ethers.keccak256(ethers.concat([ethers.toUtf8Bytes("sepolia"), txHash, ethers.toUtf8Bytes("1")]));
+
+    return ethers.AbiCoder.defaultAbiCoder().encode(
+      ["tuple(uint256, address, bytes, bytes32)"],
+      [[amount, receiver, batch, nonce]],
+    );
+  }
 
   before("setup", async () => {
     [OWNER, SECOND, THIRD] = await ethers.getSigners();
 
+    erc20Handler = await ethers.deployContract("ERC20Handler");
+    nativeHandler = await ethers.deployContract("NativeHandler");
+    messageHandler = await ethers.deployContract("MessageHandler");
+
     const Bridge = await ethers.getContractFactory("BridgeMock");
     bridge = await Bridge.deploy();
 
-    await bridge.__BridgeMock_init([OWNER.address], 1);
+    await bridge.__BridgeMock_init(
+      "sepolia",
+      [1, 2, 3],
+      [erc20Handler, nativeHandler, messageHandler],
+      [OWNER.address],
+      1,
+    );
 
     const ERC20 = await ethers.getContractFactory("ERC20CrosschainMock");
     const USDC = await ethers.getContractFactory("USDCCrosschainMock");
-    const ERC721 = await ethers.getContractFactory("ERC721CrosschainMock");
-    const ERC1155 = await ethers.getContractFactory("ERC1155CrosschainMock");
 
     erc20 = await ERC20.deploy("Mock", "MK", 18);
     await erc20.crosschainMint(OWNER.address, baseBalance);
@@ -74,589 +108,504 @@ describe("Bridge", () => {
     await usdc.mint(OWNER.address, wei("1000", 6));
     await usdc.approve(await bridge.getAddress(), wei("1000", 6));
 
-    erc721 = await ERC721.deploy("Mock", "MK", "URI");
-    await erc721.crosschainMint(OWNER.address, baseId, tokenURI);
-    await erc721.approve(await bridge.getAddress(), baseId);
-
-    erc1155 = await ERC1155.deploy("Mock", "MK", "URI");
-    await erc1155.crosschainMint(OWNER.address, baseId, baseAmount, tokenURI);
-    await erc1155.setApprovalForAll(await bridge.getAddress(), true);
-
     await reverter.snapshot();
   });
 
   afterEach(reverter.revert);
 
-  describe("access", () => {
+  describe("initialize", () => {
     it("should initialize correctly", async () => {
+      expect(await bridge.getNetwork()).to.be.equal("sepolia");
+      expect(await bridge.getHandlers()).to.be.deep.equal([
+        [1n, 2n, 3n],
+        [await erc20Handler.getAddress(), await nativeHandler.getAddress(), await messageHandler.getAddress()],
+      ]);
+      expect(await bridge.getSigners()).to.be.deep.equal([OWNER.address]);
+      expect(await bridge.getBatcher()).not.to.be.equal(ethers.ZeroAddress);
+      expect(await bridge.getSignaturesThreshold()).to.be.equal(1);
+      expect(await bridge.assetTypeSupported(1)).to.be.true;
+      expect(await bridge.assetTypeSupported(2)).to.be.true;
+      expect(await bridge.assetTypeSupported(3)).to.be.true;
+
       await expect(bridge.mockInit()).to.be.revertedWithCustomError(bridge, "NotInitializing").withArgs();
 
-      await expect(bridge.__BridgeMock_init([OWNER.address], "1"))
+      await expect(bridge.__BridgeMock_init("sepolia", [], [], [OWNER.address], "1"))
         .to.be.revertedWithCustomError(bridge, "InvalidInitialization")
         .withArgs();
     });
   });
 
   describe("ERC20 flow", () => {
-    it("should deposit 100 tokens, operationType = Wrapped", async () => {
+    it("should dispatch 100 tokens, operationType = Wrapped", async () => {
       const expectedAmount = wei("100");
 
-      await bridge.depositERC20(
+      const dispatchData = getTokenDispatchData(
         await erc20.getAddress(),
         expectedAmount,
-        "receiver",
-        "sepolia",
         ERC20BridgingType.Wrapped,
+        "0x01",
       );
+
+      await bridge.dispatch(1, dispatchData);
 
       expect(await erc20.balanceOf(OWNER.address)).to.equal(baseBalance - expectedAmount);
       expect(await erc20.balanceOf(await bridge.getAddress())).to.equal(0);
 
-      const depositEvent = (await bridge.queryFilter(bridge.filters.DepositedERC20, -1))[0];
+      const dispatchEvent = (await bridge.queryFilter(erc20Handler.filters.DispatchedERC20, -1))[0];
 
-      expect(depositEvent.eventName).to.be.equal("DepositedERC20");
-      expect(depositEvent.args.token).to.be.equal(await erc20.getAddress());
-      expect(depositEvent.args.amount).to.be.equal(expectedAmount);
-      expect(depositEvent.args.receiver).to.be.equal("receiver");
-      expect(depositEvent.args.network).to.be.equal("sepolia");
-      expect(depositEvent.args.operationType).to.be.equal(ERC20BridgingType.Wrapped);
+      expect(dispatchEvent.eventName).to.be.equal("DispatchedERC20");
+      expect(dispatchEvent.args.token).to.be.equal(await erc20.getAddress());
+      expect(dispatchEvent.args.amount).to.be.equal(expectedAmount);
+      expect(dispatchEvent.args.receiver).to.be.equal("receiver");
+      expect(dispatchEvent.args.network).to.be.equal("sepolia");
+      expect(dispatchEvent.args.batch).to.be.equal("0x01");
+      expect(dispatchEvent.args.operationType).to.be.equal(ERC20BridgingType.Wrapped);
     });
 
-    it("should deposit 52 tokens, operationType = LiquidityPool", async () => {
+    it("should dispatch 52 tokens, operationType = LiquidityPool", async () => {
       const expectedAmount = wei("52");
 
-      await bridge.depositERC20(
+      const dispatchData = getTokenDispatchData(
         await erc20.getAddress(),
         expectedAmount,
-        "receiver",
-        "sepolia",
         ERC20BridgingType.LiquidityPool,
       );
+
+      await bridge.dispatch(1, dispatchData);
 
       expect(await erc20.balanceOf(OWNER.address)).to.equal(baseBalance - expectedAmount);
       expect(await erc20.balanceOf(await bridge.getAddress())).to.equal(expectedAmount);
 
-      const depositEvent = (await bridge.queryFilter(bridge.filters.DepositedERC20, -1))[0];
-      expect(depositEvent.args.operationType).to.be.equal(ERC20BridgingType.LiquidityPool);
+      const dispatchEvent = (await bridge.queryFilter(erc20Handler.filters.DispatchedERC20, -1))[0];
+      expect(dispatchEvent.args.operationType).to.be.equal(ERC20BridgingType.LiquidityPool);
     });
 
-    it("should deposit 50 tokens, operationType = USDCType", async () => {
+    it("should dispatch 50 tokens, operationType = USDCType", async () => {
       const expectedAmount = wei("50", 6);
 
-      await bridge.depositERC20(
-        await usdc.getAddress(),
-        expectedAmount,
-        "receiver",
-        "sepolia",
-        ERC20BridgingType.USDCType,
-      );
+      const dispatchData = getTokenDispatchData(await usdc.getAddress(), expectedAmount, ERC20BridgingType.USDCType);
+
+      await bridge.dispatch(1, dispatchData);
 
       expect(await usdc.balanceOf(OWNER.address)).to.equal(wei("1000", 6) - expectedAmount);
       expect(await usdc.balanceOf(await bridge.getAddress())).to.equal(0);
 
-      const depositEvent = (await bridge.queryFilter(bridge.filters.DepositedERC20, -1))[0];
-      expect(depositEvent.args.operationType).to.be.equal(ERC20BridgingType.USDCType);
+      const dispatchEvent = (await bridge.queryFilter(erc20Handler.filters.DispatchedERC20, -1))[0];
+      expect(dispatchEvent.args.operationType).to.be.equal(ERC20BridgingType.USDCType);
     });
 
-    it("should revert when depositing 0 tokens", async () => {
-      await expect(
-        bridge.depositERC20(await erc20.getAddress(), wei("0"), "receiver", "sepolia", ERC20BridgingType.LiquidityPool),
-      )
-        .to.be.revertedWithCustomError(bridge, "InvalidAmount")
-        .withArgs();
+    it("should revert if handler for the provided bridging type does not exist in dispatch", async () => {
+      await bridge.removeHandler(2);
+
+      await expect(bridge.dispatch(2, "0x")).to.be.revertedWithCustomError(bridge, "HandlerDoesNotExist").withArgs(2);
     });
 
-    it("should revert when token address is 0", async () => {
-      await expect(
-        bridge.depositERC20(ethers.ZeroAddress, wei("1"), "receiver", "sepolia", ERC20BridgingType.LiquidityPool),
-      )
-        .to.be.revertedWithCustomError(bridge, "InvalidToken")
-        .withArgs();
+    it("should revert when dispatching 0 tokens", async () => {
+      const dispatchData = getTokenDispatchData(await erc20.getAddress(), wei("0"), ERC20BridgingType.LiquidityPool);
+
+      await expect(bridge.dispatch(1, dispatchData)).to.be.revertedWithCustomError(erc20Handler, "ZeroAmount");
     });
 
-    it("should withdraw 100 tokens, operationType = Wrapped", async () => {
+    it("should revert when dispatch token address is 0", async () => {
+      const dispatchData = getTokenDispatchData(ethers.ZeroAddress, wei("1"), ERC20BridgingType.LiquidityPool);
+
+      await expect(bridge.dispatch(1, dispatchData)).to.be.revertedWithCustomError(erc20Handler, "ZeroToken");
+    });
+
+    it("should redeem 100 tokens, operationType = Wrapped", async () => {
       const expectedAmount = wei("100");
 
-      await bridge.depositERC20(
+      const dispatchData = getTokenDispatchData(await erc20.getAddress(), expectedAmount, ERC20BridgingType.Wrapped);
+
+      const tx = await bridge.dispatch(1, dispatchData);
+
+      const redeemData = getTokenRedeemData(
+        tx.hash,
         await erc20.getAddress(),
         expectedAmount,
-        "receiver",
-        "sepolia",
+        OWNER.address,
         ERC20BridgingType.Wrapped,
       );
-      await bridge.withdrawERC20Mock(await erc20.getAddress(), expectedAmount, OWNER, ERC20BridgingType.Wrapped);
+
+      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      expect(await bridge.nonceUsed(operationHash)).to.be.false;
+
+      await bridge.redeem(1, redeemData, proof);
 
       expect(await erc20.balanceOf(OWNER.address)).to.equal(baseBalance);
       expect(await erc20.balanceOf(await bridge.getAddress())).to.equal(0);
+
+      expect(await bridge.nonceUsed(operationHash)).to.be.true;
     });
 
-    it("should withdraw 52 tokens, operationType = LiquidityPool", async () => {
+    it("should redeem 52 tokens, operationType = LiquidityPool", async () => {
       const expectedAmount = wei("52");
 
-      await bridge.depositERC20(
+      const dispatchData = getTokenDispatchData(
         await erc20.getAddress(),
         expectedAmount,
-        "receiver",
-        "sepolia",
         ERC20BridgingType.LiquidityPool,
       );
-      await bridge.withdrawERC20Mock(await erc20.getAddress(), expectedAmount, OWNER, ERC20BridgingType.LiquidityPool);
+
+      const tx = await bridge.dispatch(1, dispatchData);
+
+      const redeemData = getTokenRedeemData(
+        tx.hash,
+        await erc20.getAddress(),
+        expectedAmount,
+        OWNER.address,
+        ERC20BridgingType.LiquidityPool,
+      );
+
+      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      await bridge.redeem(1, redeemData, proof);
 
       expect(await erc20.balanceOf(OWNER.address)).to.equal(baseBalance);
       expect(await erc20.balanceOf(await bridge.getAddress())).to.equal(0);
+
+      expect(await bridge.nonceUsed(operationHash)).to.be.true;
     });
 
-    it("should withdraw 50 tokens, operationType = USDCType", async () => {
+    it("should redeem 50 tokens, operationType = USDCType", async () => {
       const expectedAmount = wei("50", 6);
 
-      await bridge.depositERC20(
+      const dispatchData = getTokenDispatchData(await usdc.getAddress(), expectedAmount, ERC20BridgingType.USDCType);
+
+      const tx = await bridge.dispatch(1, dispatchData);
+
+      const redeemData = getTokenRedeemData(
+        tx.hash,
         await usdc.getAddress(),
         expectedAmount,
-        "receiver",
-        "sepolia",
+        OWNER.address,
         ERC20BridgingType.USDCType,
       );
-      await bridge.withdrawERC20Mock(await usdc.getAddress(), expectedAmount, OWNER, ERC20BridgingType.USDCType);
+
+      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      await bridge.redeem(1, redeemData, proof);
 
       expect(await usdc.balanceOf(OWNER.address)).to.equal(wei("1000", 6));
       expect(await usdc.balanceOf(await bridge.getAddress())).to.equal(0);
+
+      expect(await bridge.nonceUsed(operationHash)).to.be.true;
     });
 
-    it("should withdrawERC20", async () => {
-      const expectedAmount = wei("100");
-      const expectedOperationType = ERC20BridgingType.Wrapped;
+    it("should redeem tokens with batch", async () => {
+      const expectedAmount = wei("50");
 
-      const signHash = await bridge.getERC20SignHash(
+      const dispatchData = getTokenDispatchData(
         await erc20.getAddress(),
         expectedAmount,
-        OWNER,
-        txHash,
-        txNonce,
-        (await ethers.provider.getNetwork()).chainId,
-        expectedOperationType,
+        ERC20BridgingType.LiquidityPool,
       );
-      const signature = await getSignature(ethers, OWNER, signHash);
 
-      await bridge.depositERC20(await erc20.getAddress(), expectedAmount, "receiver", "sepolia", expectedOperationType);
-      await bridge.withdrawERC20(
+      let tx = await bridge.dispatch(1, dispatchData);
+
+      const transferData1 = erc20.interface.encodeFunctionData("transfer", [SECOND.address, wei("35")]);
+      const transferData2 = erc20.interface.encodeFunctionData("transfer", [THIRD.address, wei("15")]);
+
+      const batch = ethers.AbiCoder.defaultAbiCoder().encode(
+        ["address[]", "uint256[]", "bytes[]"],
+        [
+          [await erc20.getAddress(), await erc20.getAddress()],
+          [0, 0],
+          [transferData1, transferData2],
+        ],
+      );
+
+      const redeemData = getTokenRedeemData(
+        tx.hash,
         await erc20.getAddress(),
         expectedAmount,
-        OWNER,
-        txHash,
-        txNonce,
-        expectedOperationType,
-        [signature],
+        OWNER.address,
+        ERC20BridgingType.LiquidityPool,
+        batch,
       );
 
-      expect(await erc20.balanceOf(OWNER)).to.equal(baseBalance);
-      expect(await erc20.balanceOf(await bridge.getAddress())).to.equal(0);
+      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
 
-      expect(await bridge.containsHash(txHash, txNonce)).to.be.true;
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      tx = await bridge.redeem(1, redeemData, proof);
+
+      await expect(tx).to.changeTokenBalances(
+        ethers,
+        erc20,
+        [await bridge.getAddress(), SECOND.address, THIRD.address],
+        [-expectedAmount, wei("35"), wei("15")],
+      );
+
+      expect(await erc20.balanceOf(await bridge.getBatcher())).to.equal(0);
     });
 
-    it("should revert when withdrawing 0 tokens", async () => {
-      await expect(bridge.withdrawERC20Mock(await erc20.getAddress(), wei("0"), OWNER, ERC20BridgingType.LiquidityPool))
-        .to.be.revertedWithCustomError(bridge, "InvalidAmount")
-        .withArgs();
+    it("should revert if handler for the provided bridging type does not exist in redeem", async () => {
+      const dispatchData = getTokenDispatchData(await erc20.getAddress(), wei("2"), ERC20BridgingType.LiquidityPool);
+
+      await bridge.dispatch(1, dispatchData);
+
+      await expect(bridge.redeem(4, "0x", "0x"))
+        .to.be.revertedWithCustomError(bridge, "HandlerDoesNotExist")
+        .withArgs(4);
     });
 
-    it("should revert when token address is 0", async () => {
-      await expect(bridge.withdrawERC20Mock(ethers.ZeroAddress, wei("1"), OWNER, ERC20BridgingType.LiquidityPool))
-        .to.be.revertedWithCustomError(bridge, "InvalidToken")
-        .withArgs();
+    it("should revert when the redeem nonce is already used", async () => {
+      const dispatchData = getTokenDispatchData(await erc20.getAddress(), wei("10"), ERC20BridgingType.LiquidityPool);
+
+      const tx = await bridge.dispatch(1, dispatchData);
+
+      const redeemData = getTokenRedeemData(
+        tx.hash,
+        await erc20.getAddress(),
+        wei("10"),
+        OWNER.address,
+        ERC20BridgingType.LiquidityPool,
+      );
+
+      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      await bridge.redeem(1, redeemData, proof);
+
+      await expect(bridge.redeem(1, redeemData, proof))
+        .to.be.revertedWithCustomError(bridge, "NonceUsed")
+        .withArgs(operationHash);
+    });
+
+    it("should revert when redeeming 0 tokens", async () => {
+      const dispatchData = getTokenDispatchData(await erc20.getAddress(), wei("1"), ERC20BridgingType.LiquidityPool);
+
+      const tx = await bridge.dispatch(1, dispatchData);
+
+      const redeemData = getTokenRedeemData(
+        tx.hash,
+        await erc20.getAddress(),
+        wei("0"),
+        OWNER.address,
+        ERC20BridgingType.LiquidityPool,
+      );
+
+      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      await expect(bridge.redeem(1, redeemData, proof)).to.be.revertedWithCustomError(erc20Handler, "ZeroAmount");
+    });
+
+    it("should revert when redeem token address is 0", async () => {
+      const dispatchData = getTokenDispatchData(await erc20.getAddress(), wei("1"), ERC20BridgingType.LiquidityPool);
+
+      const tx = await bridge.dispatch(1, dispatchData);
+
+      const redeemData = getTokenRedeemData(
+        tx.hash,
+        ethers.ZeroAddress,
+        wei("0"),
+        OWNER.address,
+        ERC20BridgingType.LiquidityPool,
+      );
+
+      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      await expect(bridge.redeem(1, redeemData, proof)).to.be.revertedWithCustomError(erc20Handler, "ZeroToken");
     });
 
     it("should revert when receiver address is 0", async () => {
-      await expect(
-        bridge.withdrawERC20Mock(
-          await erc20.getAddress(),
-          wei("100"),
-          ethers.ZeroAddress,
-          ERC20BridgingType.LiquidityPool,
-        ),
-      )
-        .to.be.revertedWithCustomError(bridge, "InvalidReceiver")
-        .withArgs();
-    });
-  });
+      const dispatchData = getTokenDispatchData(await erc20.getAddress(), wei("100"), ERC20BridgingType.LiquidityPool);
 
-  describe("ERC721 flow", () => {
-    it("should deposit token, operationType = Wrapped", async () => {
-      await bridge.depositERC721(await erc721.getAddress(), baseId, "receiver", "sepolia", ERC721BridgingType.Wrapped);
+      const tx = await bridge.dispatch(1, dispatchData);
 
-      const depositEvent = (await bridge.queryFilter(bridge.filters.DepositedERC721, -1))[0];
-
-      expect(depositEvent.eventName).to.be.equal("DepositedERC721");
-      expect(depositEvent.args.token).to.be.equal(await erc721.getAddress());
-      expect(depositEvent.args.tokenId).to.be.equal(baseId);
-      expect(depositEvent.args.receiver).to.be.equal("receiver");
-      expect(depositEvent.args.network).to.be.equal("sepolia");
-      expect(depositEvent.args.operationType).to.be.equal(ERC721BridgingType.Wrapped);
-
-      await expect(erc721.ownerOf(baseId))
-        .to.be.revertedWithCustomError(erc721, "ERC721NonexistentToken")
-        .withArgs(baseId);
-    });
-
-    it("should deposit token, operationType = LiquidityPool", async () => {
-      await bridge.depositERC721(
-        await erc721.getAddress(),
-        baseId,
-        "receiver",
-        "sepolia",
-        ERC721BridgingType.LiquidityPool,
+      const redeemData = getTokenRedeemData(
+        tx.hash,
+        await erc20.getAddress(),
+        wei("100"),
+        ethers.ZeroAddress,
+        ERC20BridgingType.LiquidityPool,
       );
 
-      const depositEvent = (await bridge.queryFilter(bridge.filters.DepositedERC721, -1))[0];
+      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
 
-      expect(depositEvent.args.operationType).to.be.equal(ERC721BridgingType.LiquidityPool);
+      const signature = await getSignature(ethers, OWNER, operationHash);
 
-      expect(await erc721.tokenURI(baseId)).to.be.equal("URI" + tokenURI);
-    });
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
 
-    it("should revert when token address is 0", async () => {
-      await expect(
-        bridge.depositERC721(ethers.ZeroAddress, baseId, "receiver", "sepolia", ERC721BridgingType.LiquidityPool),
-      )
-        .to.be.revertedWithCustomError(bridge, "InvalidToken")
-        .withArgs();
-    });
-
-    it("should withdrawERC721", async () => {
-      const expectedOperationType = ERC721BridgingType.Wrapped;
-
-      const signHash = await bridge.getERC721SignHash(
-        await erc721.getAddress(),
-        baseId,
-        OWNER,
-        txHash,
-        txNonce,
-        (await ethers.provider.getNetwork()).chainId,
-        tokenURI,
-        expectedOperationType,
-      );
-      const signature = await getSignature(ethers, OWNER, signHash);
-
-      await bridge.depositERC721(await erc721.getAddress(), baseId, "receiver", "sepolia", expectedOperationType);
-      await bridge.withdrawERC721(
-        await erc721.getAddress(),
-        baseId,
-        OWNER,
-        txHash,
-        txNonce,
-        tokenURI,
-        expectedOperationType,
-        [signature],
-      );
-
-      expect(await erc721.ownerOf(baseId)).to.equal(OWNER.address);
-      expect(await erc721.tokenURI(baseId)).to.equal("URI" + tokenURI);
-    });
-
-    it("should withdraw token, operationType = Wrapped", async () => {
-      await bridge.depositERC721(await erc721.getAddress(), baseId, "receiver", "sepolia", ERC721BridgingType.Wrapped);
-      await bridge.withdrawERC721Mock(await erc721.getAddress(), baseId, OWNER, tokenURI, ERC721BridgingType.Wrapped);
-
-      expect(await erc721.ownerOf(baseId)).to.be.equal(OWNER.address);
-      expect(await erc721.tokenURI(baseId)).to.be.equal("URI" + tokenURI);
-    });
-
-    it("should withdraw token, operationType = LiquidityPool", async () => {
-      await bridge.depositERC721(
-        await erc721.getAddress(),
-        baseId,
-        "receiver",
-        "sepolia",
-        ERC721BridgingType.LiquidityPool,
-      );
-      await bridge.withdrawERC721Mock(
-        await erc721.getAddress(),
-        baseId,
-        OWNER,
-        tokenURI,
-        ERC721BridgingType.LiquidityPool,
-      );
-
-      expect(await erc721.ownerOf(baseId)).to.be.equal(OWNER.address);
-    });
-
-    it("should revert when token address is 0", async () => {
-      await expect(
-        bridge.withdrawERC721Mock(ethers.ZeroAddress, baseId, OWNER, tokenURI, ERC721BridgingType.LiquidityPool),
-      )
-        .to.be.revertedWithCustomError(bridge, "InvalidToken")
-        .withArgs();
-    });
-
-    it("should revert when receiver address is 0", async () => {
-      await expect(
-        bridge.withdrawERC721Mock(
-          await erc721.getAddress(),
-          baseId,
-          ethers.ZeroAddress,
-          tokenURI,
-          ERC721BridgingType.LiquidityPool,
-        ),
-      )
-        .to.be.revertedWithCustomError(bridge, "InvalidReceiver")
-        .withArgs();
-    });
-  });
-
-  describe("ERC1155 flow", () => {
-    it("should deposit token, operationType = Wrapped", async () => {
-      await bridge.depositERC1155(
-        await erc1155.getAddress(),
-        baseId,
-        baseAmount,
-        "receiver",
-        "sepolia",
-        ERC1155BridgingType.Wrapped,
-      );
-
-      expect(await erc1155.balanceOf(OWNER, baseId)).to.equal("0");
-
-      const depositEvent = (await bridge.queryFilter(bridge.filters.DepositedERC1155, -1))[0];
-
-      expect(depositEvent.eventName).to.be.equal("DepositedERC1155");
-      expect(depositEvent.args.token).to.be.equal(await erc1155.getAddress());
-      expect(depositEvent.args.tokenId).to.be.equal(baseId);
-      expect(depositEvent.args.amount).to.be.equal(baseAmount);
-      expect(depositEvent.args.receiver).to.be.equal("receiver");
-      expect(depositEvent.args.network).to.be.equal("sepolia");
-      expect(depositEvent.args.operationType).to.be.equal(ERC1155BridgingType.Wrapped);
-    });
-
-    it("should deposit token, operationType = LiquidityPool", async () => {
-      await bridge.depositERC1155(
-        await erc1155.getAddress(),
-        baseId,
-        baseAmount,
-        "receiver",
-        "sepolia",
-        ERC1155BridgingType.LiquidityPool,
-      );
-
-      expect(await erc1155.balanceOf(OWNER, baseId)).to.equal("0");
-      expect(await erc1155.balanceOf(await bridge.getAddress(), baseId)).to.equal(baseAmount);
-
-      const depositEvent = (await bridge.queryFilter(bridge.filters.DepositedERC1155, -1))[0];
-
-      expect(depositEvent.args.operationType).to.be.equal(ERC1155BridgingType.LiquidityPool);
-
-      expect(await erc1155.uri(baseId)).to.be.equal("URI" + tokenURI);
-    });
-
-    it("should revert when token address is 0", async () => {
-      await expect(
-        bridge.depositERC1155(
-          ethers.ZeroAddress,
-          baseId,
-          baseAmount,
-          "receiver",
-          "sepolia",
-          ERC1155BridgingType.LiquidityPool,
-        ),
-      )
-        .to.be.revertedWithCustomError(bridge, "InvalidToken")
-        .withArgs();
-    });
-
-    it("should revert when depositing 0 tokens", async () => {
-      await expect(
-        bridge.depositERC1155(
-          await erc1155.getAddress(),
-          baseId,
-          "0",
-          "receiver",
-          "sepolia",
-          ERC1155BridgingType.LiquidityPool,
-        ),
-      )
-        .to.be.revertedWithCustomError(bridge, "InvalidAmount")
-        .withArgs();
-    });
-
-    it("should withdrawERC1155", async () => {
-      const expectedOperationType = ERC1155BridgingType.Wrapped;
-
-      const signHash = await bridge.getERC1155SignHash(
-        await erc1155.getAddress(),
-        baseId,
-        baseAmount,
-        OWNER,
-        txHash,
-        txNonce,
-        (await ethers.provider.getNetwork()).chainId,
-        tokenURI,
-        expectedOperationType,
-      );
-      const signature = await getSignature(ethers, OWNER, signHash);
-
-      await bridge.depositERC1155(
-        await erc1155.getAddress(),
-        baseId,
-        baseAmount,
-        "receiver",
-        "sepolia",
-        expectedOperationType,
-      );
-      await bridge.withdrawERC1155(
-        await erc1155.getAddress(),
-        baseId,
-        baseAmount,
-        OWNER,
-        txHash,
-        txNonce,
-        tokenURI,
-        expectedOperationType,
-        [signature],
-      );
-
-      expect(await erc1155.balanceOf(OWNER, baseId)).to.equal(baseAmount);
-      expect(await bridge.containsHash(txHash, txNonce)).to.be.true;
-    });
-
-    it("should withdraw 100 tokens, operationType = Wrapped", async () => {
-      await bridge.depositERC1155(
-        await erc1155.getAddress(),
-        baseId,
-        baseAmount,
-        "receiver",
-        "sepolia",
-        ERC1155BridgingType.Wrapped,
-      );
-      await bridge.withdrawERC1155Mock(
-        await erc1155.getAddress(),
-        baseId,
-        baseAmount,
-        OWNER,
-        tokenURI,
-        ERC1155BridgingType.Wrapped,
-      );
-
-      expect(await erc1155.balanceOf(OWNER, baseId)).to.equal(baseAmount);
-      expect(await erc1155.balanceOf(await bridge.getAddress(), baseId)).to.equal("0");
-      expect(await erc1155.uri(baseId)).to.equal("URI" + tokenURI);
-    });
-
-    it("should withdraw 52 tokens, operationType = LiquidityPool", async () => {
-      await bridge.depositERC1155(
-        await erc1155.getAddress(),
-        baseId,
-        baseAmount,
-        "receiver",
-        "sepolia",
-        ERC1155BridgingType.LiquidityPool,
-      );
-      await bridge.withdrawERC1155Mock(
-        await erc1155.getAddress(),
-        baseId,
-        baseAmount,
-        OWNER,
-        tokenURI,
-        ERC1155BridgingType.LiquidityPool,
-      );
-
-      expect(await erc1155.balanceOf(OWNER, baseId)).to.equal(baseAmount);
-      expect(await erc1155.balanceOf(await bridge.getAddress(), baseId)).to.equal("0");
-    });
-
-    it("should revert when token address is 0", async () => {
-      await expect(
-        bridge.withdrawERC1155Mock(
-          ethers.ZeroAddress,
-          baseId,
-          baseAmount,
-          OWNER,
-          tokenURI,
-          ERC1155BridgingType.Wrapped,
-        ),
-      )
-        .to.be.revertedWithCustomError(bridge, "InvalidToken")
-        .withArgs();
-    });
-
-    it("should revert when amount is 0", async () => {
-      await expect(
-        bridge.withdrawERC1155Mock(
-          await erc1155.getAddress(),
-          baseId,
-          "0",
-          OWNER,
-          tokenURI,
-          ERC1155BridgingType.Wrapped,
-        ),
-      )
-        .to.be.revertedWithCustomError(bridge, "InvalidAmount")
-        .withArgs();
-    });
-
-    it("should revert when receiver address is 0", async () => {
-      await expect(
-        bridge.withdrawERC1155Mock(
-          await erc1155.getAddress(),
-          baseId,
-          baseAmount,
-          ethers.ZeroAddress,
-          tokenURI,
-          ERC1155BridgingType.Wrapped,
-        ),
-      )
-        .to.be.revertedWithCustomError(bridge, "InvalidReceiver")
-        .withArgs();
+      await expect(bridge.redeem(1, redeemData, proof)).to.be.revertedWithCustomError(erc20Handler, "ZeroReceiver");
     });
   });
 
   describe("Native flow", () => {
-    it("should deposit native", async () => {
-      await bridge.depositNative("receiver", "sepolia", {
+    it("should dispatch native", async () => {
+      const dispatchData = getNativeDispatchData("0x01");
+
+      await bridge.dispatch(2, dispatchData, {
         value: baseAmount,
       });
 
       expect(await ethers.provider.getBalance(await bridge.getAddress())).to.equal(baseAmount);
 
-      const depositEvent = (await bridge.queryFilter(bridge.filters.DepositedNative, -1))[0];
+      const dispatchEvent = (await bridge.queryFilter(nativeHandler.filters.DispatchedNative, -1))[0];
 
-      expect(depositEvent.eventName).to.be.equal("DepositedNative");
-      expect(depositEvent.args.amount).to.be.equal(baseAmount);
-      expect(depositEvent.args.receiver).to.be.equal("receiver");
-      expect(depositEvent.args.network).to.be.equal("sepolia");
+      expect(dispatchEvent.eventName).to.be.equal("DispatchedNative");
+      expect(dispatchEvent.args.amount).to.be.equal(baseAmount);
+      expect(dispatchEvent.args.receiver).to.be.equal("receiver");
+      expect(dispatchEvent.args.network).to.be.equal("sepolia");
+      expect(dispatchEvent.args.batch).to.be.equal("0x01");
     });
 
-    it("should revert when depositing 0 tokens", async () => {
-      await expect(bridge.depositNative("receiver", "sepolia", { value: 0 }))
-        .to.be.revertedWithCustomError(bridge, "InvalidValue")
-        .withArgs();
+    it("should revert when dispatching 0 tokens", async () => {
+      const dispatchData = getNativeDispatchData();
+
+      await expect(bridge.dispatch(2, dispatchData)).to.be.revertedWithCustomError(nativeHandler, "ZeroAmount");
     });
 
-    it("should withdrawNative", async () => {
-      const signHash = await bridge.getNativeSignHash(
-        baseBalance,
-        OWNER,
-        txHash,
-        txNonce,
-        (await ethers.provider.getNetwork()).chainId,
-      );
-      const signature = await getSignature(ethers, OWNER, signHash);
+    it("should redeem native", async () => {
+      const dispatchData = getNativeDispatchData();
 
-      await bridge.depositNative("receiver", "sepolia", { value: baseBalance });
-      await bridge.withdrawNative(baseBalance, OWNER, txHash, txNonce, [signature]);
+      const tx = await bridge.dispatch(2, dispatchData, {
+        value: baseAmount,
+      });
+
+      const redeemData = getNativeRedeemData(tx.hash, baseAmount, OWNER.address);
+
+      const operationHash = await nativeHandler.getOperationHash("sepolia", redeemData);
+
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      expect(await bridge.nonceUsed(operationHash)).to.be.false;
+
+      await bridge.redeem(2, redeemData, proof);
 
       expect(await ethers.provider.getBalance(await bridge.getAddress())).to.equal(0);
-      expect(await bridge.containsHash(txHash, txNonce)).to.be.true;
+      expect(await bridge.nonceUsed(operationHash)).to.be.true;
     });
 
-    it("should revert when amount is 0", async () => {
-      await expect(bridge.withdrawNativeMock(0, OWNER))
-        .to.be.revertedWithCustomError(bridge, "InvalidAmount")
-        .withArgs();
+    it("should redeem native tokens with batch", async () => {
+      const dispatchData = getNativeDispatchData();
+
+      let tx = await bridge.dispatch(2, dispatchData, {
+        value: baseAmount,
+      });
+
+      const batch = ethers.AbiCoder.defaultAbiCoder().encode(
+        ["address[]", "uint256[]", "bytes[]"],
+        [
+          [SECOND.address, THIRD.address],
+          [7n, 2n],
+          ["0x", "0x"],
+        ],
+      );
+
+      const redeemData = getNativeRedeemData(tx.hash, BigInt(baseAmount), ethers.ZeroAddress, batch);
+
+      const operationHash = await nativeHandler.getOperationHash("sepolia", redeemData);
+
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      tx = await bridge.redeem(2, redeemData, proof);
+
+      await expect(tx).to.changeEtherBalances(
+        ethers,
+        [await bridge.getAddress(), await bridge.getBatcher(), SECOND.address, THIRD.address],
+        [-10, 1, 7, 2],
+      );
+    });
+
+    it("should revert when redeeming 0 tokens", async () => {
+      const redeemData = getNativeRedeemData("0x", wei("0"), OWNER.address);
+
+      const operationHash = await nativeHandler.getOperationHash("sepolia", redeemData);
+
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      await expect(bridge.redeem(2, redeemData, proof)).to.be.revertedWithCustomError(nativeHandler, "ZeroAmount");
     });
 
     it("should revert when receiver address is 0", async () => {
-      await expect(bridge.withdrawNativeMock(baseAmount, ethers.ZeroAddress))
-        .to.be.revertedWithCustomError(bridge, "InvalidReceiver")
-        .withArgs();
+      const redeemData = getNativeRedeemData("0x", baseAmount, ethers.ZeroAddress);
+
+      const operationHash = await nativeHandler.getOperationHash("sepolia", redeemData);
+
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      await expect(bridge.redeem(2, redeemData, proof)).to.be.revertedWithCustomError(nativeHandler, "ZeroReceiver");
+    });
+  });
+
+  describe("Message flow", () => {
+    it("should dispatch and redeem message", async () => {
+      const batchEventData1 = bridge.interface.encodeFunctionData("emitBatchEvent", [1]);
+      const batchEventData2 = bridge.interface.encodeFunctionData("emitBatchEvent", [2]);
+
+      const batch = ethers.AbiCoder.defaultAbiCoder().encode(
+        ["address[]", "uint256[]", "bytes[]"],
+        [
+          [await bridge.getAddress(), await bridge.getAddress()],
+          [0, 0],
+          [batchEventData1, batchEventData2],
+        ],
+      );
+
+      const dispatchData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(string, bytes)"], [["sepolia", batch]]);
+
+      let tx = await bridge.dispatch(3, dispatchData);
+
+      const dispatchEvent = (await bridge.queryFilter(messageHandler.filters.DispatchedMessage, -1))[0];
+
+      expect(dispatchEvent.eventName).to.be.equal("DispatchedMessage");
+      expect(dispatchEvent.args.network).to.be.equal("sepolia");
+      expect(dispatchEvent.args.batch).to.be.equal(batch);
+
+      const nonce = ethers.keccak256(ethers.concat([ethers.toUtf8Bytes("sepolia"), tx.hash, ethers.toUtf8Bytes("1")]));
+
+      const redeemData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(bytes, bytes32)"], [[batch, nonce]]);
+
+      const operationHash = await messageHandler.getOperationHash("sepolia", redeemData);
+
+      const signature = await getSignature(ethers, OWNER, operationHash);
+
+      const proof = ethers.AbiCoder.defaultAbiCoder().encode(["bytes[]"], [[signature]]);
+
+      tx = await bridge.redeem(3, redeemData, proof);
+
+      const batcher = await bridge.getBatcher();
+
+      await expect(tx).to.emit(bridge, "BatchExecuted").withArgs(batcher, 1);
+      await expect(tx).to.emit(bridge, "BatchExecuted").withArgs(batcher, 2);
+
+      expect(await bridge.nonceUsed(operationHash)).to.be.true;
     });
   });
 
@@ -696,20 +645,55 @@ describe("Bridge", () => {
     });
   });
 
+  describe("Handlers", () => {
+    it("should add handler", async () => {
+      await bridge.addHandler(7, erc20Handler);
+
+      expect(await bridge.getHandlers()).to.be.deep.equal([
+        [1n, 2n, 3n, 7n],
+        [
+          await erc20Handler.getAddress(),
+          await nativeHandler.getAddress(),
+          await messageHandler.getAddress(),
+          await erc20Handler.getAddress(),
+        ],
+      ]);
+
+      expect(await bridge.assetTypeSupported(7)).to.be.true;
+    });
+
+    it("should revert when adding handler with zero address", async () => {
+      await expect(bridge.addHandler(2, ethers.ZeroAddress)).to.be.revertedWithCustomError(bridge, "ZeroHandler");
+    });
+
+    it("should revert when adding handler for the asset type that is already added", async () => {
+      await expect(bridge.addHandler(2, erc20Handler))
+        .to.be.revertedWithCustomError(bridge, "HandlerAlreadyPresent")
+        .withArgs(2);
+    });
+
+    it("should remove handler", async () => {
+      await bridge.removeHandler(2);
+
+      expect(await bridge.getHandlers()).to.be.deep.equal([
+        [1n, 3n],
+        [await erc20Handler.getAddress(), await messageHandler.getAddress()],
+      ]);
+
+      expect(await bridge.assetTypeSupported(1)).to.be.true;
+      expect(await bridge.assetTypeSupported(2)).to.be.false;
+      expect(await bridge.assetTypeSupported(3)).to.be.true;
+    });
+
+    it("should revert when removing handler that doesn't exist", async () => {
+      await expect(bridge.removeHandler(4)).to.be.revertedWithCustomError(bridge, "HandlerDoesNotExist").withArgs(4);
+    });
+  });
+
   describe("Signatures", () => {
+    const signHash = "0xc4f46c912cc2a1f30891552ac72871ab0f0e977886852bdd5dccd221a595647d";
+
     let signersToAdd: string[];
-
-    async function getSigHash() {
-      const expectedTxHash = "0xc4f46c912cc2a1f30891552ac72871ab0f0e977886852bdd5dccd221a595647d";
-      const expectedNonce = "1794147";
-
-      return ethers.keccak256(
-        new ethers.AbiCoder().encode(
-          ["address", "uint256", "address", "bytes32", "uint256", "uint256", "bool"],
-          ["0x76e98f7d84603AEb97cd1c89A80A9e914f181679", 1, OWNER.address, expectedTxHash, expectedNonce, 98, true],
-        ),
-      );
-    }
 
     beforeEach("setup", async () => {
       signersToAdd = [OWNER.address, SECOND.address, THIRD.address];
@@ -732,8 +716,6 @@ describe("Bridge", () => {
     });
 
     it("should check signatures", async () => {
-      const signHash = await getSigHash();
-
       const signature1 = await getSignature(ethers, OWNER, signHash);
       const signature2 = await getSignature(ethers, SECOND, signHash);
 
@@ -741,8 +723,6 @@ describe("Bridge", () => {
     });
 
     it("should revert when duplicate signers", async () => {
-      const signHash = await getSigHash();
-
       const signature = await getSignature(ethers, OWNER, signHash);
 
       await expect(bridge.checkSignatures(signHash, [signature, signature]))
@@ -753,8 +733,6 @@ describe("Bridge", () => {
     it("should revert when signed by not signer", async () => {
       await bridge.removeSigners([THIRD.address]);
 
-      const signHash = await getSigHash();
-
       const signature = await getSignature(ethers, THIRD, signHash);
 
       await expect(bridge.checkSignatures(signHash, [signature]))
@@ -763,36 +741,9 @@ describe("Bridge", () => {
     });
 
     it("should revert when signers < threshold", async () => {
-      const signHash = await getSigHash();
-
       await expect(bridge.checkSignatures(signHash, []))
         .to.be.revertedWithCustomError(bridge, "ThresholdNotMet")
         .withArgs(0);
-    });
-  });
-
-  describe("Hashes", () => {
-    it("should update the hash nonce", async () => {
-      const txHash = "0xc4f46c912cc2a1f30891552ac72871ab0f0e977886852bdd5dccd221a595647d";
-      const txNonce = "1794147";
-
-      await bridge.checkAndUpdateHashes(txHash, txNonce);
-
-      expect(await bridge.containsHash(txHash, txNonce)).to.be.true;
-      expect(await bridge.containsHash(txHash, txNonce + 1)).to.be.false;
-    });
-
-    it("should revert when hash is added twice", async () => {
-      const txHash = "0xc4f46c912cc2a1f30891552ac72871ab0f0e977886852bdd5dccd221a595647d";
-      const txNonce = "1794147";
-
-      const hash = ethers.keccak256(new ethers.AbiCoder().encode(["bytes32", "uint256"], [txHash, txNonce]));
-
-      await bridge.checkAndUpdateHashes(txHash, txNonce);
-
-      await expect(bridge.checkAndUpdateHashes(txHash, txNonce))
-        .to.be.revertedWithCustomError(bridge, "HashNonceUsed")
-        .withArgs(hash);
     });
   });
 });
