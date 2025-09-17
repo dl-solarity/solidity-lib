@@ -7,7 +7,8 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
 /**
  * @notice Cryptography module
  *
- * This library provides functionality for standard and adaptor Schnorr signature verification over any 256-bit curve.
+ * This library provides functionality for Schnorr signature verification over any 256-bit curve,
+ * and secret extraction from a standard/adaptor Schnorr signature pair.
  */
 library Schnorr256 {
     using MemoryUtils for *;
@@ -15,6 +16,8 @@ library Schnorr256 {
 
     error LengthIsNot64();
     error LengthIsNot96();
+    error InvalidSignature();
+    error InvalidAdaptorSignature();
 
     /**
      * @notice The function to verify the Schnorr signature
@@ -34,22 +37,53 @@ library Schnorr256 {
     }
 
     /**
-     * @notice The function to verify the Schnorr adaptor signature
+     * @notice The function to extract the adaptor secret from a pair of Schnorr signatures.
+     * @dev Reverts if the standard or adaptor Schnorr signature is invalid.
+     *
+     *      The adaptor Schnorr signature is expected to be computed as:
+     *          c = H(P || R + T || m)
+     *          e' = (r + c * privKey) mod n
+     *          signature = (R, e')
+     *
+     *      The standard Schnorr signature is expected to be computed from the adaptor one as:
+     *          e = e' + t = (r + t + c * privKey) mod n
+     *          signature = (R + T, e)
+     *
+     *      Secret extraction is performed as follows:
+     *          t = (e - e') mod n
+     *
      * @param ec the 256-bit curve parameters.
-     * @param hashedMessage_ the already hashed message to be verified.
-     * @param signature_ the Schnorr adaptor signature. Equals to `bytes(R) + bytes(e)`.
+     * @param hashedMessage_ the already hashed message signed.
+     * @param signature_ the Schnorr signature. Equals to `bytes(R + T) + bytes(e)`.
+     * @param adaptorSignature_ the adaptor Schnorr signature. Equals to `bytes(R) + bytes(e')`.
      * @param pubKey_ the full public key of a signer. Equals to `bytes(x) + bytes(y)`.
-     * @param T_ the adaptor point used in the signature.
-     * @return True if the adaptor signature is valid, false otherwise.
+     * @return secret_ the secret scalar that was used in the adaptor signature.
      */
-    function verifyAdaptor(
+    function extract(
         EC256.Curve memory ec,
         bytes32 hashedMessage_,
         bytes memory signature_,
-        bytes memory pubKey_,
-        EC256.APoint memory T_
-    ) internal view returns (bool) {
-        return _verify(ec, hashedMessage_, signature_, pubKey_, T_);
+        bytes memory adaptorSignature_,
+        bytes memory pubKey_
+    ) internal view returns (uint256 secret_) {
+        (, uint256 sigScalar_) = _parseSignature(signature_);
+        (, uint256 adaptorScalar_) = _parseSignature(adaptorSignature_);
+
+        uint256 n_ = ec.n;
+
+        assembly {
+            secret_ := addmod(sigScalar_, sub(n_, adaptorScalar_), n_)
+        }
+
+        if (!_verify(ec, hashedMessage_, signature_, pubKey_, EC256.APoint(0, 0))) {
+            revert InvalidSignature();
+        }
+
+        EC256.APoint memory secretPoint_ = ec.toAffine(ec.jMultShamir(ec.jbasepoint(), secret_));
+
+        if (!_verify(ec, hashedMessage_, adaptorSignature_, pubKey_, secretPoint_)) {
+            revert InvalidAdaptorSignature();
+        }
     }
 
     function _verify(
@@ -62,12 +96,7 @@ library Schnorr256 {
         (EC256.APoint memory r_, uint256 e_) = _parseSignature(signature_);
         EC256.APoint memory p_ = _parsePubKey(pubKey_);
 
-        if (
-            !ec.isOnCurve(r_) ||
-            !ec.isOnCurve(p_) ||
-            !ec.isValidScalar(e_) ||
-            (T_.x != 0 && T_.y != 0 && !ec.isOnCurve(T_))
-        ) {
+        if (!ec.isOnCurve(r_) || !ec.isOnCurve(p_) || !ec.isValidScalar(e_)) {
             return false;
         }
 
@@ -78,11 +107,11 @@ library Schnorr256 {
             : r_;
 
         uint256 c_ = ec.toScalar(
-            uint256(keccak256(abi.encodePacked(ec.gx, ec.gy, rt_.x, rt_.y, hashedMessage_)))
+            uint256(keccak256(abi.encodePacked(p_.x, p_.y, rt_.x, rt_.y, hashedMessage_)))
         );
 
         EC256.JPoint memory rhs_ = ec.jMultShamir(p_.toJacobian(), c_);
-        rhs_ = ec.jAddPoint(rhs_, rt_.toJacobian());
+        rhs_ = ec.jAddPoint(rhs_, r_.toJacobian());
 
         return ec.jEqual(lhs_, rhs_);
     }
