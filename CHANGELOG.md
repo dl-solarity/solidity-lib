@@ -1,11 +1,8 @@
 # Changelog
 
-## [patch]
-
-- Fixed encoding of locktime in `TxParser` library.
-
 ## [none]
 
+- Fixed encoding of locktime in `TxParser` library.
 - Clarified CI sequence.
 
 ## [3.2.5]
