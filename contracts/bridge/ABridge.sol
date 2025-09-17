@@ -126,7 +126,7 @@ abstract contract ABridge is IBridge, Initializable {
     }
 
     /**
-     * @notice Returns the list of current bridge signers
+     * @notice Returns the list of supported asset types and a list of their corresponding handlers
      */
     function getHandlers()
         external
@@ -190,6 +190,8 @@ abstract contract ABridge is IBridge, Initializable {
      * @dev Should be access controlled and made public in the descendant contracts
      */
     function _addHandler(uint256 assetType_, address handler_) internal virtual {
+        if (handler_ == address(0)) revert ZeroHandler();
+
         if (!_getABridgeStorage().handlers.set(assetType_, handler_))
             revert HandlerAlreadyPresent(assetType_);
     }

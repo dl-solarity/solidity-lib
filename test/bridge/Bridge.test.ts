@@ -662,6 +662,10 @@ describe("Bridge", () => {
       expect(await bridge.assetTypeSupported(7)).to.be.true;
     });
 
+    it("should revert when adding handler with zero address", async () => {
+      await expect(bridge.addHandler(2, ethers.ZeroAddress)).to.be.revertedWithCustomError(bridge, "ZeroHandler");
+    });
+
     it("should revert when adding handler for the asset type that is already added", async () => {
       await expect(bridge.addHandler(2, erc20Handler))
         .to.be.revertedWithCustomError(bridge, "HandlerAlreadyPresent")

@@ -11,6 +11,7 @@ interface IBridge {
     error ThresholdNotMet(uint256 signers);
     error ThresholdIsZero();
     error NonceUsed(bytes32 nonce);
+    error ZeroHandler();
     error HandlerAlreadyPresent(uint256 handlerId);
     error HandlerDoesNotExist(uint256 handlerId);
 
