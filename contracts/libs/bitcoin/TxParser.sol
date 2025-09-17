@@ -206,7 +206,7 @@ library TxParser {
             }
         }
 
-        result_ = abi.encodePacked(result_, tx_.locktime);
+        result_ = abi.encodePacked(result_, tx_.locktime.uint32BEtoLE());
 
         return result_;
     }

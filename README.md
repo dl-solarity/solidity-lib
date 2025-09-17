@@ -28,9 +28,9 @@ contracts
 │   ├── batcher
 │   │   └── Batcher — "Batch calls execution during bridge redemption"
 │   ├── handlers
-│   │   ├── ERC20Handler — "Handles ERC-20 bridging (liquidity pool, mint-and-burn, or USDC-specific)"
-│   │   ├── MessageHandler — "Handles arbitrary cross-chain message dispatch and redemption"
-│   │   └── NativeHandler — "Handles native asset bridging"
+│   │   ├── ERC20Handler — "ERC-20 bridging (liquidity pool, mint-and-burn, or USDC-specific)"
+│   │   ├── MessageHandler — "Arbitrary cross-chain message dispatch and redemption"
+│   │   └── NativeHandler — "Native asset bridging"
 │   └── ABridge — "Simple and modular arbitrary message bridge with batching logic"
 ├── contracts—registry
 │   ├── AContractsRegistry — "Reference registry implementation of ERC-6224 pattern"
