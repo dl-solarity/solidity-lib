@@ -1,5 +1,9 @@
 # Changelog
 
+## [none]
+
+- Fixed CI publishing process.
+
 ## [3.2.6]
 
 - Enhanced the `ABridge` contract architecture.
