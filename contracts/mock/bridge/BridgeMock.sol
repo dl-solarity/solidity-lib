@@ -3,51 +3,31 @@
 pragma solidity ^0.8.21;
 
 import {ABridge} from "../../bridge/ABridge.sol";
+import {IBatcher} from "../../interfaces/bridge/IBatcher.sol";
 
 contract BridgeMock is ABridge {
+    event BatchExecuted(address sender, uint256 id);
+
     function __BridgeMock_init(
+        string memory network_,
+        uint256[] memory assetTypes_,
+        address[] memory handlers_,
         address[] calldata signers_,
         uint256 signaturesThreshold_
     ) external initializer {
-        __ABridge_init(signers_, signaturesThreshold_);
+        __ABridge_init(network_, assetTypes_, handlers_, signers_, signaturesThreshold_);
     }
 
     function mockInit() external {
-        __ABridge_init(new address[](0), 0);
+        __ABridge_init("", new uint256[](0), new address[](0), new address[](0), 0);
     }
 
-    function withdrawERC20Mock(
-        address token_,
-        uint256 amount_,
-        address receiver_,
-        ERC20BridgingType operationType_
-    ) external {
-        _withdrawERC20(token_, amount_, receiver_, operationType_);
+    function setBatcher(address batcher_) external {
+        _setBatcher(IBatcher(batcher_));
     }
 
-    function withdrawERC721Mock(
-        address token_,
-        uint256 tokenId_,
-        address receiver_,
-        string calldata tokenURI_,
-        ERC721BridgingType operationType_
-    ) external {
-        _withdrawERC721(token_, tokenId_, receiver_, tokenURI_, operationType_);
-    }
-
-    function withdrawERC1155Mock(
-        address token_,
-        uint256 tokenId_,
-        uint256 amount_,
-        address receiver_,
-        string calldata tokenURI_,
-        ERC1155BridgingType operationType_
-    ) external {
-        _withdrawERC1155(token_, tokenId_, amount_, receiver_, tokenURI_, operationType_);
-    }
-
-    function withdrawNativeMock(uint256 amount_, address receiver_) external {
-        _withdrawNative(amount_, receiver_);
+    function emitBatchEvent(uint256 id_) external {
+        emit BatchExecuted(msg.sender, id_);
     }
 
     function setSignaturesThreshold(uint256 signaturesThreshold_) external {
@@ -62,8 +42,12 @@ contract BridgeMock is ABridge {
         _removeSigners(signers_);
     }
 
-    function checkAndUpdateHashes(bytes32 txHash_, uint256 txNonce_) external {
-        _checkAndUpdateHashes(txHash_, txNonce_);
+    function addHandler(uint256 assetType_, address handler_) external {
+        _addHandler(assetType_, handler_);
+    }
+
+    function removeHandler(uint256 assetType_) external {
+        _removeHandler(assetType_);
     }
 
     function checkSignatures(bytes32 signHash_, bytes[] calldata signatures_) external view {
