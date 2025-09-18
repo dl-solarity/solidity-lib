@@ -1,11 +1,8 @@
 name: "tests"
 
 on:
-  workflow_run:
-    workflows:
-      - pre-release
-    types:
-      - completed
+  workflow_dispatch:
+  push:
     branches:
       - master
   pull_request:
@@ -20,7 +17,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'chore(release):') }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v5
