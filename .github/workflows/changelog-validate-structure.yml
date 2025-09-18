@@ -1,4 +1,4 @@
-name: changelog-validate
+name: changelog-validate-structure
 
 on:
   pull_request:

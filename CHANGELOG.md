@@ -1,6 +1,6 @@
 # Changelog
 
-## [3.2.6]
+## [patch]
 
 - Enhanced the `ABridge` contract architecture.
   - Adding modular handler contracts for assets and messages management.
