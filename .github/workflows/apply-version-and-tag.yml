@@ -1,4 +1,4 @@
-name: pre-release
+name: apply-version-and-tag
 
 on:
   workflow_run:
