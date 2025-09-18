@@ -1,5 +1,8 @@
 # Changelog
 
+## [patch]
+- Added `extract` function to the `Schnorr256` library to extract a secret from a standard/adaptor Schnorr signature pair.
+
 ## [3.2.6]
 
 - Enhanced the `ABridge` contract architecture.

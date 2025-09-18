@@ -33,7 +33,9 @@ library Schnorr256 {
         bytes memory signature_,
         bytes memory pubKey_
     ) internal view returns (bool) {
-        return _verify(ec, hashedMessage_, signature_, pubKey_, EC256.APoint(0, 0));
+        (EC256.APoint memory r_, ) = _parseSignature(signature_);
+
+        return _verify(ec, hashedMessage_, signature_, pubKey_, r_);
     }
 
     /**
@@ -66,22 +68,24 @@ library Schnorr256 {
         bytes memory adaptorSignature_,
         bytes memory pubKey_
     ) internal view returns (uint256 secret_) {
-        (, uint256 sigScalar_) = _parseSignature(signature_);
-        (, uint256 adaptorScalar_) = _parseSignature(adaptorSignature_);
+        (EC256.APoint memory nonce_, uint256 sigScalar_) = _parseSignature(signature_);
+        (EC256.APoint memory adaptorNonce_, uint256 adaptorScalar_) = _parseSignature(
+            adaptorSignature_
+        );
 
-        uint256 n_ = ec.n;
+        secret_ = addmod(sigScalar_, ec.n - adaptorScalar_, ec.n);
 
-        assembly {
-            secret_ := addmod(sigScalar_, sub(n_, adaptorScalar_), n_)
-        }
-
-        if (!_verify(ec, hashedMessage_, signature_, pubKey_, EC256.APoint(0, 0))) {
+        if (!_verify(ec, hashedMessage_, signature_, pubKey_, nonce_)) {
             revert InvalidSignature();
         }
 
         EC256.APoint memory secretPoint_ = ec.toAffine(ec.jMultShamir(ec.jbasepoint(), secret_));
 
-        if (!_verify(ec, hashedMessage_, adaptorSignature_, pubKey_, secretPoint_)) {
+        EC256.APoint memory rt_ = ec.toAffine(
+            ec.jAddPoint(adaptorNonce_.toJacobian(), secretPoint_.toJacobian())
+        );
+
+        if (!_verify(ec, hashedMessage_, adaptorSignature_, pubKey_, rt_)) {
             revert InvalidAdaptorSignature();
         }
     }
@@ -91,7 +95,7 @@ library Schnorr256 {
         bytes32 hashedMessage_,
         bytes memory signature_,
         bytes memory pubKey_,
-        EC256.APoint memory T_
+        EC256.APoint memory RT_
     ) private view returns (bool) {
         (EC256.APoint memory r_, uint256 e_) = _parseSignature(signature_);
         EC256.APoint memory p_ = _parsePubKey(pubKey_);
@@ -102,12 +106,8 @@ library Schnorr256 {
 
         EC256.JPoint memory lhs_ = ec.jMultShamir(ec.jbasepoint(), e_);
 
-        EC256.APoint memory rt_ = (T_.x != 0 && T_.y != 0)
-            ? ec.toAffine(ec.jAddPoint(r_.toJacobian(), T_.toJacobian()))
-            : r_;
-
         uint256 c_ = ec.toScalar(
-            uint256(keccak256(abi.encodePacked(p_.x, p_.y, rt_.x, rt_.y, hashedMessage_)))
+            uint256(keccak256(abi.encodePacked(p_.x, p_.y, RT_.x, RT_.y, hashedMessage_)))
         );
 
         EC256.JPoint memory rhs_ = ec.jMultShamir(p_.toJacobian(), c_);
