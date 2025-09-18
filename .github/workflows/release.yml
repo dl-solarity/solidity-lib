@@ -27,7 +27,6 @@ jobs:
     outputs:
       local_version: ${{ steps.state.outputs.local_version }}
       notes: ${{ steps.state.outputs.notes }}
-      is_release_commit: ${{ steps.state.outputs.is_release_commit }}
 
   release:
     runs-on: ubuntu-latest
