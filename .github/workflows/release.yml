@@ -2,18 +2,14 @@ name: "release"
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - tests
-    types:
-      - completed
+  push:
     branches:
       - master
 
 jobs:
   state:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'chore(release):') }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v5
@@ -64,10 +60,6 @@ jobs:
 
       - name: Set up environment
         uses: ./.github/actions/setup
-
-      - name: Install packages
-        run: npm install
-        shell: bash
 
       - name: Publish to npm
         run: npm run publish-to-npm
