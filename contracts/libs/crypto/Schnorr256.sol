@@ -8,7 +8,7 @@ import {MemoryUtils} from "../utils/MemoryUtils.sol";
  * @notice Cryptography module
  *
  * This library provides functionality for Schnorr signature verification over any 256-bit curve,
- * and secret extraction from a standard/adaptor Schnorr signature pair.
+ * together with secret extraction from a standard/adaptor Schnorr signature pair.
  */
 library Schnorr256 {
     using MemoryUtils for *;
@@ -33,9 +33,9 @@ library Schnorr256 {
         bytes memory signature_,
         bytes memory pubKey_
     ) internal view returns (bool) {
-        (EC256.APoint memory r_, ) = _parseSignature(signature_);
+        (EC256.APoint memory r_, uint256 e_) = _parseSignature(signature_);
 
-        return _verify(ec, hashedMessage_, signature_, pubKey_, r_);
+        return _verify(ec, hashedMessage_, pubKey_, e_, r_, r_);
     }
 
     /**
@@ -43,7 +43,7 @@ library Schnorr256 {
      * @dev Reverts if the standard or adaptor Schnorr signature is invalid.
      *
      *      The adaptor Schnorr signature is expected to be computed as:
-     *          c = H(P || R + T || m)
+     *          c = H(P || (R + T) || m)
      *          e' = (r + c * privKey) mod n
      *          signature = (R, e')
      *
@@ -75,7 +75,7 @@ library Schnorr256 {
 
         secret_ = addmod(sigScalar_, ec.n - adaptorScalar_, ec.n);
 
-        if (!_verify(ec, hashedMessage_, signature_, pubKey_, nonce_)) {
+        if (!_verify(ec, hashedMessage_, pubKey_, sigScalar_, nonce_, nonce_)) {
             revert InvalidSignature();
         }
 
@@ -85,7 +85,7 @@ library Schnorr256 {
             ec.jAddPoint(adaptorNonce_.toJacobian(), secretPoint_.toJacobian())
         );
 
-        if (!_verify(ec, hashedMessage_, adaptorSignature_, pubKey_, rt_)) {
+        if (!_verify(ec, hashedMessage_, pubKey_, adaptorScalar_, adaptorNonce_, rt_)) {
             revert InvalidAdaptorSignature();
         }
     }
@@ -93,11 +93,11 @@ library Schnorr256 {
     function _verify(
         EC256.Curve memory ec,
         bytes32 hashedMessage_,
-        bytes memory signature_,
         bytes memory pubKey_,
+        uint256 e_,
+        EC256.APoint memory r_,
         EC256.APoint memory RT_
     ) private view returns (bool) {
-        (EC256.APoint memory r_, uint256 e_) = _parseSignature(signature_);
         EC256.APoint memory p_ = _parsePubKey(pubKey_);
 
         if (!ec.isOnCurve(r_) || !ec.isOnCurve(p_) || !ec.isValidScalar(e_)) {
