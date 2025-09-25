@@ -22,4 +22,27 @@ contract Schnorr256Mock {
     ) external view returns (bool isVerified_) {
         return Schnorr256.verify(_secp256k1CurveParams, hashedMessage_, signature_, pubKey_);
     }
+
+    function adaptorVerifySECP256k1(
+        bytes32 hashedMessage_,
+        bytes memory signature_,
+        bytes memory pubKey_,
+        EC256.APoint memory rt_
+    ) external view returns (bool isVerified_) {
+        return
+            Schnorr256.adaptorVerify(
+                _secp256k1CurveParams,
+                hashedMessage_,
+                signature_,
+                pubKey_,
+                rt_
+            );
+    }
+
+    function extractSECP256k1(
+        bytes memory signature_,
+        bytes memory adaptorSignature_
+    ) external view returns (uint256 isVerified_) {
+        return Schnorr256.extract(_secp256k1CurveParams, signature_, adaptorSignature_);
+    }
 }
