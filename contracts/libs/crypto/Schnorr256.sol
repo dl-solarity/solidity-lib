@@ -16,6 +16,7 @@ library Schnorr256 {
 
     error LengthIsNot64();
     error LengthIsNot96();
+    error InvalidSignatureScalar();
 
     /**
      * @notice The function to verify the Schnorr signature.
@@ -118,6 +119,10 @@ library Schnorr256 {
     ) internal view returns (uint256) {
         (, uint256 sigScalar_) = _parseSignature(signature_);
         (, uint256 adaptorScalar_) = _parseSignature(adaptorSignature_);
+
+        if (!ec.isValidScalar(sigScalar_) || !ec.isValidScalar(adaptorScalar_)) {
+            revert InvalidSignatureScalar();
+        }
 
         return addmod(sigScalar_, ec.n - adaptorScalar_, ec.n);
     }

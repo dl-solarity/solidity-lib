@@ -189,5 +189,25 @@ describe("Schnorr256", () => {
 
       expect(await schnorr.extractSECP256k1(signature, adaptorSignature)).to.be.eq(t);
     });
+
+    it("should revert if invalid signature or adaptor signature scalar is provided", async () => {
+      const signature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [1n, 1n, 10n]);
+      const adaptorSignature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [1n, 1n, 2n]);
+
+      const invalidSignature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [1n, 1n, secp256k1.CURVE.n]);
+      const invalidAdaptorSignature = ethers.solidityPacked(
+        ["uint256", "uint256", "uint256"],
+        [1n, 1n, secp256k1.CURVE.n],
+      );
+
+      await expect(schnorr.extractSECP256k1(invalidSignature, adaptorSignature)).to.be.revertedWithCustomError(
+        schnorr,
+        "InvalidSignatureScalar",
+      );
+      await expect(schnorr.extractSECP256k1(signature, invalidAdaptorSignature)).to.be.revertedWithCustomError(
+        schnorr,
+        "InvalidSignatureScalar",
+      );
+    });
   });
 });
