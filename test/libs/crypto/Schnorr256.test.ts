@@ -64,7 +64,7 @@ describe("Schnorr256", () => {
 
     const signature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [R.x, R.y, e]);
 
-    return { signature, RT, e, T };
+    return { signature, RT, e };
   };
 
   const prepareParameters = function (message: string) {
@@ -135,6 +135,43 @@ describe("Schnorr256", () => {
     });
   });
 
+  describe("adaptorVerify", () => {
+    it("should verify the adaptor signature", async () => {
+      const { privKey, pubKey } = schnorrKeyPair();
+
+      const hashedMessage = ethers.keccak256("0x1337");
+
+      const t = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
+      const T = secp256k1.ProjectivePoint.BASE.multiply(t).toAffine();
+
+      const { signature } = schnorrAdaptorSign(hashedMessage, privKey, pubKey, T);
+
+      expect(await schnorr.adaptorVerifySECP256k1(hashedMessage, signature, serializePoint(pubKey), T)).to.be.true;
+    });
+
+    it("should not verify if adaptor signature or public key or T is invalid", async () => {
+      const { privKey, pubKey } = schnorrKeyPair();
+
+      const hashedMessage = ethers.keccak256("0x1337");
+
+      const t = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
+      const t2 = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
+
+      const T = secp256k1.ProjectivePoint.BASE.multiply(t).toAffine();
+      const T2 = secp256k1.ProjectivePoint.BASE.multiply(t2).toAffine();
+
+      const { signature } = schnorrAdaptorSign(hashedMessage, privKey, pubKey, T);
+
+      expect(await schnorr.adaptorVerifySECP256k1(ethers.keccak256("0x1227"), signature, serializePoint(pubKey), T)).to
+        .be.false;
+
+      expect(await schnorr.adaptorVerifySECP256k1(hashedMessage, signature, serializePoint(pubKey), T2)).to.be.false;
+
+      const wrongPubKey = "0x" + ethers.toBeHex(0, 0x40).slice(2);
+      expect(await schnorr.adaptorVerifySECP256k1(hashedMessage, signature, wrongPubKey, T)).to.be.false;
+    });
+  });
+
   describe("extract", () => {
     it("should extract secret from two signatures correctly", async () => {
       const { privKey, pubKey } = schnorrKeyPair();
@@ -150,45 +187,7 @@ describe("Schnorr256", () => {
 
       const signature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [RT.x, RT.y, signatureScalar]);
 
-      expect(
-        await schnorr.extractSECP256k1(hashedMessage, signature, adaptorSignature, serializePoint(pubKey)),
-      ).to.be.eq(t);
-    });
-
-    it("should revert if signature is incorrect", async () => {
-      const { privKey, pubKey } = schnorrKeyPair();
-
-      const hashedMessage = ethers.keccak256("0x1227");
-
-      const t = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
-      const T = secp256k1.ProjectivePoint.BASE.multiply(t).toAffine();
-
-      const { signature } = schnorrAdaptorSign(hashedMessage, privKey, pubKey, T);
-
-      await expect(
-        schnorr.extractSECP256k1(hashedMessage, signature, signature, serializePoint(pubKey)),
-      ).to.be.revertedWithCustomError(schnorr, "InvalidSignature");
-    });
-
-    it("should revert if adaptor signature is incorrect", async () => {
-      const { privKey, pubKey } = schnorrKeyPair();
-
-      const hashedMessage = ethers.keccak256("0x1337");
-
-      const t = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
-      const T = secp256k1.ProjectivePoint.BASE.multiply(t).toAffine();
-      const T2 = secp256k1.ProjectivePoint.BASE.multiply(t - 2n).toAffine();
-
-      const { RT, e } = schnorrAdaptorSign(hashedMessage, privKey, pubKey, T);
-      const { signature: invalidAdaptorSignature } = schnorrAdaptorSign(hashedMessage, privKey, pubKey, T2);
-
-      const signatureScalar = (e + t) % secp256k1.CURVE.n;
-
-      const signature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [RT.x, RT.y, signatureScalar]);
-
-      await expect(
-        schnorr.extractSECP256k1(hashedMessage, signature, invalidAdaptorSignature, serializePoint(pubKey)),
-      ).to.be.revertedWithCustomError(schnorr, "InvalidAdaptorSignature");
+      expect(await schnorr.extractSECP256k1(signature, adaptorSignature)).to.be.eq(t);
     });
   });
 });
