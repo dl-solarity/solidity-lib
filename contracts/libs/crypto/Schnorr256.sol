@@ -81,7 +81,6 @@ library Schnorr256 {
         }
 
         EC256.JPoint memory lhs_ = ec.jMultShamir(ec.jbasepoint(), e_);
-
         EC256.APoint memory rt_ = ec.toAffine(ec.jAddPoint(r_.toJacobian(), t_.toJacobian()));
 
         uint256 c_ = ec.toScalar(
@@ -116,7 +115,7 @@ library Schnorr256 {
         EC256.Curve memory ec,
         bytes memory signature_,
         bytes memory adaptorSignature_
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         (, uint256 sigScalar_) = _parseSignature(signature_);
         (, uint256 adaptorScalar_) = _parseSignature(adaptorSignature_);
 

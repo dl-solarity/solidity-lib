@@ -64,7 +64,7 @@ contracts
 │   │   ├── ECDSA256 — "ECDSA verification over any 256-bit curve"
 │   │   ├── ECDSA384 — "ECDSA verification over any 384-bit curve"
 │   │   ├── ECDSA512 — "ECDSA verification over any 512-bit curve"
-│   │   ├── Schnorr256 — "Schnorr and adaptor signature verification with secret extraction over any 256-bit curve"
+│   │   ├── Schnorr256 — "Schnorr + adaptor signature verification over any 256-bit curve"
 │   │   └── RSASSAPSS — "RSASSA-PSS signature verification with MGF1"
 │   ├── data—structures
 │   │   ├── AvlTree — "AVL tree implementation with an iterator traversal"
