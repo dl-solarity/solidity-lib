@@ -458,8 +458,8 @@ library EC256 {
         JPoint memory jPoint2_
     ) private pure returns (JPoint[16] memory jPoints_) {
         jPoints_[0x00] = jinfinity();
-        jPoints_[0x01] = JPoint(jPoint1_.x, jPoint1_.y, jPoint1_.z);
-        jPoints_[0x04] = JPoint(jPoint2_.x, jPoint2_.y, jPoint2_.z);
+        jPoints_[0x01] = jPoint2_;
+        jPoints_[0x04] = jPoint1_;
         jPoints_[0x02] = jDoublePoint(ec, jPoints_[0x01]);
         jPoints_[0x08] = jDoublePoint(ec, jPoints_[0x04]);
         jPoints_[0x03] = jAddPoint(ec, jPoints_[0x01], jPoints_[0x02]);
