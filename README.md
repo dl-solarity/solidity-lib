@@ -60,7 +60,8 @@ contracts
 │   ├── bn
 │   │   └── U512 — "A hyperoptimized uint512 implementation"
 │   ├── crypto
-│   │   ├── EC256 — "Elliptic curve arithmetic over a 256-bit prime field"
+│   │   ├── EC256 — "Weierstrass elliptic curve arithmetic over a 256-bit prime field"
+│   │   ├── ED256 — "Twisted Edwards elliptic curve arithmetic over a 256-bit prime field"
 │   │   ├── ECDSA256 — "ECDSA verification over any 256-bit curve"
 │   │   ├── ECDSA384 — "ECDSA verification over any 384-bit curve"
 │   │   ├── ECDSA512 — "ECDSA verification over any 512-bit curve"
