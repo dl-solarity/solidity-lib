@@ -158,6 +158,19 @@ library EC256 {
     }
 
     /**
+     * @notice Computes the negation of a Jacobian point: -P = (X, -Y, Z).
+     * @param ec The curve parameters.
+     * @param jPoint_ The Jacobian point P.
+     * @return jNegated_ The Jacobian representation of -P.
+     */
+    function jNegatePoint(
+        Curve memory ec,
+        JPoint memory jPoint_
+    ) internal pure returns (JPoint memory jNegated_) {
+        return _jNegate(jPoint_, ec.p);
+    }
+
+    /**
      * @notice Point multiplication: R = u*P using 4-bit windowed method.
      * @param ec The curve parameters.
      * @param jPoint_ The Jacobian point P.
@@ -246,6 +259,23 @@ library EC256 {
     }
 
     /**
+     * @notice Subtracts one Jacobian point from another: R = P1 - P2 = P1 + (-P2).
+     * @param ec The curve parameters.
+     * @param jPoint1_ The first Jacobian point P1.
+     * @param jPoint2_ The second Jacobian point P2.
+     * @return jPoint3_ The Jacobian representation of result point R.
+     */
+    function jSubPoint(
+        Curve memory ec,
+        JPoint memory jPoint1_,
+        JPoint memory jPoint2_
+    ) internal pure returns (JPoint memory jPoint3_) {
+        JPoint memory jNegated2_ = jNegatePoint(ec, jPoint2_);
+
+        return jAddPoint(ec, jPoint1_, jNegated2_);
+    }
+
+    /**
      * @notice Doubles a Jacobian point: R = 2*P.
      * @param ec The curve parameters.
      * @param jPoint1_ The Jacobian point P to double.
@@ -268,6 +298,22 @@ library EC256 {
         );
 
         return JPoint(x_, y_, z_);
+    }
+
+    /**
+     * @dev Internal Jacobian point negation.
+     */
+    function _jNegate(
+        JPoint memory jPoint_,
+        uint256 p_
+    ) internal pure returns (JPoint memory jNegated_) {
+        assembly ("memory-safe") {
+            let y_ := mload(add(jPoint_, 0x20))
+
+            mstore(jNegated_, mload(jPoint_))
+            mstore(add(jNegated_, 0x20), mul(sub(1, eq(y_, 0)), sub(p_, y_)))
+            mstore(add(jNegated_, 0x40), mload(add(jPoint_, 0x40)))
+        }
     }
 
     /**
