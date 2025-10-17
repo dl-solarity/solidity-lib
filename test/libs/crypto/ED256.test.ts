@@ -3,13 +3,13 @@ import hre from "hardhat";
 
 import { Reverter } from "@test-helpers";
 
-import { ECEdwardsMock } from "@ethers-v6";
+import { ED256Mock } from "@ethers-v6";
 
 import { Base8, Point, addPoint, mulPointEscalar } from "@zk-kit/baby-jubjub";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
-describe("ECEdwards", () => {
+describe("ED256", () => {
   const reverter: Reverter = new Reverter(networkHelpers);
 
   const p: Point<bigint> = [
@@ -17,12 +17,12 @@ describe("ECEdwards", () => {
     2626589144620713026669568689430873010625803728049924121243784502389097019475n,
   ];
 
-  let babyJubJub: ECEdwardsMock;
+  let babyJubJub: ED256Mock;
 
   before("setup", async () => {
-    const ECEdwardsMock = await ethers.getContractFactory("ECEdwardsMock");
+    const ED256Mock = await ethers.getContractFactory("ED256Mock");
 
-    babyJubJub = await ECEdwardsMock.deploy();
+    babyJubJub = await ED256Mock.deploy();
 
     await reverter.snapshot();
   });
@@ -78,6 +78,15 @@ describe("ECEdwards", () => {
     });
   });
 
+  describe("negatePoint", () => {
+    it("should negate point correctly", async () => {
+      const curveParams = await babyJubJub.babyJubJub();
+
+      expect(await babyJubJub.negatePoint(p)).to.be.deep.equal([curveParams.p - p[0], p[1]]);
+      expect(await babyJubJub.negatePoint({ x: 0, y: 15 })).to.be.deep.equal([0, 15]);
+    });
+  });
+
   describe("addPoint", () => {
     it("should add two points correctly", async () => {
       expect(await babyJubJub.addPoint(p, Base8)).to.be.deep.equal(addPoint(p, Base8));
@@ -86,6 +95,16 @@ describe("ECEdwards", () => {
       expect(await babyJubJub.addPoint(Base8, Base8)).to.be.deep.equal(addPoint(Base8, Base8));
       expect(await babyJubJub.addPoint(p, { x: 0, y: 1 })).to.be.deep.equal(p);
       expect(await babyJubJub.addPoint({ x: 0, y: 1 }, Base8)).to.be.deep.equal(Base8);
+    });
+  });
+
+  describe("subPoint", () => {
+    it("should subtract points correctly", async () => {
+      const p2 = addPoint(p, Base8);
+      const p3 = addPoint(p2, p);
+
+      expect(await babyJubJub.subPoint(p2, p)).to.be.deep.equal(Base8);
+      expect(await babyJubJub.subPoint(p3, p)).to.be.deep.equal(addPoint(p, Base8));
     });
   });
 

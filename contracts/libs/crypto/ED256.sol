@@ -8,7 +8,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
  *
  * Elliptic curve arithmetic over a 256-bit prime field (Twisted Edwards curve ax^2 + y^2 = 1 +dx^2y^2 (mod p)).
  */
-library ECEdwards {
+library ED256 {
     /**
      * @notice 256-bit curve parameters.
      * @param a The curve coefficient a.
@@ -158,6 +158,19 @@ library ECEdwards {
     }
 
     /**
+     * @notice Computes the negation of a projective point: -P = (-X, Y, Z).
+     * @param ec The curve parameters.
+     * @param pPoint_ The projective point P.
+     * @return pNegated_ The projective representation of -P.
+     */
+    function pNegatePoint(
+        Curve memory ec,
+        PPoint memory pPoint_
+    ) internal pure returns (PPoint memory pNegated_) {
+        return _pNegate(pPoint_, ec.p);
+    }
+
+    /**
      * @notice Point multiplication: R = u*P using 4-bit windowed method.
      * @param ec The curve parameters.
      * @param pPoint_ The projective point P.
@@ -244,6 +257,23 @@ library ECEdwards {
     }
 
     /**
+     * @notice Subtracts one projective point from another: R = P1 - P2 = P1 + (-P2).
+     * @param ec The curve parameters.
+     * @param pPoint1_ The first projective point P1.
+     * @param pPoint2_ The second projective point P2.
+     * @return pPoint3_ The projective representation of result point R.
+     */
+    function pSubPoint(
+        Curve memory ec,
+        PPoint memory pPoint1_,
+        PPoint memory pPoint2_
+    ) internal pure returns (PPoint memory pPoint3_) {
+        PPoint memory pNegated2_ = pNegatePoint(ec, pPoint2_);
+
+        return pAddPoint(ec, pPoint1_, pNegated2_);
+    }
+
+    /**
      * @notice Doubles a projective point: R = 2*P.
      * @param ec The curve parameters.
      * @param pPoint1_ The projective point P to double.
@@ -258,6 +288,20 @@ library ECEdwards {
         }
 
         return _pDouble(pPoint1_, ec.p, ec.a);
+    }
+
+    /**
+     * @dev Internal projective point negation.
+     */
+    function _pNegate(
+        PPoint memory pPoint_,
+        uint256 p_
+    ) internal pure returns (PPoint memory pNegated_) {
+        assembly ("memory-safe") {
+            mstore(pNegated_, mul(sub(1, eq(mload(pPoint_), 0)), sub(p_, mload(pPoint_))))
+            mstore(add(pNegated_, 0x20), mload(add(pPoint_, 0x20)))
+            mstore(add(pNegated_, 0x40), mload(add(pPoint_, 0x40)))
+        }
     }
 
     /**
@@ -278,18 +322,18 @@ library ECEdwards {
             let D_ := mulmod(mload(add(pPoint1_, 0x20)), mload(add(pPoint2_, 0x20)), p_)
             let E_ := mulmod(d_, mulmod(C_, D_, p_), p_)
             let F_ := addmod(B_, sub(p_, E_), p_)
-            let G_ := addmod(B_, E_, p_)
+            B_ := addmod(B_, E_, p_)
             let H_ := mulmod(
                 addmod(mload(pPoint1_), mload(add(pPoint1_, 0x20)), p_),
                 addmod(mload(pPoint2_), mload(add(pPoint2_, 0x20)), p_),
                 p_
             )
-            let I_ := addmod(addmod(H_, sub(p_, C_), p_), sub(p_, D_), p_)
-            let J_ := addmod(D_, sub(p_, mulmod(a_, C_, p_)), p_)
+            H_ := addmod(addmod(H_, sub(p_, C_), p_), sub(p_, D_), p_)
+            C_ := addmod(D_, sub(p_, mulmod(a_, C_, p_)), p_)
 
-            mstore(pPoint3_, mulmod(F_, mulmod(A_, I_, p_), p_))
-            mstore(add(pPoint3_, 0x20), mulmod(G_, mulmod(A_, J_, p_), p_))
-            mstore(add(pPoint3_, 0x40), mulmod(F_, G_, p_))
+            mstore(pPoint3_, mulmod(F_, mulmod(A_, H_, p_), p_))
+            mstore(add(pPoint3_, 0x20), mulmod(B_, mulmod(A_, C_, p_), p_))
+            mstore(add(pPoint3_, 0x40), mulmod(F_, B_, p_))
         }
     }
 
@@ -367,14 +411,8 @@ library ECEdwards {
             let xx_ := mulmod(ax_, ax_, p_)
             let yy_ := mulmod(ay_, ay_, p_)
 
-            let axx_ := mulmod(a_, xx_, p_)
-
-            let lhs_ := addmod(axx_, yy_, p_)
-
-            let xxyy_ := mulmod(xx_, yy_, p_)
-            let dxxyy_ := mulmod(d_, xxyy_, p_)
-
-            let rhs_ := addmod(1, dxxyy_, p_)
+            let lhs_ := addmod(mulmod(a_, xx_, p_), yy_, p_)
+            let rhs_ := addmod(1, mulmod(d_, mulmod(xx_, yy_, p_), p_), p_)
 
             result_ := and(and(lt(ax_, p_), lt(ay_, p_)), eq(lhs_, rhs_))
         }
