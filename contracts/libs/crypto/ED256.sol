@@ -6,7 +6,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 /**
  * @notice Cryptography module
  *
- * Elliptic curve arithmetic over a 256-bit prime field (Twisted Edwards curve ax^2 + y^2 = 1 +dx^2y^2 (mod p)).
+ * Elliptic curve arithmetic over any 256-bit prime field (Twisted Edwards curve ax^2 + y^2 = 1 + dx^2 * y^2 (mod p)).
  */
 library ED256 {
     /**
