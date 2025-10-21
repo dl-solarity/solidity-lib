@@ -1,6 +1,6 @@
 # Changelog
 
-## [patch]
+## [3.2.8]
 
 - Added `ED256` library for 256-bit Twisted Edwards curve arithmetic.
 - Optimized `U512` library `eq(mload(a_), 0)` -> `iszero(mload(a_))`.
