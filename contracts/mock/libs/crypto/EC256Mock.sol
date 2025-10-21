@@ -23,4 +23,18 @@ contract EC256Mock {
     function basepoint() external view returns (EC256.APoint memory) {
         return secp256k1CurveParams.basepoint();
     }
+
+    function negatePoint(EC256.APoint memory p_) external view returns (EC256.APoint memory) {
+        return secp256k1CurveParams.toAffine(secp256k1CurveParams.jNegatePoint(p_.toJacobian()));
+    }
+
+    function subPoint(
+        EC256.APoint memory p1_,
+        EC256.APoint memory p2_
+    ) external view returns (EC256.APoint memory) {
+        return
+            secp256k1CurveParams.toAffine(
+                secp256k1CurveParams.jSubPoint(p1_.toJacobian(), p2_.toJacobian())
+            );
+    }
 }

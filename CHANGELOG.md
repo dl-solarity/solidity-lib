@@ -1,5 +1,10 @@
 # Changelog
 
+## [patch]
+
+- Added `ED256` library for 256-bit Twisted Edwards curve arithmetic.
+- Optimized `U512` library `eq(mload(a_), 0)` -> `iszero(mload(a_))`.
+
 ## [3.2.7]
 
 - Added `extract` function to the `Schnorr256` library to extract a secret from a standard/adaptor Schnorr signature pair.

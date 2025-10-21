@@ -57,6 +57,7 @@
     "@types/node": "^24.3.0",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
+    "@zk-kit/baby-jubjub": "^1.0.3",
     "chai": "^5.3.3",
     "circomlibjs": "^0.1.7",
     "dotenv": "^17.2.2",
