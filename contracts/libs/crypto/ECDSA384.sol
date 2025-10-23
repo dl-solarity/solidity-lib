@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-// Separate imports due to IntelliJ Solidity plugin issues
-import {call512, uint512} from "../bn/U512.sol";
-import {U512} from "../bn/U512.sol"; // slippy-disable-line
-
+import {call512, uint512, U512} from "../bn/U512.sol";
 import {MemoryUtils} from "../utils/MemoryUtils.sol";
 
 /**
