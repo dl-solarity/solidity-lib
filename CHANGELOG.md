@@ -1,5 +1,9 @@
 # Changelog
 
+## [none]
+
+- Migrated from solhint to slippy.
+
 ## [3.2.8]
 
 - Added `ED256` library for 256-bit Twisted Edwards curve arithmetic.
