@@ -5,7 +5,7 @@ type uint512 is uint256;
 type call512 is uint256;
 
 /**
- * @notice Low-level library that implements unsigned 512-bit arithmetics.
+ * @notice Low-level library that implements unsigned 512-bit arithmetic.
  *
  * | Statistic   | Avg          |
  * | ----------- | ------------ |
