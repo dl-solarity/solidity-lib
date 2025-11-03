@@ -17,6 +17,21 @@ contract IndexedMerkleTreeMock {
         return _uintTree.add(value_, lowLeafIndex_);
     }
 
+    function getProof(
+        uint256 index_,
+        uint256 value_
+    ) external view returns (IndexedMerkleTree.Proof memory) {
+        return _uintTree.getProof(index_, value_);
+    }
+
+    function verifyProof(IndexedMerkleTree.Proof memory proof_) external view returns (bool) {
+        return _uintTree.verifyProof(proof_);
+    }
+
+    function processProof(IndexedMerkleTree.Proof memory proof_) external pure returns (bytes32) {
+        return IndexedMerkleTree.processProof(proof_);
+    }
+
     function getRoot() external view returns (bytes32) {
         return _uintTree.getRoot();
     }

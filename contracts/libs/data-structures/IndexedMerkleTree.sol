@@ -18,6 +18,25 @@ library IndexedMerkleTree {
         return _add(tree._indexedMT, bytes32(value_), lowLeafIndex_);
     }
 
+    function getProof(
+        UintIndexedMT storage tree,
+        uint256 index_,
+        uint256 value_
+    ) internal view returns (Proof memory) {
+        return _proof(tree._indexedMT, index_, bytes32(value_));
+    }
+
+    function verifyProof(
+        UintIndexedMT storage tree,
+        Proof memory proof_
+    ) internal view returns (bool) {
+        return _verifyProof(tree._indexedMT, proof_);
+    }
+
+    function processProof(Proof memory proof_) internal pure returns (bytes32) {
+        return _processProof(proof_);
+    }
+
     function getRoot(UintIndexedMT storage tree) internal view returns (bytes32) {
         return _getRoot(tree._indexedMT);
     }
@@ -63,6 +82,15 @@ library IndexedMerkleTree {
         uint256 levelsCount;
     }
 
+    struct Proof {
+        bytes32 root;
+        bytes32[] siblings;
+        bool existence;
+        uint256 index;
+        bytes32 value;
+        uint256 nextLeafIndex;
+    }
+
     struct LeafData {
         bytes32 value;
         uint256 nextLeafIndex;
@@ -70,6 +98,7 @@ library IndexedMerkleTree {
 
     error IndexOutOfBounds(uint256 index, uint256 level);
     error InvalidLowLeaf(uint256 lowLeafIndex, bytes32 newValue);
+    error InvalidProofIndex(uint256 index, bytes32 value);
     error NotANodeLevel();
     error IndexedMerkleTreeNotInitialized();
 
@@ -81,10 +110,8 @@ library IndexedMerkleTree {
     function _initialize(IndexedMT storage tree) private {
         if (_isInitialized(tree)) revert IndexedMerkleTreeNotInitialized();
 
-        bytes32 zeroNodeHash_ = _getZeroNodeHash(LEAVES_LEVEL);
-
         tree.leavesData.push(LeafData({value: ZERO_HASH, nextLeafIndex: ZERO_IDX}));
-        tree.nodes[LEAVES_LEVEL].push(zeroNodeHash_);
+        tree.nodes[LEAVES_LEVEL].push(_hashLeaf(0, 0, 0, true));
 
         tree.levelsCount++;
     }
@@ -173,6 +200,64 @@ library IndexedMerkleTree {
         }
     }
 
+    function _proof(
+        IndexedMT storage tree,
+        uint256 index_,
+        bytes32 value_
+    ) private view returns (Proof memory) {
+        LeafData memory leafData_ = _getLeafData(tree, index_);
+
+        Proof memory proof_ = Proof({
+            root: _getRoot(tree),
+            siblings: new bytes32[](tree.levelsCount - 1),
+            existence: false,
+            index: index_,
+            value: leafData_.value,
+            nextLeafIndex: leafData_.nextLeafIndex
+        });
+
+        if (leafData_.value == value_) {
+            proof_.existence = true;
+        } else if (!_isLowLeaf(tree, value_, index_)) {
+            revert InvalidProofIndex(index_, value_);
+        }
+
+        uint256 parentIndex_ = index_;
+
+        for (uint256 i = 0; i < proof_.siblings.length; ++i) {
+            uint256 currentLevelIndex_ = parentIndex_ % 2 == 0
+                ? parentIndex_ + 1
+                : parentIndex_ - 1;
+
+            proof_.siblings[i] = tree.nodes[i][currentLevelIndex_];
+
+            parentIndex_ /= 2;
+        }
+
+        return proof_;
+    }
+
+    function _verifyProof(
+        IndexedMT storage tree,
+        Proof memory proof_
+    ) private view returns (bool) {
+        return _processProof(proof_) == _getRoot(tree);
+    }
+
+    function _processProof(Proof memory proof_) private pure returns (bytes32) {
+        bytes32 computedHash_ = _hashLeaf(proof_.index, proof_.value, proof_.nextLeafIndex, true);
+
+        for (uint256 i = 0; i < proof_.siblings.length; ++i) {
+            if ((proof_.index >> i) & 1 == 1) {
+                computedHash_ = _hashNode(proof_.siblings[i], computedHash_);
+            } else {
+                computedHash_ = _hashNode(computedHash_, proof_.siblings[i]);
+            }
+        }
+
+        return computedHash_;
+    }
+
     function _getRoot(IndexedMT storage tree) private view returns (bytes32) {
         return tree.nodes[tree.levelsCount - 1][0];
     }
@@ -242,19 +327,28 @@ library IndexedMerkleTree {
 
     function _checkLowLeaf(
         IndexedMT storage tree,
-        bytes32 newValue_,
+        bytes32 value_,
         uint256 lowLeafIndex_
-    ) private view returns (uint256 nextLeafIndex_) {
+    ) private view returns (uint256) {
+        if (!_isLowLeaf(tree, value_, lowLeafIndex_)) {
+            revert InvalidLowLeaf(lowLeafIndex_, value_);
+        }
+
+        return _getLeafData(tree, lowLeafIndex_).nextLeafIndex;
+    }
+
+    function _isLowLeaf(
+        IndexedMT storage tree,
+        bytes32 value_,
+        uint256 lowLeafIndex_
+    ) private view returns (bool) {
         LeafData memory lowLeafData = _getLeafData(tree, lowLeafIndex_);
 
-        nextLeafIndex_ = lowLeafData.nextLeafIndex;
+        uint256 nextLeafIndex_ = lowLeafData.nextLeafIndex;
 
-        if (
-            lowLeafData.value > newValue_ ||
-            (nextLeafIndex_ != ZERO_IDX && _getLeafData(tree, nextLeafIndex_).value < newValue_)
-        ) {
-            revert InvalidLowLeaf(lowLeafIndex_, newValue_);
-        }
+        return
+            lowLeafData.value < value_ &&
+            (nextLeafIndex_ == ZERO_IDX || _getLeafData(tree, nextLeafIndex_).value > value_);
     }
 
     function _isInitialized(IndexedMT storage tree) private view returns (bool) {
