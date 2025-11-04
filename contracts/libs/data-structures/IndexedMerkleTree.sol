@@ -229,7 +229,9 @@ library IndexedMerkleTree {
                 ? parentIndex_ + 1
                 : parentIndex_ - 1;
 
-            proof_.siblings[i] = tree.nodes[i][currentLevelIndex_];
+            proof_.siblings[i] = currentLevelIndex_ < _getLevelNodesCount(tree, i)
+                ? tree.nodes[i][currentLevelIndex_]
+                : _getZeroNodeHash(i);
 
             parentIndex_ /= 2;
         }
