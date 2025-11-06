@@ -49,7 +49,7 @@
     "@iden3/js-merkletree": "^1.5.0",
     "@noble/curves": "^1.9.7",
     "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
-    "@slippy-lint/slippy": "^0.2.1",
+    "slippy": "^0.3.0",
     "@solarity/hardhat-markup": "^2.0.0-rc.0",
     "@solidstate/hardhat-contract-sizer": "^3.0.0",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
