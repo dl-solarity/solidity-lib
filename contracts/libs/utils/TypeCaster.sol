@@ -57,8 +57,8 @@ library TypeCaster {
 
     /**
      * @notice The function that casts the uint256 array to the bytes32 array
-     * @param from_ the bytes32 array
-     * @return array_ the list of addresses
+     * @param from_ the uint256 array
+     * @return array_ the bytes32 array
      */
     function asBytes32Array(
         uint256[] memory from_
