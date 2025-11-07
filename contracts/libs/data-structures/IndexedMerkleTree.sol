@@ -71,6 +71,136 @@ library IndexedMerkleTree {
         return _getLevelNodesCount(tree._indexedMT, level_);
     }
 
+    struct Bytes32IndexedMT {
+        IndexedMT _indexedMT;
+    }
+
+    function initialize(Bytes32IndexedMT storage tree) internal {
+        _initialize(tree._indexedMT);
+    }
+
+    function add(
+        Bytes32IndexedMT storage tree,
+        bytes32 value_,
+        uint256 lowLeafIndex_
+    ) internal returns (uint256) {
+        return _add(tree._indexedMT, value_, lowLeafIndex_);
+    }
+
+    function getProof(
+        Bytes32IndexedMT storage tree,
+        uint256 index_,
+        bytes32 value_
+    ) internal view returns (Proof memory) {
+        return _proof(tree._indexedMT, index_, value_);
+    }
+
+    function verifyProof(
+        Bytes32IndexedMT storage tree,
+        Proof memory proof_
+    ) internal view returns (bool) {
+        return _verifyProof(tree._indexedMT, proof_);
+    }
+
+    function getRoot(Bytes32IndexedMT storage tree) internal view returns (bytes32) {
+        return _getRoot(tree._indexedMT);
+    }
+
+    function getTreeLevels(Bytes32IndexedMT storage tree) internal view returns (uint256) {
+        return _getTreeLevels(tree._indexedMT);
+    }
+
+    function getLeafData(
+        Bytes32IndexedMT storage tree,
+        uint256 leafIndex_
+    ) internal view returns (LeafData memory) {
+        return _getLeafData(tree._indexedMT, leafIndex_);
+    }
+
+    function getNodeHash(
+        Bytes32IndexedMT storage tree,
+        uint256 index_,
+        uint256 level_
+    ) internal view returns (bytes32) {
+        return _getNodeHash(tree._indexedMT, index_, level_);
+    }
+
+    function getLeavesCount(Bytes32IndexedMT storage tree) internal view returns (uint256) {
+        return _getLeavesCount(tree._indexedMT);
+    }
+
+    function getLevelNodesCount(
+        Bytes32IndexedMT storage tree,
+        uint256 level_
+    ) internal view returns (uint256) {
+        return _getLevelNodesCount(tree._indexedMT, level_);
+    }
+
+    struct AddressIndexedMT {
+        IndexedMT _indexedMT;
+    }
+
+    function initialize(AddressIndexedMT storage tree) internal {
+        _initialize(tree._indexedMT);
+    }
+
+    function add(
+        AddressIndexedMT storage tree,
+        address value_,
+        uint256 lowLeafIndex_
+    ) internal returns (uint256) {
+        return _add(tree._indexedMT, bytes32(uint256(uint160(value_))), lowLeafIndex_);
+    }
+
+    function getProof(
+        AddressIndexedMT storage tree,
+        uint256 index_,
+        address value_
+    ) internal view returns (Proof memory) {
+        return _proof(tree._indexedMT, index_, bytes32(uint256(uint160(value_))));
+    }
+
+    function verifyProof(
+        AddressIndexedMT storage tree,
+        Proof memory proof_
+    ) internal view returns (bool) {
+        return _verifyProof(tree._indexedMT, proof_);
+    }
+
+    function getRoot(AddressIndexedMT storage tree) internal view returns (bytes32) {
+        return _getRoot(tree._indexedMT);
+    }
+
+    function getTreeLevels(AddressIndexedMT storage tree) internal view returns (uint256) {
+        return _getTreeLevels(tree._indexedMT);
+    }
+
+    function getLeafData(
+        AddressIndexedMT storage tree,
+        uint256 leafIndex_
+    ) internal view returns (LeafData memory) {
+        return _getLeafData(tree._indexedMT, leafIndex_);
+    }
+
+    function getNodeHash(
+        AddressIndexedMT storage tree,
+        uint256 index_,
+        uint256 level_
+    ) internal view returns (bytes32) {
+        return _getNodeHash(tree._indexedMT, index_, level_);
+    }
+
+    function getLeavesCount(AddressIndexedMT storage tree) internal view returns (uint256) {
+        return _getLeavesCount(tree._indexedMT);
+    }
+
+    function getLevelNodesCount(
+        AddressIndexedMT storage tree,
+        uint256 level_
+    ) internal view returns (uint256) {
+        return _getLevelNodesCount(tree._indexedMT, level_);
+    }
+
     uint256 internal constant LEAVES_LEVEL = 0;
     uint64 internal constant ZERO_IDX = 0;
 
@@ -101,6 +231,7 @@ library IndexedMerkleTree {
     error InvalidProofIndex(uint256 index, bytes32 value);
     error NotANodeLevel();
     error IndexedMerkleTreeNotInitialized();
+    error IndexedMerkleTreeAlreadyInitialized();
 
     modifier onlyInitialized(IndexedMT storage tree) {
         if (!_isInitialized(tree)) revert IndexedMerkleTreeNotInitialized();
@@ -108,7 +239,7 @@ library IndexedMerkleTree {
     }
 
     function _initialize(IndexedMT storage tree) private {
-        if (_isInitialized(tree)) revert IndexedMerkleTreeNotInitialized();
+        if (_isInitialized(tree)) revert IndexedMerkleTreeAlreadyInitialized();
 
         tree.leavesData.push(LeafData({value: ZERO_HASH, nextLeafIndex: ZERO_IDX}));
         tree.nodes[LEAVES_LEVEL].push(_hashLeaf(0, 0, 0, true));
@@ -301,10 +432,6 @@ library IndexedMerkleTree {
         uint256 index_,
         uint256 level_
     ) private view returns (bytes32) {
-        if (level_ == LEAVES_LEVEL) {
-            revert NotANodeLevel();
-        }
-
         uint256 childrenLevel_ = level_ - 1;
         uint256 leftChild_ = index_ * 2;
         uint256 rightChild_ = index_ * 2 + 1;
