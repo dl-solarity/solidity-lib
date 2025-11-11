@@ -35,6 +35,33 @@ contract IndexedMerkleTreeMock {
         return _addressTree.add(value_, lowLeafIndex_);
     }
 
+    function updateUint(
+        uint256 indexToUpdate_,
+        uint256 currentLowLeafIndex_,
+        uint256 newValue_,
+        uint256 newLowLeafIndex_
+    ) external {
+        _uintTree.update(indexToUpdate_, currentLowLeafIndex_, newValue_, newLowLeafIndex_);
+    }
+
+    function updateBytes32(
+        uint256 indexToUpdate_,
+        uint256 currentLowLeafIndex_,
+        bytes32 newValue_,
+        uint256 newLowLeafIndex_
+    ) external {
+        _bytes32Tree.update(indexToUpdate_, currentLowLeafIndex_, newValue_, newLowLeafIndex_);
+    }
+
+    function updateAddress(
+        uint256 indexToUpdate_,
+        uint256 currentLowLeafIndex_,
+        address newValue_,
+        uint256 newLowLeafIndex_
+    ) external {
+        _addressTree.update(indexToUpdate_, currentLowLeafIndex_, newValue_, newLowLeafIndex_);
+    }
+
     function getProofUint(
         uint256 index_,
         uint256 value_

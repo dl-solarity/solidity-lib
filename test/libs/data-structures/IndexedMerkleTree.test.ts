@@ -6,7 +6,13 @@ import { Reverter } from "@test-helpers";
 import { IndexedMerkleTreeMock } from "@ethers-v6";
 
 import { IndexedMerkleTree as IndexedMerkleTreeLib } from "../../../generated-types/ethers/mock/libs/data-structures/IndexedMerkleTreeMock.ts";
-import { IndexedMerkleTree, Proof, encodeBytes32Value, hashIndexedLeaf } from "@/test/helpers/indexed-merkle-tree.ts";
+import {
+  IndexedMerkleTree,
+  Proof,
+  ZERO_IDX,
+  encodeBytes32Value,
+  hashIndexedLeaf,
+} from "@/test/helpers/indexed-merkle-tree.ts";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
@@ -40,6 +46,34 @@ describe("IndexedMerkleTree", () => {
 
   function encodeAddressValue(address: string): string {
     return ethers.AbiCoder.defaultAbiCoder().encode(["address"], [address]);
+  }
+
+  function checkInvariant(localIndexedMerkleTree: IndexedMerkleTree) {
+    const leavesCount = localIndexedMerkleTree.getLeavesCount();
+    const usedIndexes: bigint[] = [];
+    let currentIndex = 0n;
+
+    for (let i = 0n; i < leavesCount; ++i) {
+      const currentLeafInfo = localIndexedMerkleTree.getLeafData(currentIndex);
+
+      if (currentLeafInfo.nextLeafIndex == ZERO_IDX && i != leavesCount - 1n) {
+        throw new Error(`Invariant failed: zero index in the middle`);
+      }
+
+      if (usedIndexes.includes(currentLeafInfo.nextLeafIndex)) {
+        throw new Error(`Invariant failed: index ${currentLeafInfo.nextLeafIndex} is already used`);
+      }
+
+      const nextLeafInfo = localIndexedMerkleTree.getLeafData(currentLeafInfo.nextLeafIndex);
+
+      if (currentLeafInfo.nextLeafIndex != ZERO_IDX && currentLeafInfo.value >= nextLeafInfo.value) {
+        throw new Error(`Invariant failed: invalid next leaf index for the ${currentIndex} index`);
+      }
+
+      currentIndex = currentLeafInfo.nextLeafIndex;
+
+      usedIndexes.push(currentIndex);
+    }
   }
 
   before("setup", async () => {
@@ -130,6 +164,8 @@ describe("IndexedMerkleTree", () => {
           value *= 2n;
 
           expect(await indexedMT.getRootUint()).to.be.eq(localIndexedMerkleTree.getRoot());
+
+          checkInvariant(localIndexedMerkleTree);
         }
 
         const expectedLevelsCount = Math.ceil(Math.log2(count + 1)) + 1;
@@ -158,6 +194,8 @@ describe("IndexedMerkleTree", () => {
           expect(leafData.nextLeafIndex).to.be.eq(expectedNextLeafIndex);
 
           expect((await indexedMT.getLeafDataUint(lowLeafIndex)).nextLeafIndex).to.be.eq(index);
+
+          checkInvariant(localIndexedMerkleTree);
         }
 
         expect(await indexedMT.getLevelNodesCountUint(LEAVES_LEVEL)).to.be.eq(elementsCount + 1n);
@@ -178,6 +216,167 @@ describe("IndexedMerkleTree", () => {
           newIndexedMT,
           "IndexedMerkleTreeNotInitialized",
         );
+      });
+    });
+
+    describe("update", () => {
+      const values: bigint[] = [0n, 30n, 10n, 5n, 20n];
+      let localIndexedMerkleTree: IndexedMerkleTree;
+
+      beforeEach("setup", async () => {
+        localIndexedMerkleTree = IndexedMerkleTree.buildMerkleTree();
+
+        for (let i = 1; i < values.length; i++) {
+          const lowLeafIndex = localIndexedMerkleTree.getLowLeafIndex(encodeBytes32Value(values[i]));
+          localIndexedMerkleTree.add(encodeBytes32Value(values[i]));
+
+          await indexedMT.addUint(values[i], lowLeafIndex);
+        }
+
+        checkInvariant(localIndexedMerkleTree);
+      });
+
+      it("should correctly update value without updating next leaf indexes", async () => {
+        const index = 1n;
+        const lowLeafIndex = 4n;
+        const newValue = 25n;
+        const newLowIndex = 4n;
+
+        localIndexedMerkleTree.update(index, lowLeafIndex, encodeBytes32Value(newValue));
+        await indexedMT.updateUint(index, lowLeafIndex, newValue, newLowIndex);
+
+        const expectedNextLeafIndex = ZERO_IDX;
+        const leafData = await indexedMT.getLeafDataUint(index);
+
+        expect(leafData.value).to.be.eq(newValue);
+        expect(leafData.nextLeafIndex).to.be.eq(expectedNextLeafIndex);
+
+        const lowLeafData = await indexedMT.getLeafDataUint(lowLeafIndex);
+
+        expect(lowLeafData.nextLeafIndex).to.be.eq(index);
+
+        checkInvariant(localIndexedMerkleTree);
+
+        expect(await indexedMT.getRootUint()).to.be.eq(localIndexedMerkleTree.getRoot());
+      });
+
+      it("should correctly update value with the same new low leaf index", async () => {
+        const index = 2n;
+        const lowLeafIndex = 3n;
+        const newValue = 9n;
+        const newLowIndex = 3n;
+
+        const expectedNextLeafIndex = 4n;
+
+        let leafData = await indexedMT.getLeafDataUint(index);
+
+        expect(leafData.nextLeafIndex).to.be.eq(expectedNextLeafIndex);
+
+        localIndexedMerkleTree.update(index, lowLeafIndex, encodeBytes32Value(newValue));
+        await indexedMT.updateUint(index, lowLeafIndex, newValue, newLowIndex);
+
+        leafData = await indexedMT.getLeafDataUint(index);
+
+        expect(leafData.value).to.be.eq(newValue);
+        expect(leafData.nextLeafIndex).to.be.eq(expectedNextLeafIndex);
+
+        const lowLeafData = await indexedMT.getLeafDataUint(lowLeafIndex);
+
+        expect(lowLeafData.nextLeafIndex).to.be.eq(index);
+
+        checkInvariant(localIndexedMerkleTree);
+
+        expect(await indexedMT.getRootUint()).to.be.eq(localIndexedMerkleTree.getRoot());
+      });
+
+      it("should correctly update value if the new low leaf index is equal to index", async () => {
+        const index = 2n;
+        const lowLeafIndex = 3n;
+        const newValue = 12n;
+        const newLowIndex = 2n;
+
+        const expectedNextLeafIndex = 4n;
+
+        let leafData = await indexedMT.getLeafDataUint(index);
+
+        expect(leafData.nextLeafIndex).to.be.eq(expectedNextLeafIndex);
+
+        localIndexedMerkleTree.update(index, lowLeafIndex, encodeBytes32Value(newValue));
+        await indexedMT.updateUint(index, lowLeafIndex, newValue, newLowIndex);
+
+        leafData = await indexedMT.getLeafDataUint(index);
+
+        expect(leafData.value).to.be.eq(newValue);
+        expect(leafData.nextLeafIndex).to.be.eq(expectedNextLeafIndex);
+
+        const lowLeafData = await indexedMT.getLeafDataUint(lowLeafIndex);
+
+        expect(lowLeafData.nextLeafIndex).to.be.eq(index);
+
+        checkInvariant(localIndexedMerkleTree);
+
+        expect(await indexedMT.getRootUint()).to.be.eq(localIndexedMerkleTree.getRoot());
+      });
+
+      it("should correctly update values in the random tree", async () => {
+        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
+        const newLocalIndexedMT = IndexedMerkleTree.buildMerkleTree();
+
+        await newIndexedMT.initializeUintTree();
+
+        const valuesCount = 100n;
+
+        for (let i = 0; i < valuesCount; ++i) {
+          const currentValue = ethers.hexlify(ethers.randomBytes(32));
+          const lowLeafIndex = newLocalIndexedMT.getLowLeafIndex(currentValue);
+
+          newLocalIndexedMT.add(currentValue, lowLeafIndex);
+          await newIndexedMT.addUint(BigInt(currentValue), lowLeafIndex);
+
+          checkInvariant(newLocalIndexedMT);
+        }
+
+        const updatesCount = 100n;
+
+        for (let i = 0; i < updatesCount; i++) {
+          const randIndex = BigInt(getRandomIntInclusive(1, 99));
+          const newValue = ethers.hexlify(ethers.randomBytes(32));
+          const currentLowLeafIndex = newLocalIndexedMT.getPrevLeafIndex(randIndex);
+          const newLowLeafIndex = newLocalIndexedMT.getLowLeafIndex(newValue);
+
+          newLocalIndexedMT.update(randIndex, currentLowLeafIndex, newValue, newLowLeafIndex);
+          await newIndexedMT.updateUint(randIndex, currentLowLeafIndex, newValue, newLowLeafIndex);
+
+          expect(await newIndexedMT.getRootUint()).to.be.eq(newLocalIndexedMT.getRoot());
+
+          checkInvariant(newLocalIndexedMT);
+        }
+      });
+
+      it("should get exception if pass zero index", async () => {
+        await expect(indexedMT.updateUint(0n, 0n, 123n, 0n)).to.be.revertedWithCustomError(indexedMT, "ZeroLeafIndex");
+      });
+
+      it("should get exception if pass invalid current low leaf index", async () => {
+        const index = 1n;
+        const invalidLowLeafIndex = 3n;
+        const newValue = 12n;
+        const newLowIndex = 2n;
+
+        await expect(indexedMT.updateUint(index, invalidLowLeafIndex, newValue, newLowIndex))
+          .to.be.revertedWithCustomError(indexedMT, "NotALowLeafIndex")
+          .withArgs(index, invalidLowLeafIndex);
+      });
+
+      it("should get exception if pas invalid new low index", async () => {
+        const index = 1n;
+        const lowLeafIndex = 4n;
+        const newValue = 12n;
+        const newLowIndex = 3n;
+
+        await expect(indexedMT.updateUint(index, lowLeafIndex, newValue, newLowIndex))
+          .to.be.revertedWithCustomError(indexedMT, "InvalidLowLeaf")
+          .withArgs(newLowIndex, newValue);
       });
     });
 
@@ -228,6 +427,8 @@ describe("IndexedMerkleTree", () => {
           await newIndexedMT.addUint(BigInt(currentValue), lowLeafIndex);
 
           values.push(currentValue);
+
+          checkInvariant(newLocalIndexedMT);
         }
 
         const proofsCount = 100n;
@@ -271,6 +472,8 @@ describe("IndexedMerkleTree", () => {
           await newIndexedMT.addUint(BigInt(currentValue), lowLeafIndex);
 
           values.push(currentValue);
+
+          checkInvariant(newLocalIndexedMT);
         }
 
         const proofsCount = 100n;
@@ -472,6 +675,43 @@ describe("IndexedMerkleTree", () => {
       });
     });
 
+    describe("update", () => {
+      it("should correctly update values in the random tree", async () => {
+        const indexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree();
+
+        await indexedMT.initializeBytes32Tree();
+
+        const valuesCount = 100n;
+
+        for (let i = 0; i < valuesCount; ++i) {
+          const currentValue = ethers.hexlify(ethers.randomBytes(32));
+          const lowLeafIndex = localIndexedMT.getLowLeafIndex(currentValue);
+
+          localIndexedMT.add(currentValue, lowLeafIndex);
+          await indexedMT.addBytes32(currentValue, lowLeafIndex);
+
+          checkInvariant(localIndexedMT);
+        }
+
+        const updatesCount = 20n;
+
+        for (let i = 0; i < updatesCount; i++) {
+          const randIndex = BigInt(getRandomIntInclusive(1, 99));
+          const newValue = ethers.hexlify(ethers.randomBytes(32));
+          const currentLowLeafIndex = localIndexedMT.getPrevLeafIndex(randIndex);
+          const newLowLeafIndex = localIndexedMT.getLowLeafIndex(newValue);
+
+          localIndexedMT.update(randIndex, currentLowLeafIndex, newValue, newLowLeafIndex);
+          await indexedMT.updateBytes32(randIndex, currentLowLeafIndex, newValue, newLowLeafIndex);
+
+          expect(await indexedMT.getRootBytes32()).to.be.eq(localIndexedMT.getRoot());
+
+          checkInvariant(localIndexedMT);
+        }
+      });
+    });
+
     describe("getProof", () => {
       it("should return correct exclusion proofs with the random tree elements", async () => {
         const localIndexedMT = IndexedMerkleTree.buildMerkleTree();
@@ -628,6 +868,47 @@ describe("IndexedMerkleTree", () => {
         }
 
         expect(await indexedMT.getLevelNodesCountAddress(LEAVES_LEVEL)).to.be.eq(elementsCount + 1n);
+      });
+    });
+
+    describe("update", () => {
+      it("should correctly update values in the random tree", async () => {
+        const indexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree();
+
+        await indexedMT.initializeAddressTree();
+
+        const valuesCount = 100n;
+
+        for (let i = 0; i < valuesCount; ++i) {
+          const randomAddress = ethers.hexlify(ethers.randomBytes(20));
+          const encodedAddress = encodeAddressValue(randomAddress);
+          const lowLeafIndex = localIndexedMT.getLowLeafIndex(encodedAddress);
+
+          localIndexedMT.add(encodedAddress, lowLeafIndex);
+          await indexedMT.addAddress(randomAddress, lowLeafIndex);
+
+          checkInvariant(localIndexedMT);
+        }
+
+        const updatesCount = 20n;
+
+        for (let i = 0; i < updatesCount; i++) {
+          const randIndex = BigInt(getRandomIntInclusive(1, 99));
+
+          const newValue = ethers.hexlify(ethers.randomBytes(20));
+          const newEncodedAddress = encodeAddressValue(newValue);
+
+          const currentLowLeafIndex = localIndexedMT.getPrevLeafIndex(randIndex);
+          const newLowLeafIndex = localIndexedMT.getLowLeafIndex(newEncodedAddress);
+
+          localIndexedMT.update(randIndex, currentLowLeafIndex, newEncodedAddress, newLowLeafIndex);
+          await indexedMT.updateAddress(randIndex, currentLowLeafIndex, newValue, newLowLeafIndex);
+
+          expect(await indexedMT.getRootAddress()).to.be.eq(localIndexedMT.getRoot());
+
+          checkInvariant(localIndexedMT);
+        }
       });
     });
 

@@ -18,6 +18,22 @@ library IndexedMerkleTree {
         return _add(tree._indexedMT, bytes32(value_), lowLeafIndex_);
     }
 
+    function update(
+        UintIndexedMT storage tree,
+        uint256 leafIndex_,
+        uint256 currentLowLeafIndex_,
+        uint256 newValue_,
+        uint256 newLowLeafIndex_
+    ) internal {
+        _update(
+            tree._indexedMT,
+            leafIndex_,
+            currentLowLeafIndex_,
+            bytes32(newValue_),
+            newLowLeafIndex_
+        );
+    }
+
     function getProof(
         UintIndexedMT storage tree,
         uint256 index_,
@@ -87,6 +103,16 @@ library IndexedMerkleTree {
         return _add(tree._indexedMT, value_, lowLeafIndex_);
     }
 
+    function update(
+        Bytes32IndexedMT storage tree,
+        uint256 leafIndex_,
+        uint256 currentLowLeafIndex_,
+        bytes32 newValue_,
+        uint256 newLowLeafIndex_
+    ) internal {
+        _update(tree._indexedMT, leafIndex_, currentLowLeafIndex_, newValue_, newLowLeafIndex_);
+    }
+
     function getProof(
         Bytes32IndexedMT storage tree,
         uint256 index_,
@@ -150,6 +176,22 @@ library IndexedMerkleTree {
         uint256 lowLeafIndex_
     ) internal returns (uint256) {
         return _add(tree._indexedMT, bytes32(uint256(uint160(value_))), lowLeafIndex_);
+    }
+
+    function update(
+        AddressIndexedMT storage tree,
+        uint256 leafIndex_,
+        uint256 currentLowLeafIndex_,
+        address newValue_,
+        uint256 newLowLeafIndex_
+    ) internal {
+        _update(
+            tree._indexedMT,
+            leafIndex_,
+            currentLowLeafIndex_,
+            bytes32(uint256(uint160(newValue_))),
+            newLowLeafIndex_
+        );
     }
 
     function getProof(
@@ -226,10 +268,12 @@ library IndexedMerkleTree {
         uint256 nextLeafIndex;
     }
 
+    error ZeroLeafIndex();
     error IndexOutOfBounds(uint256 index, uint256 level);
     error InvalidLowLeaf(uint256 lowLeafIndex, bytes32 newValue);
     error InvalidProofIndex(uint256 index, bytes32 value);
     error NotANodeLevel();
+    error NotALowLeafIndex(uint256 leafIndex, uint256 lowLeafIndex);
     error IndexedMerkleTreeNotInitialized();
     error IndexedMerkleTreeAlreadyInitialized();
 
@@ -255,14 +299,39 @@ library IndexedMerkleTree {
         uint256 nextLeafIndex_ = _checkLowLeaf(tree, value_, lowLeafIndex_);
         uint256 newLeafIndex_ = _getLeavesCount(tree);
 
-        tree.leavesData[lowLeafIndex_].nextLeafIndex = newLeafIndex_;
-        _updateMerkleHashes(tree, lowLeafIndex_);
+        _updateNextLeafIndex(tree, lowLeafIndex_, newLeafIndex_);
 
         LeafData memory newLeafData_ = LeafData({value: value_, nextLeafIndex: nextLeafIndex_});
 
         _pushLeaf(tree, newLeafIndex_, newLeafData_);
 
         return newLeafIndex_;
+    }
+
+    function _update(
+        IndexedMT storage tree,
+        uint256 leafIndex_,
+        uint256 currentLowLeafIndex_,
+        bytes32 newValue_,
+        uint256 newLowLeafIndex_
+    ) private onlyInitialized(tree) {
+        require(leafIndex_ != ZERO_IDX, ZeroLeafIndex());
+        require(
+            _getLeafNextIndex(tree, currentLowLeafIndex_) == leafIndex_,
+            NotALowLeafIndex(leafIndex_, currentLowLeafIndex_)
+        );
+
+        tree.leavesData[leafIndex_].value = newValue_;
+
+        if (newLowLeafIndex_ != currentLowLeafIndex_ && newLowLeafIndex_ != leafIndex_) {
+            uint256 newNextLeafIndex_ = _checkLowLeaf(tree, newValue_, newLowLeafIndex_);
+
+            _updateNextLeafIndex(tree, currentLowLeafIndex_, _getLeafNextIndex(tree, leafIndex_));
+            _updateNextLeafIndex(tree, newLowLeafIndex_, leafIndex_);
+            _updateNextLeafIndex(tree, leafIndex_, newNextLeafIndex_);
+        } else {
+            _updateMerkleHashes(tree, leafIndex_);
+        }
     }
 
     function _pushLeaf(
@@ -303,6 +372,16 @@ library IndexedMerkleTree {
         }
 
         tree.levelsCount = levelsCount_;
+    }
+
+    function _updateNextLeafIndex(
+        IndexedMT storage tree,
+        uint256 leafIndex_,
+        uint256 newNextLeafIndex_
+    ) private {
+        tree.leavesData[leafIndex_].nextLeafIndex = newNextLeafIndex_;
+
+        _updateMerkleHashes(tree, leafIndex_);
     }
 
     function _updateMerkleHashes(IndexedMT storage tree, uint256 leafIndex_) private {
@@ -425,6 +504,15 @@ library IndexedMerkleTree {
         _checkIndexExistence(tree, index_, LEAVES_LEVEL);
 
         return tree.leavesData[index_];
+    }
+
+    function _getLeafNextIndex(
+        IndexedMT storage tree,
+        uint256 index_
+    ) private view returns (uint256) {
+        _checkIndexExistence(tree, index_, LEAVES_LEVEL);
+
+        return tree.leavesData[index_].nextLeafIndex;
     }
 
     function _calculateNodeHash(

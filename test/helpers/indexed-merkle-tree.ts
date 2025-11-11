@@ -95,7 +95,7 @@ export class IndexedMerkleTree {
   }
 
   public add(value: string, lowLeafIndex: bigint = this.getLowLeafIndex(value)): bigint {
-    const currentLeavesCount = this._getLevelNodesCount(LEAVES_LEVEL);
+    const currentLeavesCount = this.getLevelNodesCount(LEAVES_LEVEL);
 
     if (currentLeavesCount >= 1n << BigInt(this.maxLevelsCount)) {
       throw new Error("Maximum tree capacity reached.");
@@ -108,16 +108,45 @@ export class IndexedMerkleTree {
     const newLeafIndex = currentLeavesCount;
     const nextLeafIndex = this.getLeafData(lowLeafIndex).nextLeafIndex;
 
-    this.leavesData[lowLeafIndex.toString()].nextLeafIndex = newLeafIndex;
-    this._updateMerkleHashes(lowLeafIndex);
-
+    this._updateNextLeafIndex(lowLeafIndex, newLeafIndex);
     this._pushLeaf(newLeafIndex, { value: value, nextLeafIndex: nextLeafIndex });
 
     return newLeafIndex;
   }
 
+  public update(
+    indexToUpdate: bigint,
+    currentLowLeafIndex: bigint,
+    newValue: string,
+    newLowLeafIndex: bigint = this.getLowLeafIndex(newValue),
+  ) {
+    if (indexToUpdate == ZERO_IDX) {
+      throw new Error("Unable to update zero index.");
+    }
+
+    if (this.getLeafData(currentLowLeafIndex).nextLeafIndex != indexToUpdate) {
+      throw new Error(`Index ${currentLowLeafIndex} not a low leaf for the element with index ${indexToUpdate}`);
+    }
+
+    this.leavesData[indexToUpdate.toString()].value = newValue;
+
+    if (newLowLeafIndex != currentLowLeafIndex && newLowLeafIndex != indexToUpdate) {
+      if (!this._isLowLeaf(newLowLeafIndex, newValue)) {
+        throw new Error(`Index ${newLowLeafIndex} not a low leaf index for the value ${newValue}`);
+      }
+
+      const nextLeafIndex = this.getLeafData(newLowLeafIndex).nextLeafIndex;
+
+      this._updateNextLeafIndex(currentLowLeafIndex, this.getLeafData(indexToUpdate).nextLeafIndex);
+      this._updateNextLeafIndex(newLowLeafIndex, indexToUpdate);
+      this._updateNextLeafIndex(indexToUpdate, nextLeafIndex);
+    } else {
+      this._updateMerkleHashes(indexToUpdate);
+    }
+  }
+
   public getProof(index: bigint, value: string): Proof {
-    if (index >= this._getLevelNodesCount(LEAVES_LEVEL)) {
+    if (index >= this.getLevelNodesCount(LEAVES_LEVEL)) {
       throw new Error(`Leaf with index ${index} does not exist.`);
     }
 
@@ -142,7 +171,7 @@ export class IndexedMerkleTree {
 
       let siblingHash: string;
 
-      if (siblingIndex < this._getLevelNodesCount(level)) {
+      if (siblingIndex < this.getLevelNodesCount(level)) {
         siblingHash = this.levels[level.toString()][siblingIndex.toString()];
       } else {
         siblingHash = this.zeroHashesCache[Number(level)];
@@ -187,15 +216,31 @@ export class IndexedMerkleTree {
   }
 
   public getLeafData(index: bigint): LeafData {
-    if (index >= this._getLevelNodesCount(LEAVES_LEVEL)) {
+    if (index >= this.getLevelNodesCount(LEAVES_LEVEL)) {
       throw new Error(`Leaf with index ${index} does not exist.`);
     }
 
     return this.leavesData[index.toString()];
   }
 
+  public getPrevLeafIndex(index: bigint): bigint {
+    const leavesCount = this.getLevelNodesCount(LEAVES_LEVEL);
+    let currentIndex = ZERO_IDX;
+
+    for (let i = 0n; i < leavesCount; i++) {
+      const currentLeafData = this.getLeafData(currentIndex);
+      if (currentLeafData.nextLeafIndex == index) {
+        return currentIndex;
+      }
+
+      currentIndex = currentLeafData.nextLeafIndex;
+    }
+
+    throw new Error(`Can't find a previous leaf for the leaf with index ${index}`);
+  }
+
   public getLeafIndex(value: string): bigint {
-    const leavesCount = this._getLevelNodesCount(LEAVES_LEVEL);
+    const leavesCount = this.getLevelNodesCount(LEAVES_LEVEL);
 
     for (let i = 0n; i < leavesCount; i++) {
       if (this._cmpValues(this.leavesData[i.toString()].value, value) == 0) {
@@ -207,7 +252,7 @@ export class IndexedMerkleTree {
   }
 
   public getLowLeafIndex(value: string): bigint {
-    const leavesCount = this._getLevelNodesCount(LEAVES_LEVEL);
+    const leavesCount = this.getLevelNodesCount(LEAVES_LEVEL);
 
     for (let i = 0n; i < leavesCount; i++) {
       if (this._isLowLeaf(i, value)) {
@@ -228,6 +273,20 @@ export class IndexedMerkleTree {
 
   public getLevelHashes(level: bigint): string[] {
     return Object.values(this.levels[level.toString()]) || [];
+  }
+
+  public getLevelNodesCount(level: bigint): bigint {
+    return BigInt(Object.values(this.levels[level.toString()]).length);
+  }
+
+  public getLeavesCount(): bigint {
+    return this.getLevelNodesCount(LEAVES_LEVEL);
+  }
+
+  private _updateNextLeafIndex(leafIndex: bigint, newNextLeafIndex: bigint): void {
+    this.leavesData[leafIndex.toString()].nextLeafIndex = newNextLeafIndex;
+
+    this._updateMerkleHashes(leafIndex);
   }
 
   private _updateMerkleHashes(leafIndex: bigint): void {
@@ -276,7 +335,7 @@ export class IndexedMerkleTree {
 
       this.levels[level.toString()][levelIndex.toString()] = currentLevelNodeHash;
 
-      if (level + 1n == BigInt(this.levelsCount) && this._getLevelNodesCount(level) > 1) {
+      if (level + 1n == BigInt(this.levelsCount) && this.getLevelNodesCount(level) > 1) {
         this.levelsCount++;
       }
 
@@ -352,7 +411,7 @@ export class IndexedMerkleTree {
 
     const leftChildHash = this.levels[childrenLevel.toString()][leftChild.toString()];
     const rightChildHash =
-      rightChild < this._getLevelNodesCount(childrenLevel)
+      rightChild < this.getLevelNodesCount(childrenLevel)
         ? this.levels[childrenLevel.toString()][rightChild.toString()]
         : this.zeroHashesCache[Number(childrenLevel)];
 
@@ -367,10 +426,6 @@ export class IndexedMerkleTree {
       (leafData.nextLeafIndex == ZERO_IDX ||
         this._cmpValues(this.getLeafData(leafData.nextLeafIndex).value, value) == 1)
     );
-  }
-
-  private _getLevelNodesCount(level: bigint): bigint {
-    return BigInt(Object.values(this.levels[level.toString()]).length);
   }
 
   private _cmpValues(value0: string, value1: string): number {
