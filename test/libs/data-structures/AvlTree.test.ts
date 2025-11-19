@@ -3,11 +3,11 @@ import hre from "hardhat";
 
 import { encodeBytes32String, toBeHex } from "ethers";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { Reverter } from "@test-helpers";
 
-import { AvlTreeMock } from "@ethers-v6";
+import type { AvlTreeMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

@@ -1,14 +1,14 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { BigNumberish, BytesLike } from "ethers";
+import type { BigNumberish, BytesLike } from "ethers";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { Reverter, getPoseidon, poseidonHash } from "@test-helpers";
 
-import { CartesianMerkleTree } from "@/generated-types/ethers/mock/libs/data-structures/CartesianMerkleTreeMock.sol/CartesianMerkleTreeMock.ts";
-import { CartesianMerkleTreeMock } from "@ethers-v6";
+import type { CartesianMerkleTree } from "@/generated-types/ethers/mock/libs/data-structures/CartesianMerkleTreeMock.sol/CartesianMerkleTreeMock.ts";
+import type { CartesianMerkleTreeMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

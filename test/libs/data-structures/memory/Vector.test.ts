@@ -3,7 +3,7 @@ import hre from "hardhat";
 
 import { Reverter } from "@test-helpers";
 
-import { VectorMock } from "@ethers-v6";
+import type { VectorMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

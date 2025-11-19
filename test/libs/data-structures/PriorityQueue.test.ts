@@ -3,7 +3,7 @@ import hre from "hardhat";
 
 import { Reverter } from "@test-helpers";
 
-import { PriorityQueueMock } from "@ethers-v6";
+import type { PriorityQueueMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
@@ -213,7 +213,7 @@ describe("PriorityQueue", () => {
         expect(await mock.valuesUint()).to.deep.equal([5n, 4n, 2n, 1n]);
       });
 
-      it.skip("should maintain heap property", async () => {
+      it.only("should maintain heap property", async () => {
         await mock.addUint(100, 100);
         await mock.addUint(19, 19);
         await mock.addUint(6, 6);

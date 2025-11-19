@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { Reverter, addHexPrefix, buildSparseMerkleTree, getPoseidon, getRoot, poseidonHash } from "@test-helpers";
 
-import { IncrementalMerkleTreeMock } from "@ethers-v6";
+import type { IncrementalMerkleTreeMock } from "@ethers-v6";
 
 import { MerkleTree } from "merkletreejs";
 

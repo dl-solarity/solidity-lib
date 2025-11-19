@@ -5,7 +5,7 @@ import { ETHER_ADDR } from "@scripts";
 
 import { Reverter } from "@test-helpers";
 
-import { TypeCasterMock } from "@ethers-v6";
+import type { TypeCasterMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

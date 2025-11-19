@@ -5,7 +5,7 @@ import { wei } from "@scripts";
 
 import { Reverter } from "@test-helpers";
 
-import { AccountRecoveryMock, RecoveryProviderMock } from "@ethers-v6";
+import type { AccountRecoveryMock, RecoveryProviderMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

@@ -1,15 +1,15 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { AddressLike } from "ethers";
+import type { AddressLike } from "ethers";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { wei } from "@scripts";
 
 import { Reverter, getSignature } from "@test-helpers";
 
-import {
+import type {
   BridgeMock,
   ERC20CrosschainMock,
   ERC20Handler,

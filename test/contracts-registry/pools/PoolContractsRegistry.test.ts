@@ -1,11 +1,17 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { Reverter } from "@test-helpers";
 
-import { ContractsRegistryPoolMock, ERC20Mock, PoolContractsRegistryMock, PoolMock, PoolUpgradeMock } from "@ethers-v6";
+import type {
+  ContractsRegistryPoolMock,
+  ERC20Mock,
+  PoolContractsRegistryMock,
+  PoolMock,
+  PoolUpgradeMock,
+} from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

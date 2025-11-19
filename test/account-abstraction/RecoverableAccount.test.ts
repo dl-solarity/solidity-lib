@@ -1,20 +1,16 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import {
-  ERC20Mock,
-  EntryPointMock,
-  IAccount,
-  RecoverableAccountMock,
-  RecoveryProviderMock,
-} from "@/generated-types/ethers";
-import { AddressLike, HDNodeWallet, ZeroAddress } from "ethers";
+import type { AddressLike, HDNodeWallet } from "ethers";
+import { ZeroAddress } from "ethers";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+
+import { wei } from "@scripts";
 
 import { Reverter } from "@test-helpers";
 
-import { wei } from "@/scripts/utils/utils";
+import type { ERC20Mock, EntryPointMock, IAccount, RecoverableAccountMock, RecoveryProviderMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
