@@ -205,7 +205,7 @@ abstract contract ARecoverableAccount is IAccount, Initializable, AAccountRecove
     }
 
     function _onlySelfCalled() internal view {
-        if (tx.origin != address(this) || tx.origin != msg.sender) revert NotSelfCalled();
+        if (msg.sender != address(this)) revert NotSelfCalled();
     }
 
     function _getRecoverableAccountStorage()

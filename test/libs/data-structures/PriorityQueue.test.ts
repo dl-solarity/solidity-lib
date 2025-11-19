@@ -213,6 +213,23 @@ describe("PriorityQueue", () => {
         expect(await mock.valuesUint()).to.deep.equal([5n, 4n, 2n, 1n]);
       });
 
+      it.skip("should maintain heap property", async () => {
+        await mock.addUint(100, 100);
+        await mock.addUint(19, 19);
+        await mock.addUint(6, 6);
+        await mock.addUint(17, 17);
+        await mock.addUint(3, 3);
+        await mock.addUint(2, 2);
+        await mock.addUint(1, 1);
+        await mock.addUint(4, 4);
+        await mock.addUint(7, 7);
+
+        await mock.removeUint(1);
+
+        // TODO check that 6 is under 7
+        console.log(await mock.elementsUint());
+      });
+
       it("should remove the top element", async () => {
         await mock.addUint(1, 1);
         await mock.addUint(2, 2);

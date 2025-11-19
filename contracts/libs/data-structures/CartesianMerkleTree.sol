@@ -935,9 +935,18 @@ library CartesianMerkleTree {
 
     function _verifyProof(CMT storage treaple, Proof memory proof_) private view returns (bool) {
         // invalid exclusion proof
-        if (!proof_.existence && proof_.nonExistenceKey == ZERO_HASH) {
+        if (
+            !proof_.existence &&
+            (proof_.nonExistenceKey == ZERO_HASH || _nodeByKey(treaple, proof_.key).key != 0)
+        ) {
             return false;
         }
+
+        if (proof_.siblingsLength < 2) {
+            return false;
+        }
+
+        // TODO check nonExistenceKey is on the same branch with the key
 
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_ = treaple
             .isCustomHasherSet

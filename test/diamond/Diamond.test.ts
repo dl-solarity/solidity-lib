@@ -25,7 +25,7 @@ describe("Diamond", () => {
     const OwnableDiamond = await ethers.getContractFactory("OwnableDiamondMock");
     diamond = await OwnableDiamond.deploy();
 
-    await diamond.__OwnableDiamondMock_init();
+    await diamond.__OwnableDiamond_init();
 
     await reverter.snapshot();
   });

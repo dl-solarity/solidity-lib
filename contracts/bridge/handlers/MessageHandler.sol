@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
+import {IBridge} from "../../interfaces/bridge/IBridge.sol";
 import {IBatcher} from "../../interfaces/bridge/IBatcher.sol";
 import {IHandler} from "../../interfaces/bridge/IHandler.sol";
 
@@ -45,11 +46,13 @@ contract MessageHandler is IHandler {
      * @inheritdoc IHandler
      */
     function getOperationHash(
+        IBridge bridge_,
         string calldata network_,
         bytes calldata redeemDetails_
     ) external view virtual returns (bytes32) {
         MessageRedeemData memory redeem_ = abi.decode(redeemDetails_, (MessageRedeemData));
 
-        return keccak256(abi.encodePacked(redeem_.batch, redeem_.nonce, network_, address(this)));
+        return
+            keccak256(abi.encodePacked(redeem_.batch, redeem_.nonce, network_, address(bridge_)));
     }
 }
