@@ -1563,6 +1563,13 @@ library U512 {
 
             if (cmp_ < 0) {
                 _sub(m_, r_, r_);
+
+                if (eq(r_, m_)) {
+                    assembly {
+                        mstore(r_, 0)
+                        mstore(add(r_, 0x20), 0)
+                    }
+                }
             }
         }
     }
