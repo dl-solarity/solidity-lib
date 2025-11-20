@@ -334,7 +334,7 @@ library PriorityQueue {
         queue._values.pop();
         queue._priorities.pop();
 
-        // indexToRemove_ = _shiftUp(queue, indexToRemove_);
+        indexToRemove_ = _shiftUp(queue, indexToRemove_);
         _shiftDown(queue, indexToRemove_);
 
         return true;
