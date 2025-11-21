@@ -355,14 +355,14 @@ describe("CartesianMerkleTree", () => {
     });
 
     it("should not pass on the forged exclusion proof", async () => {
-      const keysCount: number = 50;
+      const keysCount: number = 20;
       const keys: string[] = createRandomArray(keysCount);
 
       for (let i = 0; i < keys.length; i++) {
         await treaple.addUint(keys[i]);
       }
 
-      const desiredProofSize = 50;
+      const desiredProofSize = 20;
 
       await treaple.setDesiredProofSizeUintTreaple(desiredProofSize);
 

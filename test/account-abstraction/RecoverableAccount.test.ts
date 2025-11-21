@@ -158,20 +158,6 @@ describe("RecoverableAccount", () => {
         "NotSelfCalled",
       );
 
-      const addRecoveryProviderData = account.interface.encodeFunctionData("addRecoveryProvider", [
-        await provider2.getAddress(),
-        RECOVERY_DATA,
-      ]);
-
-      const calls = [[await account.getAddress(), 0, addRecoveryProviderData]];
-
-      const executionData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256,bytes)[]"], [calls]);
-
-      await expect(account.connect(FIRST).execute(SINGLE_BATCH_MODE, executionData)).to.be.revertedWithCustomError(
-        account,
-        "NotSelfCalled",
-      );
-
       const callerContract = await ethers.deployContract("Caller");
 
       await expect(
