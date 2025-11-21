@@ -354,6 +354,83 @@ describe("CartesianMerkleTree", () => {
       }
     });
 
+    it("should not pass on the forged exclusion proof", async () => {
+      const keysCount: number = 50;
+      const keys: string[] = createRandomArray(keysCount);
+
+      for (let i = 0; i < keys.length; i++) {
+        await treaple.addUint(keys[i]);
+      }
+
+      const desiredProofSize = 50;
+
+      await treaple.setDesiredProofSizeUintTreaple(desiredProofSize);
+
+      const treapleRoot: string = await treaple.getUintRoot();
+
+      for (let i = 0; i < keysCount; i++) {
+        for (let j = 0; j < keysCount; j++) {
+          const proof = await treaple.getUintProof(keys[i], 0);
+
+          expect(proof.siblings.length).to.be.eq(desiredProofSize);
+
+          await verifyCMTProof(proof, treapleRoot, keys[i], true, true);
+
+          const proofObj: CartesianMerkleTree.ProofStruct = {
+            root: proof.root,
+            siblings: Array.from(proof.siblings),
+            siblingsLength: proof.siblingsLength,
+            directionBits: proof.directionBits,
+            existence: false,
+            key: keys[j],
+            nonExistenceKey: proof.key,
+          };
+          expect(await treaple.verifyUintProof(proofObj)).to.be.false;
+        }
+      }
+    });
+
+    it("should not pass on the invalid exclusion proof", async () => {
+      const keysCount: number = 50;
+      const keys: string[] = createRandomArray(keysCount);
+
+      for (let i = 0; i < keys.length; i++) {
+        await treaple.addUint(keys[i]);
+      }
+
+      const desiredProofSize = 50;
+
+      await treaple.setDesiredProofSizeUintTreaple(desiredProofSize);
+
+      const treapleRoot: string = await treaple.getUintRoot();
+
+      const randKey = ethers.hexlify(ethers.randomBytes(32));
+      const proof = await treaple.getUintProof(randKey, 0);
+
+      expect(proof.siblings.length).to.be.eq(desiredProofSize);
+
+      await verifyCMTProof(proof, treapleRoot, randKey, false, true);
+
+      const proofObj: CartesianMerkleTree.ProofStruct = {
+        root: proof.root,
+        siblings: [],
+        siblingsLength: 0,
+        directionBits: proof.directionBits,
+        existence: false,
+        key: randKey,
+        nonExistenceKey: proof.nonExistenceKey,
+      };
+      expect(await treaple.verifyUintProof(proofObj)).to.be.false;
+
+      proofObj.siblingsLength = 1;
+      proofObj.siblings = [Array.from(proof.siblings)[0]];
+      expect(await treaple.verifyUintProof(proofObj)).to.be.false;
+
+      proofObj.siblingsLength = 2;
+      proofObj.siblings = [Array.from(proof.siblings)[0]];
+      expect(await treaple.verifyUintProof(proofObj)).to.be.false;
+    });
+
     it("should not verify proof with incorrect root", async () => {
       const keysCount: number = 50;
       const keys: string[] = createRandomArray(keysCount);

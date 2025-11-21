@@ -937,16 +937,14 @@ library CartesianMerkleTree {
         // invalid exclusion proof
         if (
             !proof_.existence &&
-            (proof_.nonExistenceKey == ZERO_HASH || _nodeByKey(treaple, proof_.key).key != 0)
+            (proof_.nonExistenceKey == ZERO_HASH || proof_.nonExistenceKey == proof_.key)
         ) {
             return false;
         }
 
-        if (proof_.siblingsLength < 2) {
+        if (proof_.siblingsLength < 2 || proof_.siblings.length < 2) {
             return false;
         }
-
-        // TODO check nonExistenceKey is on the same branch with the key
 
         function(bytes32, bytes32, bytes32) view returns (bytes32) hash3_ = treaple
             .isCustomHasherSet
@@ -965,6 +963,14 @@ library CartesianMerkleTree {
         bytes32 leftHash_ = proof_.siblings[proof_.siblingsLength - 2];
         bytes32 rightHash_ = proof_.siblings[proof_.siblingsLength - 1];
 
+        if (!proof_.existence) {
+            if (proof_.key < proof_.nonExistenceKey && leftHash_ != ZERO_HASH) {
+                return ZERO_HASH;
+            } else if (proof_.key > proof_.nonExistenceKey && rightHash_ != ZERO_HASH) {
+                return ZERO_HASH;
+            }
+        }
+
         if (directionBit_) {
             (leftHash_, rightHash_) = (rightHash_, leftHash_);
         }
@@ -976,6 +982,18 @@ library CartesianMerkleTree {
         );
 
         for (uint256 i = 2; i < proof_.siblingsLength; i += 2) {
+            bytes32 parentKey_ = proof_.siblings[proof_.siblingsLength - i - 2];
+
+            if (!proof_.existence) {
+                if (
+                    proof_.key == parentKey_ ||
+                    (proof_.key < parentKey_ && proof_.nonExistenceKey >= parentKey_) ||
+                    (proof_.key > parentKey_ && proof_.nonExistenceKey <= parentKey_)
+                ) {
+                    return ZERO_HASH;
+                }
+            }
+
             directionBit_ = _extractDirectionBit(proof_.directionBits, i);
 
             leftHash_ = computedHash_;
@@ -985,11 +1003,7 @@ library CartesianMerkleTree {
                 (leftHash_, rightHash_) = (rightHash_, leftHash_);
             }
 
-            computedHash_ = hash3_(
-                proof_.siblings[proof_.siblingsLength - i - 2],
-                leftHash_,
-                rightHash_
-            );
+            computedHash_ = hash3_(parentKey_, leftHash_, rightHash_);
         }
 
         return computedHash_;
