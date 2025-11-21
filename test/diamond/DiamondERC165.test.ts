@@ -3,7 +3,7 @@ import hre from "hardhat";
 
 import { FacetAction, Reverter, getSelectors } from "@test-helpers";
 
-import { Diamond, DiamondERC165, OwnableDiamondMock } from "@ethers-v6";
+import type { Diamond, DiamondERC165, OwnableDiamondMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

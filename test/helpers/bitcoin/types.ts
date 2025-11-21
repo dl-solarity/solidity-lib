@@ -1,4 +1,4 @@
-import { BigNumberish } from "ethers";
+import type { BigNumberish } from "ethers";
 
 export type HeaderData = {
   height: BigNumberish;

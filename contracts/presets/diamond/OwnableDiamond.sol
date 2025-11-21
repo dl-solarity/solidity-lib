@@ -11,6 +11,10 @@ import {Diamond} from "../../diamond/Diamond.sol";
  * The Ownable preset of Diamond proxy
  */
 contract OwnableDiamond is Diamond, OwnableUpgradeable {
+    function __OwnableDiamond_init() public initializer {
+        __Ownable_init(msg.sender);
+    }
+
     /**
      * @notice The function to manipulate the Diamond contract, as defined in [EIP-2535](https://eips.ethereum.org/EIPS/eip-2535)
      * @param facets_ the array of actions to be executed against the Diamond

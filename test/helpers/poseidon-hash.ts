@@ -1,6 +1,6 @@
 import { BaseContract, ContractFactory, hexlify, toBeHex } from "ethers";
 
-import { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
 
 import { Poseidon } from "@iden3/js-crypto";
 // @ts-ignore

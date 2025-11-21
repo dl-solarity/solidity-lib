@@ -11,7 +11,7 @@ import {
   reverseBytes,
 } from "@test-helpers";
 
-import { TxParserMock } from "@ethers-v6";
+import type { TxParserMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

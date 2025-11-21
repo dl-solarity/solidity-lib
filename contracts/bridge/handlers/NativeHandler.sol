@@ -3,6 +3,7 @@ pragma solidity ^0.8.21;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
+import {IBridge} from "../../interfaces/bridge/IBridge.sol";
 import {IBatcher} from "../../interfaces/bridge/IBatcher.sol";
 import {IHandler} from "../../interfaces/bridge/IHandler.sol";
 
@@ -62,6 +63,7 @@ contract NativeHandler is IHandler {
      * @inheritdoc IHandler
      */
     function getOperationHash(
+        IBridge bridge_,
         string calldata network_,
         bytes calldata redeemDetails_
     ) external view virtual returns (bytes32) {
@@ -75,7 +77,7 @@ contract NativeHandler is IHandler {
                     redeem_.batch,
                     redeem_.nonce,
                     network_,
-                    address(this)
+                    address(bridge_)
                 )
             );
     }

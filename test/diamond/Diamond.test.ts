@@ -1,13 +1,13 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { wei } from "@scripts";
 
 import { FacetAction, Reverter, getSelectors } from "@test-helpers";
 
-import { Diamond, DummyFacetMock, DummyInitMock, OwnableDiamondMock } from "@ethers-v6";
+import type { Diamond, DummyFacetMock, DummyInitMock, OwnableDiamondMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
@@ -25,7 +25,7 @@ describe("Diamond", () => {
     const OwnableDiamond = await ethers.getContractFactory("OwnableDiamondMock");
     diamond = await OwnableDiamond.deploy();
 
-    await diamond.__OwnableDiamondMock_init();
+    await diamond.__OwnableDiamond_init();
 
     await reverter.snapshot();
   });

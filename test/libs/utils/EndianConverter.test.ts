@@ -3,7 +3,7 @@ import hre from "hardhat";
 
 import { Reverter, reverseBytes } from "@test-helpers";
 
-import { EndianConverterMock } from "@ethers-v6";
+import type { EndianConverterMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

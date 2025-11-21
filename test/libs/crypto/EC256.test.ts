@@ -3,7 +3,7 @@ import hre from "hardhat";
 
 import { Reverter } from "@test-helpers";
 
-import { EC256Mock } from "@ethers-v6";
+import type { EC256Mock } from "@ethers-v6";
 
 import { secp256k1 } from "@noble/curves/secp256k1";
 

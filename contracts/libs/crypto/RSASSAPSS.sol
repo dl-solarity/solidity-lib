@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
+import {LibBit} from "solady/src/utils/LibBit.sol";
+
 /**
  * @notice Cryptography module
  *
@@ -66,7 +68,7 @@ library RSASSAPSS {
 
             bytes memory decipher_ = _rsa(s_, e_, n_);
 
-            return _pss(message_, decipher_, params_);
+            return _pss(message_, decipher_, n_, params_);
         }
     }
 
@@ -104,13 +106,15 @@ library RSASSAPSS {
     function _pss(
         bytes memory message_,
         bytes memory signature_,
+        bytes memory n_,
         Parameters memory params_
     ) private pure returns (bool) {
         unchecked {
             uint256 hashLength_ = params_.hashLength;
             uint256 saltLength_ = params_.saltLength;
-            uint256 sigBytes_ = signature_.length;
-            uint256 sigBits_ = (sigBytes_ * 8 - 1) & 7;
+            uint256 sigBytes_ = n_.length;
+            uint256 leadingBits_ = LibBit.clz(uint256(uint8(n_[n_.length - 1])) << 248);
+            uint256 sigBits_ = (sigBytes_ * 8 - leadingBits_ - 1) & 7;
 
             assert(message_.length < 2 ** 61);
 
@@ -135,7 +139,7 @@ library RSASSAPSS {
                 h_[i] = signature_[i + db_.length];
             }
 
-            if (uint8(db_[0] & bytes1(uint8(((0xFF << (sigBits_)))))) == 1) {
+            if (uint8(db_[0] & bytes1(uint8(((0xFF << (sigBits_)))))) != 0) {
                 return false;
             }
 

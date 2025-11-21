@@ -3,9 +3,10 @@ import hre from "hardhat";
 
 import { Reverter } from "@test-helpers";
 
-import { ED256Mock } from "@ethers-v6";
+import type { ED256Mock } from "@ethers-v6";
 
-import { Base8, Point, addPoint, mulPointEscalar } from "@zk-kit/baby-jubjub";
+import type { Point } from "@zk-kit/baby-jubjub";
+import { Base8, addPoint, mulPointEscalar } from "@zk-kit/baby-jubjub";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

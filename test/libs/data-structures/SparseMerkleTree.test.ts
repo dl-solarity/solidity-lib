@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { Reverter, getPoseidon, poseidonHash } from "@test-helpers";
 
-import { SparseMerkleTree } from "@/generated-types/ethers/mock/libs/data-structures/SparseMerkleTreeMock.sol/SparseMerkleTreeMock.ts";
-import { SparseMerkleTreeMock } from "@ethers-v6";
+import type { SparseMerkleTree } from "@/generated-types/ethers/mock/libs/data-structures/SparseMerkleTreeMock.sol/SparseMerkleTreeMock.ts";
+import type { SparseMerkleTreeMock } from "@ethers-v6";
 
 // @ts-ignore
 import { Hash, LocalStorageDB, Merkletree, Proof, str2Bytes, verifyProof } from "@iden3/js-merkletree";
