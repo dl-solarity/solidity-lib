@@ -5,6 +5,9 @@ on:
     branches:
       - master
 
+permissions:
+  id-token: write
+
 jobs:
   state:
     runs-on: ubuntu-latest
@@ -59,6 +62,3 @@ jobs:
 
       - name: Publish to npm
         run: npm run publish-to-npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
-
