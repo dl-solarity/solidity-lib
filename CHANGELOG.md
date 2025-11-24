@@ -1,7 +1,8 @@
 # Changelog
 
-## [none]
+## [minor]
 
+- Fixed two critical, three high, four low, and two info issues found during the library audit.
 - Migrated from solhint to slippy.
 
 ## [3.2.8]

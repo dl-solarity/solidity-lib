@@ -141,6 +141,7 @@ abstract contract AVesting is Initializable {
     error ExponentIsZero();
     error NothingToWithdraw();
     error StartTimeIsZero();
+    error InvalidScheduleId(uint256 scheduleId);
     error ScheduleInvalidPeriodParameter(uint256 durationInPeriods, uint256 secondsInPeriod);
     error ScheduleCliffGreaterThanDuration(uint256 cliffInPeriods, uint256 durationInPeriods);
     error UnauthorizedAccount(address account);
@@ -319,6 +320,10 @@ abstract contract AVesting is Initializable {
         AVestingStorage storage $ = _getAVestingStorage();
 
         Schedule storage _schedule = $.schedules[vesting_.scheduleId];
+
+        if (_schedule.scheduleData.secondsInPeriod == 0) {
+            revert InvalidScheduleId(vesting_.scheduleId);
+        }
 
         if (
             vesting_.vestingStartTime +

@@ -203,6 +203,14 @@ describe("Vesting", () => {
         .withArgs();
     });
 
+    it("should revert if schedule id does not exist", async () => {
+      defaultVesting.scheduleId = 13333337;
+
+      await expect(vesting.createVesting(defaultVesting))
+        .to.be.revertedWithCustomError(vesting, "InvalidScheduleId")
+        .withArgs(defaultVesting.scheduleId);
+    });
+
     it("should revert if vesting amount is zero", async () => {
       defaultVesting.vestingAmount = 0;
 

@@ -490,7 +490,7 @@ describe("Bridge", () => {
         value: baseAmount,
       });
 
-      const redeemData = getNativeRedeemData(tx.hash, baseAmount, OWNER.address);
+      const redeemData = getNativeRedeemData(tx.hash, BigInt(baseAmount), OWNER.address);
 
       const operationHash = await nativeHandler.getOperationHash(bridge, "sepolia", redeemData);
 
@@ -552,7 +552,7 @@ describe("Bridge", () => {
     });
 
     it("should revert when receiver address is 0", async () => {
-      const redeemData = getNativeRedeemData("0x", baseAmount, ethers.ZeroAddress);
+      const redeemData = getNativeRedeemData("0x", BigInt(baseAmount), ethers.ZeroAddress);
 
       const operationHash = await nativeHandler.getOperationHash(bridge, "sepolia", redeemData);
 
