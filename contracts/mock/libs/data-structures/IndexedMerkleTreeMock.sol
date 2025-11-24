@@ -4,6 +4,14 @@ pragma solidity ^0.8.21;
 
 import {IndexedMerkleTree} from "../../../libs/data-structures/IndexedMerkleTree.sol";
 
+library PoseidonUnit2L {
+    function poseidon(uint256[2] calldata) public pure returns (uint256) {}
+}
+
+library PoseidonUnit4L {
+    function poseidon(uint256[4] calldata) public pure returns (uint256) {}
+}
+
 contract IndexedMerkleTreeMock {
     using IndexedMerkleTree for *;
 
@@ -21,6 +29,18 @@ contract IndexedMerkleTreeMock {
 
     function initializeAddressTree() external {
         _addressTree.initialize();
+    }
+
+    function setUintPoseidonHasher() external {
+        _uintTree.setHashers(IndexedMerkleTree.HashFunctions({hash2: _hash2, hash4: _hash4}));
+    }
+
+    function setBytes32PoseidonHasher() external {
+        _bytes32Tree.setHashers(IndexedMerkleTree.HashFunctions({hash2: _hash2, hash4: _hash4}));
+    }
+
+    function setAddressPoseidonHasher() external {
+        _addressTree.setHashers(IndexedMerkleTree.HashFunctions({hash2: _hash2, hash4: _hash4}));
     }
 
     function addUint(uint256 value_, uint256 lowLeafIndex_) external returns (uint256) {
@@ -99,8 +119,18 @@ contract IndexedMerkleTreeMock {
         return _addressTree.verifyProof(proof_);
     }
 
-    function processProof(IndexedMerkleTree.Proof memory proof_) external pure returns (bytes32) {
+    function processProof(IndexedMerkleTree.Proof memory proof_) external view returns (bytes32) {
         return IndexedMerkleTree.processProof(proof_);
+    }
+
+    function processProofPoseidon(
+        IndexedMerkleTree.Proof memory proof_
+    ) external view returns (bytes32) {
+        return
+            IndexedMerkleTree.processProof(
+                proof_,
+                IndexedMerkleTree.HashFunctions({hash2: _hash2, hash4: _hash4})
+            );
     }
 
     function getRootUint() external view returns (bytes32) {
@@ -179,5 +209,40 @@ contract IndexedMerkleTreeMock {
 
     function getLevelNodesCountAddress(uint256 level_) external view returns (uint256) {
         return _addressTree.getLevelNodesCount(level_);
+    }
+
+    function isCustomHasherSetUint() external view returns (bool) {
+        return _uintTree.isCustomHasherSet();
+    }
+
+    function isCustomHasherSetBytes32() external view returns (bool) {
+        return _bytes32Tree.isCustomHasherSet();
+    }
+
+    function isCustomHasherSetAddress() external view returns (bool) {
+        return _addressTree.isCustomHasherSet();
+    }
+
+    function _hash2(bytes32 element1_, bytes32 element2_) internal pure returns (bytes32) {
+        return bytes32(PoseidonUnit2L.poseidon([uint256(element1_), uint256(element2_)]));
+    }
+
+    function _hash4(
+        bytes32 element1_,
+        bytes32 element2_,
+        bytes32 element3_,
+        bytes32 element4_
+    ) internal pure returns (bytes32) {
+        return
+            bytes32(
+                PoseidonUnit4L.poseidon(
+                    [
+                        uint256(element1_),
+                        uint256(element2_),
+                        uint256(element3_),
+                        uint256(element4_)
+                    ]
+                )
+            );
     }
 }

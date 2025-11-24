@@ -1,5 +1,7 @@
 import { ethers } from "ethers";
 
+import { poseidonHash } from "./poseidon-hash.ts";
+
 export interface MerkleTreeLevel {
   [index: string]: string;
 }
@@ -36,15 +38,34 @@ export interface Proof {
 export const LEAVES_LEVEL = 0n;
 export const ZERO_IDX = 0n;
 
-export function hashNode(leftChild: string, rightChild: string): string {
-  return ethers.solidityPackedKeccak256(["bytes32", "bytes32"], [leftChild, rightChild]);
+export function hashNodePoseidon(leftChild: string, rightChild: string): string {
+  const encodedData = ethers.AbiCoder.defaultAbiCoder().encode(["bytes32", "uint256"], [leftChild, rightChild]);
+
+  return poseidonHash(encodedData);
 }
 
-export function hashIndexedLeaf(leafData: IndexedLeafData): string {
-  return ethers.solidityPackedKeccak256(
+export function hashIndexedLeafPoseidon(leafData: IndexedLeafData): string {
+  const encodedData = ethers.AbiCoder.defaultAbiCoder().encode(
     ["bool", "uint256", "bytes32", "uint256"],
     [leafData.isActive, leafData.index, leafData.value, leafData.nextIndex],
   );
+
+  return poseidonHash(encodedData);
+}
+
+export function hashNode(leftChild: string, rightChild: string): string {
+  const encodedData = ethers.AbiCoder.defaultAbiCoder().encode(["bytes32", "uint256"], [leftChild, rightChild]);
+
+  return ethers.keccak256(encodedData);
+}
+
+export function hashIndexedLeaf(leafData: IndexedLeafData): string {
+  const encodedData = ethers.AbiCoder.defaultAbiCoder().encode(
+    ["bool", "uint256", "bytes32", "uint256"],
+    [leafData.isActive, leafData.index, leafData.value, leafData.nextIndex],
+  );
+
+  return ethers.keccak256(encodedData);
 }
 
 export function encodeBytes32Value(value: bigint): string {
@@ -59,7 +80,15 @@ export class IndexedMerkleTree {
   private levelsCount: number;
   private maxLevelsCount: number;
 
-  public static buildMerkleTree(leavesData?: IndexedLeafData[], maxLevelsCount: number = 256): IndexedMerkleTree {
+  private hashNodeFn: (leftChild: string, rightChild: string) => string;
+  private hashLeafFn: (leafData: IndexedLeafData) => string;
+
+  public static buildMerkleTree(
+    leavesData?: IndexedLeafData[],
+    hashNodeFn: (leftChild: string, rightChild: string) => string = hashNode,
+    hashLeafFn: (leafData: IndexedLeafData) => string = hashIndexedLeaf,
+    maxLevelsCount: number = 256,
+  ): IndexedMerkleTree {
     return new IndexedMerkleTree(
       leavesData ?? [
         {
@@ -70,10 +99,20 @@ export class IndexedMerkleTree {
         },
       ],
       maxLevelsCount,
+      hashNodeFn,
+      hashLeafFn,
     );
   }
 
-  private constructor(leavesData: IndexedLeafData[], maxLevelsCount: number) {
+  private constructor(
+    leavesData: IndexedLeafData[],
+    maxLevelsCount: number,
+    hashNodeFn: (leftChild: string, rightChild: string) => string,
+    hashLeafFn: (leafData: IndexedLeafData) => string,
+  ) {
+    this.hashNodeFn = hashNodeFn;
+    this.hashLeafFn = hashLeafFn;
+
     if (leavesData.length === 0) {
       throw new Error("Tree must have leaves.");
     }
@@ -197,7 +236,7 @@ export class IndexedMerkleTree {
   }
 
   public processProof(proof: Proof): string {
-    let computedHash = hashIndexedLeaf({
+    let computedHash = this.hashLeafFn({
       index: proof.index,
       nextIndex: proof.nextLeafIndex,
       value: proof.value,
@@ -206,9 +245,9 @@ export class IndexedMerkleTree {
 
     for (let i = 0; i < proof.siblings.length; ++i) {
       if (((proof.index >> BigInt(i)) & 1n) === 1n) {
-        computedHash = hashNode(proof.siblings[i], computedHash);
+        computedHash = this.hashNodeFn(proof.siblings[i], computedHash);
       } else {
-        computedHash = hashNode(computedHash, proof.siblings[i]);
+        computedHash = this.hashNodeFn(computedHash, proof.siblings[i]);
       }
     }
 
@@ -298,7 +337,7 @@ export class IndexedMerkleTree {
       if (level == LEAVES_LEVEL) {
         const leafData = this.getLeafData(levelIndex);
 
-        currentLevelNodeHash = hashIndexedLeaf({
+        currentLevelNodeHash = this.hashLeafFn({
           index: levelIndex,
           value: leafData.value,
           nextIndex: leafData.nextLeafIndex,
@@ -323,7 +362,7 @@ export class IndexedMerkleTree {
       let currentLevelNodeHash: string;
 
       if (level == LEAVES_LEVEL) {
-        currentLevelNodeHash = hashIndexedLeaf({
+        currentLevelNodeHash = this.hashLeafFn({
           index: levelIndex,
           value: leafData.value,
           nextIndex: leafData.nextLeafIndex,
@@ -346,7 +385,7 @@ export class IndexedMerkleTree {
   private _precalculateZeroHashes(maxDepth: number): void {
     if (this.zeroHashesCache.length > 0) return;
 
-    let currentHash = hashIndexedLeaf({
+    let currentHash = this.hashLeafFn({
       index: ZERO_IDX,
       value: encodeBytes32Value(0n),
       nextIndex: ZERO_IDX,
@@ -355,7 +394,7 @@ export class IndexedMerkleTree {
     this.zeroHashesCache.push(currentHash);
 
     for (let i = 1; i <= maxDepth; i++) {
-      currentHash = hashNode(currentHash, currentHash);
+      currentHash = this.hashNodeFn(currentHash, currentHash);
       this.zeroHashesCache.push(currentHash);
     }
   }
@@ -367,7 +406,7 @@ export class IndexedMerkleTree {
         nextLeafIndex: data.nextIndex,
       };
 
-      return hashIndexedLeaf(data);
+      return this.hashLeafFn(data);
     });
   }
 
@@ -387,7 +426,7 @@ export class IndexedMerkleTree {
         const left = currentLevelHashes[i];
         const right = i + 1 < currentLevelHashes.length ? currentLevelHashes[i + 1] : this.zeroHashesCache[level];
 
-        nextLevelHashes.push(hashNode(left, right));
+        nextLevelHashes.push(this.hashNodeFn(left, right));
       }
 
       level++;
@@ -415,7 +454,7 @@ export class IndexedMerkleTree {
         ? this.levels[childrenLevel.toString()][rightChild.toString()]
         : this.zeroHashesCache[Number(childrenLevel)];
 
-    return hashNode(leftChildHash, rightChildHash);
+    return this.hashNodeFn(leftChildHash, rightChildHash);
   }
 
   private _isLowLeaf(index: bigint, value: string): boolean {

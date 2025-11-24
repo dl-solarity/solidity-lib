@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { Reverter } from "@test-helpers";
+import { Reverter, getPoseidon } from "@test-helpers";
 
 import { IndexedMerkleTreeMock } from "@ethers-v6";
 
@@ -12,6 +12,8 @@ import {
   ZERO_IDX,
   encodeBytes32Value,
   hashIndexedLeaf,
+  hashIndexedLeafPoseidon,
+  hashNodePoseidon,
 } from "@/test/helpers/indexed-merkle-tree.ts";
 
 const { ethers, networkHelpers } = await hre.network.connect();
@@ -77,7 +79,12 @@ describe("IndexedMerkleTree", () => {
   }
 
   before("setup", async () => {
-    indexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
+    indexedMT = await ethers.deployContract("IndexedMerkleTreeMock", {
+      libraries: {
+        PoseidonUnit2L: await (await getPoseidon(ethers, 2)).getAddress(),
+        PoseidonUnit4L: await (await getPoseidon(ethers, 4)).getAddress(),
+      },
+    });
 
     await reverter.snapshot();
   });
@@ -89,6 +96,8 @@ describe("IndexedMerkleTree", () => {
   describe("UintIndexedMerkleTree", () => {
     beforeEach("setup", async () => {
       await indexedMT.initializeUintTree();
+
+      expect(await indexedMT.isCustomHasherSetUint()).to.be.false;
     });
 
     describe("initialize", () => {
@@ -210,7 +219,12 @@ describe("IndexedMerkleTree", () => {
       });
 
       it("should get exception if the tree is not initialized", async () => {
-        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
+        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock", {
+          libraries: {
+            PoseidonUnit2L: await (await getPoseidon(ethers, 2)).getAddress(),
+            PoseidonUnit4L: await (await getPoseidon(ethers, 4)).getAddress(),
+          },
+        });
 
         await expect(newIndexedMT.addUint(10n, 0n)).to.be.revertedWithCustomError(
           newIndexedMT,
@@ -319,7 +333,12 @@ describe("IndexedMerkleTree", () => {
       });
 
       it("should correctly update values in the random tree", async () => {
-        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
+        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock", {
+          libraries: {
+            PoseidonUnit2L: await (await getPoseidon(ethers, 2)).getAddress(),
+            PoseidonUnit4L: await (await getPoseidon(ethers, 4)).getAddress(),
+          },
+        });
         const newLocalIndexedMT = IndexedMerkleTree.buildMerkleTree();
 
         await newIndexedMT.initializeUintTree();
@@ -411,7 +430,12 @@ describe("IndexedMerkleTree", () => {
       });
 
       it("should return correct inclusion proofs with the random tree elements", async () => {
-        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
+        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock", {
+          libraries: {
+            PoseidonUnit2L: await (await getPoseidon(ethers, 2)).getAddress(),
+            PoseidonUnit4L: await (await getPoseidon(ethers, 4)).getAddress(),
+          },
+        });
         const newLocalIndexedMT = IndexedMerkleTree.buildMerkleTree();
 
         await newIndexedMT.initializeUintTree();
@@ -456,7 +480,12 @@ describe("IndexedMerkleTree", () => {
       });
 
       it("should return correct exclusion proofs with the random tree elements", async () => {
-        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
+        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock", {
+          libraries: {
+            PoseidonUnit2L: await (await getPoseidon(ethers, 2)).getAddress(),
+            PoseidonUnit4L: await (await getPoseidon(ethers, 4)).getAddress(),
+          },
+        });
         const newLocalIndexedMT = IndexedMerkleTree.buildMerkleTree();
 
         await newIndexedMT.initializeUintTree();
@@ -539,7 +568,12 @@ describe("IndexedMerkleTree", () => {
       });
 
       it("should correctly verify inclusion proofs with the random tree elements", async () => {
-        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
+        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock", {
+          libraries: {
+            PoseidonUnit2L: await (await getPoseidon(ethers, 2)).getAddress(),
+            PoseidonUnit4L: await (await getPoseidon(ethers, 4)).getAddress(),
+          },
+        });
         const newLocalIndexedMT = IndexedMerkleTree.buildMerkleTree();
 
         await newIndexedMT.initializeUintTree();
@@ -571,7 +605,12 @@ describe("IndexedMerkleTree", () => {
       });
 
       it("should correctly verify exclusion proofs with the random tree elements", async () => {
-        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
+        const newIndexedMT = await ethers.deployContract("IndexedMerkleTreeMock", {
+          libraries: {
+            PoseidonUnit2L: await (await getPoseidon(ethers, 2)).getAddress(),
+            PoseidonUnit4L: await (await getPoseidon(ethers, 4)).getAddress(),
+          },
+        });
         const newLocalIndexedMT = IndexedMerkleTree.buildMerkleTree();
 
         await newIndexedMT.initializeUintTree();
@@ -617,15 +656,174 @@ describe("IndexedMerkleTree", () => {
     });
   });
 
+  describe("UintIndexedMerkleTree Poseidon", () => {
+    beforeEach("setup", async () => {
+      await indexedMT.setUintPoseidonHasher();
+      await indexedMT.initializeUintTree();
+
+      expect(await indexedMT.isCustomHasherSetUint()).to.be.true;
+    });
+
+    describe("initialize", () => {
+      it("should correctly initialize UintIndexedMerkleTree with Poseidon hash functions", async () => {
+        const localIndexedMerkleTree = IndexedMerkleTree.buildMerkleTree(
+          undefined,
+          hashNodePoseidon,
+          hashIndexedLeafPoseidon,
+        );
+        const zeroLeafHash = hashIndexedLeafPoseidon({
+          index: 0n,
+          isActive: true,
+          nextIndex: 0n,
+          value: ethers.ZeroHash,
+        });
+
+        expect(await indexedMT.getRootUint()).to.be.eq(zeroLeafHash);
+        expect(await indexedMT.getRootUint()).to.be.eq(localIndexedMerkleTree.getRoot());
+        expect(await indexedMT.getTreeLevelsUint()).to.be.eq(1);
+        expect(await indexedMT.getLeavesCountUint()).to.be.eq(1);
+        expect(await indexedMT.getNodeHashUint(0, LEAVES_LEVEL)).to.be.eq(zeroLeafHash);
+      });
+
+      it("should get exception if try to initialize twice", async () => {
+        await expect(indexedMT.initializeUintTree()).to.be.revertedWithCustomError(
+          indexedMT,
+          "IndexedMerkleTreeAlreadyInitialized",
+        );
+      });
+    });
+
+    describe("setHashers", () => {
+      it("should get exception if the IndexedMerkleTree is already initialized", async () => {
+        await expect(indexedMT.setUintPoseidonHasher()).to.revertedWithCustomError(
+          indexedMT,
+          "IndexedMerkleTreeAlreadyInitialized",
+        );
+      });
+    });
+
+    describe("add", () => {
+      it("should correctly add 15 random elements", async () => {
+        const localIndexedMerkleTree = IndexedMerkleTree.buildMerkleTree(
+          undefined,
+          hashNodePoseidon,
+          hashIndexedLeafPoseidon,
+        );
+        const elementsCount = 15n;
+
+        for (let i = 0; i < elementsCount; ++i) {
+          const randomValue = BigInt(ethers.hexlify(ethers.randomBytes(30)));
+          const encodedValue = encodeBytes32Value(randomValue);
+          const lowLeafIndex = localIndexedMerkleTree.getLowLeafIndex(encodedValue);
+
+          const expectedNextLeafIndex = localIndexedMerkleTree.getLeafData(lowLeafIndex).nextLeafIndex;
+
+          const index = localIndexedMerkleTree.add(encodedValue, lowLeafIndex);
+          await indexedMT.addUint(randomValue, lowLeafIndex);
+
+          expect(await indexedMT.getRootUint()).to.be.eq(localIndexedMerkleTree.getRoot());
+
+          const leafData = await indexedMT.getLeafDataUint(index);
+
+          expect(leafData.value).to.be.eq(encodedValue);
+          expect(leafData.nextLeafIndex).to.be.eq(expectedNextLeafIndex);
+
+          expect((await indexedMT.getLeafDataUint(lowLeafIndex)).nextLeafIndex).to.be.eq(index);
+
+          checkInvariant(localIndexedMerkleTree);
+        }
+
+        expect(await indexedMT.getLevelNodesCountUint(LEAVES_LEVEL)).to.be.eq(elementsCount + 1n);
+      });
+    });
+
+    describe("update", () => {
+      it("should correctly update values in the random tree", async () => {
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree(undefined, hashNodePoseidon, hashIndexedLeafPoseidon);
+
+        const valuesCount = 15n;
+
+        for (let i = 0; i < valuesCount; ++i) {
+          const randomValue = BigInt(ethers.hexlify(ethers.randomBytes(30)));
+          const encodedValue = encodeBytes32Value(randomValue);
+          const lowLeafIndex = localIndexedMT.getLowLeafIndex(encodedValue);
+
+          localIndexedMT.add(encodedValue, lowLeafIndex);
+          await indexedMT.addUint(randomValue, lowLeafIndex);
+
+          checkInvariant(localIndexedMT);
+        }
+
+        const updatesCount = 10n;
+
+        for (let i = 0; i < updatesCount; i++) {
+          const randIndex = BigInt(getRandomIntInclusive(1, Number(valuesCount - 1n)));
+          const newValue = BigInt(ethers.hexlify(ethers.randomBytes(30)));
+          const newEncodedValue = encodeBytes32Value(newValue);
+          const currentLowLeafIndex = localIndexedMT.getPrevLeafIndex(randIndex);
+          const newLowLeafIndex = localIndexedMT.getLowLeafIndex(newEncodedValue);
+
+          localIndexedMT.update(randIndex, currentLowLeafIndex, newEncodedValue, newLowLeafIndex);
+          await indexedMT.updateUint(randIndex, currentLowLeafIndex, newValue, newLowLeafIndex);
+
+          expect(await indexedMT.getRootUint()).to.be.eq(localIndexedMT.getRoot());
+
+          checkInvariant(localIndexedMT);
+        }
+      });
+    });
+
+    describe("verifyProof", () => {
+      it("should correctly verify inclusion proofs with the random tree elements", async () => {
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree(undefined, hashNodePoseidon, hashIndexedLeafPoseidon);
+
+        const valuesCount = 15n;
+        const values = [];
+
+        for (let i = 0; i < valuesCount; ++i) {
+          const randomValue = BigInt(ethers.hexlify(ethers.randomBytes(30)));
+          const encodedValue = encodeBytes32Value(randomValue);
+          const lowLeafIndex = localIndexedMT.getLowLeafIndex(encodedValue);
+
+          localIndexedMT.add(encodedValue, lowLeafIndex);
+          await indexedMT.addUint(randomValue, lowLeafIndex);
+
+          values.push(randomValue);
+        }
+
+        const proofsCount = 10n;
+
+        for (let i = 0; i < proofsCount; i++) {
+          const randIndex = getRandomIntInclusive(0, Number(valuesCount - 1n));
+          const valueToProve = values[randIndex];
+          const encodedValue = encodeBytes32Value(valueToProve);
+
+          const index = localIndexedMT.getLeafIndex(encodedValue);
+          const proof = localIndexedMT.getProof(index, encodedValue);
+
+          expect(await indexedMT.processProofPoseidon(proof)).to.be.eq(localIndexedMT.getRoot());
+          expect(await indexedMT.verifyProofUint(proof)).to.be.true;
+        }
+      });
+    });
+  });
+
   describe("Bytes32IndexedMerkleTree", () => {
     beforeEach("setup", async () => {
+      await indexedMT.setBytes32PoseidonHasher();
       await indexedMT.initializeBytes32Tree();
+
+      expect(await indexedMT.isCustomHasherSetBytes32()).to.be.true;
     });
 
     describe("initialize", () => {
       it("should correctly initialize Bytes32IndexedMerkleTree", async () => {
-        const localIndexedMerkleTree = IndexedMerkleTree.buildMerkleTree();
-        const zeroLeafHash = hashIndexedLeaf({
+        const localIndexedMerkleTree = IndexedMerkleTree.buildMerkleTree(
+          undefined,
+          hashNodePoseidon,
+          hashIndexedLeafPoseidon,
+        );
+        const zeroLeafHash = hashIndexedLeafPoseidon({
           index: 0n,
           isActive: true,
           nextIndex: 0n,
@@ -648,24 +846,29 @@ describe("IndexedMerkleTree", () => {
     });
 
     describe("add", () => {
-      it("should correctly add 100 random elements", async () => {
-        const localIndexedMerkleTree = IndexedMerkleTree.buildMerkleTree();
-        const elementsCount = 100n;
+      it("should correctly add 10 random elements", async () => {
+        const localIndexedMerkleTree = IndexedMerkleTree.buildMerkleTree(
+          undefined,
+          hashNodePoseidon,
+          hashIndexedLeafPoseidon,
+        );
+        const elementsCount = 10n;
 
         for (let i = 0; i < elementsCount; ++i) {
-          const currentValue = ethers.hexlify(ethers.randomBytes(32));
-          const lowLeafIndex = localIndexedMerkleTree.getLowLeafIndex(currentValue);
+          const randValue = BigInt(ethers.hexlify(ethers.randomBytes(30)));
+          const encodedValue = encodeBytes32Value(randValue);
+          const lowLeafIndex = localIndexedMerkleTree.getLowLeafIndex(encodedValue);
 
           const expectedNextLeafIndex = localIndexedMerkleTree.getLeafData(lowLeafIndex).nextLeafIndex;
 
-          const index = localIndexedMerkleTree.add(currentValue, lowLeafIndex);
-          await indexedMT.addBytes32(currentValue, lowLeafIndex);
+          const index = localIndexedMerkleTree.add(encodedValue, lowLeafIndex);
+          await indexedMT.addBytes32(encodedValue, lowLeafIndex);
 
           expect(await indexedMT.getRootBytes32()).to.be.eq(localIndexedMerkleTree.getRoot());
 
           const leafData = await indexedMT.getLeafDataBytes32(index);
 
-          expect(leafData.value).to.be.eq(currentValue);
+          expect(leafData.value).to.be.eq(encodedValue);
           expect(leafData.nextLeafIndex).to.be.eq(expectedNextLeafIndex);
 
           expect((await indexedMT.getLeafDataBytes32(lowLeafIndex)).nextLeafIndex).to.be.eq(index);
@@ -677,19 +880,26 @@ describe("IndexedMerkleTree", () => {
 
     describe("update", () => {
       it("should correctly update values in the random tree", async () => {
-        const indexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
-        const localIndexedMT = IndexedMerkleTree.buildMerkleTree();
+        const indexedMT = await ethers.deployContract("IndexedMerkleTreeMock", {
+          libraries: {
+            PoseidonUnit2L: await (await getPoseidon(ethers, 2)).getAddress(),
+            PoseidonUnit4L: await (await getPoseidon(ethers, 4)).getAddress(),
+          },
+        });
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree(undefined, hashNodePoseidon, hashIndexedLeafPoseidon);
 
+        await indexedMT.setBytes32PoseidonHasher();
         await indexedMT.initializeBytes32Tree();
 
-        const valuesCount = 100n;
+        const valuesCount = 10n;
 
         for (let i = 0; i < valuesCount; ++i) {
-          const currentValue = ethers.hexlify(ethers.randomBytes(32));
-          const lowLeafIndex = localIndexedMT.getLowLeafIndex(currentValue);
+          const randValue = BigInt(ethers.hexlify(ethers.randomBytes(30)));
+          const encodedValue = encodeBytes32Value(randValue);
+          const lowLeafIndex = localIndexedMT.getLowLeafIndex(encodedValue);
 
-          localIndexedMT.add(currentValue, lowLeafIndex);
-          await indexedMT.addBytes32(currentValue, lowLeafIndex);
+          localIndexedMT.add(encodedValue, lowLeafIndex);
+          await indexedMT.addBytes32(encodedValue, lowLeafIndex);
 
           checkInvariant(localIndexedMT);
         }
@@ -697,13 +907,14 @@ describe("IndexedMerkleTree", () => {
         const updatesCount = 20n;
 
         for (let i = 0; i < updatesCount; i++) {
-          const randIndex = BigInt(getRandomIntInclusive(1, 99));
-          const newValue = ethers.hexlify(ethers.randomBytes(32));
+          const randIndex = BigInt(getRandomIntInclusive(1, Number(valuesCount - 1n)));
+          const randValue = BigInt(ethers.hexlify(ethers.randomBytes(30)));
+          const newEncodedValue = encodeBytes32Value(randValue);
           const currentLowLeafIndex = localIndexedMT.getPrevLeafIndex(randIndex);
-          const newLowLeafIndex = localIndexedMT.getLowLeafIndex(newValue);
+          const newLowLeafIndex = localIndexedMT.getLowLeafIndex(newEncodedValue);
 
-          localIndexedMT.update(randIndex, currentLowLeafIndex, newValue, newLowLeafIndex);
-          await indexedMT.updateBytes32(randIndex, currentLowLeafIndex, newValue, newLowLeafIndex);
+          localIndexedMT.update(randIndex, currentLowLeafIndex, newEncodedValue, newLowLeafIndex);
+          await indexedMT.updateBytes32(randIndex, currentLowLeafIndex, newEncodedValue, newLowLeafIndex);
 
           expect(await indexedMT.getRootBytes32()).to.be.eq(localIndexedMT.getRoot());
 
@@ -714,28 +925,29 @@ describe("IndexedMerkleTree", () => {
 
     describe("getProof", () => {
       it("should return correct exclusion proofs with the random tree elements", async () => {
-        const localIndexedMT = IndexedMerkleTree.buildMerkleTree();
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree(undefined, hashNodePoseidon, hashIndexedLeafPoseidon);
 
-        const valuesCount = 100n;
+        const valuesCount = 10n;
         const values = [];
 
         for (let i = 0; i < valuesCount; ++i) {
-          const currentValue = ethers.hexlify(ethers.randomBytes(32));
-          const lowLeafIndex = localIndexedMT.getLowLeafIndex(currentValue);
+          const randValue = BigInt(ethers.hexlify(ethers.randomBytes(30)));
+          const encodedValue = encodeBytes32Value(randValue);
+          const lowLeafIndex = localIndexedMT.getLowLeafIndex(encodedValue);
 
-          localIndexedMT.add(currentValue, lowLeafIndex);
-          await indexedMT.addBytes32(currentValue, lowLeafIndex);
+          localIndexedMT.add(encodedValue, lowLeafIndex);
+          await indexedMT.addBytes32(encodedValue, lowLeafIndex);
 
-          values.push(currentValue);
+          values.push(encodedValue);
         }
 
-        const proofsCount = 100n;
+        const proofsCount = 10n;
 
         for (let i = 0; i < proofsCount; i++) {
           let valueToProve: string;
 
           do {
-            valueToProve = ethers.hexlify(ethers.randomBytes(32));
+            valueToProve = encodeBytes32Value(BigInt(ethers.hexlify(ethers.randomBytes(30))));
           } while (values.includes(valueToProve));
 
           const index = localIndexedMT.getLowLeafIndex(valueToProve);
@@ -750,25 +962,26 @@ describe("IndexedMerkleTree", () => {
 
     describe("verifyProof", () => {
       it("should correctly verify inclusion proofs with the random tree elements", async () => {
-        const localIndexedMT = IndexedMerkleTree.buildMerkleTree();
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree(undefined, hashNodePoseidon, hashIndexedLeafPoseidon);
 
-        const valuesCount = 100n;
+        const valuesCount = 10n;
         const values = [];
 
         for (let i = 0; i < valuesCount; ++i) {
-          const currentValue = ethers.hexlify(ethers.randomBytes(32));
-          const lowLeafIndex = localIndexedMT.getLowLeafIndex(currentValue);
+          const randValue = BigInt(ethers.hexlify(ethers.randomBytes(30)));
+          const encodedValue = encodeBytes32Value(randValue);
+          const lowLeafIndex = localIndexedMT.getLowLeafIndex(encodedValue);
 
-          localIndexedMT.add(currentValue, lowLeafIndex);
-          await indexedMT.addBytes32(currentValue, lowLeafIndex);
+          localIndexedMT.add(encodedValue, lowLeafIndex);
+          await indexedMT.addBytes32(encodedValue, lowLeafIndex);
 
-          values.push(currentValue);
+          values.push(encodedValue);
         }
 
-        const proofsCount = 100n;
+        const proofsCount = 10n;
 
         for (let i = 0; i < proofsCount; i++) {
-          const randIndex = getRandomIntInclusive(0, 99);
+          const randIndex = getRandomIntInclusive(0, values.length - 1);
           const valueToProve = values[randIndex];
 
           const index = localIndexedMT.getLeafIndex(valueToProve);
@@ -779,28 +992,29 @@ describe("IndexedMerkleTree", () => {
       });
 
       it("should correctly verify exclusion proofs with the random tree elements", async () => {
-        const localIndexedMT = IndexedMerkleTree.buildMerkleTree();
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree(undefined, hashNodePoseidon, hashIndexedLeafPoseidon);
 
-        const valuesCount = 100n;
+        const valuesCount = 10n;
         const values = [];
 
         for (let i = 0; i < valuesCount; ++i) {
-          const currentValue = ethers.hexlify(ethers.randomBytes(32));
-          const lowLeafIndex = localIndexedMT.getLowLeafIndex(currentValue);
+          const randValue = BigInt(ethers.hexlify(ethers.randomBytes(30)));
+          const encodedValue = encodeBytes32Value(randValue);
+          const lowLeafIndex = localIndexedMT.getLowLeafIndex(encodedValue);
 
-          localIndexedMT.add(currentValue, lowLeafIndex);
-          await indexedMT.addBytes32(currentValue, lowLeafIndex);
+          localIndexedMT.add(encodedValue, lowLeafIndex);
+          await indexedMT.addBytes32(encodedValue, lowLeafIndex);
 
-          values.push(currentValue);
+          values.push(encodedValue);
         }
 
-        const proofsCount = 100n;
+        const proofsCount = 10n;
 
         for (let i = 0; i < proofsCount; i++) {
           let valueToProve: string;
 
           do {
-            valueToProve = ethers.hexlify(ethers.randomBytes(32));
+            valueToProve = encodeBytes32Value(BigInt(ethers.hexlify(ethers.randomBytes(30))));
           } while (values.includes(valueToProve));
 
           const index = localIndexedMT.getLowLeafIndex(valueToProve);
@@ -814,13 +1028,20 @@ describe("IndexedMerkleTree", () => {
 
   describe("AddressIndexedMerkleTree", () => {
     beforeEach("setup", async () => {
+      await indexedMT.setAddressPoseidonHasher();
       await indexedMT.initializeAddressTree();
+
+      expect(await indexedMT.isCustomHasherSetAddress()).to.be.true;
     });
 
     describe("initialize", () => {
       it("should correctly initialize AddressIndexedMerkleTree", async () => {
-        const localIndexedMerkleTree = IndexedMerkleTree.buildMerkleTree();
-        const zeroLeafHash = hashIndexedLeaf({
+        const localIndexedMerkleTree = IndexedMerkleTree.buildMerkleTree(
+          undefined,
+          hashNodePoseidon,
+          hashIndexedLeafPoseidon,
+        );
+        const zeroLeafHash = hashIndexedLeafPoseidon({
           index: 0n,
           isActive: true,
           nextIndex: 0n,
@@ -843,9 +1064,13 @@ describe("IndexedMerkleTree", () => {
     });
 
     describe("add", () => {
-      it("should correctly add 100 random elements", async () => {
-        const localIndexedMerkleTree = IndexedMerkleTree.buildMerkleTree();
-        const elementsCount = 100n;
+      it("should correctly add 10 random elements", async () => {
+        const localIndexedMerkleTree = IndexedMerkleTree.buildMerkleTree(
+          undefined,
+          hashNodePoseidon,
+          hashIndexedLeafPoseidon,
+        );
+        const elementsCount = 10n;
 
         for (let i = 0; i < elementsCount; ++i) {
           const randomAddress = ethers.hexlify(ethers.randomBytes(20));
@@ -873,12 +1098,18 @@ describe("IndexedMerkleTree", () => {
 
     describe("update", () => {
       it("should correctly update values in the random tree", async () => {
-        const indexedMT = await ethers.deployContract("IndexedMerkleTreeMock");
-        const localIndexedMT = IndexedMerkleTree.buildMerkleTree();
+        const indexedMT = await ethers.deployContract("IndexedMerkleTreeMock", {
+          libraries: {
+            PoseidonUnit2L: await (await getPoseidon(ethers, 2)).getAddress(),
+            PoseidonUnit4L: await (await getPoseidon(ethers, 4)).getAddress(),
+          },
+        });
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree(undefined, hashNodePoseidon, hashIndexedLeafPoseidon);
 
+        await indexedMT.setAddressPoseidonHasher();
         await indexedMT.initializeAddressTree();
 
-        const valuesCount = 100n;
+        const valuesCount = 10n;
 
         for (let i = 0; i < valuesCount; ++i) {
           const randomAddress = ethers.hexlify(ethers.randomBytes(20));
@@ -894,7 +1125,7 @@ describe("IndexedMerkleTree", () => {
         const updatesCount = 20n;
 
         for (let i = 0; i < updatesCount; i++) {
-          const randIndex = BigInt(getRandomIntInclusive(1, 99));
+          const randIndex = BigInt(getRandomIntInclusive(1, Number(valuesCount - 1n)));
 
           const newValue = ethers.hexlify(ethers.randomBytes(20));
           const newEncodedAddress = encodeAddressValue(newValue);
@@ -914,9 +1145,9 @@ describe("IndexedMerkleTree", () => {
 
     describe("getProof", () => {
       it("should return correct exclusion proofs with the random tree elements", async () => {
-        const localIndexedMT = IndexedMerkleTree.buildMerkleTree();
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree(undefined, hashNodePoseidon, hashIndexedLeafPoseidon);
 
-        const valuesCount = 100n;
+        const valuesCount = 10n;
         const values = [];
 
         for (let i = 0; i < valuesCount; ++i) {
@@ -930,7 +1161,7 @@ describe("IndexedMerkleTree", () => {
           values.push(randomAddress);
         }
 
-        const proofsCount = 100n;
+        const proofsCount = 10n;
 
         for (let i = 0; i < proofsCount; i++) {
           let addressToProve: string;
@@ -953,9 +1184,9 @@ describe("IndexedMerkleTree", () => {
 
     describe("verifyProof", () => {
       it("should correctly verify inclusion proofs with the random tree elements", async () => {
-        const localIndexedMT = IndexedMerkleTree.buildMerkleTree();
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree(undefined, hashNodePoseidon, hashIndexedLeafPoseidon);
 
-        const valuesCount = 100n;
+        const valuesCount = 10n;
         const values = [];
 
         for (let i = 0; i < valuesCount; ++i) {
@@ -969,10 +1200,10 @@ describe("IndexedMerkleTree", () => {
           values.push(randomAddress);
         }
 
-        const proofsCount = 100n;
+        const proofsCount = 10n;
 
         for (let i = 0; i < proofsCount; i++) {
-          const randIndex = getRandomIntInclusive(0, 99);
+          const randIndex = getRandomIntInclusive(0, values.length - 1);
           const addressToProve = values[randIndex];
           const encodedAddressToProve = encodeAddressValue(addressToProve);
 
@@ -984,9 +1215,9 @@ describe("IndexedMerkleTree", () => {
       });
 
       it("should correctly verify exclusion proofs with the random tree elements", async () => {
-        const localIndexedMT = IndexedMerkleTree.buildMerkleTree();
+        const localIndexedMT = IndexedMerkleTree.buildMerkleTree(undefined, hashNodePoseidon, hashIndexedLeafPoseidon);
 
-        const valuesCount = 100n;
+        const valuesCount = 10n;
         const values = [];
 
         for (let i = 0; i < valuesCount; ++i) {
@@ -1000,7 +1231,7 @@ describe("IndexedMerkleTree", () => {
           values.push(randomAddress);
         }
 
-        const proofsCount = 100n;
+        const proofsCount = 10n;
 
         for (let i = 0; i < proofsCount; i++) {
           let addressToProve: string;

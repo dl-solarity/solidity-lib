@@ -10,6 +10,10 @@ library IndexedMerkleTree {
         _initialize(tree._indexedMT);
     }
 
+    function setHashers(UintIndexedMT storage tree, HashFunctions memory hashFunctions_) internal {
+        _setHashers(tree._indexedMT, hashFunctions_);
+    }
+
     function add(
         UintIndexedMT storage tree,
         uint256 value_,
@@ -49,8 +53,15 @@ library IndexedMerkleTree {
         return _verifyProof(tree._indexedMT, proof_);
     }
 
-    function processProof(Proof memory proof_) internal pure returns (bytes32) {
-        return _processProof(proof_);
+    function processProof(Proof memory proof_) internal view returns (bytes32) {
+        return _processProof(proof_, HashFunctions({hash2: _hash2, hash4: _hash4}));
+    }
+
+    function processProof(
+        Proof memory proof_,
+        HashFunctions memory hashFunctions_
+    ) internal view returns (bytes32) {
+        return _processProof(proof_, hashFunctions_);
     }
 
     function getRoot(UintIndexedMT storage tree) internal view returns (bytes32) {
@@ -87,12 +98,23 @@ library IndexedMerkleTree {
         return _getLevelNodesCount(tree._indexedMT, level_);
     }
 
+    function isCustomHasherSet(UintIndexedMT storage tree) internal view returns (bool) {
+        return _isCustomHasherSet(tree._indexedMT);
+    }
+
     struct Bytes32IndexedMT {
         IndexedMT _indexedMT;
     }
 
     function initialize(Bytes32IndexedMT storage tree) internal {
         _initialize(tree._indexedMT);
+    }
+
+    function setHashers(
+        Bytes32IndexedMT storage tree,
+        HashFunctions memory hashFunctions_
+    ) internal {
+        _setHashers(tree._indexedMT, hashFunctions_);
     }
 
     function add(
@@ -162,12 +184,23 @@ library IndexedMerkleTree {
         return _getLevelNodesCount(tree._indexedMT, level_);
     }
 
+    function isCustomHasherSet(Bytes32IndexedMT storage tree) internal view returns (bool) {
+        return _isCustomHasherSet(tree._indexedMT);
+    }
+
     struct AddressIndexedMT {
         IndexedMT _indexedMT;
     }
 
     function initialize(AddressIndexedMT storage tree) internal {
         _initialize(tree._indexedMT);
+    }
+
+    function setHashers(
+        AddressIndexedMT storage tree,
+        HashFunctions memory hashFunctions_
+    ) internal {
+        _setHashers(tree._indexedMT, hashFunctions_);
     }
 
     function add(
@@ -243,6 +276,10 @@ library IndexedMerkleTree {
         return _getLevelNodesCount(tree._indexedMT, level_);
     }
 
+    function isCustomHasherSet(AddressIndexedMT storage tree) internal view returns (bool) {
+        return _isCustomHasherSet(tree._indexedMT);
+    }
+
     uint256 internal constant LEAVES_LEVEL = 0;
     uint64 internal constant ZERO_IDX = 0;
 
@@ -252,6 +289,14 @@ library IndexedMerkleTree {
         LeafData[] leavesData;
         mapping(uint256 level => bytes32[] nodeHashes) nodes;
         uint256 levelsCount;
+        bool isCustomHasherSet;
+        function(bytes32, bytes32) view returns (bytes32) hash2;
+        function(bytes32, bytes32, bytes32, bytes32) view returns (bytes32) hash4;
+    }
+
+    struct HashFunctions {
+        function(bytes32, bytes32) view returns (bytes32) hash2;
+        function(bytes32, bytes32, bytes32, bytes32) view returns (bytes32) hash4;
     }
 
     struct Proof {
@@ -286,9 +331,18 @@ library IndexedMerkleTree {
         if (_isInitialized(tree)) revert IndexedMerkleTreeAlreadyInitialized();
 
         tree.leavesData.push(LeafData({value: ZERO_HASH, nextLeafIndex: ZERO_IDX}));
-        tree.nodes[LEAVES_LEVEL].push(_hashLeaf(0, 0, 0, true));
+        tree.nodes[LEAVES_LEVEL].push(_hashLeaf(0, 0, 0, true, _getHashFunctions(tree).hash4));
 
         tree.levelsCount++;
+    }
+
+    function _setHashers(IndexedMT storage tree, HashFunctions memory hashFunctions_) private {
+        if (_isInitialized(tree)) revert IndexedMerkleTreeAlreadyInitialized();
+
+        tree.isCustomHasherSet = true;
+
+        tree.hash2 = hashFunctions_.hash2;
+        tree.hash4 = hashFunctions_.hash4;
     }
 
     function _add(
@@ -344,6 +398,8 @@ library IndexedMerkleTree {
         uint256 levelsCount_ = tree.levelsCount;
         uint256 levelIndex_ = leafIndex_;
 
+        HashFunctions memory hashFunctions_ = _getHashFunctions(tree);
+
         for (uint256 i = 0; i < levelsCount_; i++) {
             bytes32 currentLevelNodeHash_;
 
@@ -352,10 +408,11 @@ library IndexedMerkleTree {
                     levelIndex_,
                     leafData_.value,
                     leafData_.nextLeafIndex,
-                    true
+                    true,
+                    hashFunctions_.hash4
                 );
             } else {
-                currentLevelNodeHash_ = _calculateNodeHash(tree, levelIndex_, i);
+                currentLevelNodeHash_ = _calculateNodeHash(tree, levelIndex_, i, hashFunctions_);
             }
 
             if (levelIndex_ == _getLevelNodesCount(tree, i)) {
@@ -388,6 +445,8 @@ library IndexedMerkleTree {
         uint256 levelsCount_ = tree.levelsCount;
         uint256 levelIndex_ = leafIndex_;
 
+        HashFunctions memory hashFunctions_ = _getHashFunctions(tree);
+
         for (uint256 i = 0; i < levelsCount_; i++) {
             bytes32 currentLevelNodeHash_;
 
@@ -398,10 +457,11 @@ library IndexedMerkleTree {
                     levelIndex_,
                     leafData_.value,
                     leafData_.nextLeafIndex,
-                    true
+                    true,
+                    hashFunctions_.hash4
                 );
             } else {
-                currentLevelNodeHash_ = _calculateNodeHash(tree, levelIndex_, i);
+                currentLevelNodeHash_ = _calculateNodeHash(tree, levelIndex_, i, hashFunctions_);
             }
 
             tree.nodes[i][levelIndex_] = currentLevelNodeHash_;
@@ -432,6 +492,8 @@ library IndexedMerkleTree {
             revert InvalidProofIndex(index_, value_);
         }
 
+        HashFunctions memory hashFunctions_ = _getHashFunctions(tree);
+
         uint256 parentIndex_ = index_;
 
         for (uint256 i = 0; i < proof_.siblings.length; ++i) {
@@ -441,7 +503,7 @@ library IndexedMerkleTree {
 
             proof_.siblings[i] = currentLevelIndex_ < _getLevelNodesCount(tree, i)
                 ? tree.nodes[i][currentLevelIndex_]
-                : _getZeroNodeHash(i);
+                : _getZeroNodeHash(i, hashFunctions_);
 
             parentIndex_ /= 2;
         }
@@ -453,17 +515,26 @@ library IndexedMerkleTree {
         IndexedMT storage tree,
         Proof memory proof_
     ) private view returns (bool) {
-        return _processProof(proof_) == _getRoot(tree);
+        return _processProof(proof_, _getHashFunctions(tree)) == _getRoot(tree);
     }
 
-    function _processProof(Proof memory proof_) private pure returns (bytes32) {
-        bytes32 computedHash_ = _hashLeaf(proof_.index, proof_.value, proof_.nextLeafIndex, true);
+    function _processProof(
+        Proof memory proof_,
+        HashFunctions memory hashFunctions_
+    ) private view returns (bytes32) {
+        bytes32 computedHash_ = _hashLeaf(
+            proof_.index,
+            proof_.value,
+            proof_.nextLeafIndex,
+            true,
+            hashFunctions_.hash4
+        );
 
         for (uint256 i = 0; i < proof_.siblings.length; ++i) {
             if ((proof_.index >> i) & 1 == 1) {
-                computedHash_ = _hashNode(proof_.siblings[i], computedHash_);
+                computedHash_ = _hashNode(proof_.siblings[i], computedHash_, hashFunctions_.hash2);
             } else {
-                computedHash_ = _hashNode(computedHash_, proof_.siblings[i]);
+                computedHash_ = _hashNode(computedHash_, proof_.siblings[i], hashFunctions_.hash2);
             }
         }
 
@@ -518,7 +589,8 @@ library IndexedMerkleTree {
     function _calculateNodeHash(
         IndexedMT storage tree,
         uint256 index_,
-        uint256 level_
+        uint256 level_,
+        HashFunctions memory hashFunctions_
     ) private view returns (bytes32) {
         uint256 childrenLevel_ = level_ - 1;
         uint256 leftChild_ = index_ * 2;
@@ -527,9 +599,9 @@ library IndexedMerkleTree {
         bytes32 leftChildHash_ = _getNodeHash(tree, leftChild_, childrenLevel_);
         bytes32 rightChildHash_ = rightChild_ < _getLevelNodesCount(tree, childrenLevel_)
             ? _getNodeHash(tree, rightChild_, childrenLevel_)
-            : _getZeroNodeHash(childrenLevel_);
+            : _getZeroNodeHash(childrenLevel_, hashFunctions_);
 
-        return _hashNode(leftChildHash_, rightChildHash_);
+        return _hashNode(leftChildHash_, rightChildHash_, hashFunctions_.hash2);
     }
 
     function _checkIndexExistence(
@@ -572,29 +644,84 @@ library IndexedMerkleTree {
         return tree.levelsCount > 0;
     }
 
-    function _getZeroNodeHash(uint256 level_) private pure returns (bytes32) {
+    function _isCustomHasherSet(IndexedMT storage tree) private view returns (bool) {
+        return tree.isCustomHasherSet;
+    }
+
+    function _getZeroNodeHash(
+        uint256 level_,
+        HashFunctions memory hashFunctions_
+    ) private view returns (bytes32) {
         if (level_ == 0) {
-            return _hashLeaf(0, 0, 0, false);
+            return _hashLeaf(0, 0, 0, false, hashFunctions_.hash4);
         }
 
-        bytes32 prevLevelNodeHash_ = _getZeroNodeHash(level_ - 1);
+        bytes32 prevLevelNodeHash_ = _getZeroNodeHash(level_ - 1, hashFunctions_);
 
-        return _hashNode(prevLevelNodeHash_, prevLevelNodeHash_);
+        return _hashNode(prevLevelNodeHash_, prevLevelNodeHash_, hashFunctions_.hash2);
     }
 
     function _hashNode(
         bytes32 leftChildHash_,
-        bytes32 rightChildHash_
-    ) private pure returns (bytes32) {
-        return keccak256(abi.encodePacked(leftChildHash_, rightChildHash_));
+        bytes32 rightChildHash_,
+        function(bytes32, bytes32) view returns (bytes32) hash2_
+    ) private view returns (bytes32) {
+        return hash2_(leftChildHash_, rightChildHash_);
     }
 
     function _hashLeaf(
         uint256 leafIndex_,
         bytes32 value_,
         uint256 nextLeafIndex_,
-        bool isActive_
-    ) private pure returns (bytes32) {
-        return keccak256(abi.encodePacked(isActive_, leafIndex_, value_, nextLeafIndex_));
+        bool isActive_,
+        function(bytes32, bytes32, bytes32, bytes32) view returns (bytes32) hash4_
+    ) private view returns (bytes32) {
+        return
+            hash4_(
+                bytes32(uint256(isActive_ ? 1 : 0)),
+                bytes32(leafIndex_),
+                value_,
+                bytes32(nextLeafIndex_)
+            );
+    }
+
+    function _getHashFunctions(
+        IndexedMT storage tree
+    ) private view returns (HashFunctions memory) {
+        return
+            HashFunctions({
+                hash2: tree.isCustomHasherSet ? tree.hash2 : _hash2,
+                hash4: tree.isCustomHasherSet ? tree.hash4 : _hash4
+            });
+    }
+
+    function _hash2(bytes32 a_, bytes32 b_) private pure returns (bytes32 result_) {
+        assembly {
+            mstore(0, a_)
+            mstore(32, b_)
+
+            result_ := keccak256(0, 64)
+        }
+    }
+
+    /**
+     * @dev The decision not to update the free memory pointer is due to the temporary nature of the hash arguments.
+     */
+    function _hash4(
+        bytes32 a_,
+        bytes32 b_,
+        bytes32 c_,
+        bytes32 d_
+    ) private pure returns (bytes32 result_) {
+        assembly {
+            let freePtr_ := mload(64)
+
+            mstore(freePtr_, a_)
+            mstore(add(freePtr_, 32), b_)
+            mstore(add(freePtr_, 64), c_)
+            mstore(add(freePtr_, 96), d_)
+
+            result_ := keccak256(freePtr_, 128)
+        }
     }
 }
