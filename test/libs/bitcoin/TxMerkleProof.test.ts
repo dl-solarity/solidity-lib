@@ -5,7 +5,7 @@ import { sha256 } from "ethers";
 
 import { MerkleRawProofParser, Reverter, addHexPrefix, reverseBytes } from "@test-helpers";
 
-import { TxMerkleProofMock } from "@ethers-v6";
+import type { TxMerkleProofMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

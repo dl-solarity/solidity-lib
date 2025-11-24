@@ -1,4 +1,4 @@
-import { BigNumberish } from "ethers";
+import type { BigNumberish } from "ethers";
 
 export function addHexPrefix(str: string): string {
   return `0x${str}`;

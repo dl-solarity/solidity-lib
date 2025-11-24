@@ -1,5 +1,19 @@
 # Changelog
 
+## [none]
+
+- Migrated to OIDC npm publishing.
+
+## [3.3.0]
+
+- Fixed two critical, three high, four low, and two info issues found during the library audit.
+- Migrated from solhint to slippy.
+
+## [3.2.8]
+
+- Added `ED256` library for 256-bit Twisted Edwards curve arithmetic.
+- Optimized `U512` library `eq(mload(a_), 0)` -> `iszero(mload(a_))`.
+
 ## [3.2.7]
 
 - Added `extract` function to the `Schnorr256` library to extract a secret from a standard/adaptor Schnorr signature pair.

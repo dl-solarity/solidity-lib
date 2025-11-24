@@ -10,7 +10,7 @@ import {
   reverseBytes,
 } from "@test-helpers";
 
-import { BlockHeaderMock } from "@ethers-v6";
+import type { BlockHeaderMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

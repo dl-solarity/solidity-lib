@@ -6,7 +6,7 @@ import { randomBytes } from "ethers";
 
 import { Reverter } from "@test-helpers";
 
-import { RSASSAPSSMock } from "@ethers-v6";
+import type { RSASSAPSSMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

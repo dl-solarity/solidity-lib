@@ -334,6 +334,7 @@ library PriorityQueue {
         queue._values.pop();
         queue._priorities.pop();
 
+        indexToRemove_ = _shiftUp(queue, indexToRemove_);
         _shiftDown(queue, indexToRemove_);
 
         return true;
@@ -361,7 +362,7 @@ library PriorityQueue {
         return queue._priorities;
     }
 
-    function _shiftUp(Queue storage queue, uint256 index_) private {
+    function _shiftUp(Queue storage queue, uint256 index_) private returns (uint256) {
         uint256 priority_ = queue._priorities[index_];
 
         while (index_ > 0) {
@@ -375,9 +376,11 @@ library PriorityQueue {
 
             index_ = parent_;
         }
+
+        return index_;
     }
 
-    function _shiftDown(Queue storage queue, uint256 index_) private {
+    function _shiftDown(Queue storage queue, uint256 index_) private returns (uint256) {
         while (true) {
             uint256 maxIndex_ = _maxPriorityIndex(queue, index_);
 
@@ -389,6 +392,8 @@ library PriorityQueue {
 
             index_ = maxIndex_;
         }
+
+        return index_;
     }
 
     function _swap(Queue storage queue, uint256 index1_, uint256 index2_) private {

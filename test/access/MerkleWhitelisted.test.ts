@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { Reverter, buildTree, getProof, getRoot } from "@test-helpers";
 
-import { MerkleWhitelistedMock } from "@ethers-v6";
+import type { MerkleWhitelistedMock } from "@ethers-v6";
 
 import { MerkleTree } from "merkletreejs";
 

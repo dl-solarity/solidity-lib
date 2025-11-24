@@ -7,7 +7,7 @@ pragma solidity ^0.8.21;
  */
 library MemoryUtils {
     /**
-     * @notice Copies the contents of the source bytes to the destination bytes. strings can be casted
+     * @notice Copies the contents of the source bytes to the destination bytes. Strings can be cast
      * to bytes in order to use this function.
      *
      * @param source_ The source bytes to copy from.

@@ -3,7 +3,7 @@ import hre from "hardhat";
 
 import { Reverter } from "@test-helpers";
 
-import { Groth16Verifier2Mock, Groth16Verifier3Mock, Groth16VerifierHelperMock } from "@ethers-v6";
+import type { Groth16Verifier2Mock, Groth16Verifier3Mock, Groth16VerifierHelperMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

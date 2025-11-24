@@ -3,6 +3,7 @@ pragma solidity ^0.8.21;
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {IBridge} from "../../interfaces/bridge/IBridge.sol";
 import {IBatcher} from "../../interfaces/bridge/IBatcher.sol";
 import {IHandler} from "../../interfaces/bridge/IHandler.sol";
 import {IUSDCCrosschain} from "../../interfaces/bridge/tokens/IUSDCCrosschain.sol";
@@ -95,6 +96,7 @@ contract ERC20Handler is IHandler {
      * @inheritdoc IHandler
      */
     function getOperationHash(
+        IBridge bridge_,
         string calldata network_,
         bytes calldata redeemDetails_
     ) external view virtual returns (bytes32) {
@@ -110,7 +112,7 @@ contract ERC20Handler is IHandler {
                     redeem_.operationType,
                     redeem_.nonce,
                     network_,
-                    address(this)
+                    address(bridge_)
                 )
             );
     }

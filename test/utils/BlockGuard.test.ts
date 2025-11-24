@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
-import { Time } from "@nomicfoundation/hardhat-network-helpers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { Time } from "@nomicfoundation/hardhat-network-helpers/types";
 
 import { Reverter } from "@test-helpers";
 
-import { BlockGuardMock } from "@ethers-v6";
+import type { BlockGuardMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

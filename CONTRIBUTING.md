@@ -4,7 +4,7 @@ You are more than welcome to contribute to Solarity library as we are warmly ope
 
 ## Issues
 
-If you found a minor bug, interested in a new feature, or just have any questions, please [open an issue](https://github.com/dl-solarity/solidity-lib/issues/new/choose). For major bugs, please reach out to the team directly.
+If you found a minor bug, are interested in a new feature, or just have any questions, please [open an issue](https://github.com/dl-solarity/solidity-lib/issues/new/choose). For major bugs, please reach out to the team directly.
 
 Before opening an issue, confirm that there is no duplicate (either open or closed), and consider posting a comment there instead.
 

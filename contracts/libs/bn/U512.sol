@@ -5,7 +5,7 @@ type uint512 is uint256;
 type call512 is uint256;
 
 /**
- * @notice Low-level library that implements unsigned 512-bit arithmetics.
+ * @notice Low-level library that implements unsigned 512-bit arithmetic.
  *
  * | Statistic   | Avg          |
  * | ----------- | ------------ |
@@ -221,7 +221,7 @@ library U512 {
     function eqU256(uint512 a_, uint256 u256_) internal pure returns (bool eq_) {
         unchecked {
             assembly {
-                eq_ := and(eq(mload(a_), 0), eq(mload(add(a_, 0x20)), u256_))
+                eq_ := and(iszero(mload(a_)), eq(mload(add(a_, 0x20)), u256_))
             }
         }
     }
@@ -1563,6 +1563,13 @@ library U512 {
 
             if (cmp_ < 0) {
                 _sub(m_, r_, r_);
+
+                if (eq(r_, m_)) {
+                    assembly {
+                        mstore(r_, 0)
+                        mstore(add(r_, 0x20), 0)
+                    }
+                }
             }
         }
     }

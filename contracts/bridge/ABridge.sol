@@ -115,7 +115,11 @@ abstract contract ABridge is IBridge, Initializable {
 
         address handler_ = $.handlers.get(assetType_);
 
-        bytes32 operationHash_ = IHandler(handler_).getOperationHash($.network, redeemDetails_);
+        bytes32 operationHash_ = IHandler(handler_).getOperationHash(
+            this,
+            $.network,
+            redeemDetails_
+        );
 
         _checkAndUpdateNonce(operationHash_);
         _checkSignatures(operationHash_, abi.decode(proof_, (bytes[])));
