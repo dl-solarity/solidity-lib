@@ -4,6 +4,16 @@ pragma solidity ^0.8.21;
 /**
  * @notice Indexed Merkle Tree Module
  *
+ * Gas usage for adding and updating 100 elements to an IndexedMT with the keccak256 and poseidon hash functions is detailed below:
+ *
+ * Keccak256:
+ * - CMT.add - 249k
+ * - CMT.update - 250k
+ *
+ * Poseidon:
+ * - CMT.add - 1.13m
+ * - CMT.update - 1.13m
+ *
  * Custom hashing functions can be provided before initialization to change how nodes and
  * leaves are hashed (useful for e.g. Poseidon-based hashing in zk environments). Default
  * keccak based hashing functions are used when custom hashers are not set.
