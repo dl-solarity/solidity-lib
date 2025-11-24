@@ -1,19 +1,77 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
+/**
+ * @notice Indexed Merkle Tree Module
+ *
+ * Custom hashing functions can be provided before initialization to change how nodes and
+ * leaves are hashed (useful for e.g. Poseidon-based hashing in zk environments). Default
+ * keccak based hashing functions are used when custom hashers are not set.
+ *
+ * ## Usage Example
+ *
+ * ```solidity
+ * using IndexedMerkleTree for IndexedMerkleTree.UintIndexedMT;
+ *
+ * IndexedMerkleTree.UintIndexedMT internal tree;
+ *
+ * tree.setHashers(hashFunctions);
+ * tree.initialize();
+ *
+ * uint256 leafIndex = tree.add(42, 0);
+ *
+ * IndexedMerkleTree.Proof memory proof = tree.getProof(leafIndex, 42);
+ *
+ * bool ok = tree.verifyProof(proof);
+ *```
+ */
+
 library IndexedMerkleTree {
+    /**
+     **************************
+     *      UintIndexedMT     *
+     **************************
+     */
+
     struct UintIndexedMT {
         IndexedMT _indexedMT;
     }
 
+    /**
+     * @notice Initialize the in-storage Indexed Merkle tree wrapper for uint values.
+     *
+     * Requirements:
+     * - The tree must not already be initialized.
+     *
+     * @param tree self.
+     */
     function initialize(UintIndexedMT storage tree) internal {
         _initialize(tree._indexedMT);
     }
 
+    /**
+     * @notice Set custom hashing functions to be used by the tree.
+     *
+     * Requirements:
+     * - Must be called before the tree is initialized.
+     *
+     * @param tree self.
+     * @param hashFunctions_ The hash function container (hash2 and hash4).
+     */
     function setHashers(UintIndexedMT storage tree, HashFunctions memory hashFunctions_) internal {
         _setHashers(tree._indexedMT, hashFunctions_);
     }
 
+    /**
+     * @notice Add a new uint value to the Indexed Merkle tree.
+     *
+     * Complexity: O(log(levels)) where levels is the current tree height.
+     *
+     * @param tree self.
+     * @param value_ The value to insert.
+     * @param lowLeafIndex_ A known low leaf index indicating insertion position.
+     * @return The new leaf index for the inserted value.
+     */
     function add(
         UintIndexedMT storage tree,
         uint256 value_,
@@ -22,6 +80,18 @@ library IndexedMerkleTree {
         return _add(tree._indexedMT, bytes32(value_), lowLeafIndex_);
     }
 
+    /**
+     * @notice Update an existing leaf in the Indexed Merkle tree.
+     *
+     * Requirements:
+     * - leafIndex_ must be valid and initialized.
+     *
+     * @param tree self.
+     * @param leafIndex_ The index of the leaf to update.
+     * @param currentLowLeafIndex_ The current low-leaf insertion point that precedes the leaf.
+     * @param newValue_ New value to set.
+     * @param newLowLeafIndex_ New low-leaf pointer (may be same as currentLowLeafIndex_).
+     */
     function update(
         UintIndexedMT storage tree,
         uint256 leafIndex_,
@@ -38,6 +108,16 @@ library IndexedMerkleTree {
         );
     }
 
+    /**
+     * @notice Generate an inclusion/exclusion proof for the leaf at `index_`.
+     *
+     * Complexity: O(levels) to build the proof.
+     *
+     * @param tree self.
+     * @param index_ The leaf index to build the proof for.
+     * @param value_ The value expected at the index (used to validate existence vs exclusion).
+     * @return A merkle Proof structure for `index_` and `value_`.
+     */
     function getProof(
         UintIndexedMT storage tree,
         uint256 index_,
@@ -46,6 +126,13 @@ library IndexedMerkleTree {
         return _proof(tree._indexedMT, index_, bytes32(value_));
     }
 
+    /**
+     * @notice Verify a proof produced by `getProof` for this tree instance.
+     *
+     * @param tree self.
+     * @param proof_ The proof to verify.
+     * @return True if the proof matches the current root, false otherwise.
+     */
     function verifyProof(
         UintIndexedMT storage tree,
         Proof memory proof_
@@ -53,10 +140,23 @@ library IndexedMerkleTree {
         return _verifyProof(tree._indexedMT, proof_);
     }
 
+    /**
+     * @notice Convenience helper to process a raw Proof using the default hashers (keccak256).
+     *
+     * @param proof_ A proof as returned by `getProof`.
+     * @return The computed root when hashing the proof values using default hash functions.
+     */
     function processProof(Proof memory proof_) internal view returns (bytes32) {
         return _processProof(proof_, HashFunctions({hash2: _hash2, hash4: _hash4}));
     }
 
+    /**
+     * @notice Process a proof using the provided hash functions.
+     *
+     * @param proof_ A proof as returned by `getProof`.
+     * @param hashFunctions_ Custom hashing functions to use when processing the proof.
+     * @return The computed root when hashing the proof using the provided functions.
+     */
     function processProof(
         Proof memory proof_,
         HashFunctions memory hashFunctions_
@@ -64,14 +164,33 @@ library IndexedMerkleTree {
         return _processProof(proof_, hashFunctions_);
     }
 
+    /**
+     * @notice Get the current Merkle root for the tree.
+     *
+     * @param tree self.
+     * @return The bytes32 root hash.
+     */
     function getRoot(UintIndexedMT storage tree) internal view returns (bytes32) {
         return _getRoot(tree._indexedMT);
     }
 
+    /**
+     * @notice Get the current number of levels in the Indexed Merkle tree.
+     *
+     * @param tree self.
+     * @return The number of levels used by the tree (>= 1 when initialized).
+     */
     function getTreeLevels(UintIndexedMT storage tree) internal view returns (uint256) {
         return _getTreeLevels(tree._indexedMT);
     }
 
+    /**
+     * @notice Read data for a leaf in the tree.
+     *
+     * @param tree self.
+     * @param leafIndex_ The leaf index to query.
+     * @return LeafData struct with value and nextLeafIndex.
+     */
     function getLeafData(
         UintIndexedMT storage tree,
         uint256 leafIndex_
@@ -79,6 +198,14 @@ library IndexedMerkleTree {
         return _getLeafData(tree._indexedMT, leafIndex_);
     }
 
+    /**
+     * @notice Get the hash of a node at a given index and level.
+     *
+     * @param tree self.
+     * @param index_ Index of the node on the provided level.
+     * @param level_ Level to query (0 == leaves).
+     * @return The node hash.
+     */
     function getNodeHash(
         UintIndexedMT storage tree,
         uint256 index_,
@@ -87,10 +214,23 @@ library IndexedMerkleTree {
         return _getNodeHash(tree._indexedMT, index_, level_);
     }
 
+    /**
+     * @notice Get the total number of leaves in the tree.
+     *
+     * @param tree self.
+     * @return The number of leaves stored at level 0.
+     */
     function getLeavesCount(UintIndexedMT storage tree) internal view returns (uint256) {
         return _getLeavesCount(tree._indexedMT);
     }
 
+    /**
+     * @notice Get the number of nodes present at a specific level of the tree.
+     *
+     * @param tree self.
+     * @param level_ The level to query.
+     * @return The number of nodes in the specified level.
+     */
     function getLevelNodesCount(
         UintIndexedMT storage tree,
         uint256 level_
@@ -98,18 +238,47 @@ library IndexedMerkleTree {
         return _getLevelNodesCount(tree._indexedMT, level_);
     }
 
+    /**
+     * @notice Returns true when custom hash functions were provided before initialization.
+     *
+     * @param tree self.
+     * @return True if custom hashers are set, false otherwise.
+     */
     function isCustomHasherSet(UintIndexedMT storage tree) internal view returns (bool) {
         return _isCustomHasherSet(tree._indexedMT);
     }
+
+    /**
+     **************************
+     *    Bytes32IndexedMT    *
+     **************************
+     */
 
     struct Bytes32IndexedMT {
         IndexedMT _indexedMT;
     }
 
+    /**
+     * @notice Initialize the in-storage Indexed Merkle tree wrapper for bytes32 values.
+     *
+     * Requirements:
+     * - The tree must not already be initialized.
+     *
+     * @param tree self.
+     */
     function initialize(Bytes32IndexedMT storage tree) internal {
         _initialize(tree._indexedMT);
     }
 
+    /**
+     * @notice Set custom hashing functions to be used by the tree.
+     *
+     * Requirements:
+     * - Must be called before the tree is initialized.
+     *
+     * @param tree self.
+     * @param hashFunctions_ The hash function container (hash2 and hash4).
+     */
     function setHashers(
         Bytes32IndexedMT storage tree,
         HashFunctions memory hashFunctions_
@@ -117,6 +286,16 @@ library IndexedMerkleTree {
         _setHashers(tree._indexedMT, hashFunctions_);
     }
 
+    /**
+     * @notice Add a new bytes32 value to the Indexed Merkle tree.
+     *
+     * Complexity: O(log(levels)) where levels is the current tree height.
+     *
+     * @param tree self.
+     * @param value_ The value to insert.
+     * @param lowLeafIndex_ A known low leaf index indicating insertion position.
+     * @return The new leaf index for the inserted value.
+     */
     function add(
         Bytes32IndexedMT storage tree,
         bytes32 value_,
@@ -125,6 +304,18 @@ library IndexedMerkleTree {
         return _add(tree._indexedMT, value_, lowLeafIndex_);
     }
 
+    /**
+     * @notice Update an existing leaf in the Indexed Merkle tree.
+     *
+     * Requirements:
+     * - leafIndex_ must be valid and initialized.
+     *
+     * @param tree self.
+     * @param leafIndex_ The index of the leaf to update.
+     * @param currentLowLeafIndex_ The current low-leaf insertion point that precedes the leaf.
+     * @param newValue_ New value to set.
+     * @param newLowLeafIndex_ New low-leaf pointer (may be same as currentLowLeafIndex_).
+     */
     function update(
         Bytes32IndexedMT storage tree,
         uint256 leafIndex_,
@@ -135,6 +326,16 @@ library IndexedMerkleTree {
         _update(tree._indexedMT, leafIndex_, currentLowLeafIndex_, newValue_, newLowLeafIndex_);
     }
 
+    /**
+     * @notice Generate an inclusion/exclusion proof for the leaf at `index_`.
+     *
+     * Complexity: O(levels) to build the proof.
+     *
+     * @param tree self.
+     * @param index_ The leaf index to build the proof for.
+     * @param value_ The value expected at the index (used to validate existence vs exclusion).
+     * @return A merkle Proof structure for `index_` and `value_`.
+     */
     function getProof(
         Bytes32IndexedMT storage tree,
         uint256 index_,
@@ -143,6 +344,13 @@ library IndexedMerkleTree {
         return _proof(tree._indexedMT, index_, value_);
     }
 
+    /**
+     * @notice Verify a proof produced by `getProof` for this tree instance.
+     *
+     * @param tree self.
+     * @param proof_ The proof to verify.
+     * @return True if the proof matches the current root, false otherwise.
+     */
     function verifyProof(
         Bytes32IndexedMT storage tree,
         Proof memory proof_
@@ -150,14 +358,33 @@ library IndexedMerkleTree {
         return _verifyProof(tree._indexedMT, proof_);
     }
 
+    /**
+     * @notice Get the current Merkle root for the tree.
+     *
+     * @param tree self.
+     * @return The bytes32 root hash.
+     */
     function getRoot(Bytes32IndexedMT storage tree) internal view returns (bytes32) {
         return _getRoot(tree._indexedMT);
     }
 
+    /**
+     * @notice Get the current number of levels in the Indexed Merkle tree.
+     *
+     * @param tree self.
+     * @return The number of levels used by the tree (>= 1 when initialized).
+     */
     function getTreeLevels(Bytes32IndexedMT storage tree) internal view returns (uint256) {
         return _getTreeLevels(tree._indexedMT);
     }
 
+    /**
+     * @notice Read data for a leaf in the tree.
+     *
+     * @param tree self.
+     * @param leafIndex_ The leaf index to query.
+     * @return LeafData struct with value and nextLeafIndex.
+     */
     function getLeafData(
         Bytes32IndexedMT storage tree,
         uint256 leafIndex_
@@ -165,6 +392,14 @@ library IndexedMerkleTree {
         return _getLeafData(tree._indexedMT, leafIndex_);
     }
 
+    /**
+     * @notice Get the hash of a node at a given index and level.
+     *
+     * @param tree self.
+     * @param index_ Index of the node on the provided level.
+     * @param level_ Level to query (0 == leaves).
+     * @return The node hash.
+     */
     function getNodeHash(
         Bytes32IndexedMT storage tree,
         uint256 index_,
@@ -173,10 +408,23 @@ library IndexedMerkleTree {
         return _getNodeHash(tree._indexedMT, index_, level_);
     }
 
+    /**
+     * @notice Get the total number of leaves in the tree.
+     *
+     * @param tree self.
+     * @return The number of leaves stored at level 0.
+     */
     function getLeavesCount(Bytes32IndexedMT storage tree) internal view returns (uint256) {
         return _getLeavesCount(tree._indexedMT);
     }
 
+    /**
+     * @notice Get the number of nodes present at a specific level of the tree.
+     *
+     * @param tree self.
+     * @param level_ The level to query.
+     * @return The number of nodes in the specified level.
+     */
     function getLevelNodesCount(
         Bytes32IndexedMT storage tree,
         uint256 level_
@@ -184,18 +432,47 @@ library IndexedMerkleTree {
         return _getLevelNodesCount(tree._indexedMT, level_);
     }
 
+    /**
+     * @notice Returns true when custom hash functions were provided before initialization.
+     *
+     * @param tree self.
+     * @return True if custom hashers are set, false otherwise.
+     */
     function isCustomHasherSet(Bytes32IndexedMT storage tree) internal view returns (bool) {
         return _isCustomHasherSet(tree._indexedMT);
     }
+
+    /**
+     **************************
+     *    AddressIndexedMT    *
+     **************************
+     */
 
     struct AddressIndexedMT {
         IndexedMT _indexedMT;
     }
 
+    /**
+     * @notice Initialize the in-storage Indexed Merkle tree wrapper for address values.
+     *
+     * Requirements:
+     * - The tree must not already be initialized.
+     *
+     * @param tree self.
+     */
     function initialize(AddressIndexedMT storage tree) internal {
         _initialize(tree._indexedMT);
     }
 
+    /**
+     * @notice Set custom hashing functions to be used by the tree.
+     *
+     * Requirements:
+     * - Must be called before the tree is initialized.
+     *
+     * @param tree self.
+     * @param hashFunctions_ The hash function container (hash2 and hash4).
+     */
     function setHashers(
         AddressIndexedMT storage tree,
         HashFunctions memory hashFunctions_
@@ -203,6 +480,16 @@ library IndexedMerkleTree {
         _setHashers(tree._indexedMT, hashFunctions_);
     }
 
+    /**
+     * @notice Add a new address value to the Indexed Merkle tree.
+     *
+     * Complexity: O(log(levels)) where levels is the current tree height.
+     *
+     * @param tree self.
+     * @param value_ The address value to insert.
+     * @param lowLeafIndex_ A known low leaf index indicating insertion position.
+     * @return The new leaf index for the inserted value.
+     */
     function add(
         AddressIndexedMT storage tree,
         address value_,
@@ -211,6 +498,18 @@ library IndexedMerkleTree {
         return _add(tree._indexedMT, bytes32(uint256(uint160(value_))), lowLeafIndex_);
     }
 
+    /**
+     * @notice Update an existing leaf in the Indexed Merkle tree.
+     *
+     * Requirements:
+     * - leafIndex_ must be valid and initialized.
+     *
+     * @param tree self.
+     * @param leafIndex_ The index of the leaf to update.
+     * @param currentLowLeafIndex_ The current low-leaf insertion point that precedes the leaf.
+     * @param newValue_ New address value to set.
+     * @param newLowLeafIndex_ New low-leaf pointer (may be same as currentLowLeafIndex_).
+     */
     function update(
         AddressIndexedMT storage tree,
         uint256 leafIndex_,
@@ -227,6 +526,16 @@ library IndexedMerkleTree {
         );
     }
 
+    /**
+     * @notice Generate an inclusion/exclusion proof for the leaf at `index_`.
+     *
+     * Complexity: O(levels) to build the proof.
+     *
+     * @param tree self.
+     * @param index_ The leaf index to build the proof for.
+     * @param value_ The value expected at the index (used to validate existence vs exclusion).
+     * @return A merkle Proof structure for `index_` and `value_`.
+     */
     function getProof(
         AddressIndexedMT storage tree,
         uint256 index_,
@@ -235,6 +544,13 @@ library IndexedMerkleTree {
         return _proof(tree._indexedMT, index_, bytes32(uint256(uint160(value_))));
     }
 
+    /**
+     * @notice Verify a proof produced by `getProof` for this tree instance.
+     *
+     * @param tree self.
+     * @param proof_ The proof to verify.
+     * @return True if the proof matches the current root, false otherwise.
+     */
     function verifyProof(
         AddressIndexedMT storage tree,
         Proof memory proof_
@@ -242,14 +558,33 @@ library IndexedMerkleTree {
         return _verifyProof(tree._indexedMT, proof_);
     }
 
+    /**
+     * @notice Get the current Merkle root for the tree.
+     *
+     * @param tree self.
+     * @return The bytes32 root hash.
+     */
     function getRoot(AddressIndexedMT storage tree) internal view returns (bytes32) {
         return _getRoot(tree._indexedMT);
     }
 
+    /**
+     * @notice Get the current number of levels in the Indexed Merkle tree.
+     *
+     * @param tree self.
+     * @return The number of levels used by the tree (>= 1 when initialized).
+     */
     function getTreeLevels(AddressIndexedMT storage tree) internal view returns (uint256) {
         return _getTreeLevels(tree._indexedMT);
     }
 
+    /**
+     * @notice Read data for a leaf in the tree.
+     *
+     * @param tree self.
+     * @param leafIndex_ The leaf index to query.
+     * @return LeafData struct with value and nextLeafIndex.
+     */
     function getLeafData(
         AddressIndexedMT storage tree,
         uint256 leafIndex_
@@ -257,6 +592,14 @@ library IndexedMerkleTree {
         return _getLeafData(tree._indexedMT, leafIndex_);
     }
 
+    /**
+     * @notice Get the hash of a node at a given index and level.
+     *
+     * @param tree self.
+     * @param index_ Index of the node on the provided level.
+     * @param level_ Level to query (0 == leaves).
+     * @return The node hash.
+     */
     function getNodeHash(
         AddressIndexedMT storage tree,
         uint256 index_,
@@ -265,10 +608,23 @@ library IndexedMerkleTree {
         return _getNodeHash(tree._indexedMT, index_, level_);
     }
 
+    /**
+     * @notice Get the total number of leaves in the tree.
+     *
+     * @param tree self.
+     * @return The number of leaves stored at level 0.
+     */
     function getLeavesCount(AddressIndexedMT storage tree) internal view returns (uint256) {
         return _getLeavesCount(tree._indexedMT);
     }
 
+    /**
+     * @notice Get the number of nodes present at a specific level of the tree.
+     *
+     * @param tree self.
+     * @param level_ The level to query.
+     * @return The number of nodes in the specified level.
+     */
     function getLevelNodesCount(
         AddressIndexedMT storage tree,
         uint256 level_
@@ -276,15 +632,47 @@ library IndexedMerkleTree {
         return _getLevelNodesCount(tree._indexedMT, level_);
     }
 
+    /**
+     * @notice Returns true when custom hash functions were provided before initialization.
+     *
+     * @param tree self.
+     * @return True if custom hashers are set, false otherwise.
+     */
     function isCustomHasherSet(AddressIndexedMT storage tree) internal view returns (bool) {
         return _isCustomHasherSet(tree._indexedMT);
     }
 
+    /**
+     **************************
+     *     InnerIndexedMT     *
+     **************************
+     */
+
+    /**
+     * @notice Level index used for leaf nodes.
+     */
     uint256 internal constant LEAVES_LEVEL = 0;
+
+    /**
+     * @notice A sentinel zero index used in linked-leaf pointers.
+     */
     uint64 internal constant ZERO_IDX = 0;
 
+    /**
+     * @notice Zero hash representation used for empty nodes / default values.
+     */
     bytes32 internal constant ZERO_HASH = bytes32(0);
 
+    /**
+     * @notice Core storage structure for the Indexed Merkle tree.
+     *
+     * @param leavesData compact storage of leaf metadata (value + pointer to next leaf).
+     * @param nodes mapping of level => array of node hashes; level 0 is leaves, top index is root.
+     * @param levelsCount current number of levels present in the tree (>= 1 after init).
+     * @param isCustomHasherSet true when caller provided custom hash functions before init.
+     * @param hash2 A two-input hash function used to hash node pairs.
+     * @param hash4 A four-input hash function used to hash leaf metadata (active flag, idx, value, nextIndex).
+     */
     struct IndexedMT {
         LeafData[] leavesData;
         mapping(uint256 level => bytes32[] nodeHashes) nodes;
@@ -294,11 +682,24 @@ library IndexedMerkleTree {
         function(bytes32, bytes32, bytes32, bytes32) view returns (bytes32) hash4;
     }
 
+    /**
+     * @notice Container type for custom hashing functions.
+     */
     struct HashFunctions {
         function(bytes32, bytes32) view returns (bytes32) hash2;
         function(bytes32, bytes32, bytes32, bytes32) view returns (bytes32) hash4;
     }
 
+    /**
+     * @notice Merkle proof returned by `getProof` and used by `verifyProof`.
+     *
+     * @param root The root hash for which this proof should verify.
+     * @param siblings Array of sibling hashes used to reconstruct the root from the leaf.
+     * @param existence Whether the supplied index/value exists (true) or this is an exclusion proof (false).
+     * @param index The leaf index (position) within the leaves level used to compute the proof.
+     * @param value The stored value for the leaf referenced by `index` (or candidate value for an exclusion check).
+     * @param nextLeafIndex For the indexed tree the leaf contains a pointer to the next leaf; used when hashing leaves.
+     */
     struct Proof {
         bytes32 root;
         bytes32[] siblings;
@@ -308,6 +709,11 @@ library IndexedMerkleTree {
         uint256 nextLeafIndex;
     }
 
+    /**
+     * @notice The main leaf metadata struct
+     * @param value The stored bytes32 value for the leaf.
+     * @param nextLeafIndex Index of the next active leaf (ZERO_IDX when none).
+     */
     struct LeafData {
         bytes32 value;
         uint256 nextLeafIndex;
@@ -327,6 +733,11 @@ library IndexedMerkleTree {
         _;
     }
 
+    /**
+     * @dev This will create the empty-leaf sentinel and push the initial leaf and the
+     * corresponding zero-hash for the leaves level. The function reverts if the
+     * tree is already initialized.
+     */
     function _initialize(IndexedMT storage tree) private {
         if (_isInitialized(tree)) revert IndexedMerkleTreeAlreadyInitialized();
 
@@ -336,6 +747,10 @@ library IndexedMerkleTree {
         tree.levelsCount++;
     }
 
+    /**
+     * @dev Set custom hash functions for the indexed tree.
+     * Must be invoked before initialization (otherwise the tree is already created).
+     */
     function _setHashers(IndexedMT storage tree, HashFunctions memory hashFunctions_) private {
         if (_isInitialized(tree)) revert IndexedMerkleTreeAlreadyInitialized();
 
@@ -345,6 +760,13 @@ library IndexedMerkleTree {
         tree.hash4 = hashFunctions_.hash4;
     }
 
+    /**
+     * @dev Insert a new leaf into the indexed tree at the position following lowLeafIndex_.
+     * Performs necessary checks that lowLeafIndex_ is a valid low-leaf and then updates
+     * the data structures and merkle node hashes accordingly.
+     *
+     * @return The newly allocated leaf index.
+     */
     function _add(
         IndexedMT storage tree,
         bytes32 value_,
@@ -362,6 +784,11 @@ library IndexedMerkleTree {
         return newLeafIndex_;
     }
 
+    /**
+     * @dev Update stored value and optionally reposition the leaf by modifying
+     * the nextLeafIndex links. The function validates provided low-leaf pointers
+     * and updates merkle node hashes for affected leaves.
+     */
     function _update(
         IndexedMT storage tree,
         uint256 leafIndex_,
@@ -614,6 +1041,10 @@ library IndexedMerkleTree {
         }
     }
 
+    /**
+     * @dev Validate whether `lowLeafIndex_` is a valid low leaf for the supplied value_.
+     * If valid, returns the next leaf index after the low leaf.
+     */
     function _checkLowLeaf(
         IndexedMT storage tree,
         bytes32 value_,
@@ -626,6 +1057,11 @@ library IndexedMerkleTree {
         return _getLeafData(tree, lowLeafIndex_).nextLeafIndex;
     }
 
+    /**
+     * @dev Returns true when `lowLeafIndex_` is an insertion point for `value_`.
+     * That means low leaf's value is < value_ and the next leaf's value (if present)
+     * is strictly greater than value_.
+     */
     function _isLowLeaf(
         IndexedMT storage tree,
         bytes32 value_,
@@ -648,6 +1084,11 @@ library IndexedMerkleTree {
         return tree.isCustomHasherSet;
     }
 
+    /**
+     * @dev Return the canonical zero node hash for a given level. For level 0 this is
+     * the hash of an inactive leaf; for higher levels it is the hash of two identical
+     * zero child hashes.
+     */
     function _getZeroNodeHash(
         uint256 level_,
         HashFunctions memory hashFunctions_
