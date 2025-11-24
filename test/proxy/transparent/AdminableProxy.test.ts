@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { Reverter } from "@test-helpers";
 
-import { AdminableProxy, AdminableProxyUpgrader, ERC20Mock } from "@ethers-v6";
+import type { AdminableProxy, AdminableProxyUpgrader, ERC20Mock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

@@ -3,9 +3,9 @@ import hre from "hardhat";
 
 import { Reverter } from "@test-helpers";
 
-import { Schnorr256Mock } from "@ethers-v6";
+import type { Schnorr256Mock } from "@ethers-v6";
 
-import { AffinePoint } from "@noble/curves/abstract/curve";
+import type { AffinePoint } from "@noble/curves/abstract/curve";
 import { bytesToNumberBE } from "@noble/curves/abstract/utils";
 import { secp256k1 } from "@noble/curves/secp256k1";
 

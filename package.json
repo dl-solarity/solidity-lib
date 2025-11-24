@@ -25,7 +25,7 @@
   ],
   "scripts": {
     "prepare": "husky",
-    "compile": "npx hardhat compile --force",
+    "compile": "npx hardhat compile",
     "coverage": "npx hardhat test --coverage",
     "test": "npx hardhat test",
     "private-network": "npx hardhat node",
@@ -64,7 +64,7 @@
     "eslint": "^9.35.0",
     "eslint-plugin-promise": "^7.2.1",
     "ethers": "^6.15.0",
-    "hardhat": "^3.0.5",
+    "hardhat": "^3.0.15",
     "husky": "^9.1.7",
     "jiti": "^2.5.1",
     "merkletreejs": "^0.5.2",

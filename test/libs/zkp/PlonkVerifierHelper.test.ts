@@ -3,7 +3,7 @@ import hre from "hardhat";
 
 import { Reverter } from "@test-helpers";
 
-import { PlonkVerifier2Mock, PlonkVerifier3Mock, PlonkVerifierHelperMock } from "@ethers-v6";
+import type { PlonkVerifier2Mock, PlonkVerifier3Mock, PlonkVerifierHelperMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

@@ -3,7 +3,7 @@ import hre from "hardhat";
 
 import { Reverter } from "@test-helpers";
 
-import { U512Mock } from "@ethers-v6";
+import type { U512Mock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
@@ -16,6 +16,10 @@ describe("U512", () => {
 
   function randomU512(): string {
     return "0x" + ethers.toBigInt(ethers.randomBytes(64)).toString(16).padStart(128, "0");
+  }
+
+  function randomU256(): string {
+    return "0x" + ethers.toBigInt(ethers.randomBytes(32)).toString(16).padStart(64, "0");
   }
 
   function toBytes(value: bigint): string {
@@ -320,6 +324,16 @@ describe("U512", () => {
       expect(await u512.modsubAssign(a, b, m)).to.equal(modsub(a, b, m));
       expect(await u512.modsubAssignTo(a, b, m, to)).to.equal(modsub(a, b, m));
     }
+
+    const m = randomU256();
+    const a = randomU256();
+
+    const bBigInt = ethers.toBigInt(a) + ethers.toBigInt(m);
+
+    const b = "0x" + bBigInt.toString(16).padStart(128, "0");
+    const zero = "0x" + 0n.toString(16).padStart(128, "0");
+
+    expect(await u512.modsub(a, b, m)).to.equal(zero);
   });
 
   it("redsub test", async () => {

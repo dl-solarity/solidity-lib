@@ -1,15 +1,15 @@
 import { expect } from "chai";
 import hre from "hardhat";
 
-import { AddressLike } from "ethers";
+import type { AddressLike } from "ethers";
 
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
 
 import { wei } from "@scripts";
 
 import { Reverter, getSignature } from "@test-helpers";
 
-import {
+import type {
   BridgeMock,
   ERC20CrosschainMock,
   ERC20Handler,
@@ -227,7 +227,7 @@ describe("Bridge", () => {
         ERC20BridgingType.Wrapped,
       );
 
-      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+      const operationHash = await erc20Handler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -262,7 +262,7 @@ describe("Bridge", () => {
         ERC20BridgingType.LiquidityPool,
       );
 
-      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+      const operationHash = await erc20Handler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -291,7 +291,7 @@ describe("Bridge", () => {
         ERC20BridgingType.USDCType,
       );
 
-      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+      const operationHash = await erc20Handler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -337,7 +337,7 @@ describe("Bridge", () => {
         batch,
       );
 
-      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+      const operationHash = await erc20Handler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -378,7 +378,7 @@ describe("Bridge", () => {
         ERC20BridgingType.LiquidityPool,
       );
 
-      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+      const operationHash = await erc20Handler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -404,7 +404,7 @@ describe("Bridge", () => {
         ERC20BridgingType.LiquidityPool,
       );
 
-      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+      const operationHash = await erc20Handler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -426,7 +426,7 @@ describe("Bridge", () => {
         ERC20BridgingType.LiquidityPool,
       );
 
-      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+      const operationHash = await erc20Handler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -448,7 +448,7 @@ describe("Bridge", () => {
         ERC20BridgingType.LiquidityPool,
       );
 
-      const operationHash = await erc20Handler.getOperationHash("sepolia", redeemData);
+      const operationHash = await erc20Handler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -490,9 +490,9 @@ describe("Bridge", () => {
         value: baseAmount,
       });
 
-      const redeemData = getNativeRedeemData(tx.hash, baseAmount, OWNER.address);
+      const redeemData = getNativeRedeemData(tx.hash, BigInt(baseAmount), OWNER.address);
 
-      const operationHash = await nativeHandler.getOperationHash("sepolia", redeemData);
+      const operationHash = await nativeHandler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -524,7 +524,7 @@ describe("Bridge", () => {
 
       const redeemData = getNativeRedeemData(tx.hash, BigInt(baseAmount), ethers.ZeroAddress, batch);
 
-      const operationHash = await nativeHandler.getOperationHash("sepolia", redeemData);
+      const operationHash = await nativeHandler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -542,7 +542,7 @@ describe("Bridge", () => {
     it("should revert when redeeming 0 tokens", async () => {
       const redeemData = getNativeRedeemData("0x", wei("0"), OWNER.address);
 
-      const operationHash = await nativeHandler.getOperationHash("sepolia", redeemData);
+      const operationHash = await nativeHandler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -552,9 +552,9 @@ describe("Bridge", () => {
     });
 
     it("should revert when receiver address is 0", async () => {
-      const redeemData = getNativeRedeemData("0x", baseAmount, ethers.ZeroAddress);
+      const redeemData = getNativeRedeemData("0x", BigInt(baseAmount), ethers.ZeroAddress);
 
-      const operationHash = await nativeHandler.getOperationHash("sepolia", redeemData);
+      const operationHash = await nativeHandler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 
@@ -592,7 +592,7 @@ describe("Bridge", () => {
 
       const redeemData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(bytes, bytes32)"], [[batch, nonce]]);
 
-      const operationHash = await messageHandler.getOperationHash("sepolia", redeemData);
+      const operationHash = await messageHandler.getOperationHash(bridge, "sepolia", redeemData);
 
       const signature = await getSignature(ethers, OWNER, operationHash);
 

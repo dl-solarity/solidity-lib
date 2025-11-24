@@ -7,7 +7,7 @@ import { wei } from "@scripts";
 
 import { Reverter } from "@test-helpers";
 
-import { RawReturnMock, ReturnDataProxyMock } from "@ethers-v6";
+import type { RawReturnMock, ReturnDataProxyMock } from "@ethers-v6";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 

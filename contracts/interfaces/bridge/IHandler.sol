@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
+import {IBridge} from "./IBridge.sol";
 import {IBatcher} from "./IBatcher.sol";
 
 /**
@@ -26,11 +27,13 @@ interface IHandler {
 
     /**
      * @notice A function to compute a redeem operation hash used for signing.
+     * @param bridge_ the bridge contract.
      * @param network_ the network name.
      * @param redeemDetails_ encoded redeem operation details.
      * @return Operation hash to be signed by bridge signers.
      */
     function getOperationHash(
+        IBridge bridge_,
         string calldata network_,
         bytes calldata redeemDetails_
     ) external view returns (bytes32);
