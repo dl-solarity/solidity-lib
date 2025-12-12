@@ -198,11 +198,11 @@ library ECDSA384 {
 
                     bit += 3;
                 } else if (bit == 385) {
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
+
                     mask1_ = _getWord(scalar1_, 0) & 0x03;
                     mask2_ = _getWord(scalar2_, 0) & 0x03;
-
-                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
-                    (x_, y_) = _twiceAffine(call_, p_, two_, three_, a_, x_, y_);
 
                     bit += 2;
                 } else {
