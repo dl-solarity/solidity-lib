@@ -20,7 +20,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'chore(release):') }}
     strategy:
       matrix:
-        node-version: [22.17, 24]
+        node-version: [24]
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v5

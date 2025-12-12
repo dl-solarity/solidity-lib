@@ -17,14 +17,17 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v5
+
       - name: Setup
         uses: ./.github/actions/setup
+
       - name: Checkout Docs Repository
         uses: actions/checkout@v5
         with:
           repository: dl-solarity/docs
           ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
           path: docs
+
       - name: Generate and Copy Docs
         run: |
           npx hardhat markup --outdir markups
@@ -33,6 +36,7 @@ jobs:
           rm -rf docs/docs/reference/contracts
           mkdir -p docs/docs/reference
           cp -r markups/contracts docs/docs/reference
+
       - name: Push Docs
         run: |
           git config --global user.name "Docs Syncer"
