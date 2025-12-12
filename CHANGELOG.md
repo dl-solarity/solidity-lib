@@ -1,7 +1,8 @@
 # Changelog
 
-## [none]
+## [patch]
 
+- Fixed `viaIR` compilation.
 - Migrated to OIDC npm publishing.
 
 ## [3.3.0]
