@@ -1,6 +1,6 @@
 # Changelog
 
-## [patch]
+## [3.3.2]
 
 - Fixed `RecoverableAccount` execution gas estimation revert.
 
