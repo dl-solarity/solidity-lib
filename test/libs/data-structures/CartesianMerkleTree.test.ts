@@ -299,7 +299,7 @@ describe("CartesianMerkleTree", () => {
       const treapleRoot: string = await treaple.getUintRoot();
 
       for (let i = 0; i < keysCount; i++) {
-        const randIndex = Math.floor(Math.random() * (Number(await treaple.getUintNodesCount()) - 1)) + 1;
+        const randIndex = Math.floor(Math.random() * (Number(await treaple.getUintNodesCount()) - 1));
         const proof = await treaple.getUintProof(keys[randIndex], 40);
 
         await verifyCMTProof(proof, treapleRoot, keys[randIndex], true, true);
@@ -624,7 +624,7 @@ describe("CartesianMerkleTree", () => {
       const treapleRoot: string = await treaple.getBytes32Root();
 
       for (let i = 0; i < keysCount; i++) {
-        const randIndex = Math.floor(Math.random() * (Number(await treaple.getBytes32NodesCount()) - 1)) + 1;
+        const randIndex = Math.floor(Math.random() * (Number(await treaple.getBytes32NodesCount()) - 1));
         const proof = await treaple.getBytes32Proof(keys[randIndex], 40);
 
         await verifyCMTProof(proof, treapleRoot, keys[randIndex], true, true);
@@ -733,6 +733,7 @@ describe("CartesianMerkleTree", () => {
             break;
           }
         }
+
         const currentNode = await treaple.getAddressNode(randIndex);
         const currentNodeKey = `0x${currentNode.key.slice(26)}`;
 
@@ -757,7 +758,7 @@ describe("CartesianMerkleTree", () => {
       const treapleRoot: string = await treaple.getAddressRoot();
 
       for (let i = 0; i < keysCount; i++) {
-        const randIndex = Math.floor(Math.random() * (Number(await treaple.getAddressNodesCount()) - 1)) + 1;
+        const randIndex = Math.floor(Math.random() * (Number(await treaple.getAddressNodesCount()) - 1));
         const proof = await treaple.getAddressProof(keys[randIndex], 40);
 
         await verifyCMTProof(proof, treapleRoot, keys[randIndex], true, true);
