@@ -31,9 +31,7 @@ describe("ECDSA512", () => {
       "0x43f800fbeaf9238c58af795bcdad04bc49cd850c394d3382953356b023210281757b30e19218a37cbd612086fbc158caa8b4e1acb2ec00837e5d941f342fb3cc";
 
     it("should verify the signature", async () => {
-      // Added very big gasLimit for the coverage to pass
-      expect(await ecdsa512.verifyBrainpoolP512r1WithoutHashing(message, signature, pubKey, { gasLimit: 300000000 })).to
-        .be.true;
+      expect(await ecdsa512.verifyBrainpoolP512r1WithoutHashing(message, signature, pubKey)).to.be.true;
     });
   });
 });

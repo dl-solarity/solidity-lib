@@ -1,5 +1,9 @@
 # Changelog
 
+## [patch]
+
+- Fixed `RecoverableAccount` execution gas estimation revert.
+
 ## [3.3.1]
 
 - Fixed `viaIR` compilation.

@@ -47,7 +47,7 @@ describe("RecoverableAccount", () => {
     return ethers.Signature.from(signature).serialized;
   }
 
-  function packTwoUint128(a, b) {
+  function packTwoUint128(a: bigint, b: bigint) {
     const maxUint128 = (1n << 128n) - 1n;
 
     if (a > maxUint128 || b > maxUint128) {
@@ -254,7 +254,7 @@ describe("RecoverableAccount", () => {
 
       const transferData = token.interface.encodeFunctionData("transfer", [FIRST.address, transferAmount]);
 
-      calls = [[await token.getAddress(), 0, transferData]];
+      calls = [[await token.getAddress(), 0n, transferData]];
 
       executionData = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256,bytes)[]"], [calls]);
 
@@ -514,6 +514,21 @@ describe("RecoverableAccount", () => {
       await expect(account.connect(DELEGATED).validateUserOp(userOp, userOpHash, 1n))
         .to.be.revertedWithCustomError(account, "NotAnEntryPoint")
         .withArgs(DELEGATED.address);
+    });
+
+    it("should not revert if signature length is less than 65 bytes", async () => {
+      const userOp = await getUserOp();
+
+      userOp.signature = "0x";
+
+      const userOpHash = await entryPoint.getUserOpHash(userOp);
+
+      await networkHelpers.impersonateAccount(await entryPoint.getAddress());
+      await networkHelpers.setBalance(await entryPoint.getAddress(), wei(1));
+      const entryPointAccount = await ethers.provider.getSigner(await entryPoint.getAddress());
+
+      await expect(account.connect(entryPointAccount).validateUserOp(userOp, userOpHash, 1n)).to.be.eventually
+        .fulfilled;
     });
   });
 });
