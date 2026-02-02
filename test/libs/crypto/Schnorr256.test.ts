@@ -6,8 +6,8 @@ import { Reverter } from "@test-helpers";
 import type { Schnorr256Mock } from "@ethers-v6";
 
 import type { AffinePoint } from "@noble/curves/abstract/curve";
-import { bytesToNumberBE } from "@noble/curves/abstract/utils";
 import { secp256k1 } from "@noble/curves/secp256k1";
+import { bytesToNumberBE } from "@noble/curves/utils";
 
 const { ethers, networkHelpers } = await hre.network.connect();
 
@@ -15,8 +15,8 @@ describe("Schnorr256", () => {
   const reverter: Reverter = new Reverter(networkHelpers);
 
   const schnorrKeyPair = () => {
-    const privKey = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
-    const pubKey = secp256k1.ProjectivePoint.BASE.multiply(privKey).toAffine();
+    const privKey = bytesToNumberBE(secp256k1.utils.randomSecretKey());
+    const pubKey = secp256k1.Point.BASE.multiply(privKey).toAffine();
 
     return { privKey, pubKey };
   };
@@ -36,7 +36,7 @@ describe("Schnorr256", () => {
         [pubKey.x, pubKey.y, R.x, R.y, hashedMessage],
       ),
     );
-    const e = (k + c * privKey) % secp256k1.CURVE.n;
+    const e = (k + c * privKey) % secp256k1.Point.CURVE().n;
 
     return ethers.solidityPacked(["uint256", "uint256", "uint256"], [R.x, R.y, e]);
   };
@@ -51,7 +51,7 @@ describe("Schnorr256", () => {
     const k = randomness.privKey;
     const R = randomness.pubKey;
 
-    const RT = secp256k1.ProjectivePoint.fromAffine(R).add(secp256k1.ProjectivePoint.fromAffine(T)).toAffine();
+    const RT = secp256k1.Point.fromAffine(R).add(secp256k1.Point.fromAffine(T)).toAffine();
 
     const c = BigInt(
       ethers.solidityPackedKeccak256(
@@ -60,7 +60,7 @@ describe("Schnorr256", () => {
       ),
     );
 
-    const e = (k + c * privKey) % secp256k1.CURVE.n;
+    const e = (k + c * privKey) % secp256k1.Point.CURVE().n;
 
     const signature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [R.x, R.y, e]);
 
@@ -142,7 +142,7 @@ describe("Schnorr256", () => {
       const hashedMessage = ethers.keccak256("0x1337");
 
       const t = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
-      const T = secp256k1.ProjectivePoint.BASE.multiply(t).toAffine();
+      const T = secp256k1.Point.BASE.multiply(t).toAffine();
 
       const { signature } = schnorrAdaptorSign(hashedMessage, privKey, pubKey, T);
 
@@ -157,8 +157,8 @@ describe("Schnorr256", () => {
       const t = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
       const t2 = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
 
-      const T = secp256k1.ProjectivePoint.BASE.multiply(t).toAffine();
-      const T2 = secp256k1.ProjectivePoint.BASE.multiply(t2).toAffine();
+      const T = secp256k1.Point.BASE.multiply(t).toAffine();
+      const T2 = secp256k1.Point.BASE.multiply(t2).toAffine();
 
       const { signature } = schnorrAdaptorSign(hashedMessage, privKey, pubKey, T);
 
@@ -179,11 +179,11 @@ describe("Schnorr256", () => {
       const hashedMessage = ethers.keccak256("0x1337");
 
       const t = bytesToNumberBE(secp256k1.utils.randomPrivateKey());
-      const T = secp256k1.ProjectivePoint.BASE.multiply(t).toAffine();
+      const T = secp256k1.Point.BASE.multiply(t).toAffine();
 
       const { signature: adaptorSignature, RT, e } = schnorrAdaptorSign(hashedMessage, privKey, pubKey, T);
 
-      const signatureScalar = (e + t) % secp256k1.CURVE.n;
+      const signatureScalar = (e + t) % secp256k1.Point.CURVE().n;
 
       const signature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [RT.x, RT.y, signatureScalar]);
 
@@ -194,10 +194,13 @@ describe("Schnorr256", () => {
       const signature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [1n, 1n, 10n]);
       const adaptorSignature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [1n, 1n, 2n]);
 
-      const invalidSignature = ethers.solidityPacked(["uint256", "uint256", "uint256"], [1n, 1n, secp256k1.CURVE.n]);
+      const invalidSignature = ethers.solidityPacked(
+        ["uint256", "uint256", "uint256"],
+        [1n, 1n, secp256k1.Point.CURVE().n],
+      );
       const invalidAdaptorSignature = ethers.solidityPacked(
         ["uint256", "uint256", "uint256"],
-        [1n, 1n, secp256k1.CURVE.n],
+        [1n, 1n, secp256k1.Point.CURVE().n],
       );
 
       await expect(schnorr.extractSECP256k1(invalidSignature, adaptorSignature)).to.be.revertedWithCustomError(

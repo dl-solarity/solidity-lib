@@ -1,5 +1,9 @@
 # Changelog
 
+## [none]
+
+- Fixed deprecation warnings.
+
 ## [3.3.2]
 
 - Fixed `RecoverableAccount` execution gas estimation revert.
