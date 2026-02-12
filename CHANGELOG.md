@@ -1,5 +1,9 @@
 # Changelog
 
+## [patch]
+
+- Added the `IndexedMerkleTree` library for efficient Indexed Merkle Tree data structures.
+
 ## [none]
 
 - Fixed deprecation warnings.
