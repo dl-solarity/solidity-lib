@@ -72,7 +72,7 @@ contracts
 │   │   ├── CartesianMerkleTree — "CMT reference implementation"
 │   │   ├── DynamicSet — "Set for strings and bytes"
 │   │   ├── IncrementalMerkleTree — "IMT implementation with flexible tree height"
-│   │   ├── IndexedMerkleTree — "IndexedMT implementation with flexible tree height and custom hash functions"
+│   │   ├── IndexedMerkleTree — "IndexedMT implementation"
 │   │   ├── PriorityQueue — "Max queue heap implementation"
 │   │   ├── SparseMerkleTree — "SMT optimized implementation"
 │   │   └── memory

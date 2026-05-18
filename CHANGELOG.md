@@ -2,11 +2,7 @@
 
 ## [patch]
 
-- Added the `IndexedMerkleTree` library for efficient Indexed Merkle Tree data structures.
-
-## [none]
-
-- Migrated to OIDC npm publishing.
+- Added `IndexedMerkleTree` library that implements Indexed Merkle Tree data structure.
 
 ## [3.3.0]
 
