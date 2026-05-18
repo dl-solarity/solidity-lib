@@ -42,7 +42,7 @@ describe("EC256", () => {
     it("should negate point correctly", async () => {
       const p = secp256k1.Point.BASE.multiply(123n);
 
-      expect(await ec256.negatePoint(p.toAffine())).to.be.deep.equal([p.x, secp256k1.CURVE.p - p.y]);
+      expect(await ec256.negatePoint(p.toAffine())).to.be.deep.equal([p.x, secp256k1.Point.CURVE().p - p.y]);
       expect(await ec256.negatePoint({ x: 15, y: 0 })).to.be.deep.equal([15, 0]);
     });
   });

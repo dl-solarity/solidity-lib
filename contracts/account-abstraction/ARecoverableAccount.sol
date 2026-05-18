@@ -185,6 +185,12 @@ abstract contract ARecoverableAccount is IAccount, Initializable, AAccountRecove
         PackedUserOperation calldata userOp_,
         bytes32 userOpHash_
     ) internal virtual returns (uint256 validationData_) {
+        // For gas estimation bundler sets signature as empty
+        // and we need to avoid reverting in this case
+        if (userOp_.signature.length < 65) {
+            return SIG_VALIDATION_FAILED;
+        }
+
         address recovered_ = ECDSA.recover(userOpHash_, userOp_.signature);
 
         if (recovered_ == address(this) || recovered_ == trustedExecutor()) {

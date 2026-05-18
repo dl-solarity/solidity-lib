@@ -38,11 +38,11 @@ contract ED256Mock {
 
     function isProjectiveInfinity(
         ED256.PPoint memory pPoint_
-    ) external view returns (bool result_) {
+    ) external pure returns (bool result_) {
         return ED256.isProjectiveInfinity(pPoint_);
     }
 
-    function pInfinity() external view returns (ED256.PPoint memory) {
+    function pInfinity() external pure returns (ED256.PPoint memory) {
         return ED256.pInfinity();
     }
 

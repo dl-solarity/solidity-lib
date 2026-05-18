@@ -4,6 +4,15 @@
 
 - Added `IndexedMerkleTree` library that implements Indexed Merkle Tree data structure.
 
+## [3.3.2]
+
+- Fixed `RecoverableAccount` execution gas estimation revert.
+
+## [3.3.1]
+
+- Fixed `viaIR` compilation.
+- Migrated to OIDC npm publishing.
+
 ## [3.3.0]
 
 - Fixed two critical, three high, four low, and two info issues found during the library audit.
